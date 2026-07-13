@@ -74,10 +74,13 @@
         <div class="slots-filter-field slots-filter-page-size">
             <label for="<%= ddlPageSize.ClientID %>">Số dòng</label>
             <asp:DropDownList ID="ddlPageSize" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlPageSize_SelectedIndexChanged">
-                <asp:ListItem Value="25" Text="25" />
-                <asp:ListItem Value="50" Text="50" Selected="true" />
-                <asp:ListItem Value="100" Text="100" />
-                <asp:ListItem Value="200" Text="200" />
+                <asp:ListItem Value="100" Text="100" Selected="true" />
+                <asp:ListItem Value="500" Text="500" />
+                <asp:ListItem Value="1000" Text="1000" />
+                <asp:ListItem Value="2000" Text="2000" />
+                <asp:ListItem Value="4000" Text="4000" />
+                <asp:ListItem Value="6000" Text="6000" />
+                <asp:ListItem Value="8000" Text="8000" />
             </asp:DropDownList>
         </div>
         <div class="slots-toolbar-actions">

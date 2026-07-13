@@ -607,17 +607,32 @@
 
             #sidebar.atfm-modern-menu {
                 position: relative;
-                z-index: 20;
+                z-index: 200;
                 float: none;
                 flex: 0 0 var(--atfm-sidebar-width);
                 width: var(--atfm-sidebar-width);
+                margin-right: calc(72px - var(--atfm-sidebar-width));
                 min-height: 100%;
                 border: 0;
+                background: transparent;
+                box-shadow: none;
+                box-sizing: border-box;
+                pointer-events: none;
+            }
+
+            #sidebar.atfm-modern-menu:before {
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 0;
+                width: 100%;
                 border-right: 1px solid #d8e3ed;
                 background: #f7f9fc;
                 box-shadow: 3px 0 12px rgba(35, 62, 89, .07);
-                box-sizing: border-box;
-                transition: flex-basis .28s ease, width .28s ease, box-shadow .28s ease;
+                pointer-events: none;
+                transition: width .2s cubic-bezier(.4, 0, .2, 1), box-shadow .18s ease;
             }
 
             #sidebar.atfm-modern-menu .atfm-sidebar-toggle {
@@ -638,6 +653,7 @@
                 color: #1769aa;
                 box-shadow: 0 3px 9px rgba(35, 62, 89, .18);
                 cursor: pointer;
+                pointer-events: auto;
                 transition: color .2s ease, background-color .2s ease, transform .28s ease;
             }
 
@@ -653,9 +669,20 @@
             }
 
             #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu {
-                flex-basis: 72px;
+                box-shadow: none;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu:before {
                 width: 72px;
                 box-shadow: 2px 0 8px rgba(35, 62, 89, .06);
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-sidebar-toggle {
+                transform: translateX(calc(72px - var(--atfm-sidebar-width)));
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-transitioning #sidebar.atfm-modern-menu {
+                pointer-events: none;
             }
 
             #main-container > .atfm-workspace.atfm-sidebar-collapsed .atfm-sidebar-toggle .fa {
@@ -663,6 +690,7 @@
             }
 
             #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list {
+                width: 72px;
                 padding: 10px 7px;
             }
 
@@ -682,11 +710,14 @@
 
             #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list > li > a .menu-text,
             #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list > li > a > .arrow {
-                display: none;
+                max-width: 0;
+                margin: 0;
+                opacity: 0;
+                visibility: hidden;
             }
 
             #main-container > .atfm-workspace.atfm-sidebar-collapsed > .main-content {
-                width: calc(100vw - 72px);
+                width: auto;
             }
 
             #sidebar.atfm-modern-menu .sidebar-shortcuts {
@@ -695,12 +726,16 @@
 
             #sidebar.atfm-modern-menu .atfm-menu-list {
                 display: block;
-                width: 100%;
+                width: var(--atfm-sidebar-width);
                 margin: 0;
                 padding: 10px;
                 border: 0;
                 background: transparent;
                 box-sizing: border-box;
+                position: relative;
+                z-index: 1;
+                pointer-events: auto;
+                transition: width .16s ease, padding .16s ease;
             }
 
             #sidebar.atfm-modern-menu .atfm-menu-list > li {
@@ -756,26 +791,59 @@
             }
 
             #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-icon {
+                display: inline-flex !important;
+                flex: 0 0 30px;
                 width: 30px;
                 min-width: 30px;
+                height: 30px;
+                align-items: center;
+                justify-content: center;
                 margin: 0 9px 0 0;
                 color: inherit;
+                line-height: 1;
                 text-align: center;
+                vertical-align: middle;
+                overflow: visible;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-icon img {
+                display: block !important;
+                width: 28px !important;
+                height: 28px !important;
+                max-width: 28px !important;
+                max-height: 28px !important;
+                margin: 0 !important;
+                border: 0;
+                object-fit: contain;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-icon.fa:before {
+                margin: 0;
+                line-height: 1;
             }
 
             #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-text {
                 flex: 1;
+                max-width: 100%;
                 overflow: hidden;
+                opacity: 1;
+                visibility: visible;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 text-align: left;
+                transition: opacity .12s ease, max-width .18s ease, visibility 0s linear 0s;
             }
 
             #sidebar.atfm-modern-menu .atfm-menu-list > li > a > .arrow {
                 position: static;
+                max-width: 20px;
+                overflow: hidden;
                 margin-left: auto;
                 color: inherit;
+                opacity: 1;
+                visibility: visible;
                 transform: rotate(-90deg);
+                transition: opacity .12s ease, max-width .18s ease, visibility 0s linear 0s;
             }
 
             /* ACE tự sinh thêm tam giác cho li.active; giao diện mới đã có arrow riêng. */
@@ -811,6 +879,7 @@
                 background: rgba(255, 255, 255, .98);
                 box-shadow: 0 18px 42px rgba(24, 67, 102, .2);
                 box-sizing: border-box;
+                pointer-events: auto;
             }
 
             #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu.atfm-submenu-visible {
@@ -975,8 +1044,11 @@
             }
 
             #main-container > .atfm-workspace > .main-content {
+                position: relative;
+                z-index: 1;
                 flex: 1 1 auto;
-                width: calc(100vw - var(--atfm-sidebar-width));
+                width: auto;
+                min-width: 0;
                 min-height: 100%;
                 height: auto !important;
                 overflow: visible !important;
@@ -1308,7 +1380,7 @@
                 try { ace.settings.loadState('main-container') } catch (e) { }
             </script>
 
-            <div class="atfm-workspace">
+            <div class="atfm-workspace atfm-sidebar-collapsed">
 
             <div id="sidebar" class="sidebar navbar-collapse collapse ace-save-state atfm-modern-menu">
                 <script type="text/javascript">
@@ -1547,15 +1619,30 @@
                         workspace.style.setProperty('--atfm-sidebar-width', fittedWidth + 'px');
                     }
 
-                    fitSidebarToMenuText();
+                    var sidebarWidthReady = false;
+                    var transitionTimer = null;
+
+                    function ensureSidebarWidth() {
+                        if (sidebarWidthReady) return;
+                        fitSidebarToMenuText();
+                        sidebarWidthReady = true;
+                    }
 
                     function setSidebarCollapsed(collapsed, saveState) {
                         if (!workspace || !toggleButton) return;
+                        if (collapsed) closeMenuPanels(menu);
+                        else ensureSidebarWidth();
+
+                        workspace.classList.add('atfm-sidebar-transitioning');
                         workspace.classList.toggle('atfm-sidebar-collapsed', collapsed);
                         toggleButton.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
                         toggleButton.setAttribute('aria-label', collapsed ? 'Mở rộng menu' : 'Thu gọn menu');
                         toggleButton.setAttribute('title', collapsed ? 'Mở rộng menu' : 'Thu gọn menu');
-                        if (collapsed) closeMenuPanels(menu);
+
+                        window.clearTimeout(transitionTimer);
+                        transitionTimer = window.setTimeout(function () {
+                            workspace.classList.remove('atfm-sidebar-transitioning');
+                        }, 240);
 
                         if (saveState) {
                             try {
@@ -1565,11 +1652,9 @@
                     }
 
                     if (toggleButton) {
-                        var savedCollapsed = false;
-                        try {
-                            savedCollapsed = window.localStorage.getItem('atfm-sidebar-collapsed') === '1';
-                        } catch (e) { }
-                        setSidebarCollapsed(savedCollapsed, false);
+                        /* Mỗi lần tải trang luôn bắt đầu ở trạng thái thu gọn. */
+                        setSidebarCollapsed(true, false);
+                        try { window.localStorage.setItem('atfm-sidebar-collapsed', '1'); } catch (e) { }
 
                         toggleButton.addEventListener('click', function (event) {
                             event.preventDefault();

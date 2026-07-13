@@ -14,3 +14,21 @@
 .rn-status-list.has-active .rn-status:not(.is-active) { opacity: .5; }
 .rn-table tbody tr.rn-filter-hidden { display: none; }
 .rn-airport-selected .rn-bar { filter: saturate(1.15); box-shadow: 0 0 0 3px rgba(37,135,200,.16); transform: translateY(-5px); }
+.rn-flight-list-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.rn-page-size { color: #60778b; font-size: 12px; white-space: nowrap; }
+.rn-page-size select { height: 34px; margin-left: 6px; padding: 0 8px; border: 1px solid #cfe0ec; border-radius: 8px; background: #fff; color: #294c68; }
+.rn-flight-detail-wrap { max-height: 520px; border-radius: 10px; }
+.rn-flight-detail-table { min-width: 1320px; white-space: nowrap; }
+.rn-flight-detail-table thead th { position: sticky; top: 0; z-index: 2; }
+.rn-flight-detail-table th,
+.rn-flight-detail-table td { padding: 10px 11px; }
+.rn-flight-detail-table .rn-stt { width: 42px; text-align: center; color: #718397; }
+.rn-flight-detail-table .rn-no-data { padding: 42px 16px; color: #718397; text-align: center; }
+.rn-flight-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; }
+.rn-flight-pager span { color: #60778b; font-size: 12px; }
+.rn-flight-pager .rn-filter-button { height: 34px; padding: 0 14px; }
+.rn-flight-pager .rn-filter-button:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }
+@media (max-width: 767px) {
+    .rn-flight-list-card { padding: 14px; }
+    .rn-flight-pager { justify-content: space-between; }
+}

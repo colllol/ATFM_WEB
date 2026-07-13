@@ -140,7 +140,7 @@ namespace prjApplication.SLOTS
         private int GetPageSize()
         {
             int pageSize;
-            return int.TryParse(ddlPageSize.SelectedValue, out pageSize) && pageSize > 0 ? Math.Min(pageSize, 200) : 50;
+            return int.TryParse(ddlPageSize.SelectedValue, out pageSize) && pageSize > 0 ? Math.Min(pageSize, 8000) : 100;
         }
 
         private static string BuildWhereClause(IEnumerable<SlotColumn> columns, string keyword, string tableName,

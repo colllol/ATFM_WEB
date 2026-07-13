@@ -60,6 +60,94 @@
         }
     </style>
     <style>
+        #abcxyz {
+            display: flex;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding: 14px 16px !important;
+            border: 1px solid #c8ddeb;
+            border-radius: 12px;
+            background: #f7fbfe;
+            box-shadow: 0 7px 20px rgba(24, 78, 117, .10);
+            text-align: left !important;
+        }
+
+        #abcxyz .schedule-filter-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+        #abcxyz .schedule-filter-label { color: #315a77; font-size: 11px; font-weight: 700; }
+        #abcxyz .schedule-date-field { flex: 0 1 190px; }
+        #abcxyz .schedule-page-size { flex: 0 0 90px; }
+        #abcxyz .schedule-date-field input[type="date"] { width: 100%; }
+        #abcxyz .schedule-date-value { display: none !important; }
+        #abcxyz input[type="date"], #abcxyz select {
+            height: 36px;
+            padding: 6px 9px;
+            border: 1px solid #8eb9d6;
+            border-radius: 7px;
+            background: #fff;
+            color: #173b59;
+        }
+        #abcxyz .btn { height: 36px; border-radius: 7px; font-weight: 600; }
+        #abcxyz .schedule-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+        #tblSource {
+            width: 100% !important;
+            max-width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            font-size: 12px !important;
+        }
+        #tblSource th, #tblSource td {
+            padding: 0 !important;
+            border: 1px solid #c4d5e1 !important;
+            border-radius: 0 !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #tblSource > thead {
+            position: sticky !important;
+            top: 0;
+            z-index: 40;
+            background: #fff;
+            box-shadow: 0 2px 0 rgba(31, 105, 154, .18);
+        }
+        #tblSource > thead > tr:first-child > th {
+            position: static !important;
+            height: 38px;
+            background: #f7fbff !important;
+            background-clip: padding-box !important;
+            border-radius: 0 !important;
+        }
+        #tblSource > thead > tr:nth-child(2) > th {
+            position: static !important;
+            height: 35px;
+            background: #337ab7 !important;
+            background-clip: padding-box !important;
+            color: #fff !important;
+            border-radius: 0 !important;
+        }
+        #tblSource input[type="text"] {
+            display: block;
+            width: 100% !important;
+            height: 34px;
+            margin: 0 !important;
+            padding: 4px 3px;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            font-size: 12px !important;
+        }
+        #tblSource tbody tr.select,
+        #tblSource tbody tr.select > td { background-color: #cfe9d6 !important; border-color: #75b488 !important; }
+        #tblSource tbody tr.select input[type="text"] { background-color: #cfe9d6 !important; border-radius: 0 !important; }
+        @media (max-width: 767px) {
+            #abcxyz .schedule-actions { width: 100%; margin-left: 0; }
+            #abcxyz .schedule-actions .btn { flex: 1 1 140px; }
+        }
+    </style>
+    <style>
         .preloader {
             display: inline-block;
             padding: 0px;
@@ -110,20 +198,30 @@
             background-color: red;
         }
     </style>
-    <div id="abcxyz" class="well well-sm" style="text-align: center;">
-        
-        <input id="txtFromDate" data-minlenght="1" data-control="checkAccess"  type="text"
-            placeholder="select date" class="wid_100px" />
-        <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnExport_OnClick()">
-            Export DailyFlight</button>
-        <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width:100px;" onclick="btnSearch_OnClick()">
-            Search</button>
-        <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" style="width:100px;" onclick="btnDeleteByChecked_Onclick()">
-            Delete</button>
-        <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" style="width:100px;" onclick="btnClearSearch_OnClick()">
-            Clear search</button>
-        
-
+    <div id="abcxyz" class="well well-sm">
+        <div class="schedule-filter-field schedule-date-field">
+            <label class="schedule-filter-label" for="txtFromDatePicker">NGÀY BAY</label>
+            <input id="txtFromDatePicker" type="date" aria-label="Ngày bay" />
+            <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text" class="schedule-date-value" />
+        </div>
+        <div class="schedule-filter-field schedule-page-size">
+            <label class="schedule-filter-label" for="ddlPageSize">SỐ DÒNG</label>
+            <select id="ddlPageSize" onchange="ddlPageSize_OnChange()">
+                <option value="100" selected="selected">100</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+                <option value="2000">2000</option>
+                <option value="4000">4000</option>
+                <option value="6000">6000</option>
+                <option value="8000">8000</option>
+            </select>
+        </div>
+        <div class="schedule-actions">
+        <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnExport_OnClick()">Export DailyFlight</button>
+        <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">Search</button>
+        <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()">Delete</button>
+        <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()">Clear search</button>
+        </div>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
     <div id="pageging"></div>
@@ -181,6 +279,7 @@
                 <th>
                     <input id="txtREMARK" class="wid_120px" type="text" /></th>
                 <th></th>
+                <th></th>
             </tr>
             <tr style="color: white">
                 <th>No</th>
@@ -228,8 +327,16 @@
         var qDel = '<%= _Role.R_Del %>';
         var isSearch = false;
         var rowId = 0;
-        var pageSize = 100;
+        var pageSize = parseInt($('#ddlPageSize').val(), 10) || 100;
         $('#tblSource').paging({ pageSize: pageSize });
+
+        function ddlPageSize_OnChange() {
+            pageSize = parseInt($('#ddlPageSize').val(), 10) || 100;
+            $('#tblSource').attr('data-pageSize', pageSize);
+            $('#tblSource').attr('data-pageIndex', 1);
+            isSearch = true;
+            LoadDataGrid();
+        }
         function Render2Table(data) {
             var kq = '';
             var idx = parseInt($('#tblSource').attr('data-pageindex'));
@@ -258,14 +365,14 @@
                 + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtVALIDHOURS" + a + "' data-oldValue='" + b.VALIDHOURS + "' value='" + b.VALIDHOURS + "' data-number=\"true\" maxlength=\"2\" onblur='checkIsUpdate(this)'/></td>"
                 + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtVIA" + a + "' data-oldValue='" + returnEmpty(b.VIA).replace(/\n/gi, '') + "' value='" + returnEmpty(b.VIA) + "' onblur='checkIsUpdate(this)'/></td>"
                 + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtREMARK" + a + "' data-oldValue='" + returnEmpty(b.REMARK) + "' value='" + returnEmpty(b.REMARK) + "' onblur='checkIsUpdate(this)'/></td>"
-                + "<td style=\"white-space: nowrap;>\""
+                + "<td style=\"white-space: nowrap;\">"
                             + "<div class=\"action-buttons\">"
-                            + "<i id=\"btnDeleteRemark" + b.ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteOnclick(" + b.ID + ");\"></i></a>"
-                            + "</td>"
-                + "<td style=\"white-space: nowrap;>\""
+                            + "<i id=\"btnDeleteRemark" + b.ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteOnclick(" + b.ID + ");\"></i>"
+                            + "</div></td>"
+                + "<td style=\"white-space: nowrap;\">"
                             + "<div class=\"action-buttons\">"
                             + "<a><i id=\"btnCancelRemark" + b.ID + "\" class=\"ace-icon fa fa-check bigger-130\" onclick=\"btnCancelOnclick(" + b.ID + ");\"></i>" + b.ISRENDER + "</a>"
-                            + "</td>"           
+                            + "</div></td>"
                 + "</tr>"
 
                 stt++;
@@ -841,6 +948,14 @@
     <script>
         $('#txtFromDate').val(dateFormat(new Date().setDate(new Date().getDate() + 1), 'dd-mm-yyyy'));
         $('#txtFromDate').multiDate();        
+        (function () {
+            var value = $('#txtFromDate').val().split('-');
+            if (value.length === 3) $('#txtFromDatePicker').val(value[2] + '-' + value[1] + '-' + value[0]);
+            $('#txtFromDatePicker').on('change', function () {
+                var parts = (this.value || '').split('-');
+                $('#txtFromDate').val(parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '');
+            });
+        }());
         $('#txtDATE_OLD').multiDate();
         $('#txtFLIGHTDATE').val(dateFormat(new Date().setDate(new Date().getDate() + 1), 'dd-mm-yyyy'));
         $('#txtFLIGHTDATE').multiDate();

@@ -896,3 +896,136 @@ Quy ước:
     - Thêm ô chọn ngày native type=date để mở lịch tháng giống giao diện KHH; vẫn giữ ô ngày nội bộ dd-mm-yyyy để không ảnh hưởng API và hàm lọc cũ.
     - Đồng bộ ngày người dùng chọn sang giá trị nội bộ trước khi Search/Export.
     - Đổi màu bộ lọc TIME sang nền xanh sáng, có trạng thái hover/focus và chữ tương phản tốt hơn.
+
+[20/07/2026] Tối ưu hiển thị bảng ListFinishedFlights
+-----------------------------------------------------
+
+137. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Bỏ bo góc và khoảng hở giữa các ô/input, chuyển bảng sang đường lưới liền mạch bằng border-collapse.
+    - Tăng cỡ chữ nội dung và tiêu đề bảng, giữ giới hạn responsive để không làm tràn chiều ngang trang.
+
+[20/07/2026] Hoàn thiện hiệu ứng chọn hàng ListFinishedFlights
+------------------------------------------------------------
+
+138. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Khi nhấn vào bảng, đổi màu phẳng toàn bộ hàng được chọn và loại bỏ bo góc ở các input.
+    - Giữ nguyên màu của các ô cảnh báo/nghiệp vụ như sInputCompare và các ô có background riêng.
+
+[20/07/2026] Bỏ bo góc ô màu nghiệp vụ ListFinishedFlights
+----------------------------------------------------------
+
+139. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Bổ sung CSS áp dụng cả khi chưa chọn hàng, giúp các ô sInputCompare màu đỏ luôn vuông và liền mạch với bảng.
+
+[20/07/2026] Cố định hai hàng đầu bảng ListFinishedFlights
+----------------------------------------------------------
+
+140. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Freeze hàng bộ lọc và hàng tiêu đề bằng sticky positioning với nền đặc, tránh dữ liệu phía sau bị lộ khi cuộn.
+    - Ép bo góc bằng 0 cho hai hàng cố định để các ô liền nhau.
+
+[20/07/2026] Đồng bộ giao diện Schedule_Flight
+----------------------------------------------
+
+141. prjApplication/ScheduleFlights/Schedule_Flight.aspx
+    - Áp dụng card bộ lọc và kiểu bảng liền ô, freeze hai hàng đầu tương tự ListFinishedFlights.
+    - Chuyển chọn ngày sang date picker native nhưng vẫn giữ giá trị nội bộ dd-mm-yyyy cho API hiện tại.
+    - Ban đầu đặt cỡ chữ bảng 14px; sau đó giữ lại hai nút mũi tên cuộn bên cạnh bảng theo yêu cầu mới.
+
+[20/07/2026] Cập nhật cỡ chữ bảng ListFinishedFlights
+--------------------------------------------------
+
+142. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Ép cỡ chữ toàn bộ bảng (tiêu đề, dữ liệu và ô lọc) là 14px trên mọi kích thước màn hình.
+
+[20/07/2026] Điều chỉnh bảng chuyến bay và bộ lọc số dòng SLOTS
+------------------------------------------------------------
+
+143. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Giảm cỡ chữ bảng từ 14px xuống 12px.
+    - Freeze nguyên khối hai hàng thead để toàn bộ cột, kể cả cột cuối, luôn cố định.
+
+144. prjApplication/ScheduleFlights/Schedule_Flight.aspx
+    - Giảm cỡ chữ bảng xuống 12px và freeze nguyên khối hai hàng thead.
+    - Bổ sung ô tiêu đề còn thiếu và sửa HTML hai cột thao tác cuối để các hàng có cùng số cột, không lệch khi cuộn.
+
+145. prjApplication/SLOTS/SlotsTable.ascx
+    - Mở rộng bộ lọc số dòng dùng chung cho KHH và SlotAero với các mức 100, 500, 1000, 2000, 4000, 6000 và 8000.
+
+146. prjApplication/SLOTS/SlotsTable.ascx.cs
+    - Cho phép truy vấn và phân trang tối đa 8000 dòng theo lựa chọn, mặc định 100 dòng.
+
+147. prjApplication/ScheduleFlights/Schedule_Flight.aspx
+    - Bổ sung bộ lọc số dòng ngay trong thanh bộ lọc với các mức 100 đến 8000.
+    - Khi thay đổi số dòng, đặt lại trang đầu và tải dữ liệu với PAGESIZE tương ứng.
+
+[20/07/2026] Tối ưu trạng thái và hiệu ứng menu cấp 1
+--------------------------------------------------
+
+148. prjApplication/Masters/ATFM_New.Master
+    - Mặc định thu gọn menu cấp 1 ngay từ HTML và không khôi phục trạng thái mở khi reload.
+    - Giảm thao tác tính lại layout bằng cách chỉ animate chiều rộng sidebar, để nội dung chính tự co giãn bằng flex.
+    - Thêm chuyển đổi opacity/chiều rộng cho chữ và mũi tên, khóa tương tác trong 240ms để thao tác đóng/mở mượt hơn.
+
+[20/07/2026] Chuẩn hóa giao diện Calendar Accepted
+------------------------------------------------
+
+149. prjApplication/CalendarFlight/CanlendarFlights.aspx
+    - Thay sáu lựa chọn radio bằng một select loại dữ liệu, vẫn đồng bộ radio ẩn để giữ nguyên logic tải API hiện có.
+    - Gom Accept, Export, Update, Search, Delete, Del Remark, Clear Search, Export Excel và Export Bravo vào thẻ lọc phía trên; xóa cụm nút trùng phía dưới bảng.
+    - Bổ sung bộ lọc số dòng từ 100 đến 8000 và kết nối với PAGESIZE/phân trang hiện tại.
+    - Thêm date picker lọc ngày bay ở thẻ lọc, đồng bộ với txtFLIGHTDATE cũ.
+    - Ép bảng border-collapse, bỏ bo góc và căn sát toàn bộ ô dữ liệu/ô lọc.
+
+150. prjApplication/CalendarFlight/CanlendarFlights.aspx
+    - Freeze nguyên khối hai hàng đầu của bảng bằng sticky thead.
+    - Dùng nền đặc và z-index riêng cho hàng lọc, hàng tiêu đề để dữ liệu phía dưới không bị lộ khi cuộn.
+
+[20/07/2026] Tối ưu icon, menu cấp 1 và bảng Calendar Accepted
+--------------------------------------------------------------
+
+151. prjApplication/Masters/ATFM_New.Master
+    - Chuẩn hóa khung, kích thước và cách căn giữa icon ảnh/Font Awesome của menu cấp 1 để icon không bị lệch hoặc cắt.
+    - Đổi hiệu ứng đóng/mở sidebar sang lớp nền overlay độc lập; phần nội dung chính giữ nguyên kích thước khi menu chuyển động, đồng thời submenu không bị cắt.
+
+152. prjApplication/CalendarFlight/CanlendarFlights.aspx
+    - Thay handler click gắn riêng trên từng ô bằng một delegated handler dùng chung cho toàn bảng.
+    - Khởi tạo validation, tooltip và date input theo từng lô nhỏ để tránh khóa giao diện khi tải 500 dòng trở lên.
+    - Ngăn đăng ký lặp các sự kiện validation sau mỗi lần tải dữ liệu và chỉ khởi tạo input của dòng vừa thêm mới.
+
+[20/07/2026] Sửa thứ tự hiển thị menu và bảng sticky
+--------------------------------------------------
+
+153. prjApplication/Masters/ATFM_New.Master
+    - Tạo stacking context riêng cho nội dung trang và nâng lớp sidebar lên trên để hai hàng sticky của mọi bảng không còn đè lên menu cấp 1/cấp 2.
+
+[13/07/2026] Điều chỉnh điều kiện chuyến quốc tế bị hủy
+-----------------------------------------------------
+
+154. prjApplication/ReportNew/FlightStatusRate.aspx.cs
+    - Chiều Việt Nam đi quốc tế chỉ hoàn thành khi có FROM và ATD; thiếu một trong hai được phân loại CANCEL.
+    - Chiều quốc tế về Việt Nam chỉ hoàn thành khi có TO và ATA; thiếu một trong hai được phân loại CANCEL.
+    - Ưu tiên điều kiện CANCEL quốc tế trước WAIT để các chuyến thiếu dữ liệu bắt buộc không bị xếp sai trạng thái.
+    - Chuẩn hóa chuỗi rỗng/khoảng trắng của FROM, TO, ATD và ATA thành dữ liệu thiếu khi đánh giá trạng thái.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx | Kết nối trang thống kê trạng thái với code-behind và script dữ liệu Oracle thực tế.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Thêm truy vấn tham số hóa cho dữ liệu hôm nay/lịch sử, phân loại hoàn thành, hủy, delay, wait và lọc hãng bay.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.js | Thêm tải dữ liệu động, bộ lọc hãng/ngày, KPI, biểu đồ tỷ lệ và bảng chi tiết.
+2026-07-13 | prjApplication/prjApplication.csproj | Đăng ký các tệp mới của trang FlightStatusRate vào dự án.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx | Chuyển CodeBehind sang CodeFile để IIS biên dịch lớp trang tại runtime, khắc phục lỗi không tải được kiểu FlightStatusRate khi DLL triển khai chưa được cập nhật.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Sửa logic DAYNOW nhận theo ngày hiện tại của máy người dùng qua tham số API, không phụ thuộc SYSDATE của Oracle hoặc máy chủ.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.js | Truyền cờ ngày hiện tại của trình duyệt khi tải dữ liệu và danh sách hãng bay.
+2026-07-13 | prjApplication/Web.config | Tăng giới hạn JSON của ASP.NET để API báo cáo không lỗi khi dữ liệu lớn.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Giới hạn 500 dòng chi tiết trả về giao diện nhưng vẫn tính KPI trên toàn bộ bản ghi.
+2026-07-13 | prjApplication/Web.config | Loại bỏ khai báo httpRuntime trùng, giữ cấu hình giới hạn hiện hữu và bổ sung giới hạn JSON riêng.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.js | Thêm bộ chọn số dòng và phân trang bảng chi tiết, giữ lọc trạng thái và cập nhật số trang theo dữ liệu hiển thị.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Sửa thứ tự ưu tiên phân loại để hoàn thành không bị WAIT ghi đè, thêm điều kiện lọc theo sân bay đi/đến.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.js | Bổ sung đồng thời bộ lọc sân bay và hãng bay; tỷ lệ vẫn tính trên tổng bốn nhóm.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Sửa điều kiện hủy nội địa: các đầu sân bay có dữ liệu phải thuộc Việt Nam và thiếu FROM, TO, ATD hoặc ATA đều được phân loại hủy.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Sửa DELAY/WAIT chỉ áp dụng chuyến xuất phát từ sân bay VV; phân tích EOBT-FPL và ATD dạng HHMM/DDHHMM trên cùng FLIGHT_ID, neo theo FLIGHTDATE, hỗ trợ qua ngày và loại bỏ cặp thời gian lệch ngày bất hợp lý.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Đưa DELAY lên trước FINISHED để chuyến đã thực hiện nhưng khởi hành trễ không bị ghi nhận nhầm là hoàn thành đúng giờ; WAIT chỉ dành cho chuyến nội địa ngày hiện tại có EOBT hợp lệ nhưng chưa có ATD.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Với dữ liệu lịch sử, lấy EOBT-FPL bằng phép nối chặt T_FINISHED_FLIGHTS và T_DAY_FLIGHTS_GOINGON theo FLIGHT_ID + FLIGHTDATE, không nối theo callsign; chỉ dùng ETD dự phòng khi không có FPL đúng khóa.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Bỏ giới hạn 500 dòng chi tiết, trả về đầy đủ chuyến bay cùng CALLSIGN, OPER, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP, ATDDAY, ATADAY, EOBTDAY và trạng thái.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.js | Mở rộng bảng chi tiết đúng 11 cột yêu cầu; phân trang bằng cách chỉ tạo các dòng của trang hiện tại để tải đủ dữ liệu nhưng không làm nặng DOM; giữ lọc khi nhấn biểu đồ hoặc thẻ trạng thái.
+2026-07-13 | prjApplication/ReportNew/ReportInteractive.css | Bổ sung bố cục bảng chi tiết chuyến bay, header cố định, cuộn ngang trong bảng và giao diện chọn số dòng/phân trang responsive.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx | Gắn phiên bản tài nguyên JS/CSS mới để trình duyệt tải ngay giao diện bảng đã cập nhật, tránh dùng cache cũ.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Sửa luồng ngày quá khứ: tìm EOBT từ các bảng T_DAY_FLIGHTS_GOINGON và bảng lưu trữ theo REGISTRATION + FLIGHTDATE, xác thực thêm CALLSIGN/hành trình/FLIGHT_ID, chọn một ứng viên tốt nhất và không dùng ETD giả làm EOBT khi không có bản ghi khớp an toàn.

@@ -110,74 +110,193 @@
         #tblSource tbody tr.selectdel {
             background-color: red;
         }
+
+        #abcxyz.calendar-filter-card {
+            display: block;
+            margin-bottom: 14px;
+            padding: 0 !important;
+            overflow: hidden;
+            border: 1px solid #c7ddeb;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 7px 20px rgba(24, 78, 117, .10);
+            text-align: left !important;
+        }
+
+        .calendar-filter-title {
+            padding: 12px 15px;
+            border-bottom: 1px solid #d8e6f0;
+            background: linear-gradient(135deg, #edf7fd, #dceefa);
+            color: #175f91;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .calendar-filter-title .fa { margin-right: 7px; }
+        .calendar-filter-body {
+            display: flex;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 13px 15px;
+        }
+        .calendar-filter-field { display: flex; flex-direction: column; flex: 0 1 150px; gap: 5px; min-width: 0; }
+        .calendar-filter-field.calendar-date { flex-basis: 150px; }
+        .calendar-filter-field.calendar-status { flex-basis: 190px; }
+        .calendar-filter-field.calendar-airport { flex-basis: 125px; }
+        .calendar-filter-field.calendar-page-size { flex-basis: 90px; }
+        .calendar-filter-label { margin: 0; color: #315a77; font-size: 11px; font-weight: 700; }
+        .calendar-filter-field input,
+        .calendar-filter-field select {
+            width: 100% !important;
+            height: 36px;
+            padding: 6px 9px;
+            border: 1px solid #8eb9d6 !important;
+            border-radius: 7px;
+            background: #fff;
+            color: #173b59;
+            outline: 0;
+        }
+        .calendar-filter-field input:focus,
+        .calendar-filter-field select:focus { border-color: #2388c6 !important; box-shadow: 0 0 0 3px rgba(35,136,198,.14); }
+        .calendar-filter-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 11px 15px 13px;
+            border-top: 1px solid #e0ebf2;
+            background: #f8fbfd;
+        }
+        .calendar-filter-actions .btn { width: auto !important; min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
+        .calendar-legacy-radios { display: none !important; }
+        #tblSource .calendar-hidden-filter-date { display: none !important; }
+
+        #tblSource {
+            margin: 0 !important;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+        }
+        #tblSource th, #tblSource td {
+            padding: 0 !important;
+            border: 1px solid #c4d5e1 !important;
+            border-radius: 0 !important;
+            background-clip: padding-box !important;
+        }
+        #tblSource > thead {
+            position: sticky !important;
+            top: 0;
+            z-index: 40;
+            background: #fff;
+            box-shadow: 0 2px 0 rgba(31, 105, 154, .2);
+        }
+        #tblSource > thead > tr:first-child > th {
+            position: static !important;
+            height: 38px;
+            background: #f7fbff !important;
+            background-clip: padding-box !important;
+        }
+        #tblSource > thead > tr:nth-child(2) > th {
+            position: static !important;
+            height: 35px;
+            background: #337ab7 !important;
+            color: #fff !important;
+            background-clip: padding-box !important;
+        }
+        #tblSource input[type="text"] {
+            display: block;
+            width: 100% !important;
+            height: 34px;
+            margin: 0 !important;
+            padding: 4px 3px;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .atfm-responsive-table-layout > .table-responsive { border-radius: 0 !important; }
+
+        @media (max-width: 767px) {
+            .calendar-filter-field { flex: 1 1 145px; }
+            .calendar-filter-actions .btn { flex: 1 1 140px; }
+        }
     </style>
-    <div id="abcxyz" class="well well-sm" style="text-align: center;">
-
-        <%--<asp:LinkButton runat="server" ID="btnExportExel" OnClick=" " CssClass="btn btn-sm btn-primary btn-bold">
-                                                    <span class="glyphicon glyphicon-download-alt"></span>
-                                                    Export data into Excel
-        </asp:LinkButton>--%>
-
-
-        <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select date" class="wid_100px" />
-        <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnAccess_OnClick()">
-            Accept</button>
-        <select id="ddlSelect" class="disabled" style="width: 100px;">
-            <option value="1">All</option>
-            <option value="2">Ariport</option>
-            <option value="3">Ext</option>
-            <option value="4">O/F</option>
-            <option value="5">LD</option>
-        </select>
-        <button id="btnRenderKhb" class="btn btn-sm btn-primary btn-bold" type="button" onclick="btnRenderKhb_OnClick()">
-            Export</button>
-
-        <input id="txtVV" type="text"
-            placeholder="air port" class="wid_100px" />
-        <input id="txtZZ" type="text"
-            placeholder="air port" class="wid_100px" />
-
+    <div id="abcxyz" class="calendar-filter-card">
+        <div class="calendar-filter-title"><i class="fa fa-filter"></i>BỘ LỌC VÀ THAO TÁC KẾ HOẠCH BAY</div>
+        <div class="calendar-filter-body">
+            <div class="calendar-filter-field calendar-date">
+                <label class="calendar-filter-label" for="txtFromDate">NGÀY XỬ LÝ</label>
+                <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text" placeholder="CHỌN NGÀY" />
+            </div>
+            <div class="calendar-filter-field calendar-date">
+                <label class="calendar-filter-label" for="txtFilterDatePicker">NGÀY BAY CẦN LỌC</label>
+                <input id="txtFilterDatePicker" type="date" onchange="calendarFilterDate_OnChange()" />
+            </div>
+            <div class="calendar-filter-field calendar-status">
+                <label class="calendar-filter-label" for="ddlCalendarStatus">LOẠI DỮ LIỆU</label>
+                <select id="ddlCalendarStatus" onchange="calendarStatus_OnChange()">
+                    <option value="chkKhb" selected="selected">KHB</option>
+                    <option value="chkKhbTrungLap">KHB TRÙNG LẶP</option>
+                    <option value="chkKhbDelete">KHB DELETE</option>
+                    <option value="chkKhbOrigin">KHB ORIGIN</option>
+                    <option value="chkKhbNotInScheduleMonth">KHB HÃNG QN</option>
+                    <option value="chkKhbNotInSchedule">KHB HÃNG QT</option>
+                </select>
+            </div>
+            <div class="calendar-filter-field">
+                <label class="calendar-filter-label" for="ddlSelect">LOẠI XUẤT</label>
+                <select id="ddlSelect" class="disabled">
+                    <option value="1">ALL</option>
+                    <option value="2">AIRPORT</option>
+                    <option value="3">EXT</option>
+                    <option value="4">O/F</option>
+                    <option value="5">LD</option>
+                </select>
+            </div>
+            <div class="calendar-filter-field calendar-airport">
+                <label class="calendar-filter-label" for="txtVV">SÂN BAY ĐI</label>
+                <input id="txtVV" type="text" placeholder="MÃ SÂN BAY" />
+            </div>
+            <div class="calendar-filter-field calendar-airport">
+                <label class="calendar-filter-label" for="txtZZ">SÂN BAY ĐẾN</label>
+                <input id="txtZZ" type="text" placeholder="MÃ SÂN BAY" />
+            </div>
+            <div class="calendar-filter-field calendar-page-size">
+                <label class="calendar-filter-label" for="ddlPageSize">SỐ DÒNG</label>
+                <select id="ddlPageSize" onchange="calendarPageSize_OnChange()">
+                    <option value="100">100</option>
+                    <option value="500">500</option>
+                    <option value="1000" selected="selected">1000</option>
+                    <option value="2000">2000</option>
+                    <option value="4000">4000</option>
+                    <option value="6000">6000</option>
+                    <option value="8000">8000</option>
+                </select>
+            </div>
+        </div>
+        <div class="calendar-filter-actions">
+            <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnAccess_OnClick()">Accept</button>
+            <button id="btnRenderKhb" class="btn btn-sm btn-primary btn-bold" type="button" onclick="btnRenderKhb_OnClick()">Export</button>
+            <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">Update all</button>
+            <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">Search</button>
+            <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()">Delete</button>
+            <button type="button" id="btnDeleteByCheckedRemark" class="btn btn-sm btn-primary" onclick="btnDeleteRemarkByChecked_Onclick()">Del Remark</button>
+            <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()">Clear search</button>
+            <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="LoadDataGrid_Export()">Export Excel</button>
+            <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()">Export Bravo</button>
+        </div>
+        <div class="calendar-legacy-radios" aria-hidden="true">
+            <input id="chkKhb" checked="checked" type="radio" name="optradio" />
+            <input id="chkKhbTrungLap" type="radio" name="optradio" />
+            <input id="chkKhbDelete" type="radio" name="optradio" />
+            <input id="chkKhbOrigin" type="radio" name="optradio" />
+            <input id="chkKhbNotInScheduleMonth" type="radio" name="optradio" />
+            <input id="chkKhbNotInSchedule" type="radio" name="optradio" />
+        </div>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
     <div id="pageging"></div>
     <table id="tblSource" class="table table-bordered">
 
-        <caption>
-            <label class="radio-inline">
-                <input id="chkKhb" checked onchange="chkKhb_CheckedChanged();" type="radio" name="optradio">KHB</label>
-            <label class="radio-inline">
-                <input id="chkKhbTrungLap" onchange="chkKhbTrungLap_CheckedChanged();" type="radio"
-                    name="optradio">KHB
-                trùng lặp</label>
-            <label class="radio-inline">
-                <input id="chkKhbDelete" onchange="chkKhbDelete_CheckedChanged();" type="radio" name="optradio">KHB
-                delete</label>
-            <label class="radio-inline">
-                <input id="chkKhbOrigin" onchange="chkKhbOrigin_CheckedChanged();" type="radio" name="optradio">KHB
-                origin</label>
-            <label class="radio-inline">
-                <input id="chkKhbNotInScheduleMonth" onchange="chkKhbDelete_CheckedChanged();" type="radio"
-                    name="optradio">KHB Hãng QN</label>
-            <label class="radio-inline">
-                <input id="chkKhbNotInSchedule" onchange="chkKhbDelete_CheckedChanged();" type="radio"
-                    name="optradio">KHB Hãng QT</label>
-
-            <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">
-                Update all</button>
-            <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">
-                Search</button>
-            <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()">
-                Delete</button>
-            <button type="button" id="btnDeleteByCheckedRemark" class="btn btn-sm btn-primary" onclick="btnDeleteRemarkByChecked_Onclick()">
-                Del Remark</button>
-            <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()">
-                Clear search</button>
-            <button type="button" id="btnExport" class="btn btn-sm btn-primary" style="width: 100px" onclick="LoadDataGrid_Export()">
-                Export Excel</button>
-			<button type="button" id="btnExport801" class="btn btn-sm btn-primary" style="width: 115px" onclick="ExportBravo()">
-            Export Bravo</button>	
-        </caption>
         <thead>
             <tr style="background-color: unset">
                 <th></th>
@@ -199,7 +318,7 @@
                 <th style="display: none">
                     <input id="txtDATE_OLD" class="wid_85px" disabled type="text" /></th>
                 <th>
-                    <input id="txtFLIGHTDATE" class="wid_85px" type="text" /></th>
+                    <input id="txtFLIGHTDATE" class="calendar-hidden-filter-date" type="text" /></th>
                 <th style="display: none">
                     <input id="txtATD" class="wid_50px" type="text" /></th>
                 <th style="display: none">
@@ -274,16 +393,6 @@
 
         </tbody>
     </table>
-    <div id="abcxyza" style="text-align: right;">
-           <button type="button" id="btnUpdateList_N" class="btn btn-sm btn-primary" style="width: 110px" onclick="btnUpdateList_Onclick()">
-                Update all</button>           
-            <button type="button" id="btnDeleteByChecked_N" class="btn btn-sm btn-primary" style="width: 110px" onclick="btnDeleteByChecked_Onclick()">
-                Delete</button>
-            <button type="button" id="btnDeleteByCheckedRemark_N" class="btn btn-sm btn-primary" style="width: 110px" onclick="btnDeleteRemarkByChecked_Onclick()">
-                Del Remark</button>           
-            <button type="button" id="btnExport_N" class="btn btn-sm btn-primary" style="width: 110px" onclick="LoadDataGrid_Export()">
-                Export Excel</button>
-    </div>
     <script src="../Scripts/CustomDynamic.js"></script>
     <script src="../Scripts/CustomPaging.js"></script>
     <script src="../Scripts/CustumStaticdata.js"></script>
@@ -330,8 +439,74 @@
         var qDel = '<%= _Role.R_Del %>';
         var isSearch = false;
         var rowId = 0;
-        var pageSize = 1000;
+        var pageSize = parseInt($('#ddlPageSize').val(), 10) || 1000;
+        var calendarGridPrepareVersion = 0;
+
+        function prepareCalendarGridAfterLoad() {
+            var $table = $('#tblSource');
+            var version = ++calendarGridPrepareVersion;
+
+            // Chỉ dùng một handler cho toàn bộ bảng, không tạo hàng nghìn handler theo từng ô.
+            $table.off('.calendarGrid')
+                .on('click.calendarGrid', 'tbody td', function () {
+                    $table.find('tbody tr.select').removeClass('select');
+                    $(this).closest('tr').addClass('select');
+                })
+                .on('keypress.calendarGrid', '[data-number="true"]', validateNumber)
+                .on('keyup.calendarGrid', '[data-minlenght]', validateEmty1)
+                .on('blur.calendarGrid', '[data-CheckDate="true"]', function () {
+                    checkInputDate1($(this));
+                });
+
+            // Khởi tạo tooltip/date theo từng lô nhỏ để trình duyệt vẫn phản hồi khi có nhiều dòng.
+            var inputs = $table[0].querySelectorAll('input[data-control="_updateAll"]');
+            var index = 0;
+            function initializeBatch() {
+                if (version !== calendarGridPrepareVersion) return;
+                var batchEnd = Math.min(index + 60, inputs.length);
+                for (; index < batchEnd; index++) {
+                    var input = inputs[index];
+                    var $input = $(input);
+                    if ($input.data('calendar-grid-ready')) continue;
+
+                    var minLength = parseInt(input.getAttribute('data-minlenght'), 10);
+                    if (!isNaN(minLength)) {
+                        input.style.border = input.value.length < minLength ? '1px solid red' : '0px';
+                    }
+
+                    if (input.id.indexOf('txtPERMDATE') >= 0 || input.id.indexOf('txtFLIGHTDATE') >= 0)
+                        $input.multiDate();
+                    else
+                        $input.ValidateTip();
+                    $input.data('calendar-grid-ready', true);
+                }
+                if (index < inputs.length) window.setTimeout(initializeBatch, 0);
+            }
+            initializeBatch();
+        }
         $('#tblSource').paging({ pageSize: pageSize });
+
+        function calendarStatus_OnChange() {
+            var selectedRadioId = $('#ddlCalendarStatus').val();
+            $('.calendar-legacy-radios input[type="radio"]').prop('checked', false);
+            $('#' + selectedRadioId).prop('checked', true);
+            $('#tblSource').attr('data-pageIndex', 1);
+            isSearch = true;
+            Load_Data_Search();
+        }
+
+        function calendarPageSize_OnChange() {
+            pageSize = parseInt($('#ddlPageSize').val(), 10) || 1000;
+            $('#tblSource').attr('data-pageSize', pageSize);
+            $('#tblSource').attr('data-pageIndex', 1);
+            isSearch = true;
+            Load_Data_Search();
+        }
+
+        function calendarFilterDate_OnChange() {
+            var parts = ($('#txtFilterDatePicker').val() || '').split('-');
+            $('#txtFLIGHTDATE').val(parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '');
+        }
         function Render2Table(data) {
             var kq = '';
             var idx = parseInt($('#tblSource').attr('data-pageindex'));
@@ -466,20 +641,11 @@
                 },
                 complete: function () {
                     unLoadingData('loaddingData');
-                    reloadCheckValid();
                     $('#tblSource').paging({
                         onClickButton: 'LoadDataGrid',
                         pageSize: pageSize,
                     });
-                    $('#tblSource input[data-control="_updateAll"]').each(function (a, b) {
-                        if ($(b).prop('id').indexOf('txtPERMDATE') == -1 && $(b).prop('id').indexOf('txtFLIGHTDATE') == -1)
-                            $(b).ValidateTip();
-                        else $(b).multiDate();
-                    });
-                    $("#tblSource td").click(function () {
-                        $('#tblSource tbody tr').removeClass('select');
-                        $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
-                    });
+                    prepareCalendarGridAfterLoad();
                 },
             }).always(function (data) {
                 if (data.ListValue == null) {
@@ -509,15 +675,11 @@
                 },
                 complete: function () {
                     unLoadingData('loaddingData');
-                    reloadCheckValid();
                     $('#tblSource').paging({
                         onClickButton: 'LoadDataGrid_Khb_Venh_Mua',
                         pageSize: pageSize,
                     });
-                    $("#tblSource td").click(function () {
-                        $('#tblSource tbody tr').removeClass('select');
-                        $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
-                    });
+                    prepareCalendarGridAfterLoad();
                 },
             }).always(function (data) {
                 if (data.ListValue == null) {
@@ -546,15 +708,11 @@
                 },
                 complete: function () {
                     unLoadingData('loaddingData');
-                    reloadCheckValid();
                     $('#tblSource').paging({
                         onClickButton: 'LoadDataGrid_Khb_Venh_Thang',
                         pageSize: pageSize,
                     });
-                    $("#tblSource td").click(function () {
-                        $('#tblSource tbody tr').removeClass('select');
-                        $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
-                    });
+                    prepareCalendarGridAfterLoad();
                 },
             }).always(function (data) {
                 if (data.ListValue == null) {
@@ -588,10 +746,7 @@
                         onClickButton: 'LoadDataGrid_Origin',
                         pageSize: pageSize,
                     });
-                    $("#tblSource td").click(function () {
-                        $('#tblSource tbody tr').removeClass('select');
-                        $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
-                    });
+                    prepareCalendarGridAfterLoad();
                 },
             }).always(function (data) {
                 if (data.ListValue == null) {
@@ -620,20 +775,11 @@
                 },
                 complete: function () {
                     unLoadingData('loaddingData');
-                    reloadCheckValid();
                     $('#tblSource').paging({
                         onClickButton: 'LoadDataGrid_Delete',
                         pageSize: pageSize,
                     });
-                    $('#tblSource input[data-control="_updateAll"]').each(function (a, b) {
-                        if ($(b).prop('id').indexOf('txtPERMDATE') == -1 && $(b).prop('id').indexOf('txtFLIGHTDATE') == -1)
-                            $(b).ValidateTip();
-                        else $(b).multiDate();
-                    });
-                    $("#tblSource td").click(function () {
-                        $('#tblSource tbody tr').removeClass('select');
-                        $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
-                    });
+                    prepareCalendarGridAfterLoad();
                 },
             }).always(function (data) {
                 if (data.ListValue == null) {
@@ -706,21 +852,12 @@
                 },
                 complete: function () {
                     unLoadingData('loaddingData');
-                    reloadCheckValid();
                     $('#tblSource').paging({
                         onClickButton: 'LoadDataGrid_TrungLap',
                         pageSize: pageSize,
                     });
-                    $('#tblSource input[data-control="_updateAll"]').each(function (a, b) {
-                        if ($(b).prop('id').indexOf('txtPERMDATE') == -1 && $(b).prop('id').indexOf('txtFLIGHTDATE') == -1)
-                            $(b).ValidateTip();
-                        else $(b).multiDate();
-                    })
+                    prepareCalendarGridAfterLoad();
                     khb_TrungLap_SetColor();
-                    $("#tblSource td").click(function () {
-                        $('#tblSource tbody tr').removeClass('select');
-                        $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
-                    });
                 },
             }).always(function (data) {
                 if (data.ListValue == null) {
@@ -1567,7 +1704,7 @@
 
                 if ($('#tblSource tbody tr').length == 0) {
                     $('#tblSource tbody').append(_tr);
-                    $('#tblSource input[data-control="_updateAll"]').each(function (a, b) {
+                    $('#_' + c + ' input[data-control="_updateAll"]').each(function (a, b) {
                         $(b).mouseover(function () {
                             onmouseoverInput(b.id)
                         });
@@ -1619,7 +1756,7 @@
                 })
 
                 $($tr).find('input')[0].focus();
-                $('#tblSource input[data-control="_updateAll"]').each(function (a, b) {
+                $tr.find('input[data-control="_updateAll"]').each(function (a, b) {
                     $(b).mouseover(function () {
                         onmouseoverInput(b.id)
                     });
@@ -1772,10 +1909,13 @@
     </script>
     <script>        
        
-        $('#txtFromDate').val(dateFormat(new Date().setDate(new Date().getDate() + 1), 'dd-mm-yyyy'));
+        var defaultCalendarDate = dateFormat(new Date().setDate(new Date().getDate() + 1), 'dd-mm-yyyy');
+        $('#txtFromDate').val(defaultCalendarDate);
         $('#txtFromDate').multiDate();
         $('#txtDATE_OLD').multiDate();
-        $('#txtFLIGHTDATE').val(dateFormat(new Date().setDate(new Date().getDate() + 1), 'dd-mm-yyyy'));
+        $('#txtFLIGHTDATE').val(defaultCalendarDate);
+        var defaultCalendarParts = defaultCalendarDate.split('-');
+        $('#txtFilterDatePicker').val(defaultCalendarParts[2] + '-' + defaultCalendarParts[1] + '-' + defaultCalendarParts[0]);
         $('#txtFLIGHTDATE').multiDate();
         LoadDataGrid();
     </script>

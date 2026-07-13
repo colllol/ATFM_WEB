@@ -176,23 +176,72 @@
             max-width: 100%;
             min-width: 0 !important;
             table-layout: fixed;
-            font-size: clamp(8px, .65vw, 11px);
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            font-size: 12px !important;
         }
 
         #tblSource th, #tblSource td {
             min-width: 0 !important;
+            padding: 0 !important;
+            border: 1px solid #c4d5e1 !important;
+            border-radius: 0 !important;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
+        /* Freeze nguyên khối thead để tất cả cột, kể cả cột cuối, luôn cố định. */
+        #tblSource > thead {
+            position: sticky !important;
+            top: 0;
+            z-index: 40;
+            background: #fff;
+            box-shadow: 0 2px 0 rgba(31, 105, 154, .18);
+        }
+
+        #tblSource > thead > tr:first-child > th {
+            position: static !important;
+            height: 38px;
+            background: #f7fbff !important;
+            background-clip: padding-box !important;
+            border-radius: 0 !important;
+        }
+
+        #tblSource > thead > tr:nth-child(2) > th {
+            position: static !important;
+            height: 35px;
+            background: #337ab7 !important;
+            background-clip: padding-box !important;
+            border-radius: 0 !important;
+        }
+
         #tblSource input[type="text"] {
+            display: block;
             width: 100% !important;
             min-width: 0 !important;
-            padding: 2px 1px;
+            height: 34px;
+            margin: 0 !important;
+            padding: 4px 3px;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
             font-size: inherit;
+            line-height: 1.25;
             text-overflow: ellipsis;
         }
+
+        #tblSource input.sInputCompare {
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        #tblSource thead th {
+            font-size: 12px !important;
+            font-weight: 700;
+        }
+
+        #tblSource tbody td { height: 34px; }
 
         #tblSource th:nth-child(1), #tblSource td:nth-child(1) { width: 3%; }
         #tblSource th:nth-child(2), #tblSource td:nth-child(2) { width: 2.5%; }
@@ -236,7 +285,7 @@
 
         @media (max-width: 767px) {
             .export-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            #tblSource { font-size: 7px; }
+            #tblSource { font-size: 12px !important; }
             #tblSource input[type="text"] { padding-left: 0; padding-right: 0; }
             .finished-filter-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .finished-filter-field, .finished-filter-field.finished-date,
@@ -288,12 +337,29 @@
         }
     </style>
     <style>
-        #tblSource tbody tr.select input {
-            background-color: darkseagreen;
+        #tblSource tbody tr.select,
+        #tblSource tbody tr.select > td {
+            background-color: #cfe9d6 !important;
+            border-color: #75b488 !important;
         }
 
-        #tblSource tbody tr.select {
-            background-color: darkseagreen;
+        #tblSource tbody tr.select input[type="text"]:not(.sInputCompare):not([style*="background-color"]) {
+            background-color: #cfe9d6 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        /* Ô mang màu nghiệp vụ phải giữ nguyên khi chọn hàng. */
+        #tblSource tbody tr.select input.sInputCompare {
+            background-color: red !important;
+            color: #fff !important;
+            border-radius: 0 !important;
+        }
+
+        #tblSource tbody tr.select.rowCreate input,
+        #tblSource tbody tr.select.success input,
+        #tblSource tbody tr.select input[style*="background-color"] {
+            border-radius: 0 !important;
         }
     </style>
     <div id="abcxyz" class="finished-filter-card">
