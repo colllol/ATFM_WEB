@@ -616,15 +616,20 @@
     <Content Include="Common\Dashboard.aspx" />
     <Content Include="Common\ChartReport.aspx" />
     <Content Include="Common\ChartReportAirport.aspx" />
+    <Content Include="Common\ChartReportAirport.js" />
     <Content Include="Data\dashboard-flights.json" />
     <Content Include="ReportNew\AnomalyWarning.aspx" />
     <Content Include="ReportNew\AirportActivitySummary.aspx" />
     <Content Include="ReportNew\AirportTakeoffLanding.aspx" />
+    <Content Include="ReportNew\AirportTakeoffLanding.js" />
     <Content Include="ReportNew\CivilFlightSummary.aspx" />
+    <Content Include="ReportNew\Dashboard.js" />
     <Content Include="ReportNew\FlightOperationOverview.aspx" />
+    <Content Include="ReportNew\FlightOperationOverview.js" />
     <Content Include="ReportNew\FlightStatusRate.aspx" />
     <Content Include="ReportNew\FlightStatusRate.js" />
     <Content Include="ReportNew\FlightTrendAnalysis.aspx" />
+    <Content Include="ReportNew\FlightTrendAnalysis.js" />
     <Content Include="ReportNew\MilitaryFlightReport.aspx" />
     <Content Include="ReportNew\ReportNew.css" />
     <Content Include="ReportNew\ReportInteractive.css" />
@@ -1940,6 +1945,15 @@
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ReportNew\ReportPageBase.cs" />
+    <Compile Include="ReportNew\AirportTakeoffLanding.aspx.cs">
+      <DependentUpon>AirportTakeoffLanding.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ReportNew\FlightOperationOverview.aspx.cs">
+      <DependentUpon>FlightOperationOverview.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ReportNew\FlightTrendAnalysis.aspx.cs">
+      <DependentUpon>FlightTrendAnalysis.aspx</DependentUpon>
+    </Compile>
     <Compile Include="ReportNew\FlightStatusRate.aspx.cs">
       <DependentUpon>FlightStatusRate.aspx</DependentUpon>
     </Compile>
@@ -4306,6 +4320,8 @@
     <Content Include="Style\assets\fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="Style\assets\fonts\glyphicons-halflings-regular.woff" />
     <Content Include="Style\assets\fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="Style\assets\fonts\roboto\Roboto-Italic-Variable.ttf" />
+    <Content Include="Style\assets\fonts\roboto\Roboto-Variable.ttf" />
     <Content Include="Scripts\AjaxRequest.js" />
     <Content Include="Scripts\AutoSave.js" />
     <Content Include="Scripts\ColorPicker.js" />

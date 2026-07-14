@@ -6,8 +6,8 @@ namespace prjApplication.Common
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Dashboard hiện đọc dữ liệu giả lập từ Data/dashboard-flights.json.
-            // Khi có API thật, chỉ cần thay nguồn dataUrl trong ChartReport.aspx.
+            // Dữ liệu dashboard được tổng hợp ở phía trình duyệt từ ba báo cáo ReportNew
+            // để dùng chung một bộ lọc sân bay và khoảng thời gian.
         }
     }
 }

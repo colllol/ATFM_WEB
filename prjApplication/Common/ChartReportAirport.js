@@ -1,0 +1,156 @@
+(function () {
+    'use strict';
+
+    var page = document.querySelector('.airport-page');
+    if (!page) return;
+
+    var endpoint = page.getAttribute('data-endpoint');
+    var flights = [];
+    var statuses = [
+        ['total', 'Tổng chuyến bay', '#244b74'],
+        ['finished', 'Finished', '#20b486'],
+        ['cancel', 'Cancel', '#ef5b5b'],
+        ['delay', 'Delay', '#f5a623'],
+        ['wait', 'Wait', '#4d8df7']
+    ];
+
+    function byId(id) { return document.getElementById(id); }
+    function escapeHtml(value) {
+        var node = document.createElement('div');
+        node.appendChild(document.createTextNode(value == null ? '' : String(value)));
+        return node.innerHTML;
+    }
+    function dateKey(value) {
+        return String(value || '').substring(0, 10);
+    }
+    function todayKey() {
+        var date = new Date();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        return date.getFullYear() + '-' + month + '-' + day;
+    }
+    function normalizedStatus(value) {
+        var state = String(value || '').toUpperCase();
+        if (state.indexOf('DELAY') === 0) return 'delay';
+        if (state === 'FINISHED') return 'finished';
+        if (state === 'CANCEL') return 'cancel';
+        if (state === 'WAIT') return 'wait';
+        return '';
+    }
+    function airportCodes() {
+        var found = {};
+        flights.forEach(function (flight) {
+            [flight.fromAirp, flight.toAirp].forEach(function (code) {
+                code = String(code || '').trim().toUpperCase();
+                if (code) found[code] = true;
+            });
+        });
+        return Object.keys(found).sort();
+    }
+    function setAirportOptions() {
+        var codes = airportCodes();
+        var html = codes.map(function (code) {
+            return '<option value="' + escapeHtml(code) + '">' + escapeHtml(code) + '</option>';
+        }).join('');
+        byId('airport1').innerHTML = html;
+        byId('airport2').innerHTML = html;
+        if (codes.length > 1) byId('airport2').selectedIndex = 1;
+    }
+    function updateAirportMode() {
+        var two = byId('airportCount').value === '2';
+        byId('airport2Wrap').style.display = two ? '' : 'none';
+        byId('time2Label').textContent = two ? 'Thời gian sân bay 2' : 'Thời gian 2 (cùng sân bay 1)';
+    }
+    function selectedDates() {
+        var dates = [byId('time1').value, byId('time2').value].filter(Boolean).sort();
+        return { from: dates[0] || todayKey(), to: dates[dates.length - 1] || todayKey() };
+    }
+    function postData(range) {
+        return fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            body: JSON.stringify({ fromDate: range.from, toDate: range.to })
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Máy chủ trả về HTTP ' + response.status + '.');
+            return response.json();
+        }).then(function (response) {
+            var data = response.d;
+            return typeof data === 'string' ? JSON.parse(data) : data;
+        });
+    }
+    function values(airport, date) {
+        var result = { total: 0, finished: 0, cancel: 0, delay: 0, wait: 0 };
+        flights.forEach(function (flight) {
+            var from = String(flight.fromAirp || '').toUpperCase();
+            var to = String(flight.toAirp || '').toUpperCase();
+            if (dateKey(flight.flightDate) !== date || (from !== airport && to !== airport)) return;
+            result.total++;
+            var state = normalizedStatus(flight.status);
+            if (state) result[state]++;
+        });
+        return result;
+    }
+    function renderEmpty(message, isError) {
+        byId('airportResult').innerHTML = '<div class="airport-empty' + (isError ? ' airport-error' : '') + '">' + escapeHtml(message) + '</div>';
+    }
+    function render() {
+        var count = byId('airportCount').value;
+        var airport1 = byId('airport1').value;
+        var airport2 = byId('airport2').value;
+        var date1 = byId('time1').value;
+        var date2 = byId('time2').value;
+        if (!airport1 || !date1 || !date2 || (count === '2' && !airport2)) {
+            renderEmpty('Vui lòng nhập đủ sân bay và thời gian để so sánh.');
+            return;
+        }
+
+        var first = values(airport1, date1);
+        var second = count === '2' ? values(airport2, date2) : values(airport1, date2);
+        var secondAirport = count === '2' ? airport2 : airport1;
+        var max = 1;
+        statuses.forEach(function (status) { max = Math.max(max, first[status[0]], second[status[0]]); });
+
+        var html = '<div class="airport-chart-layout"><div><h3 class="airport-chart-title">Số lượng chuyến bay</h3>' +
+            '<p class="airport-chart-subtitle">' + escapeHtml(airport1) + ' · ' + escapeHtml(date1) + ' &nbsp;|&nbsp; ' +
+            escapeHtml(secondAirport) + ' · ' + escapeHtml(date2) + '</p><div class="bar-area"><div class="airport-y-axis">' +
+            '<span>' + max + '</span><span>' + Math.round(max * .75) + '</span><span>' + Math.round(max * .5) + '</span><span>' + Math.round(max * .25) + '</span><span>0</span>' +
+            '</div><div class="bar-chart">';
+        statuses.forEach(function (status) {
+            html += '<div class="bar-group"><div class="bar bar-a" style="height:' + Math.max(3, first[status[0]] / max * 100) + '%"><span class="bar-value">' + first[status[0]] + '</span></div>' +
+                '<div class="bar bar-b" style="height:' + Math.max(3, second[status[0]] / max * 100) + '%"><span class="bar-value">' + second[status[0]] + '</span></div></div>';
+        });
+        html += '</div><div class="bar-labels">' + statuses.map(function (status) { return '<span>' + status[1] + '</span>'; }).join('') +
+            '</div></div></div><div class="airport-legend"><h3>Chú thích</h3>' +
+            '<div class="legend-item"><i class="legend-dot" style="background:#337ab7"></i>' + escapeHtml(airport1) + '<strong>' + escapeHtml(date1) + '</strong></div>' +
+            '<div class="legend-item"><i class="legend-dot" style="background:#f5a623"></i>' + escapeHtml(secondAirport) + '<strong>' + escapeHtml(date2) + '</strong></div><hr>';
+        statuses.forEach(function (status) {
+            html += '<div class="legend-item"><i class="legend-dot" style="background:' + status[2] + '"></i>' + status[1] + '<strong>' + first[status[0]] + ' / ' + second[status[0]] + '</strong></div>';
+        });
+        html += '</div></div>';
+        byId('airportResult').innerHTML = html;
+    }
+    function loadData() {
+        var range = selectedDates();
+        renderEmpty('Đang tải dữ liệu từ T_FINISHED_FLIGHTS...');
+        byId('compareButton').disabled = true;
+        postData(range).then(function (data) {
+            flights = data && data.flights ? data.flights : [];
+            setAirportOptions();
+            updateAirportMode();
+            render();
+        }).catch(function (error) {
+            flights = [];
+            renderEmpty(error.message || 'Không thể tải dữ liệu từ T_FINISHED_FLIGHTS.', true);
+        }).then(function () {
+            byId('compareButton').disabled = false;
+        });
+    }
+
+    var today = todayKey();
+    byId('time1').value = byId('time1').value || today;
+    byId('time2').value = byId('time2').value || today;
+    byId('airportCount').addEventListener('change', updateAirportMode);
+    byId('compareButton').addEventListener('click', loadData);
+    updateAirportMode();
+    loadData();
+}());

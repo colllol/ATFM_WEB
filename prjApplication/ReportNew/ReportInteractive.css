@@ -32,3 +32,53 @@
     .rn-flight-list-card { padding: 14px; }
     .rn-flight-pager { justify-content: space-between; }
 }
+.rn-airport-chart-scroll { overflow-x: auto; overflow-y: hidden; padding: 18px 4px 4px; border-bottom: 1px solid #dce8f1; }
+.rn-airport-chart { display: flex; min-width: 100%; height: 330px; align-items: flex-end; gap: 16px; padding: 34px 12px 0; background: repeating-linear-gradient(to top,#edf3f7 0,#edf3f7 1px,transparent 1px,transparent 62px); }
+.rn-airport-bar-group { display: flex; min-width: 74px; height: 100%; align-items: center; flex: 1 0 74px; flex-direction: column; justify-content: flex-end; }
+.rn-airport-bar-pair { display: flex; width: 100%; height: calc(100% - 42px); align-items: flex-end; justify-content: center; gap: 5px; }
+.rn-airport-bar { position: relative; width: 34%; min-height: 0; padding: 0; border: 0; border-radius: 7px 7px 2px 2px; cursor: pointer; transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; }
+.rn-airport-bar.departure { background: linear-gradient(#3ba6df,#227db8); }
+.rn-airport-bar.arrival { background: linear-gradient(#39d2b0,#1cad87); }
+.rn-airport-bar span { position: absolute; top: -25px; left: 50%; color: #31546f; font-size: 11px; font-weight: 800; transform: translateX(-50%); white-space: nowrap; }
+.rn-airport-bar:hover,.rn-airport-bar.is-active { z-index: 2; filter: brightness(1.08); transform: translateY(-5px); box-shadow: 0 0 0 4px rgba(35,135,200,.17),0 8px 16px rgba(31,71,103,.2); }
+.rn-airport-bar-group.is-active .rn-airport-bar { z-index: 2; filter: brightness(1.08); transform: translateY(-5px); box-shadow: 0 0 0 4px rgba(35,135,200,.17),0 8px 16px rgba(31,71,103,.2); }
+.rn-airport-bar-group > b { margin-top: 8px; color: #31546f; font-size: 11px; }
+.rn-airport-bar-group > small { display: block; max-width: 82px; overflow: hidden; color: #8193a3; font-size: 9px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.rn-airport-empty { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #718397; }
+.rn-airport-detail-card { min-height: 180px; }
+.rn-airport-detail-placeholder { display: flex; min-height: 135px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #718397; text-align: center; }
+.rn-airport-detail-placeholder i { color: #2787c3; font-size: 30px; }
+.rn-airport-detail-placeholder strong { color: #31546f; font-size: 15px; }
+.rn-airport-detail-placeholder.rn-airport-error i,.rn-airport-error strong { color: #d94c4c; }
+.rn-airport-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.rn-airport-detail-wrap { max-height: 520px; border-radius: 10px; }
+.rn-overview-chart-scroll { padding-top: 10px; }
+.rn-overview-chart-scroll .rn-airport-chart { height: 300px; padding-top: 32px; }
+.rn-dashboard-chart-scroll .rn-airport-chart { height: 300px; padding-top: 32px; }
+.rn-dashboard-bar-detail { margin: 10px 0 0; text-align: center; }
+.rn-filters.rn-trend-filters { grid-template-columns: 1.2fr 1.2fr 1fr 1fr .8fr auto; }
+.rn-trend-card { overflow: hidden; }
+.rn-trend-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.rn-trend-legend { display: flex; align-items: center; gap: 16px; color: #60778b; font-size: 12px; white-space: nowrap; }
+.rn-trend-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.rn-trend-legend i,.rn-trend-tooltip i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.rn-trend-chart-wrap { position: relative; min-height: 390px; padding: 4px 0 0; overflow: hidden; border-radius: 12px; background: linear-gradient(180deg,#fbfdff,#fff); }
+.rn-trend-canvas { display: block; width: 100%; height: 390px; cursor: crosshair; }
+.rn-trend-tooltip { position: absolute; z-index: 5; display: flex; min-width: 190px; padding: 11px 13px; border: 1px solid rgba(35,135,200,.2); border-radius: 11px; background: rgba(16,55,87,.94); color: #fff; flex-direction: column; gap: 6px; font-size: 11px; pointer-events: none; opacity: 0; box-shadow: 0 10px 25px rgba(16,55,87,.24); transform: translate(-50%,8px); transition: opacity .16s ease,transform .16s ease; backdrop-filter: blur(6px); }
+.rn-trend-tooltip.is-visible { opacity: 1; transform: translate(-50%,0); }
+.rn-trend-tooltip strong { color: #fff; font-size: 13px; }
+.rn-trend-tooltip span { display: flex; align-items: center; gap: 6px; color: #dceef9; }
+.rn-trend-tooltip b { margin-left: auto; color: #fff; }
+.rn-trend-hint { margin: 5px 0 0; color: #8293a2; font-size: 11px; text-align: center; }
+@media (max-width: 767px) {
+    .rn-airport-chart { height: 280px; gap: 10px; }
+    .rn-airport-detail-card { padding: 14px; }
+    .rn-trend-head { flex-direction: column; }
+    .rn-trend-chart-wrap,.rn-trend-canvas { height: 330px; min-height: 330px; }
+}
+@media (max-width: 1100px) {
+    .rn-filters.rn-trend-filters { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 600px) {
+    .rn-filters.rn-trend-filters { grid-template-columns: 1fr; }
+}

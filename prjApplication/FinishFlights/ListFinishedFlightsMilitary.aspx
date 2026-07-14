@@ -11,7 +11,7 @@
         }
 
         .table > thead > tr {
-            background-color: blue;
+            background-color: rgb(65, 142, 214);
             background-image: none;
             color: black;
         }
@@ -57,6 +57,41 @@
         input, select, label, textarea {
             text-transform: uppercase;
         }
+
+        .military-date-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0 6px;
+            vertical-align: middle;
+        }
+
+        .military-date-filter > label {
+            margin: 0;
+            color: #315a77;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .military-date-picker {
+            width: 150px !important;
+            height: 36px;
+            padding: 6px 9px;
+            border: 1px solid #8eb9d6 !important;
+            border-radius: 7px;
+            background: #fff;
+            color: #173b59;
+            font-size: 13px;
+            outline: 0;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .military-date-picker:focus {
+            border-color: #2388c6 !important;
+            box-shadow: 0 0 0 3px rgba(35, 136, 198, .14);
+        }
+
+        .military-date-value { display: none !important; }
 
         caption {
             text-align: left;
@@ -108,14 +143,18 @@
         }
     </style>
     <div id="abcxyz" class="well well-sm" style="text-align: center;">
-        <b>FROM :</b>
-        <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select date" class="wid_100px" />
+        <span class="military-date-filter">
+            <label for="txtFromDatePicker">FROM</label>
+            <input id="txtFromDatePicker" type="date" class="military-date-picker" aria-label="Ngày bắt đầu" />
+            <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text" class="military-date-value" />
+        </span>
         <input id="txtFromTime" data-minlenght="1" data-control="checkAccess" type="text"
             placeholder="select time" class="wid_50px" maxlength='4' data-number='true' value="0000" />
-        <b>TO :</b>
-        <input id="txtToDate" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select date" class="wid_100px" />
+        <span class="military-date-filter">
+            <label for="txtToDatePicker">TO</label>
+            <input id="txtToDatePicker" type="date" class="military-date-picker" aria-label="Ngày kết thúc" />
+            <input id="txtToDate" data-minlenght="1" data-control="checkAccess" type="text" class="military-date-value" />
+        </span>
         <input id="txtToTime" data-minlenght="1" data-control="checkAccess" type="text"
             placeholder="select time" class="wid_50px" maxlength='4' data-number='true' value="2359" />
         <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnSearch_OnClick()">
@@ -1739,6 +1778,22 @@
         $('#txtFromDate').multiDate();
         $('#txtToDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
         $('#txtToDate').multiDate();
+        function militaryDateToIso(value) {
+            var parts = String(value || '').split('-');
+            return parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '';
+        }
+        function militaryDateToDisplay(value) {
+            var parts = String(value || '').split('-');
+            return parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '';
+        }
+        $('#txtFromDatePicker').val(militaryDateToIso($('#txtFromDate').val()));
+        $('#txtToDatePicker').val(militaryDateToIso($('#txtToDate').val()));
+        $('#txtFromDatePicker').on('change', function () {
+            $('#txtFromDate').val(militaryDateToDisplay(this.value));
+        });
+        $('#txtToDatePicker').on('change', function () {
+            $('#txtToDate').val(militaryDateToDisplay(this.value));
+        });
         $('#txtDATE_OLD').multiDate();
         $('#txtFLIGHTDATE').multiDate();
         $('#btnMove').attr('disabled', 'disabled');

@@ -209,6 +209,16 @@ namespace prjApplication.ReportNew
                    ), ";
         }
 
+        internal static string BuildHistoricalStatusSql()
+        {
+            string fromClause = @"T_FINISHED_FLIGHTS f
+                    LEFT JOIN historical_fpl day_fpl
+                      ON day_fpl.finished_rowid=ROWIDTOCHAR(f.ROWID)
+                     AND day_fpl.match_order=1";
+            string plannedTime = BuildEobtFallbackSql("day_fpl.EOBTDATE", "day_fpl.EOBT", "NULL");
+            return BuildSql(BuildHistoricalFplCtes(), fromClause, plannedTime, false);
+        }
+
         private static string BuildSql(string auxiliaryCtes, string fromClause, string plannedTime, bool currentDay)
         {
             string plannedTimestamp = BuildFlightTimestampSql("planned_raw");
@@ -250,7 +260,7 @@ namespace prjApplication.ReportNew
                            END delay_minutes
                       FROM parsed_rows p
                   )
-                SELECT FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
+                SELECT FLIGHTDATE, FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
                        NULLIF(TRIM(ATD), '') ATDDAY,
                        NULLIF(TRIM(ATA), '') ATADAY,
                        planned_raw EOBTDAY,

@@ -143,6 +143,7 @@
         .calendar-filter-field { display: flex; flex-direction: column; flex: 0 1 150px; gap: 5px; min-width: 0; }
         .calendar-filter-field.calendar-date { flex-basis: 150px; }
         .calendar-filter-field.calendar-status { flex-basis: 190px; }
+        .calendar-filter-field.calendar-export-type { flex-basis: 120px; }
         .calendar-filter-field.calendar-airport { flex-basis: 125px; }
         .calendar-filter-field.calendar-page-size { flex-basis: 90px; }
         .calendar-filter-label { margin: 0; color: #315a77; font-size: 11px; font-weight: 700; }
@@ -169,19 +170,49 @@
             background: #f8fbfd;
         }
         .calendar-filter-actions .btn { width: auto !important; min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
+        .calendar-inline-actions { display: flex; align-items: flex-end; gap: 8px; flex: 0 0 auto; }
+        .calendar-inline-actions .btn { min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
+        .calendar-bottom-status { display: flex; flex-direction: column; gap: 5px; flex: 0 1 190px; min-width: 155px; }
+        .calendar-bottom-status select { width: 100% !important; height: 36px; padding: 6px 9px; border: 1px solid #8eb9d6 !important; border-radius: 7px; background: #fff; color: #173b59; }
         .calendar-legacy-radios { display: none !important; }
         #tblSource .calendar-hidden-filter-date { display: none !important; }
 
         #tblSource {
+            width: 1821px !important;
+            min-width: 100%;
+            max-width: none !important;
             margin: 0 !important;
+            table-layout: fixed;
             border-collapse: collapse !important;
             border-spacing: 0 !important;
+            font-size: 12px !important;
         }
+        #tblSource .calendar-col-no { width: 44px; }
+        #tblSource .calendar-col-check { width: 36px; }
+        #tblSource .calendar-col-callsign { width: 90px; }
+        #tblSource .calendar-col-regis { width: 82px; }
+        #tblSource .calendar-col-airport { width: 60px; }
+        #tblSource .calendar-col-time { width: 60px; }
+        #tblSource .calendar-col-date { width: 96px; }
+        #tblSource .calendar-col-perm-type { width: 68px; }
+        #tblSource .calendar-col-flight-type { width: 72px; }
+        #tblSource .calendar-col-oper { width: 60px; }
+        #tblSource .calendar-col-craft { width: 86px; }
+        #tblSource .calendar-col-purpose { width: 55px; }
+        #tblSource .calendar-col-valid { width: 64px; }
+        #tblSource .calendar-col-number { width: 210px; }
+        #tblSource .calendar-col-via { width: 200px; }
+        #tblSource .calendar-col-remark { width: 200px; }
+        #tblSource .calendar-col-user { width: 90px; }
+        #tblSource .calendar-col-action { width: 42px; }
         #tblSource th, #tblSource td {
             padding: 0 !important;
             border: 1px solid #c4d5e1 !important;
             border-radius: 0 !important;
             background-clip: padding-box !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         #tblSource > thead {
             position: sticky !important;
@@ -212,6 +243,16 @@
             border: 0 !important;
             border-radius: 0 !important;
             box-shadow: none !important;
+            color: #163b58;
+            font-size: 12px !important;
+            text-overflow: ellipsis;
+        }
+        #tblSource tbody input[type="text"]:focus {
+            position: relative;
+            z-index: 2;
+            background: #fffde9 !important;
+            box-shadow: inset 0 0 0 2px #58a7d7 !important;
+            text-overflow: clip;
         }
         .atfm-responsive-table-layout > .table-responsive { border-radius: 0 !important; }
 
@@ -231,21 +272,10 @@
                 <label class="calendar-filter-label" for="txtFilterDatePicker">NGÀY BAY CẦN LỌC</label>
                 <input id="txtFilterDatePicker" type="date" onchange="calendarFilterDate_OnChange()" />
             </div>
-            <div class="calendar-filter-field calendar-status">
-                <label class="calendar-filter-label" for="ddlCalendarStatus">LOẠI DỮ LIỆU</label>
-                <select id="ddlCalendarStatus" onchange="calendarStatus_OnChange()">
-                    <option value="chkKhb" selected="selected">KHB</option>
-                    <option value="chkKhbTrungLap">KHB TRÙNG LẶP</option>
-                    <option value="chkKhbDelete">KHB DELETE</option>
-                    <option value="chkKhbOrigin">KHB ORIGIN</option>
-                    <option value="chkKhbNotInScheduleMonth">KHB HÃNG QN</option>
-                    <option value="chkKhbNotInSchedule">KHB HÃNG QT</option>
-                </select>
-            </div>
-            <div class="calendar-filter-field">
+            <div class="calendar-filter-field calendar-export-type">
                 <label class="calendar-filter-label" for="ddlSelect">LOẠI XUẤT</label>
-                <select id="ddlSelect" class="disabled">
-                    <option value="1">ALL</option>
+                <select id="ddlSelect">
+                    <option value="1" selected="selected">ALL</option>
                     <option value="2">AIRPORT</option>
                     <option value="3">EXT</option>
                     <option value="4">O/F</option>
@@ -272,10 +302,23 @@
                     <option value="8000">8000</option>
                 </select>
             </div>
+            <div class="calendar-inline-actions">
+                <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnAccess_OnClick()">Accept</button>
+                <button id="btnRenderKhb" class="btn btn-sm btn-primary btn-bold" type="button" onclick="btnRenderKhb_OnClick()">Export</button>
+            </div>
         </div>
         <div class="calendar-filter-actions">
-            <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnAccess_OnClick()">Accept</button>
-            <button id="btnRenderKhb" class="btn btn-sm btn-primary btn-bold" type="button" onclick="btnRenderKhb_OnClick()">Export</button>
+            <div class="calendar-bottom-status">
+                <label class="calendar-filter-label" for="ddlCalendarStatus">LOẠI DỮ LIỆU</label>
+                <select id="ddlCalendarStatus" onchange="calendarStatus_OnChange()">
+                    <option value="chkKhb" selected="selected">KHB</option>
+                    <option value="chkKhbTrungLap">KHB TRÙNG LẶP</option>
+                    <option value="chkKhbDelete">KHB DELETE</option>
+                    <option value="chkKhbOrigin">KHB ORIGIN</option>
+                    <option value="chkKhbNotInScheduleMonth">KHB HÃNG QN</option>
+                    <option value="chkKhbNotInSchedule">KHB HÃNG QT</option>
+                </select>
+            </div>
             <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">Update all</button>
             <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">Search</button>
             <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()">Delete</button>
@@ -296,6 +339,29 @@
     </div>
     <div id="pageging"></div>
     <table id="tblSource" class="table table-bordered">
+        <colgroup>
+            <col class="calendar-col-no" />
+            <col class="calendar-col-check" />
+            <col class="calendar-col-callsign" />
+            <col class="calendar-col-regis" />
+            <col class="calendar-col-airport" />
+            <col class="calendar-col-airport" />
+            <col class="calendar-col-time" />
+            <col class="calendar-col-time" />
+            <col class="calendar-col-date" />
+            <col class="calendar-col-perm-type" />
+            <col class="calendar-col-flight-type" />
+            <col class="calendar-col-oper" />
+            <col class="calendar-col-craft" />
+            <col class="calendar-col-craft" />
+            <col class="calendar-col-purpose" />
+            <col class="calendar-col-valid" />
+            <col class="calendar-col-number" />
+            <col class="calendar-col-via" />
+            <col class="calendar-col-remark" />
+            <col class="calendar-col-user" />
+            <col class="calendar-col-action" />
+        </colgroup>
 
         <thead>
             <tr style="background-color: unset">
@@ -452,6 +518,9 @@
                     $table.find('tbody tr.select').removeClass('select');
                     $(this).closest('tr').addClass('select');
                 })
+                .on('input.calendarGrid', 'tbody input[type="text"]', function () {
+                    this.title = this.value;
+                })
                 .on('keypress.calendarGrid', '[data-number="true"]', validateNumber)
                 .on('keyup.calendarGrid', '[data-minlenght]', validateEmty1)
                 .on('blur.calendarGrid', '[data-CheckDate="true"]', function () {
@@ -468,6 +537,7 @@
                     var input = inputs[index];
                     var $input = $(input);
                     if ($input.data('calendar-grid-ready')) continue;
+                    input.title = input.value;
 
                     var minLength = parseInt(input.getAttribute('data-minlenght'), 10);
                     if (!isNaN(minLength)) {
@@ -538,9 +608,9 @@
                     + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtVIA" + a + "' data-oldValue='" + returnEmpty(b.VIA).replace(/\n/gi, '') + "' value='" + returnEmpty(b.VIA) + "' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtREMARK" + a + "' data-oldValue='" + returnEmpty(b.REMARK) + "' value='" + returnEmpty(b.REMARK) + "' onblur='checkIsUpdate(this)'/></td>"
                     + "<td>" + returnEmpty(b.LASTUSER) + "</td>"
-                    + "<td style=\"white-space: nowrap;>\""
+                    + "<td style=\"white-space: nowrap;\">"
                                 + "<div class=\"action-buttons\">"
-                                + "<i id=\"btnDeleteRemark" + b.FLIGHT_ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteRemark_Onclick(this," + b.FLIGHT_ID + ");\"></i></a>"
+                                + "<i id=\"btnDeleteRemark" + b.FLIGHT_ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteRemark_Onclick(this," + b.FLIGHT_ID + ");\"></i>"
                                 + "</td>"
                     + "</tr>"
                 }
@@ -568,9 +638,9 @@
                         + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtVIA" + a + "' data-oldValue='" + returnEmpty(b.VIA).replace(/\n/gi, '') + "' value='" + returnEmpty(b.VIA) + "' onblur='checkIsUpdate(this)'/></td>"
                         + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtREMARK" + a + "' data-oldValue='" + returnEmpty(b.REMARK) + "' value='" + returnEmpty(b.REMARK) + "' onblur='checkIsUpdate(this)'/></td>"
                         + "<td>" + returnEmpty(b.LASTUSER) + "</td>"
-                        + "<td style=\"white-space: nowrap;>\""
+                        + "<td style=\"white-space: nowrap;\">"
                                     + "<div class=\"action-buttons\">"
-                                    + "<i id=\"btnDeleteRemark" + b.FLIGHT_ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteRemark_Onclick(this," + b.FLIGHT_ID + ");\"></i></a>"
+                                    + "<i id=\"btnDeleteRemark" + b.FLIGHT_ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteRemark_Onclick(this," + b.FLIGHT_ID + ");\"></i>"
                                     + "</td>"
                         + "</tr>"
                 }
@@ -826,9 +896,9 @@
                     + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtVIA" + a + "' data-oldValue='" + returnEmpty(b.VIA).replace(/\n/gi, '') + "' value='" + returnEmpty(b.VIA) + "' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtREMARK" + a + "' data-oldValue='" + returnEmpty(b.REMARK) + "' value='" + returnEmpty(b.REMARK) + "' onblur='checkIsUpdate(this)'/></td>"
                     + "<td>" + returnEmpty(b.LASTUSER) + "</td>"
-                    + "<td style=\"white-space: nowrap;>\""
+                    + "<td style=\"white-space: nowrap;\">"
                                 + "<div class=\"action-buttons\">"
-                                + "<i id=\"btnDeleteRemark" + b.FLIGHT_ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteRemark_Onclick(this," + b.FLIGHT_ID + ");\"></i></a>"
+                                + "<i id=\"btnDeleteRemark" + b.FLIGHT_ID + "\" class=\"ace-icon fa fa-trash-o bigger-130\" onclick=\"btnDeleteRemark_Onclick(this," + b.FLIGHT_ID + ");\"></i>"
                                 + "&nbsp;&nbsp;<a data-toggle=\"tooltip\" title=\"Restore\"><i id=\"btnRestore_" + b.FLIGHT_ID + "\" class=\"glyphicon glyphicon-refresh bigger-130\" onclick=\"RestoreDelete(" + b.FLIGHT_ID + ", " + b.NOVERSION + ");\"></i></a>"
                                 + "</td>"
 

@@ -198,18 +198,31 @@ namespace prjApplication.Day_Flights
         /// <returns></returns>
         protected string RenderTopBar()
         {
-            string kq = "";
-            DataTable dt = new DayFlightTotalInfoDAL().GetInfoTopBar3();
-            //dt = new DayFlightTotalInfoDAL().GetInfoTopBar3();
-            if (dt == null) return kq;
-            kq += $"$('#lbltopbarNotificon_TotalMessage').text('{dt.Rows[0]["TotalMessage"]}');";
-            kq += $"$('#lbltopbarNotificon_TotalFlight').text('{dt.Rows[0]["TotalFlight"]}');";
-            kq += $"$('#lbltopbarNotComplate_TotalFlight').text('{dt.Rows[0]["TotalFlightNotAtd"]}');";
-            kq = $"<script>{kq}</script>";
-            //kq += $"{GetAlarmEvent()}";
-            //kq += GetMessageAlert();
-            kq = System.Text.RegularExpressions.Regex.Replace(kq, @"\r\n?|\n", "</br>");
-            return kq;
+            try
+            {
+                DataTable dt = new DayFlightTotalInfoDAL().GetInfoTopBar3();
+                if (dt == null || dt.Rows.Count == 0)
+                    return string.Empty;
+
+                string kq = "";
+                kq += $"$('#lbltopbarNotificon_TotalMessage').text('{dt.Rows[0]["TotalMessage"]}');";
+                kq += $"$('#lbltopbarNotificon_TotalFlight').text('{dt.Rows[0]["TotalFlight"]}');";
+                kq += $"$('#lbltopbarNotComplate_TotalFlight').text('{dt.Rows[0]["TotalFlightNotAtd"]}');";
+                kq = $"<script>{kq}</script>";
+                kq = System.Text.RegularExpressions.Regex.Replace(kq, @"\r\n?|\n", "</br>");
+                return kq;
+            }
+            catch (Exception ex)
+            {
+                Exception rootException = ex;
+                while (rootException.InnerException != null)
+                    rootException = rootException.InnerException;
+
+                System.Diagnostics.Trace.TraceWarning(
+                    "DaylyFlightDng.RenderTopBar: không tải được dữ liệu Top Bar. {0}",
+                    rootException.Message);
+                return string.Empty;
+            }
         }
         protected string RenderTopBarInfo()
         {

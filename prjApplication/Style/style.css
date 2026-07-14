@@ -1,5 +1,5 @@
 ﻿
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+@import url('assets/css/fonts.googleapis.com.css');
 
 html, body, input, button, select, textarea, table { font-family: 'Roboto', Arial, sans-serif !important; }
 body *:not(.fa):not(.ace-icon):not([class*="glyphicon"]) { font-family: 'Roboto', Arial, sans-serif !important; }

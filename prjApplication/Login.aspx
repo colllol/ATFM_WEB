@@ -10,7 +10,7 @@
     <title>Đăng nhập | VATM</title>
 
     <link rel="stylesheet" href="Style/assets/font-awesome/4.5.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="Style/login-modern.css" />
+    <link rel="stylesheet" href="Style/login-modern.css?v=20260713.1" />
     <style type="text/css">
         .login-loading-overlay { position:fixed; z-index:99999; inset:0; display:flex; visibility:hidden; align-items:center; justify-content:center; background:rgba(231,241,249,.72); opacity:0; pointer-events:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); transition:opacity .18s ease,visibility .18s ease; }
         .login-loading-overlay.is-visible { visibility:visible; opacity:1; pointer-events:all; }

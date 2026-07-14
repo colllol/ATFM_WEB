@@ -91,13 +91,31 @@
         #abcxyz .btn { height: 36px; border-radius: 7px; font-weight: 600; }
         #abcxyz .schedule-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
         #tblSource {
-            width: 100% !important;
-            max-width: 100%;
+            width: 1634px !important;
+            min-width: 100%;
+            max-width: none;
             table-layout: fixed;
             border-collapse: collapse !important;
             border-spacing: 0 !important;
             font-size: 12px !important;
         }
+        #tblSource .schedule-col-no { width: 42px; }
+        #tblSource .schedule-col-check { width: 34px; }
+        #tblSource .schedule-col-number { width: 190px; }
+        #tblSource .schedule-col-flight { width: 92px; }
+        #tblSource .schedule-col-regis { width: 86px; }
+        #tblSource .schedule-col-airport { width: 58px; }
+        #tblSource .schedule-col-time { width: 58px; }
+        #tblSource .schedule-col-date { width: 96px; }
+        #tblSource .schedule-col-perm-type { width: 64px; }
+        #tblSource .schedule-col-flight-type { width: 70px; }
+        #tblSource .schedule-col-oper { width: 58px; }
+        #tblSource .schedule-col-purpose { width: 50px; }
+        #tblSource .schedule-col-valid { width: 62px; }
+        #tblSource .schedule-col-via { width: 180px; }
+        #tblSource .schedule-col-remark { width: 190px; }
+        #tblSource .schedule-col-delete { width: 38px; }
+        #tblSource .schedule-col-status { width: 54px; }
         #tblSource th, #tblSource td {
             padding: 0 !important;
             border: 1px solid #c4d5e1 !important;
@@ -226,9 +244,30 @@
     </div>
     <div id="pageging"></div>
     <table id="tblSource" class="table table-bordered">
-
         <caption>
         </caption>
+        <colgroup>
+            <col class="schedule-col-no" />
+            <col class="schedule-col-check" />
+            <col class="schedule-col-number" />
+            <col class="schedule-col-flight" />
+            <col class="schedule-col-regis" />
+            <col class="schedule-col-airport" />
+            <col class="schedule-col-airport" />
+            <col class="schedule-col-time" />
+            <col class="schedule-col-time" />
+            <col class="schedule-col-date" />
+            <col class="schedule-col-date" />
+            <col class="schedule-col-perm-type" />
+            <col class="schedule-col-flight-type" />
+            <col class="schedule-col-oper" />
+            <col class="schedule-col-purpose" />
+            <col class="schedule-col-valid" />
+            <col class="schedule-col-via" />
+            <col class="schedule-col-remark" />
+            <col class="schedule-col-delete" />
+            <col class="schedule-col-status" />
+        </colgroup>
 
         <thead>
             <tr style="background-color: unset">

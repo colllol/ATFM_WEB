@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/Atfm_Nofooter.Master" AutoEventWireup="true"
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
     CodeBehind="DaylyFlightDNG.aspx.cs" Inherits="prjApplication.Day_Flights.DaylyFlightDNG" %>
 
 <%@ Import Namespace="System.Data" %>
@@ -12,6 +12,12 @@
     <link href="../Style/assets/css/ace-skins.min.css" rel="stylesheet" />
     <link href="../Style/assets/css/ace-rtl.min.css" rel="stylesheet" />
     <style>
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         .sInputDb {
             border: 0px !important;
             width: 100%;
@@ -20,8 +26,21 @@
         }
 
         #table-container {
-				height: 900px;
-			}
+            position: relative;
+            display: flex;
+            width: 100%;
+            max-width: 100%;
+            height: clamp(420px, calc(100vh - 390px), 720px);
+            min-height: 0;
+            flex-direction: column;
+            box-sizing: border-box;
+            margin: 10px 0 20px !important;
+            overflow: hidden;
+            border: 1px solid #c8d9e8;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 7px 22px rgba(26, 67, 105, .13);
+        }
 
         tr {
             cursor: pointer;
@@ -45,6 +64,226 @@
             top: 0px;
             display: none;
             background-color: white;
+        }
+
+        .dayly-table-shell {
+            position: relative;
+            width: calc(100% + 15px);
+            max-width: calc(100% + 15px);
+            min-width: 0;
+            box-sizing: border-box;
+            margin-left: -15px;
+            padding-right: 24px;
+        }
+
+        #table-container > .table-responsive {
+            flex: 1 1 auto;
+            width: 100%;
+            height: auto;
+            min-height: 0;
+            max-height: 100%;
+            overflow: auto !important;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-color: #337ab7 #e5edf4;
+        }
+
+        #table-container > .table-responsive::-webkit-scrollbar { width: 14px; height: 14px; }
+        #table-container > .table-responsive::-webkit-scrollbar-track { background: #e5edf4; border-radius: 8px; }
+        #table-container > .table-responsive::-webkit-scrollbar-thumb {
+            min-height: 42px;
+            background: #337ab7;
+            border: 3px solid #e5edf4;
+            border-radius: 8px;
+        }
+        #table-container > .table-responsive::-webkit-scrollbar-thumb:hover { background: #205b8f; }
+
+        .dayly-scroll-controls {
+            position: absolute;
+            top: 50%;
+            right: -11px;
+            z-index: 120;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transform: translateY(-50%);
+        }
+
+        .dayly-scroll-right {
+            display: flex;
+            width: 34px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, .75);
+            border-radius: 8px;
+            background: linear-gradient(135deg, #337ab7, #185d93);
+            color: #fff;
+            box-shadow: 0 5px 14px rgba(20, 68, 105, .30);
+            transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .dayly-scroll-right:hover,
+        .dayly-scroll-right:focus {
+            outline: 0;
+            background: linear-gradient(135deg, #2f8dcc, #174f7d);
+            box-shadow: 0 7px 18px rgba(20, 68, 105, .40);
+        }
+
+        .dayly-scroll-right:active,
+        .dayly-scroll-right.is-holding { transform: scale(.95); }
+        .dayly-scroll-right .fa { font-size: 16px; }
+
+        .dayly-table-actions,
+        .dayly-top-actions { display: flex; align-items: center; gap: 7px; }
+        .dayly-table-actions { min-width: 112px; padding: 2px 3px; }
+
+        .dayly-table-actions a,
+        .dayly-top-actions > a {
+            position: relative;
+            display: inline-flex;
+            width: 34px;
+            height: 34px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #acd0e7;
+            border-radius: 9px;
+            background: #fff;
+            color: #267fb7 !important;
+            box-shadow: 0 3px 9px rgba(30, 89, 128, .12);
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+        }
+
+        .dayly-table-actions a:hover,
+        .dayly-top-actions > a:hover,
+        .dayly-top-actions > a:focus {
+            outline: 0;
+            background: #287fbd;
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(31, 105, 155, .25);
+        }
+
+        .dayly-top-actions > a.dayly-search-action {
+            background: linear-gradient(135deg, #2f92cc, #1d6fa8);
+            color: #fff !important;
+        }
+
+        .dayly-top-actions .badge { position: absolute; top: -6px; right: -6px; }
+        #optionColor { display: none; }
+
+        .dayly-top-actions #optionColor {
+            position: relative;
+            display: inline-flex;
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+        }
+
+        .dayly-top-actions #ace-settings-container {
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            width: 34px;
+            height: 34px;
+            z-index: 140;
+        }
+
+        .dayly-top-actions #ace-settings-btn {
+            position: static !important;
+            display: inline-flex !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            height: 34px !important;
+            min-height: 34px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #87badd !important;
+            border-radius: 9px !important;
+            background: linear-gradient(145deg, #fff, #e7f4fc) !important;
+            color: #267fb7 !important;
+            box-shadow: 0 3px 9px rgba(30, 89, 128, .14) !important;
+        }
+
+        .dayly-top-actions #ace-settings-btn:hover,
+        .dayly-top-actions #ace-settings-btn:focus {
+            background: linear-gradient(135deg, #359bd2, #1d6fa8) !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+        }
+
+        .dayly-top-actions #ace-settings-btn .fa-cog { font-size: 16px; transition: transform .28s ease; }
+        .dayly-top-actions #ace-settings-btn:hover .fa-cog { transform: rotate(60deg); }
+        .dayly-top-actions #ace-settings-box {
+            position: absolute !important;
+            top: 42px !important;
+            right: 0 !important;
+            left: auto !important;
+            max-height: min(520px, calc(100vh - 180px));
+            overflow-y: auto;
+            border: 1px solid #b9d2e5;
+            border-radius: 10px;
+            box-shadow: 0 12px 28px rgba(20, 66, 101, .22);
+            z-index: 1500 !important;
+        }
+
+        #grdSource {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #fff;
+            isolation: isolate;
+        }
+        #grdSource tbody > tr,
+        #grdSource tbody > tr > td { height: auto !important; }
+        #grdSource tbody > tr > td {
+            padding: 4px 7px !important;
+            line-height: 1.2 !important;
+            vertical-align: middle !important;
+        }
+        #grdSource thead tr:last-child > th {
+            background: #1e5f91 !important;
+            color: #fff !important;
+            border-color: #75a4c7 !important;
+        }
+        #grdSource thead tr.Spec > td {
+            padding: 9px 8px !important;
+            border-top: 2px solid #2c8bc2 !important;
+            border-bottom: 2px solid #2c8bc2 !important;
+            background: #d9effc !important;
+        }
+        #grdSource thead tr.Spec input,
+        #grdSource thead tr.Spec select {
+            border: 1px solid #68a6cf !important;
+            border-radius: 6px !important;
+            background: #fff !important;
+        }
+        #grdSource thead tr.Spec > td.dayly-action-cell {
+            min-width: 145px;
+            padding-left: 10px !important;
+            border-right: 2px solid #2d8bc3 !important;
+        }
+        #grdSource thead tr > * {
+            position: sticky !important;
+            z-index: 20;
+            background-clip: padding-box;
+        }
+        #grdSource tr > *.dayly-frozen-column {
+            position: sticky !important;
+            z-index: 50 !important;
+            background-clip: padding-box;
+        }
+        #grdSource thead tr > *.dayly-frozen-column { z-index: 90 !important; }
+        #grdSource tbody tr > td:not(.dayly-frozen-column) { position: relative; z-index: 1; }
+        #grdSource tr > *.dayly-freeze-edge {
+            border-right: 4px solid #006f9f !important;
+            box-shadow: 8px 0 10px -7px rgba(0, 44, 70, .95) !important;
         }
     </style>
     <style>
@@ -310,6 +549,108 @@
             top: -10px;
         }
     </style>
+    <style>
+        .divHeader {
+            position: relative;
+            display: flex;
+            width: 100%;
+            max-width: 100%;
+            height: auto !important;
+            min-height: 132px;
+            flex-direction: column;
+            gap: 8px;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+            padding: 10px 12px 12px;
+            border: 1px solid #bfd5e6 !important;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f7fbff, #e7f3fc);
+            box-shadow: 0 5px 14px rgba(35, 83, 120, .10);
+        }
+
+        #infoTotal { position: static !important; width: 100%; }
+        #topBar1,
+        #topBar2,
+        #topBar3 {
+            position: static !important;
+            display: flex;
+            width: 100% !important;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            text-align: center;
+        }
+        #topBar1 { gap: 4px; }
+        #topBar2 { gap: 8px; font-size: 16px; }
+        #topBar3 { min-height: 38px; gap: 8px; }
+        #topBar2 span {
+            width: auto !important;
+            min-width: 92px;
+            padding: 5px 10px;
+            border: 1px solid #8eb7d7 !important;
+            border-radius: 6px;
+            background: #fff;
+            color: #174f7c;
+            white-space: nowrap;
+        }
+        #topBar3 > *,
+        #topBar3 .checkbox,
+        #divSelectDate,
+        #ddlPERMTYPE,
+        #ddlSelect,
+        #ddlExport,
+        #ddlPageSize,
+        #lblTimeRefresh {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            width: auto !important;
+            margin: 0 !important;
+        }
+        #topBar3 .checkbox { display: flex; min-width: 132px; align-items: center; }
+        #topBar3 .checkbox label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding-left: 0 !important;
+            white-space: nowrap;
+        }
+        #topBar3 .checkbox input[type="checkbox"] { position: static; margin: 0 !important; }
+        #topBar3 select,
+        #divSelectDate select {
+            min-width: 90px;
+            height: 36px;
+            border: 1px solid #78a9cc;
+            border-radius: 6px;
+            background: #fff;
+            color: #164d76;
+        }
+
+        @media (max-width: 1199px) {
+            #table-container { height: clamp(380px, calc(100vh - 410px), 650px); }
+            .divHeader { padding-right: 8px; padding-left: 8px; }
+            #topBar1 { gap: 3px; }
+            #topBar1 .btn { min-width: 32px; padding-right: 8px; padding-left: 8px; }
+            #topBar3 { gap: 6px; }
+        }
+
+        @media (max-width: 767px) {
+            #table-container { height: max(360px, calc(100vh - 430px)); border-radius: 8px; }
+            .dayly-table-shell {
+                width: calc(100% + 8px);
+                max-width: calc(100% + 8px);
+                margin-left: -8px;
+                padding-right: 22px;
+            }
+            .dayly-scroll-controls { right: -7px; gap: 4px; }
+            .dayly-scroll-right { width: 30px; height: 36px; border-radius: 7px; }
+            .divHeader { min-height: 0; }
+            #topBar2, #topBar3 { justify-content: flex-start; }
+            .dayly-top-actions { flex-wrap: wrap; }
+        }
+    </style>
     <style id="styCSS">
         
     </style>
@@ -506,7 +847,10 @@
                 <span id="lblTimeRefresh"></span>
 
                 <div id="topbarNotificon"></div>
-                <div>
+                <div class="dayly-top-actions">
+                    <a id="btnSearch" class="dayly-search-action" onclick="btnSearch_Onclick()" data-toggle="tooltip" title="Tìm kiếm dữ liệu">
+                        <i class="glyphicon glyphicon-search"></i>
+                    </a>
                    <!--<a href="#" onclick="window.open('<%= Page.ResolveUrl("~/SendMessage/SendMessageFlight.aspx") + "?Menu_Id=" + Request.Params["Menu_ID"] %>','_blank','toolbar=yes,scrollbars=yes,resizable=yes').resizeTo(window.screen.availWidth, window.screen.availHeight).moveTo(0,0)"
                         data-toggle="tooltip" title="Send message">
                         <i class="glyphicon glyphicon-send"></i>
@@ -539,25 +883,18 @@
             </div>
         </div>
     </div>
-    <%= RenderTopBar() %>
+    <%--Thông tin Top Bar của trang DNG đang không hiển thị; không gọi API đồng bộ để tránh chặn tải trang khi API chậm.--%>
 
-    <div class="row" id="table-container" >
-        <div class="table-responsive">
+    <div class="dayly-table-shell">
+        <div class="row" id="table-container">
+            <div class="table-responsive">
 
             <table id="grdSource" class="table table-bordered">
                 <thead>
                     <tr class="Spec" data-isinsert="true">
-                        <td style="width: 10px" class="headSpec">                           
-                             <div class="action-buttons wid_20px">
-                                <a id="btnSearch" onclick="btnSearch_Onclick()" title="Search">
-                                    <i class="glyphicon glyphicon-search"></i>
-                                </a>
-                               
-                            </div>
-                        </td>
-                        <td class="headSpec" colspan="2" style="width: 100px;">
-                              <div class="action-buttons wid_20px">                               
-                                 <a id="btnClearInput" onclick="btnClearInput_Onclick();" title="Clear value search">
+                        <td class="headSpec dayly-action-cell" colspan="3">
+                            <div class="dayly-table-actions">
+                                 <a id="btnClearInput" onclick="btnClearInput_Onclick();" title="Xóa điều kiện tìm kiếm">
                                     <i class="glyphicon glyphicon-trash"></i>
                                 </a>
                             </div>
@@ -663,7 +1000,12 @@
 
             </table>
             
-       </div>
+            </div>
+        </div>
+        <div class="dayly-scroll-controls" aria-label="Điều khiển cuộn ngang">
+            <button id="daylyScrollLeft" class="dayly-scroll-right" type="button" title="Nhấn để sang trái một cột, giữ để cuộn liên tục" aria-label="Cuộn bảng sang trái"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+            <button id="daylyScrollRight" class="dayly-scroll-right" type="button" title="Nhấn để sang phải một cột, giữ để cuộn liên tục" aria-label="Cuộn bảng sang phải"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+        </div>
     </div>
 
 
@@ -1233,6 +1575,8 @@
         var isRefresh = false;
         var isSearch = false;
         var isSroll = false;
+        var isScrollRequestPending = false;
+        var hasMoreScrollData = true;
         var timeRefresh = 20;
         var cd = timeRefresh;
         var sObj = JSON.parse('<%= _ObjSearch%>');
@@ -1353,7 +1697,9 @@
 
                 $('#grdSource tbody tr').remove();
                 $('#grdSource tbody').append(array[0]);
-                $("#grdSource").tableHeadFixer({ "head": true, "left": 4 });
+                isScrollRequestPending = false;
+                hasMoreScrollData = true;
+                scheduleDaylyStickyFreeze();
                 unPreLoadData();
 
                 highlight_row();
@@ -1365,8 +1711,14 @@
                     notifyMe($('#divMessegeChange').html().replace(/<br>/gi, '\n'));
             }
             if (context == 'LoadGrdSourceScroll') {
-                $('#grdSource tr').last().after(resulf).fadeIn();
-                $("#grdSource").tableHeadFixer({ "head": true, "left": 4 });
+                var appendedRows = $.trim(resulf || '');
+                if (appendedRows) {
+                    $('#grdSource tr').last().after(appendedRows).fadeIn();
+                } else {
+                    hasMoreScrollData = false;
+                }
+                isScrollRequestPending = false;
+                scheduleDaylyStickyFreeze();
                 unPreLoadData();
 
                 highlight_row();
@@ -1408,6 +1760,8 @@
             textColorChange();
         }
         function btnSearch_Onclick() {
+            isScrollRequestPending = false;
+            hasMoreScrollData = true;
             isSearch = true;
             if (isSearch) {
                 preLoadData();
@@ -1865,12 +2219,20 @@
 
     </script>
     <script>
-        $(window).scroll(function () { //detact scroll
-            if ($(window).scrollTop() + $(window).height() >= $(document).height()) { //scrolled to bottom of the page
-               isSroll = true;
-               LoadGrdSourceScroll();
+        $(function () {
+            var $tableScroll = $('#table-container > .table-responsive');
+            $tableScroll.off('scroll.daylyLoadMore').on('scroll.daylyLoadMore', function () {
+                var distanceToBottom = this.scrollHeight - this.scrollTop - this.clientHeight;
+                if (this.scrollHeight <= this.clientHeight
+                    || distanceToBottom > 40
+                    || isScrollRequestPending
+                    || !hasMoreScrollData) return;
+
+                isScrollRequestPending = true;
+                isSroll = true;
+                LoadGrdSourceScroll();
                 isSroll = false;
-            }
+            });
         });
         function LoadGrdSourceScroll() {
             if (isSroll) {
@@ -1879,17 +2241,6 @@
                 preLoadData()
             }
         }
-        //$('.row').scroll(function () {
-        //    if ($(this)[0].scrollHeight > 998) {
-        //        if ($(this).scrollTop() + $(this).innerHeight() > $(this)[0].scrollHeight) {
-                    
-        //            isSroll = true;
-         //           LoadGrdSourceScroll();
-         //           isSroll = false;
-         //       }
-         //   }
-       // });
-                
         function sortTableSpan(f, n) {
             var rows = $('#grdSource tbody  tr').get();
             rows.sort(function (a, b) {
@@ -2332,12 +2683,149 @@
         }
     </script>
     <script>
-        $(document).ready(function () {
-             btnSearch_Onclick();
-            $("#grdSource").tableHeadFixer({ "head": true, "left": 2 });
-        });
+        function applyDaylyStickyFreeze() {
+            var table = document.getElementById('grdSource');
+            if (!table || !table.tHead || !table.tHead.rows.length) return;
 
-        
+            function isTransparentColor(color) {
+                return !color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)' ||
+                    /rgba\([^)]*,\s*0(?:\.0+)?\s*\)$/.test(color);
+            }
+
+            function getEffectiveBackground(cell) {
+                cell.style.removeProperty('background-color');
+                var element = cell;
+                while (element && element !== table.parentNode) {
+                    var color = window.getComputedStyle(element).backgroundColor;
+                    if (!isTransparentColor(color)) return color;
+                    element = element.parentElement;
+                }
+                return '#ffffff';
+            }
+
+            var referenceRow = table.tHead.rows.length > 1
+                ? table.tHead.rows[table.tHead.rows.length - 1]
+                : table.tHead.rows[0];
+            var columnWidths = [];
+            for (var i = 0; i < 4 && i < referenceRow.cells.length; i++) {
+                columnWidths.push(referenceRow.cells[i].getBoundingClientRect().width);
+            }
+
+            for (var rowIndex = 0; rowIndex < table.rows.length; rowIndex++) {
+                var logicalColumn = 0;
+                for (var cellIndex = 0; cellIndex < table.rows[rowIndex].cells.length; cellIndex++) {
+                    var cell = table.rows[rowIndex].cells[cellIndex];
+                    var span = parseInt(cell.getAttribute('colspan') || '1', 10);
+                    if (logicalColumn < 4) {
+                        var left = 0;
+                        for (var col = 0; col < logicalColumn; col++) left += columnWidths[col] || 0;
+                        cell.classList.add('dayly-frozen-column');
+                        cell.style.left = Math.round(left) + 'px';
+                        cell.style.setProperty('background-color', getEffectiveBackground(cell));
+                        if (logicalColumn + span >= 4) cell.classList.add('dayly-freeze-edge');
+                    }
+                    logicalColumn += span;
+                }
+            }
+
+            var stickyTop = 0;
+            for (var headerIndex = 0; headerIndex < table.tHead.rows.length; headerIndex++) {
+                var headerRow = table.tHead.rows[headerIndex];
+                for (var headerCell = 0; headerCell < headerRow.cells.length; headerCell++) {
+                    headerRow.cells[headerCell].style.top = Math.round(stickyTop) + 'px';
+                }
+                stickyTop += headerRow.getBoundingClientRect().height;
+            }
+        }
+
+        function initializeDaylyHorizontalControls() {
+            var container = document.getElementById('table-container');
+            var mainScroll = container ? container.querySelector('.table-responsive') : null;
+            var leftButton = document.getElementById('daylyScrollLeft');
+            var rightButton = document.getElementById('daylyScrollRight');
+            if (!mainScroll || !leftButton || !rightButton || rightButton.getAttribute('data-bound') === 'true') return;
+
+            rightButton.setAttribute('data-bound', 'true');
+            leftButton.setAttribute('data-bound', 'true');
+
+            function getOneColumnWidth() {
+                var table = document.getElementById('grdSource');
+                if (!table || !table.tHead || !table.tHead.rows.length) return 120;
+                var row = table.tHead.rows[table.tHead.rows.length - 1];
+                var cell = row.cells.length > 4 ? row.cells[4] : row.cells[row.cells.length - 1];
+                return cell ? Math.max(60, Math.round(cell.getBoundingClientRect().width)) : 120;
+            }
+
+            function bindDirectionButton(button, direction) {
+                var holdTimer = null;
+                var holdFrame = null;
+                var isHolding = false;
+
+                function scrollOneColumn() {
+                    mainScroll.scrollBy({ left: direction * getOneColumnWidth(), behavior: 'smooth' });
+                }
+
+                function continuousScroll() {
+                    mainScroll.scrollLeft += direction * 4;
+                    holdFrame = window.requestAnimationFrame(continuousScroll);
+                }
+
+                function beginHold(event) {
+                    if (event.button !== undefined && event.button !== 0) return;
+                    event.preventDefault();
+                    isHolding = false;
+                    if (button.setPointerCapture && event.pointerId !== undefined) button.setPointerCapture(event.pointerId);
+                    holdTimer = window.setTimeout(function () {
+                        isHolding = true;
+                        button.classList.add('is-holding');
+                        continuousScroll();
+                    }, 280);
+                }
+
+                function endHold(event) {
+                    if (holdTimer === null && holdFrame === null) return;
+                    window.clearTimeout(holdTimer);
+                    holdTimer = null;
+                    if (holdFrame !== null) window.cancelAnimationFrame(holdFrame);
+                    holdFrame = null;
+                    button.classList.remove('is-holding');
+                    if (!isHolding) scrollOneColumn();
+                    isHolding = false;
+                    if (event) event.preventDefault();
+                }
+
+                button.addEventListener('pointerdown', beginHold);
+                button.addEventListener('pointerup', endHold);
+                button.addEventListener('pointercancel', endHold);
+                button.addEventListener('lostpointercapture', endHold);
+                button.addEventListener('click', function (event) {
+                    if (event.detail === 0) scrollOneColumn();
+                });
+            }
+
+            bindDirectionButton(leftButton, -1);
+            bindDirectionButton(rightButton, 1);
+        }
+
+        function scheduleDaylyStickyFreeze() {
+            window.requestAnimationFrame(function () {
+                applyDaylyStickyFreeze();
+                window.requestAnimationFrame(applyDaylyStickyFreeze);
+            });
+        }
+
+        $(document).ready(function () {
+            $('#optionColor').appendTo('.dayly-top-actions');
+            initializeDaylyHorizontalControls();
+            scheduleDaylyStickyFreeze();
+            btnSearch_Onclick();
+
+            var resizeTimer;
+            $(window).on('resize.daylyDngSticky', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(applyDaylyStickyFreeze, 120);
+            });
+        });
     </script>
     <script type="text/javascript">
 

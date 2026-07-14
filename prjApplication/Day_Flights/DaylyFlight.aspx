@@ -265,6 +265,78 @@
             right: -6px;
         }
 
+        .dayly-top-actions #optionColor {
+            position: relative;
+            display: inline-flex;
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dayly-top-actions #ace-settings-container {
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            width: 34px;
+            height: 34px;
+            z-index: 140;
+        }
+
+        .dayly-top-actions #ace-settings-btn {
+            position: static !important;
+            display: inline-flex !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            height: 34px !important;
+            min-height: 34px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #87badd !important;
+            border-radius: 9px !important;
+            background: linear-gradient(145deg, #ffffff 0%, #e7f4fc 100%) !important;
+            color: #267fb7 !important;
+            box-shadow: 0 3px 9px rgba(30, 89, 128, .14) !important;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+        }
+
+        .dayly-top-actions #ace-settings-btn:hover,
+        .dayly-top-actions #ace-settings-btn:focus {
+            outline: 0;
+            background: linear-gradient(135deg, #359bd2 0%, #1d6fa8 100%) !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(31, 105, 155, .26) !important;
+        }
+
+        .dayly-top-actions #ace-settings-btn .fa-cog {
+            font-size: 16px;
+            text-shadow: none;
+            transition: transform .28s ease;
+        }
+
+        .dayly-top-actions #ace-settings-btn:hover .fa-cog,
+        .dayly-top-actions #ace-settings-btn:focus .fa-cog {
+            transform: rotate(60deg);
+        }
+
+        .dayly-top-actions #ace-settings-box {
+            position: absolute !important;
+            top: 42px !important;
+            right: 0 !important;
+            left: auto !important;
+            max-height: min(520px, calc(100vh - 180px));
+            overflow-y: auto;
+            border: 1px solid #b9d2e5;
+            border-radius: 10px;
+            box-shadow: 0 12px 28px rgba(20, 66, 101, .22);
+            z-index: 1500 !important;
+        }
+
         #grdSource tbody > tr > td {
             height: auto !important;
             padding: 4px 7px !important;
@@ -919,47 +991,6 @@
         }
     </style>
     <div id="sound"></div>
-    <div id="optionColor">
-        <div class="ace-settings-container" id="ace-settings-container">
-            <div class="btn btn-app btn-xs btn-warning ace-settings-btn" onclick="$('#ace-settings-box').toggleClass('open');"
-                id="ace-settings-btn">
-                <i class="ace-icon fa fa-cog bigger-130"></i>
-            </div>
-            <div class="ace-settings-box clearfix" id="ace-settings-box">
-                <div class="pull-left width_50">
-                    <div class="ace-settings-item">
-                        <label class="lbl" for="ace-settings-navbar">
-                            Sound notification
-                            <input id="chkAutoSound" type="checkbox" onchange="isSound = ($('#chkAutoSound').prop('checked'));runtimeSoundNotification();" /></label>
-
-                    </div>
-                    <% foreach (DataRow r in new DayFlightSetColorDAL().GetTableColor(_user.UserID.ToString()).Rows)%>
-                    <%  {%>
-                    <% if (!r["CSSCLASSNAME"].ToString().Contains("FontSize")) %>
-                    <%{ %>
-                    <div class="ace-settings-item">
-                        <label class="lbl" for="ace-settings-navbar"><%: r["ALIASNAME"] %></label>
-                        <input id="txtMc<%:r["CSSCLASSNAME"] %>" type="text" data-classname="<%: r["CSSCLASSNAME"] %>"
-                            data-modecolor="true" data-setcolor="<%: r["COLORCUSTOM"] %>" data-colordefault="<%: r["DEFAULTCOLOR"] %>" />
-                        <a style="cursor: pointer" onclick="SetDefaultColor('<%: r["CSSCLASSNAME"] %>', <%: _user.UserID %>)">Default</a>
-                    </div>
-                    <%} %>
-                    <% else %>
-                    <%{ %>
-                    <div class="ace-settings-item">
-                        <label class="lbl" for="ace-settings-navbar"><%: r["ALIASNAME"] %></label>
-                        <input id="txtFc<%:r["CSSCLASSNAME"] %>" type="number" data-classname="<%: r["CSSCLASSNAME"] %>"
-                            data-modefontsize="true" class="wid_55px hei_25px" onblur="UpdateColorBy('<%= _user.UserID%>', $(this).val(), $(this).attr('data-className'));reStyleColor();"
-                            value="<%: r["COLORCUSTOM"] %>" data-setfontsize="<%: r["COLORCUSTOM"] %>" data-fontsizedefault="<%: r["DEFAULTCOLOR"] %>" />
-                        <%--<a style="cursor: pointer" onclick="SetDefaultFontSize('<%: r["CSSCLASSNAME"] %>', <%: _user.UserID %>)">
-                            Default</a>--%>
-                    </div>
-                    <% } %>
-                    <% } %>
-                </div>
-            </div>
-        </div>
-    </div>
     <div class="row">
         <div class="divHeader">
             <div id="infoTotal">
@@ -1060,6 +1091,48 @@
                     <a href="#" data-toggle="tooltip" title="Export Exel Sum O/F" onclick="viewPopupInfoExtensionSelect()">
                         <i class="glyphicon glyphicon-save-file"></i>
                     </a>
+                    <div id="optionColor">
+                        <div class="ace-settings-container" id="ace-settings-container">
+                            <div class="btn ace-settings-btn" onclick="$('#ace-settings-box').toggleClass('open');"
+                                id="ace-settings-btn" role="button" tabindex="0" data-toggle="tooltip"
+                                title="Tùy chỉnh màu sắc và cỡ chữ">
+                                <i class="ace-icon fa fa-cog" aria-hidden="true"></i>
+                            </div>
+                            <div class="ace-settings-box clearfix" id="ace-settings-box">
+                                <div class="pull-left width_50">
+                                    <div class="ace-settings-item">
+                                        <label class="lbl" for="ace-settings-navbar">
+                                            Sound notification
+                                            <input id="chkAutoSound" type="checkbox" onchange="isSound = ($('#chkAutoSound').prop('checked'));runtimeSoundNotification();" /></label>
+
+                                    </div>
+                                    <% foreach (DataRow r in new DayFlightSetColorDAL().GetTableColor(_user.UserID.ToString()).Rows)%>
+                                    <%  {%>
+                                    <% if (!r["CSSCLASSNAME"].ToString().Contains("FontSize")) %>
+                                    <%{ %>
+                                    <div class="ace-settings-item">
+                                        <label class="lbl" for="ace-settings-navbar"><%: r["ALIASNAME"] %></label>
+                                        <input id="txtMc<%:r["CSSCLASSNAME"] %>" type="text" data-classname="<%: r["CSSCLASSNAME"] %>"
+                                            data-modecolor="true" data-setcolor="<%: r["COLORCUSTOM"] %>" data-colordefault="<%: r["DEFAULTCOLOR"] %>" />
+                                        <a style="cursor: pointer" onclick="SetDefaultColor('<%: r["CSSCLASSNAME"] %>', <%: _user.UserID %>)">Default</a>
+                                    </div>
+                                    <%} %>
+                                    <% else %>
+                                    <%{ %>
+                                    <div class="ace-settings-item">
+                                        <label class="lbl" for="ace-settings-navbar"><%: r["ALIASNAME"] %></label>
+                                        <input id="txtFc<%:r["CSSCLASSNAME"] %>" type="number" data-classname="<%: r["CSSCLASSNAME"] %>"
+                                            data-modefontsize="true" class="wid_55px hei_25px" onblur="UpdateColorBy('<%= _user.UserID%>', $(this).val(), $(this).attr('data-className'));reStyleColor();"
+                                            value="<%: r["COLORCUSTOM"] %>" data-setfontsize="<%: r["COLORCUSTOM"] %>" data-fontsizedefault="<%: r["DEFAULTCOLOR"] %>" />
+                                        <%--<a style="cursor: pointer" onclick="SetDefaultFontSize('<%: r["CSSCLASSNAME"] %>', <%: _user.UserID %>)">
+                                            Default</a>--%>
+                                    </div>
+                                    <% } %>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

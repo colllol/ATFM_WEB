@@ -1029,3 +1029,54 @@ Quy ước:
 2026-07-13 | prjApplication/ReportNew/ReportInteractive.css | Bổ sung bố cục bảng chi tiết chuyến bay, header cố định, cuộn ngang trong bảng và giao diện chọn số dòng/phân trang responsive.
 2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx | Gắn phiên bản tài nguyên JS/CSS mới để trình duyệt tải ngay giao diện bảng đã cập nhật, tránh dùng cache cũ.
 2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Sửa luồng ngày quá khứ: tìm EOBT từ các bảng T_DAY_FLIGHTS_GOINGON và bảng lưu trữ theo REGISTRATION + FLIGHTDATE, xác thực thêm CALLSIGN/hành trình/FLIGHT_ID, chọn một ứng viên tốt nhất và không dùng ETD giả làm EOBT khi không có bản ghi khớp an toàn.
+2026-07-13 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Tách hàm dựng truy vấn trạng thái lịch sử dùng chung để báo cáo cất/hạ cánh áp dụng đúng cùng quy tắc Finished và Delay.
+2026-07-13 | prjApplication/ReportNew/AirportTakeoffLanding.aspx.cs | Kết nối T_FINISHED_FLIGHTS, tổng hợp lượt cất/hạ cánh tại sân bay Việt Nam chỉ từ chuyến Finished hoặc Delay, đồng thời cung cấp API chi tiết phân trang theo từng cột.
+2026-07-13 | prjApplication/ReportNew/AirportTakeoffLanding.js | Thay dữ liệu biểu đồ mẫu bằng dữ liệu Oracle, hiển thị số lượng trên từng cột và tải bảng 11 cột chi tiết khi nhấn cột cất/hạ cánh.
+2026-07-13 | prjApplication/ReportNew/AirportTakeoffLanding.aspx | Gắn code-behind, JavaScript báo cáo thật và phiên bản CSS mới để tránh cache giao diện cũ.
+2026-07-13 | prjApplication/ReportNew/ReportInteractive.css | Bổ sung giao diện biểu đồ cột có nhãn số lượng, trạng thái cột được chọn và vùng bảng chi tiết responsive.
+2026-07-13 | prjApplication/prjApplication.csproj | Đăng ký code-behind và JavaScript mới của trang AirportTakeoffLanding trong project.
+2026-07-13 | prjApplication/Day_Flights/DaylyFlight.aspx | Chuyển nút bánh răng tùy chỉnh xuống cạnh cụm nút thao tác; đồng bộ kích thước, màu sắc, bóng đổ và bổ sung hiệu ứng xoay khi rê chuột, giữ nguyên hộp cài đặt hiện có.
+2026-07-13 | prjApplication/Style/assets/fonts/roboto/Roboto-Variable.ttf | Bổ sung font Roboto Variable kiểu thường từ bộ Google Fonts để giao diện sử dụng offline với đầy đủ độ đậm.
+2026-07-13 | prjApplication/Style/assets/fonts/roboto/Roboto-Italic-Variable.ttf | Bổ sung font Roboto Variable kiểu nghiêng từ bộ Google Fonts để giao diện sử dụng offline.
+2026-07-13 | prjApplication/Style/assets/css/fonts.googleapis.com.css | Thay các font Open Sans tải qua fonts.gstatic.com bằng khai báo @font-face Roboto trỏ hoàn toàn tới tài nguyên nội bộ.
+2026-07-13 | prjApplication/Style/style.css | Thay lệnh tải Roboto từ Google Fonts bằng stylesheet font nội bộ dùng chung cho các trang ứng dụng.
+2026-07-13 | prjApplication/Style/login-modern.css | Chuyển trang đăng nhập sang tải Roboto từ tài nguyên nội bộ, không còn phụ thuộc Internet.
+2026-07-13 | prjApplication/prjApplication.csproj | Đăng ký hai file Roboto Variable offline là Content để được đóng gói khi build/publish project.
+2026-07-13 | prjApplication/Masters/ATFM_New.Master | Tăng phiên bản URL CSS dùng chung để trình duyệt nhận ngay bộ Roboto offline thay vì dùng cache cũ.
+2026-07-13 | prjApplication/Masters/ATFM.Master | Tăng phiên bản URL CSS dùng chung để tải ngay khai báo font nội bộ.
+2026-07-13 | prjApplication/Masters/ATFMNoneMenu.Master | Tăng phiên bản URL CSS dùng chung để các trang không menu nhận Roboto offline ngay sau cập nhật.
+2026-07-13 | prjApplication/Masters/Atfm_Nofooter.Master | Tăng phiên bản URL CSS dùng chung để các trang không footer nhận Roboto offline ngay sau cập nhật.
+2026-07-13 | prjApplication/Login.aspx | Gắn phiên bản mới cho login-modern.css để trang đăng nhập bỏ cache CSS còn tải Google Fonts trực tuyến.
+2026-07-13 | prjApplication/ScheduleFlights/Schedule_Flight.aspx | Phân bổ lại chiều rộng 20 cột bằng colgroup: thu gọn STT, checkbox, ETD/ETA, Perm type, Flight type, Oper, Pur, Valid hour và hai cột cuối; dành thêm không gian cho Number, Via và Remark, giữ cuộn ngang trong khung bảng.
+2026-07-13 | prjApplication/CalendarFlight/CanlendarFlights.aspx | Bỏ select LOẠI XUẤT khỏi thẻ bộ lọc; giữ giá trị ALL bằng trường ẩn để nút Export tiếp tục chạy đúng luồng mặc định và không mất sự kiện.
+2026-07-13 | prjApplication/CalendarFlight/CanlendarFlights.aspx | Phân bổ chiều rộng rõ ràng cho 21 cột, mở rộng Number/Via/Remark, thu gọn cột dữ liệu ngắn; bổ sung tooltip theo giá trị ô, trạng thái focus dễ đọc và sửa HTML sai ở các ô thao tác cuối bảng.
+2026-07-13 | prjApplication/ReportNew/FlightOperationOverview.aspx | Chuyển trang tổng quan sang code-behind và JavaScript riêng, gắn CSS tương tác mới để bỏ dữ liệu mẫu.
+2026-07-13 | prjApplication/ReportNew/FlightOperationOverview.aspx.cs | Kết nối T_FINISHED_FLIGHTS qua truy vấn trạng thái lịch sử dùng chung; chỉ lấy Finished và Delay, tổng hợp cất/hạ cánh theo sân bay và trả đầy đủ 10 trường thông tin cùng trạng thái.
+2026-07-13 | prjApplication/ReportNew/FlightOperationOverview.js | Hiển thị số lượng trên từng cột; nhấn cột cập nhật biểu đồ tròn theo sân bay, nhấn trạng thái lọc danh sách; bổ sung bảng chi tiết 11 cột, chọn số dòng và phân trang.
+2026-07-13 | prjApplication/ReportNew/ReportInteractive.css | Bổ sung kích thước biểu đồ cất/hạ cánh phù hợp với bố cục hai cột của trang tổng quan.
+2026-07-13 | prjApplication/prjApplication.csproj | Đăng ký code-behind và JavaScript mới của FlightOperationOverview để build và publish đầy đủ.
+2026-07-14 | prjApplication/ReportNew/FlightTrendAnalysis.aspx | Chuyển trang phân tích xu hướng sang code-behind và JavaScript riêng, gắn CSS tương tác có cache version mới.
+2026-07-14 | prjApplication/ReportNew/FlightTrendAnalysis.aspx.cs | Kết nối T_FINISHED_FLIGHTS, chỉ thống kê Finished và Delay; bổ sung lọc hãng bay/sân bay, gom theo ngày hoặc tháng và so sánh đúng cùng kỳ năm trước.
+2026-07-14 | prjApplication/ReportNew/FlightTrendAnalysis.js | Thêm bộ lọc hãng bay, KPI dữ liệu thật và biểu đồ đường bo mượt có animation, vùng màu, điểm tương tác và tooltip số chuyến theo từng mốc thời gian.
+2026-07-14 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Bổ sung FLIGHTDATE vào kết quả truy vấn trạng thái dùng chung để báo cáo xu hướng gom đúng chuyến theo ngày/tháng.
+2026-07-14 | prjApplication/ReportNew/ReportInteractive.css | Bổ sung bố cục responsive cho bộ lọc xu hướng, biểu đồ, chú thích và tooltip tương tác.
+2026-07-14 | prjApplication/prjApplication.csproj | Đăng ký code-behind và JavaScript mới của FlightTrendAnalysis để build/publish đầy đủ.
+2026-07-14 | prjApplication/Common/ChartReport.aspx | Gắn stylesheet tương tác và Dashboard.js để thay toàn bộ số liệu mẫu bằng dữ liệu từ ba báo cáo ReportNew.
+2026-07-14 | prjApplication/Common/ChartReport.aspx.cs | Cập nhật mô tả nguồn dashboard theo luồng tổng hợp ba báo cáo dùng chung bộ lọc.
+2026-07-14 | prjApplication/ReportNew/Dashboard.js | Đồng bộ song song trạng thái từ FlightStatusRate, cất/hạ cánh từ FlightOperationOverview và chuỗi xu hướng từ FlightTrendAnalysis; dựng KPI, donut, cột có số lượng và biểu đồ tooltip bằng dữ liệu thật.
+2026-07-14 | prjApplication/ReportNew/ReportInteractive.css | Bổ sung trạng thái cụm cột sân bay được chọn và kích thước biểu đồ cất/hạ cánh dành cho dashboard.
+2026-07-14 | prjApplication/prjApplication.csproj | Đăng ký Dashboard.js là Content để được đóng gói khi build/publish.
+2026-07-14 | prjApplication/ReportNew/Dashboard.js | Đồng bộ phần biểu đồ xu hướng trên dashboard với FlightTrendAnalysis: cùng tiêu đề, nguồn dữ liệu, animation 650ms, gradient, đường dóng, điểm hover và tooltip hiển thị số chuyến của hai kỳ.
+2026-07-14 | prjApplication/Masters/ATFM_New.Master | Tăng hiệu ứng icon menu cấp 1 đang chọn khi sidebar thu gọn: nền gradient, viền sáng, đổ bóng, phóng nhẹ icon và vòng glow chuyển động.
+2026-07-14 | prjApplication/Common/ChartReportAirport.aspx.cs | Thêm WebMethod GetData truy vấn T_FINISHED_FLIGHTS qua logic lịch sử dùng chung, trả ngày bay, thông tin chuyến và trạng thái Finished/Cancel/Delay/Wait.
+2026-07-14 | prjApplication/Common/ChartReportAirport.js | Thay dữ liệu mẫu bằng gọi WebMethod, lọc ngày/sân bay, tạo danh sách sân bay động và dựng biểu đồ so sánh theo dữ liệu Oracle thật.
+2026-07-14 | prjApplication/Common/ChartReportAirport.aspx | Gắn endpoint GetData và JavaScript mới cho trang so sánh hoạt động sân bay; bổ sung trạng thái tải/lỗi dữ liệu.
+2026-07-14 | prjApplication/prjApplication.csproj | Đăng ký ChartReportAirport.js là Content để được đóng gói khi build/publish.
+2026-07-14 | prjApplication/CalendarFlight/CanlendarFlights.aspx | Đưa Accept/Export lên hàng bộ lọc trên, khôi phục select loại xuất ALL/AIRPORT/EXT/O-F/LD và chuyển select loại dữ liệu KHB xuống hàng thao tác phía dưới.
+2026-07-14 | prjApplication/FinishFlights/ListFinishedFlightsMilitary.aspx | Thay ô ngày dạng text bằng date picker native có icon lịch, viền và focus đồng bộ giao diện; giữ giá trị ẩn dd-mm-yyyy để không thay đổi logic tìm kiếm/API.
+2026-07-14 | prjApplication/FinishFlights/ListFinishedFlightsMilitaryReport.aspx | Đồng bộ bộ lọc ngày sang date picker native có icon lịch, viền xanh và hiệu ứng focus; giữ trường ngày ẩn dạng dd-mm-yyyy để tương thích logic tìm kiếm và xuất báo cáo.
+2026-07-14 | prjApplication/Day_Flights/DaylyFlightHcm.aspx.cs | Bổ sung cơ chế fail-safe cho dữ liệu Top Bar: kiểm tra bảng rỗng, bắt lỗi API bị hủy/timeout và ghi Trace để lỗi thống kê phụ không làm sập toàn bộ trang.
+2026-07-14 | prjApplication/Day_Flights/DaylyFlightHcm.aspx | Đồng bộ giao diện theo DaylyFlight.aspx: dùng master có footer, toolbar responsive, nút tìm kiếm/xuất/cài đặt cùng cụm, bảng cuộn nội bộ, freeze 2 hàng đầu và 4 cột trái, nút cuộn ngang hai chiều, tải thêm theo thanh cuộn bảng và responsive theo cửa sổ.
+2026-07-14 | prjApplication/Day_Flights/DaylyFlightDng.aspx.cs | Bổ sung fail-safe cho RenderTopBar: kiểm tra dữ liệu rỗng, bắt lỗi API bị hủy/timeout và ghi Trace để trang DNG không còn lỗi Server Error khi Top Bar thất bại.
+2026-07-14 | prjApplication/Day_Flights/DaylyFlightDng.aspx | Đồng bộ giao diện theo DaylyFlight.aspx: master có footer, toolbar responsive, cụm Search/Export/cài đặt, bảng cuộn nội bộ, freeze 2 hàng đầu và 4 cột trái, nút cuộn ngang hai chiều và tải thêm theo thanh cuộn bảng.
+2026-07-14 | prjApplication/Day_Flights/DaylyFlightDng.aspx | Loại bỏ lời gọi RenderTopBar đồng bộ không còn hiển thị trên giao diện, tránh trang phải chờ endpoint GetInfoTopBar3 và triệt tiêu nguyên nhân TaskCanceled khi tải trang.
