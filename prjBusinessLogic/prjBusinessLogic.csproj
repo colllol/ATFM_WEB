@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F09FC491-6C09-4AF2-B277-F5C007DA7E35}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>prjBusinessLogic</RootNamespace>
+    <AssemblyName>prjBusinessLogic</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>http://localhost/HPCBusinessLogic/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\packages\HtmlAgilityPack.1.5.1\lib\Net45\HtmlAgilityPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Atkl\AtklDAL.cs" />
+    <Compile Include="CancelFlights\CancelFlightsDAL.cs" />
+    <Compile Include="Cant\CantRealizeDAL.cs" />
+    <Compile Include="Cant\CantSplitDAL.cs" />
+    <Compile Include="Cant\ErrorsDAL.cs" />
+    <Compile Include="DAL\ActionHistoryDAL.cs" />
+    <Compile Include="DAL\AddressAftnDAL.cs" />
+    <Compile Include="DAL\AeroDAL.cs" />
+    <Compile Include="DAL\AftnDAL.cs" />
+    <Compile Include="DAL\AirlinesDAL.cs" />
+    <Compile Include="DAL\AirportRouteDAL.cs" />
+    <Compile Include="DAL\AlarmDAL.cs" />
+    <Compile Include="DAL\AtsDAL.cs" />
+    <Compile Include="DAL\DocumnetDAL.cs" />
+    <Compile Include="DAL\CraftTypeDAL.cs" />
+    <Compile Include="DAL\CtryDAL.cs" />
+    <Compile Include="DAL\FlightPermission\FlightPermissionDAL.cs" />
+    <Compile Include="DAL\FlightPermission\FlightPermissionDetailDAl.cs" />
+    <Compile Include="DAL\FlightPermission\Flight_DayFlights\DayFlightsDAL.cs" />
+    <Compile Include="DAL\FlightPermission\Flight_DayFlights\DayFlightTotalInfoDAL.cs" />
+    <Compile Include="DAL\FlightPermission\Flight_DayFlights\DayFlyght_NotPermDAL.cs" />
+    <Compile Include="DAL\FLight_FixesDAL.cs" />
+    <Compile Include="DAL\FlyPlanType\FlyPlanTypeDAL.cs" />
+    <Compile Include="DAL\FlyPurposeDAL.cs" />
+    <Compile Include="DAL\FpAuthorDAL.cs" />
+    <Compile Include="DAL\FTPClass.cs" />
+    <Compile Include="DAL\GroupDAL.cs" />
+    <Compile Include="DAL\GroupMenuDAL.cs" />
+    <Compile Include="DAL\HPC_GenerateHtml.cs" />
+    <Compile Include="DAL\ImageFilesDAL.cs" />
+    <Compile Include="DAL\InfoDAL.cs" />
+    <Compile Include="DAL\LanguagesDAL.cs" />
+    <Compile Include="DAL\LogfilesDAL.cs" />
+    <Compile Include="DAL\MenuDAL.cs" />
+    <Compile Include="DAL\PermissionInbox\PermissionInboxDAL.cs" />
+    <Compile Include="DAL\Permission\OperDAL.cs" />
+    <Compile Include="DAL\Permission\PermNoDetailDAL.cs" />
+    <Compile Include="DAL\Permission\PermDetailScDAL.cs" />
+    <Compile Include="DAL\Permission\PermMasterNoDAL.cs" />
+    <Compile Include="DAL\Permission\PermMasterScDAL.cs" />
+    <Compile Include="DAL\PermNoImpDAL.cs" />
+    <Compile Include="DAL\PermScImpDAL.cs" />
+    <Compile Include="DAL\PlanMessage\PlanMessageDAL.cs" />
+    <Compile Include="DAL\Receive_LogFile\ReceiveLogFileDAL.cs" />
+    <Compile Include="DAL\ReportDAL.cs" />
+    <Compile Include="DAL\ReportingPointDAL.cs" />
+    <Compile Include="DAL\ReportingRouteDAL.cs" />
+    <Compile Include="DAL\ReportMenu\ReportDAL.cs" />
+    <Compile Include="DAL\Report\MenuReportDAL.cs" />
+    <Compile Include="DAL\Report\ReportBTCDAL.cs" />
+    <Compile Include="DAL\Report\ReportDHBDAL.cs" />
+    <Compile Include="DAL\Report\ReportStatisticDAL.cs" />
+    <Compile Include="DAL\RouteListDAL.cs" />
+    <Compile Include="DAL\SectorDAL.cs" />
+    <Compile Include="DAL\SendMessage\GroupAddressDAL.cs" />
+    <Compile Include="DAL\SendMessage\QlbInBoxDAL.cs" />
+    <Compile Include="DAL\SendMessage\QlbOutBoxDAL.cs" />
+    <Compile Include="DAL\SubdivisionDAL.cs" />
+    <Compile Include="DAL\UltilFuncDAL.cs" />
+    <Compile Include="DAL\UserDAL.cs" />
+    <Compile Include="DAL\UserMenuDAL.cs" />
+    <Compile Include="DAL\ConfigDAL.cs" />
+    <Compile Include="DAL\ViaDAL.cs" />
+    <Compile Include="DAL\VIA_ARIPORT_DAL.cs" />
+    <Compile Include="FinishFlights\FinishedFlightsDAL.cs" />
+    <Compile Include="FinishFlights\NotCompletedFlightsDAL.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResultFormAPI\clsResuftAPI.cs" />
+    <Compile Include="ResultFormAPI\IDAL.cs" />
+    <Compile Include="ScheduleFilght\ScheduleDayFlightsDAL.cs" />
+    <Compile Include="Static\ReportStaticDAL.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HPCServerDataAccess\HPCServerDataAccess.csproj">
+      <Project>{B2908378-C21D-46CE-8770-18DE7A14EC16}</Project>
+      <Name>HPCServerDataAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HPCShareDLL\HPCShareDLL.csproj">
+      <Project>{B517E835-D3BA-4945-9193-57D5A6679A3A}</Project>
+      <Name>HPCShareDLL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\prjInfo\prjInfo.csproj">
+      <Project>{d29a43cc-5078-420f-bbf9-2e760796df74}</Project>
+      <Name>prjInfo</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

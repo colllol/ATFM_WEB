@@ -1,0 +1,37 @@
+# Visual Studio / build output
+.vs/
+.vscode/
+**/bin/
+**/obj/
+**/TestResults/
+*.user
+*.suo
+*.pdb
+*.cache
+*.log
+
+# NuGet packages are restored by setup.ps1
+packages/
+
+# Generated publish output and local backups
+**/PackageTmp/
+**/Back*/
+Crystal Reports Backup Files/
+prjApplicationOnline/
+
+# Source control metadata from legacy systems
+*.scc
+*.vssscc
+*.vspscc
+
+# Machine-local configuration and uploaded/runtime data
+*.local.config
+*.secrets.config
+prjApplication/Upload/
+prjApplication/Uploads/
+prjApplication/App_Data/*.mdf
+prjApplication/App_Data/*.ldf
+prjApplication/FileUploadPermission/
+prjApplication/BinNews/
+prjApplication/Sound/DayFlight/
+**/PublishProfiles/
