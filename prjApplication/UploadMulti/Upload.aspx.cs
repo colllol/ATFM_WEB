@@ -14,7 +14,6 @@ using prjBusinessLogic;
 using prjInfo;
 using prjComponents;
 using HPCServerDataAccess;
-using JockerSoft.Media;
 
 namespace prjApplication.UploadMulti
 {

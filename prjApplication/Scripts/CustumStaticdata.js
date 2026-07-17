@@ -1176,7 +1176,7 @@ var listAero = '';
 var listPermType = ['LD', 'O/F'];
 var listFlightType = ['SC', 'NO'];
 var urlApi = 'http://localhost/QLB.API/';
-var urlApp = 'http://localhost/atfm/'
+var urlApp = 'http://localhost/atfm_web/'
 //var urlApi = 'http://192.168.63.21/';
 //var urlApp = 'http://192.168.62.20:2121/'
 $("<link/>", {

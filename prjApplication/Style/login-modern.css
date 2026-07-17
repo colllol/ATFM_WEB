@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+
+html, body, input, button, select, textarea {
+    font-family: 'Roboto', Arial, sans-serif !important;
+}
+
 :root {
     --vatm-blue: #17427e;
     --vatm-blue-dark: #092a57;

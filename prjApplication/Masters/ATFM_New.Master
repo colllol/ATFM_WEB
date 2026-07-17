@@ -117,6 +117,7 @@
             border: 0;
             border-radius: 7px;
             background: transparent;
+            transition: transform .2s ease;
         }
 
         .atfm-modern-menu .atfm-menu-list > li > a {
@@ -131,7 +132,8 @@
             font-size: 13px;
             font-weight: 600;
             line-height: 20px;
-            transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+            box-shadow: 0 1px 0 rgba(31,55,78,.03);
+            transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
         }
 
         .atfm-modern-menu .atfm-menu-list > li > a:hover,
@@ -139,6 +141,7 @@
             background: #edf6ff;
             color: #1769aa;
             box-shadow: inset 0 0 0 1px #d4e9fb;
+            transform: translateY(-2px);
         }
 
         .atfm-modern-menu .atfm-menu-list > li.active > a,
@@ -146,6 +149,34 @@
             background: linear-gradient(135deg, #1686c8, #11639d);
             color: #fff;
             box-shadow: 0 3px 8px rgba(17, 99, 157, .24);
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li.active > a:before,
+        .atfm-modern-menu .atfm-menu-list > li.open > a:before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            bottom: 5px;
+            left: 0;
+            width: 4px;
+            border-radius: 0 4px 4px 0;
+            background: #8ed2ff;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a:hover .menu-icon,
+        .atfm-modern-menu .atfm-menu-list > li.active > a .menu-icon {
+            filter: drop-shadow(0 2px 3px rgba(20, 92, 143, .28));
+            transform: scale(1.08);
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a .menu-icon,
+        .atfm-modern-menu .atfm-menu-list > li > a > .arrow {
+            transition: transform .18s ease, filter .18s ease;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li.open > a > .arrow,
+        .atfm-modern-menu .atfm-menu-list > li.active.open > a > .arrow {
+            transform: rotate(180deg);
         }
 
         .atfm-modern-menu .atfm-menu-list > li > a .menu-icon {
@@ -243,6 +274,20 @@
         /* Cụm thông báo và tài khoản trên header. */
         #navbar.atfm-header .atfm-header-action {
             position: relative;
+        }
+
+        #navbar.atfm-header .atfm-header-action:has(> .atfm-ai-link),
+        #navbar.atfm-header .atfm-header-action.user-min,
+        #navbar.atfm-header .atfm-ai-link,
+        #navbar.atfm-header .atfm-ai-link:hover,
+        #navbar.atfm-header .atfm-ai-link:focus,
+        #navbar.atfm-header .atfm-user-button,
+        #navbar.atfm-header .atfm-user-button:hover,
+        #navbar.atfm-header .atfm-user-button:focus,
+        #navbar.atfm-header .atfm-header-action.is-open > .atfm-user-button {
+            border-color: transparent !important;
+            background: transparent !important;
+            box-shadow: none !important;
         }
 
         #navbar.atfm-header .atfm-notification-button,
@@ -543,6 +588,8 @@
                 position: relative;
                 display: flex;
                 flex-direction: column;
+                height: auto !important;
+                overflow: visible !important;
                 min-height: calc(100vh - 96px);
                 background: #eef3f7;
             }
@@ -552,6 +599,8 @@
                 position: relative;
                 display: flex;
                 flex: 1 0 auto;
+                height: auto !important;
+                overflow: visible !important;
                 align-items: stretch;
                 min-height: calc(100vh - 186px);
             }
@@ -802,35 +851,89 @@
             }
 
             #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a {
+                position: relative;
                 display: flex;
                 width: 100%;
-                min-height: 48px;
+                min-height: 54px;
                 align-items: center;
-                padding: 11px 14px;
-                border: 1px solid #e1eaf1;
-                border-radius: 8px;
-                background: #fff;
-                color: #40566b;
+                padding: 12px 48px 12px 18px;
+                overflow: hidden;
+                border: 1px solid #d7e4ee;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #fff 0%, #f7fbff 100%);
+                color: #314c64;
+                font-weight: 600;
                 line-height: 20px;
                 box-sizing: border-box;
-                box-shadow: 0 1px 2px rgba(35, 62, 89, .04);
+                box-shadow: 0 4px 12px rgba(35, 78, 112, .08);
                 cursor: pointer;
                 pointer-events: auto;
+                transition: transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
             }
 
-            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:hover {
-                border-color: #bcdcf2;
-                background: #eaf5fd;
-                color: #12679e;
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:before {
+                content: "";
+                position: absolute;
+                top: 10px;
+                bottom: 10px;
+                left: 0;
+                width: 4px;
+                border-radius: 0 4px 4px 0;
+                background: #337ab7;
+                transition: width .2s ease, background .2s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:after {
+                content: "\f105";
+                position: absolute;
+                right: 14px;
+                display: flex;
+                width: 28px;
+                height: 28px;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: #e8f3fb;
+                color: #337ab7;
+                font-family: FontAwesome;
+                font-size: 16px;
+                transition: transform .2s ease, background .2s ease, color .2s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:hover,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:focus {
+                border-color: #337ab7;
+                outline: 0;
+                background: linear-gradient(135deg, #337ab7 0%, #24689f 100%);
+                color: #fff;
+                text-decoration: none;
+                transform: translateY(-3px);
+                box-shadow: 0 10px 22px rgba(36, 104, 159, .25);
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:hover:before,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:focus:before {
+                width: 6px;
+                background: #8ed2ff;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:hover:after,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:focus:after {
+                background: rgba(255, 255, 255, .2);
+                color: #fff;
+                transform: translateX(3px);
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:active {
+                transform: translateY(-1px);
+                box-shadow: 0 5px 12px rgba(36, 104, 159, .2);
             }
 
             /* Không hiển thị arrow/caret của ACE khi hover menu cấp 2. */
             #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > b.arrow,
             #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > b.arrow:before,
             #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > b.arrow:after,
-            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li:hover > b.arrow,
-            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:before,
-            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:after {
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li:hover > b.arrow {
                 display: none !important;
                 content: none !important;
                 border: 0 !important;
@@ -848,6 +951,8 @@
                 flex: 1 1 auto;
                 width: calc(100vw - var(--atfm-sidebar-width));
                 min-height: 100%;
+                height: auto !important;
+                overflow: visible !important;
                 margin-left: 0 !important;
                 padding: 20px;
                 background: #fff;
@@ -855,7 +960,7 @@
             }
 
             #main-container > .footer {
-                position: relative;
+                position: relative !important;
                 flex: 0 0 auto;
                 width: 100%;
                 height: auto;
@@ -864,6 +969,13 @@
                 border-top: 1px solid #dce5ec;
                 background: #fff;
                 box-sizing: border-box;
+            }
+
+            #main-container > .atfm-workspace .page-content,
+            #main-container > .atfm-workspace .main-content-inner {
+                height: auto !important;
+                min-height: 0;
+                overflow: visible !important;
             }
 
             #main-container > .footer .footer-inner,
@@ -909,6 +1021,7 @@
                 position: static;
                 width: 100%;
                 height: auto;
+                overflow: visible !important;
             }
         }
     </style>
@@ -1022,7 +1135,7 @@
             align-items: center;
             padding: 5px 10px;
             border-radius: 6px;
-            background: rgba(255, 255, 255, .10);
+            background: transparent;
         }
 
         #navbar.atfm-header .nav-user-photo {
@@ -1068,7 +1181,7 @@
         <div id="navbar" class="navbar navbar-default navbar-collapse h-navbar ace-save-state atfm-header">
             <div class="navbar-container ace-save-state" id="navbar-container">
                 <div class="navbar-header pull-left">
-                    <a href="<%=Global.ApplicationPath%>/Common/Reports.aspx" class="navbar-brand atfm-brand">
+                    <a href="<%=Global.ApplicationPath%>/Common/ChartReport.aspx" class="navbar-brand atfm-brand">
                         <img class="atfm-brand-logo" src="<%=Global.ApplicationPath%>/images/Logo.png" alt="VATM" />
                         <span class="atfm-brand-vatm">VATM</span>
                         <span class="atfm-brand-name">
@@ -1096,6 +1209,7 @@
 
                 <div class="navbar-buttons navbar-header pull-right  collapse navbar-collapse" role="navigation">
                     <ul class="nav ace-nav">
+                        <li class="atfm-header-action atfm-ai-action"><a class="atfm-ai-link" href="https://backwash-january-glare.ngrok-free.dev" target="_blank" rel="noopener noreferrer" title="Trợ lý AI"><span class="atfm-ai-orb">AI</span></a></li>
                         <li class="atfm-notification atfm-header-action" id="atfmNotification">
                             <button type="button" class="atfm-notification-button atfm-popup-toggle" title="Thông báo" aria-label="Thông báo" aria-expanded="false">
                                 <i class="ace-icon fa fa-bell" aria-hidden="true"></i>
@@ -1242,7 +1356,7 @@
 
             <div class="footer">
                 <div class="footer-inner">
-                    <div class="footer-content" style="font-family: 'Times New Roman'; font-size: 14px;">
+                    <div class="footer-content" style="font-family: 'Roboto', Arial, sans-serif; font-size: 14px;">
                         <span class="bigger-120">
                             <span class="blue bolder">Copyrights 2017 © <b>-----</b>
                             </span>
@@ -1608,6 +1722,164 @@
 
                 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeHeaderPopups);
                 else initializeHeaderPopups();
+            })();
+        </script>
+        <style type="text/css">
+            .atfm-loading-overlay {
+                position: fixed;
+                z-index: 999999;
+                inset: 0;
+                display: flex;
+                visibility: hidden;
+                align-items: center;
+                justify-content: center;
+                background: rgba(235, 243, 249, .72);
+                opacity: 0;
+                pointer-events: none;
+                -webkit-backdrop-filter: blur(3px);
+                backdrop-filter: blur(3px);
+                transition: opacity .18s ease, visibility .18s ease;
+            }
+            .atfm-loading-overlay.is-visible { visibility: visible; opacity: 1; pointer-events: all; }
+            .atfm-loading-box { min-width: 150px; padding: 22px 28px; border: 1px solid rgba(51, 122, 183, .18); border-radius: 14px; background: rgba(255, 255, 255, .94); text-align: center; box-shadow: 0 15px 40px rgba(31, 65, 92, .18); }
+            .atfm-loading-spinner { position: relative; width: 48px; height: 48px; margin: 0 auto 13px; }
+            .atfm-loading-spinner:before, .atfm-loading-spinner:after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 4px solid transparent; }
+            .atfm-loading-spinner:before { border-top-color: #337ab7; border-right-color: #337ab7; animation: atfmLoadingSpin .8s linear infinite; }
+            .atfm-loading-spinner:after { inset: 8px; border-bottom-color: #20b486; border-left-color: #20b486; animation: atfmLoadingSpinReverse .65s linear infinite; }
+            .atfm-loading-text { color: #31536e; font-size: 13px; font-weight: 700; letter-spacing: .2px; }
+            @keyframes atfmLoadingSpin { to { transform: rotate(360deg); } }
+            @keyframes atfmLoadingSpinReverse { to { transform: rotate(-360deg); } }
+            @media (prefers-reduced-motion: reduce) { .atfm-loading-spinner:before, .atfm-loading-spinner:after { animation-duration: 1.8s; } }
+        </style>
+        <div id="atfmGlobalLoading" class="atfm-loading-overlay" role="status" aria-live="polite" aria-hidden="true">
+            <div class="atfm-loading-box"><div class="atfm-loading-spinner"></div><div id="atfmLoadingText" class="atfm-loading-text">Đang tải dữ liệu...</div></div>
+        </div>
+        <script type="text/javascript">
+            (function () {
+                var overlay = document.getElementById('atfmGlobalLoading');
+                var textNode = document.getElementById('atfmLoadingText');
+                var pendingTasks = 0;
+                var safetyTimer = null;
+                var exportDownloadPending = false;
+                var exportFallbackTimer = null;
+
+                function showLoading(message) {
+                    pendingTasks++;
+                    if (message && textNode) textNode.textContent = message;
+                    overlay.classList.add('is-visible');
+                    overlay.setAttribute('aria-hidden', 'false');
+                    clearTimeout(safetyTimer);
+                    safetyTimer = setTimeout(function () { pendingTasks = 0; hideLoading(true); }, 60000);
+                }
+
+                function hideLoading(force) {
+                    pendingTasks = force ? 0 : Math.max(0, pendingTasks - 1);
+                    if (pendingTasks > 0) return;
+                    clearTimeout(safetyTimer);
+                    overlay.classList.remove('is-visible');
+                    overlay.setAttribute('aria-hidden', 'true');
+                    if (textNode) textNode.textContent = 'Đang tải dữ liệu...';
+                }
+
+                window.ATFMLoading = { show: showLoading, hide: function () { hideLoading(false); }, forceHide: function () { hideLoading(true); } };
+                window.addEventListener('load', function () { hideLoading(true); });
+                window.addEventListener('pageshow', function () { hideLoading(true); });
+                window.addEventListener('beforeunload', function () { showLoading('Đang chuyển trang...'); });
+
+                function isExportAction(id, text) {
+                    return /export|excel|xuất/i.test((id || '') + ' ' + (text || ''));
+                }
+
+                function beginExportDownload() {
+                    exportDownloadPending = true;
+                    showLoading('Đang chuẩn bị file...');
+                    clearTimeout(exportFallbackTimer);
+                    exportFallbackTimer = setTimeout(function () { exportDownloadPending = false; hideLoading(true); }, 30000);
+                }
+
+                window.addEventListener('blur', function () {
+                    if (!exportDownloadPending) return;
+                    exportDownloadPending = false;
+                    clearTimeout(exportFallbackTimer);
+                    hideLoading(true);
+                });
+
+                document.addEventListener('submit', function (event) {
+                    var submitter = event.submitter;
+                    if (submitter && isExportAction(submitter.id || submitter.name, submitter.value || submitter.textContent)) beginExportDownload();
+                    else showLoading('Đang xử lý yêu cầu...');
+                }, true);
+                document.addEventListener('click', function (event) {
+                    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                    var link = event.target;
+                    while (link && link.tagName !== 'A') link = link.parentNode;
+                    if (!link || link.hasAttribute('download') || link.getAttribute('target') === '_blank') return;
+                    var href = link.getAttribute('href');
+                    if (!href || /^javascript:/i.test(href)) return;
+                    if (href === '#') return;
+                    showLoading('Đang chuyển trang...');
+                }, true);
+
+                if (window.jQuery) {
+                    window.jQuery(document).ajaxStart(function () { showLoading('Đang tải dữ liệu...'); });
+                    window.jQuery(document).ajaxStop(function () { hideLoading(true); });
+                }
+
+                if (window.fetch) {
+                    var originalFetch = window.fetch;
+                    window.fetch = function () {
+                        showLoading('Đang tải dữ liệu...');
+                        return originalFetch.apply(this, arguments).then(function (response) { hideLoading(true); return response; }, function (error) { hideLoading(true); throw error; });
+                    };
+                }
+
+                // Bao phủ các lời gọi XMLHttpRequest thuần không đi qua jQuery.
+                if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+                    var originalXhrSend = window.XMLHttpRequest.prototype.send;
+                    window.XMLHttpRequest.prototype.send = function () {
+                        showLoading('Đang tải dữ liệu...');
+                        var xhr = this;
+                        var finishLoading = function () { xhr.removeEventListener('loadend', finishLoading, false); hideLoading(true); };
+                        this.addEventListener('loadend', finishLoading, false);
+                        try { return originalXhrSend.apply(this, arguments); }
+                        catch (error) { hideLoading(true); throw error; }
+                    };
+                }
+
+                // ASP.NET Web Forms: postback có thể gọi form.submit() trực tiếp nên không phát sinh DOM submit event.
+                if (window.HTMLFormElement && window.HTMLFormElement.prototype && window.HTMLFormElement.prototype.submit) {
+                    var originalFormSubmit = window.HTMLFormElement.prototype.submit;
+                    window.HTMLFormElement.prototype.submit = function () {
+                        showLoading('Đang xử lý yêu cầu...');
+                        return originalFormSubmit.apply(this, arguments);
+                    };
+                }
+
+                function hookWebFormsLoading() {
+                    if (typeof window.__doPostBack === 'function' && !window.__doPostBack.atfmLoadingHooked) {
+                        var originalDoPostBack = window.__doPostBack;
+                        var wrappedDoPostBack = function (eventTarget) {
+                            var controlId = (eventTarget || '').replace(/\$/g, '_');
+                            var control = controlId ? document.getElementById(controlId) : null;
+                            if (isExportAction(eventTarget, control ? (control.value || control.textContent) : '')) beginExportDownload();
+                            else showLoading('Đang xử lý yêu cầu...');
+                            return originalDoPostBack.apply(this, arguments);
+                        };
+                        wrappedDoPostBack.atfmLoadingHooked = true;
+                        window.__doPostBack = wrappedDoPostBack;
+                    }
+                    if (window.Sys && window.Sys.WebForms && window.Sys.WebForms.PageRequestManager) {
+                        var manager = window.Sys.WebForms.PageRequestManager.getInstance();
+                        if (manager && !manager._atfmLoadingHooked) {
+                            manager.add_beginRequest(function () { showLoading('Đang xử lý yêu cầu...'); });
+                            manager.add_endRequest(function () { hideLoading(true); });
+                            manager._atfmLoadingHooked = true;
+                        }
+                    }
+                }
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookWebFormsLoading);
+                else hookWebFormsLoading();
+                window.addEventListener('load', hookWebFormsLoading);
             })();
         </script>
     </form>

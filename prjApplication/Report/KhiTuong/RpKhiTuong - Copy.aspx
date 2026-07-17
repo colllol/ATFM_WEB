@@ -1,6 +1,6 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM.Master" AutoEventWireup="true" CodeBehind="RpKhiTuong.aspx.cs" Inherits="prjApplication.Report.KhiTuong.RpKhiTuong" %>
 
-<%@ Register TagPrefix="asp" Namespace="Saplin.Controls" Assembly="DropDownCheckBoxes" %>
+<%@ Register TagPrefix="asp" Namespace="Saplin.Controls" Assembly="prjApplication" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
    
     <span class="TitlePanel">+ WMO</span>

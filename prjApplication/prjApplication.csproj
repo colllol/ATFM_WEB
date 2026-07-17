@@ -61,13 +61,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AjaxControlToolkit">
-      <HintPath>..\..\..\..\..\..\04. DLL\ASTM\dll\AjaxControlToolkit.dll</HintPath>
-    </Reference>
-    <Reference Include="AjaxMin">
-      <HintPath>..\..\..\..\..\..\04. DLL\ASTM\dll\AjaxMin.dll</HintPath>
+      <HintPath>..\..\..\..\..\2020\QLB\atfm_ThaiBanGiao\atfm\APP\prjApplication\Back22042020\bin\AjaxControlToolkit.dll</HintPath>
     </Reference>
     <Reference Include="Anthem">
-      <HintPath>..\..\..\..\..\..\04. DLL\ASTM\dll\Anthem.dll</HintPath>
+      <HintPath>..\..\..\..\..\2020\QLB\atfm_ThaiBanGiao\atfm\APP\prjApplication\Back22042020\bin\Anthem.dll</HintPath>
     </Reference>
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\..\..\DLL\Antlr3.Runtime.dll</HintPath>
@@ -96,15 +93,9 @@
     <Reference Include="CrystalDecisions.Windows.Forms">
       <HintPath>..\..\dll\CrystalDecisions.Windows.Forms.dll</HintPath>
     </Reference>
-    <Reference Include="DropDownCheckBoxes">
-      <HintPath>..\..\..\Tool\DropDownCheckBoxes.dll</HintPath>
-    </Reference>
     <Reference Include="HtmlAgilityPack">
-      <HintPath>..\packages\HtmlAgilityPack.1.5.1\lib\Net45\HtmlAgilityPack.dll</HintPath>
+      <HintPath>..\Lib\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="JockerSoft.Media">
-      <HintPath>..\..\..\..\..\..\04. DLL\ASTM\dll\JockerSoft.Media.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -116,8 +107,9 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\..\dll\Microsoft.Office.Interop.Word.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.121.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -148,10 +140,10 @@
     <Reference Include="System.Web.Mobile" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="TuesPechkin">
-      <HintPath>..\..\..\..\..\..\04. DLL\tuespeckin\TuesPechkin.dll</HintPath>
+      <HintPath>..\..\..\..\..\2020\QLB\atfm_ThaiBanGiao\atfm\APP\prjApplication\Back22042020\bin\TuesPechkin.dll</HintPath>
     </Reference>
     <Reference Include="TuesPechkin.Wkhtmltox.AnyCPU">
-      <HintPath>..\..\..\..\..\..\04. DLL\tuespeckin\TuesPechkin.Wkhtmltox.AnyCPU.dll</HintPath>
+      <HintPath>..\..\..\..\..\2020\QLB\atfm_ThaiBanGiao\atfm\APP\prjApplication\Back22042020\bin\TuesPechkin.Wkhtmltox.AnyCPU.dll</HintPath>
     </Reference>
     <Reference Include="WDF.Component">
       <HintPath>..\..\..\..\..\..\04. DLL\ASTM\dll\WDF.Component.dll</HintPath>
@@ -616,6 +608,8 @@
     <Content Include="Common\Log_Export.aspx" />
     <Content Include="Common\Dashboard.aspx" />
     <Content Include="Common\ChartReport.aspx" />
+    <Content Include="Common\ChartReportAirport.aspx" />
+    <Content Include="Data\dashboard-flights.json" />
     <Content Include="Day_Flights\DayFlightNotRoute.aspx" />
     <Content Include="Day_Flights\DayFlightSearch.aspx" />
     <Content Include="Day_Flights\DaylyFlight.aspx" />
@@ -1917,6 +1911,10 @@
       <DependentUpon>ChartReport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="Common\ChartReportAirport.aspx.cs">
+      <DependentUpon>ChartReportAirport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="Common\ChartReport.aspx.designer.cs">
       <DependentUpon>ChartReport.aspx</DependentUpon>
     </Compile>
@@ -2000,6 +1998,7 @@
     <Compile Include="CustomObject\clsSearch.cs" />
     <Compile Include="CustomObject\clsSuportDropdownList.cs" />
     <Compile Include="CustomObject\DateTimeHelper.cs" />
+    <Compile Include="Controls\SaplinControls.cs" />
     <Compile Include="CustomObject\PageBaseCallBack.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
@@ -4480,9 +4479,9 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>14664</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost/atfm</IISUrl>
+          <IISUrl>http://localhost/atfm_web</IISUrl>
           <OverrideIISAppRootUrl>True</OverrideIISAppRootUrl>
-          <IISAppRootUrl>http://localhost/atfm</IISAppRootUrl>
+          <IISAppRootUrl>http://localhost/atfm_web</IISAppRootUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

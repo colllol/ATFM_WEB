@@ -1,6 +1,6 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ChartReportLine.aspx.cs" Inherits="prjApplication.Common.ChartReportLine" %>
 
-<%@ Register TagPrefix="asp" Namespace="Saplin.Controls" Assembly="DropDownCheckBoxes" %>
+<%@ Register TagPrefix="asp" Namespace="Saplin.Controls" Assembly="prjApplication" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
     <script type="text/javascript" src="../Scripts/jsapi.js"></script>
    <script type="text/javascript" src="../Scripts/uds_api_contents.js"></script> 
