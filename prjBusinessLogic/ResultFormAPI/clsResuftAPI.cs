@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using System.Text;
 using System.Data;
 using prjInfo;
-
+using System.Configuration;
 
 namespace prjBusinessLogic
 {
@@ -102,6 +102,12 @@ namespace prjBusinessLogic
             client.BaseAddress = new Uri(System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"]);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Thêm X-API-Key
+            client.DefaultRequestHeaders.Add(
+                "X-API-Key",
+                System.Configuration.ConfigurationManager.AppSettings["APIKey"]);
+
         }
 
         #endregion        
@@ -456,6 +462,9 @@ public class clsResuftAPI
         client.BaseAddress = new Uri(System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"]);
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        client.DefaultRequestHeaders.Add(
+            "X-API-Key",
+            ConfigurationManager.AppSettings["APIKey"]);
     }
 
     #endregion
@@ -668,12 +677,16 @@ public class clsResuftAPI
     {
         DataTable dt = new DataTable();
         string serilized = JsonConvert.SerializeObject(obj);
-        var inputMessage = new HttpRequestMessage
+        var inputMessage = new HttpRequestMessage(HttpMethod.Put, urlPath)
         {
             Content = new StringContent(serilized, Encoding.UTF8, "application/json")
         };
         inputMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        HttpResponseMessage message = client.PutAsync(urlPath, inputMessage.Content).Result;
+        // Gắn trực tiếp vào request để bảo đảm header không bị bỏ qua khi gửi PUT.
+        inputMessage.Headers.TryAddWithoutValidation(
+            "X-API-Key",
+            ConfigurationManager.AppSettings["APIKey"]);
+        HttpResponseMessage message = client.SendAsync(inputMessage).Result;
         if (message.IsSuccessStatusCode)
         {
             var re = message.Content.ReadAsAsync<dynamic>().Result;
@@ -1275,12 +1288,8 @@ public class clsResuftAPI
     {
         DataTable dt = new DataTable();
         string serilized = JsonConvert.SerializeObject(obj);
-        var inputMessage = new HttpRequestMessage
-        {
-            Content = new StringContent(serilized, Encoding.UTF8, "application/json")
-        };
-        inputMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        HttpResponseMessage message = client.PostAsync($"api/ApiExtension/ExcutePostTable?packageName={packageName}&storeName={storeName}", inputMessage.Content).Result;
+        var content = new StringContent(serilized, Encoding.UTF8, "application/json");
+        HttpResponseMessage message = client.PostAsync($"api/ApiExtension/ExcutePostTable?packageName={packageName}&storeName={storeName}", content).Result;
         if (message.IsSuccessStatusCode)
         {
             var re = message.Content.ReadAsAsync<dynamic>().Result;
@@ -1289,7 +1298,9 @@ public class clsResuftAPI
                 dt = JsonConvert.DeserializeObject<DataTable>(re.ListValue.ToString());
             }
             else
+            {
                 dt = null;
+            }
         }
         return dt;
     }
@@ -1317,12 +1328,8 @@ public class clsResuftAPI
     public object GetPostValueApiExtension(string packageName, string storeName, object obj)
     {
         string serilized = JsonConvert.SerializeObject(obj);
-        var inputMessage = new HttpRequestMessage
-        {
-            Content = new StringContent(serilized, Encoding.UTF8, "application/json")
-        };
-        inputMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        HttpResponseMessage message = client.PostAsync($"api/ApiExtension/ExcutePostReturnInt?packageName={packageName}&storeName={storeName}", inputMessage.Content).Result;
+        var content = new StringContent(serilized, Encoding.UTF8, "application/json");
+        HttpResponseMessage message = client.PostAsync($"api/ApiExtension/ExcutePostReturnInt?packageName={packageName}&storeName={storeName}", content).Result;
         if (message.IsSuccessStatusCode)
         {
             var re = message.Content.ReadAsAsync<dynamic>().Result;
@@ -1330,9 +1337,8 @@ public class clsResuftAPI
             {
                 return re.ListValue.ToString();
             }
-            else
-                return null;
         }
+
         return null;
     }
     #endregion

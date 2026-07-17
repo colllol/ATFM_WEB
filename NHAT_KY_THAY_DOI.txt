@@ -304,3 +304,16 @@ Quy ước:
 
 49. prjApplication/Masters/ATFMNoneMenu.Master
     - Bổ sung class atfm-header để trang không có menu cũng nhận giao diện header mới.
+
+[17/07/2026] Bổ sung X-API-Key cho các request từ client
+------------------------------------------------------
+
+50. prjBusinessLogic/ResultFormAPI/clsResuftAPI.cs
+    - Cấu hình X-API-Key trong header mặc định của cả hai HttpClient để áp dụng cho toàn bộ request GET, POST, PUT và DELETE.
+    - Chuẩn hóa hai hàm POST API Extension dùng PostAsync và nhận X-API-Key từ header mặc định, tránh khai báo header lặp lại trên từng request.
+
+[17/07/2026] Bổ sung X-API-Key trực tiếp cho request GetTableWithObject
+---------------------------------------------------------------------
+
+51. prjBusinessLogic/ResultFormAPI/clsResuftAPI.cs
+    - Chuyển request PUT của GetTableWithObject sang HttpRequestMessage/SendAsync và gắn trực tiếp X-API-Key để bảo đảm API nhận được khóa xác thực.
