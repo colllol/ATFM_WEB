@@ -71,7 +71,9 @@
                         'overflow-y': 'auto'
                     });
 
-                parent.scroll(function () {
+                var scrollFrame = null;
+                var updateFixedCells = function () {
+                    scrollFrame = null;
                     var scrollWidth = parent[0].scrollWidth;
                     var clientWidth = parent[0].clientWidth;
                     var scrollHeight = parent[0].scrollHeight;
@@ -80,17 +82,26 @@
                     var left = parent.scrollLeft();
 
                     if (settings.head)
-                        this.find("thead tr > *").css("top", top);
+                        table.find("thead tr > *").css("top", top);
 
                     if (settings.foot)
-                        this.find("tfoot tr > *").css("bottom", scrollHeight - clientHeight - top);
+                        table.find("tfoot tr > *").css("bottom", scrollHeight - clientHeight - top);
 
                     if (settings.left > 0)
                         settings.leftColumns.css("left", left);
 
                     if (settings.right > 0)
                         settings.rightColumns.css("right", scrollWidth - clientWidth - left);
-                }.bind(table));
+                };
+
+                // Tránh cộng dồn handler mỗi lần bảng nạp lại và gom cập nhật theo frame
+                // để bảng lớn cuộn mượt hơn, không ép browser layout nhiều lần liên tiếp.
+                parent.off("scroll.tableHeadFixer").on("scroll.tableHeadFixer", function () {
+                    if (scrollFrame !== null) return;
+                    scrollFrame = window.requestAnimationFrame
+                        ? window.requestAnimationFrame(updateFixedCells)
+                        : window.setTimeout(updateFixedCells, 16);
+                });
             }
 
             // Set table head fixed

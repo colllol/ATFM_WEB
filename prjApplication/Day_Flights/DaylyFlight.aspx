@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/Atfm_Nofooter.Master" AutoEventWireup="true"
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
     CodeBehind="DaylyFlight.aspx.cs" Inherits="prjApplication.Day_Flights.DaylyFlight" %>
 
 <%@ Import Namespace="System.Data" %>
@@ -20,8 +20,104 @@
         }
 
         #table-container {
-				height: 900px;
-			}
+            height: calc(100vh - 220px);
+            min-height: 520px;
+            margin: 10px 0 20px !important;
+            overflow: hidden;
+            border: 1px solid #c8d9e8;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 7px 22px rgba(26, 67, 105, .13);
+        }
+
+        #table-container > .table-responsive {
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            overflow: auto !important;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-color: #337ab7 #e5edf4;
+            scrollbar-width: auto;
+        }
+
+        #table-container > .table-responsive::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+
+        #table-container > .table-responsive::-webkit-scrollbar-track {
+            background: #e5edf4;
+            border-radius: 8px;
+        }
+
+        #table-container > .table-responsive::-webkit-scrollbar-thumb {
+            min-height: 42px;
+            background: #337ab7;
+            border: 3px solid #e5edf4;
+            border-radius: 8px;
+        }
+
+        #table-container > .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #205b8f;
+        }
+
+        #grdSource {
+            margin-bottom: 0;
+            background: #fff;
+            isolation: isolate;
+        }
+
+        #grdSource thead tr:last-child > th {
+            background: #1e5f91 !important;
+            color: #fff !important;
+            border-color: #75a4c7 !important;
+        }
+
+        #grdSource thead tr.Spec > td {
+            background: #dcecf8 !important;
+            border-bottom: 2px solid #337ab7 !important;
+        }
+
+        #grdSource tbody tr > td:nth-child(-n+4) {
+            border-right-color: #7da4c1 !important;
+        }
+
+        #grdSource tr > *:nth-child(4) {
+            border-right: 4px solid #00a6d6 !important;
+            box-shadow: 7px 0 9px -6px rgba(0, 80, 120, .9) !important;
+        }
+
+        #grdSource thead tr > *:nth-child(-n+4) {
+            border-bottom-color: #00a6d6 !important;
+        }
+
+        /* Freeze bằng CSS sticky để hàng/cột đứng im ngay trong lúc cuộn. */
+        #grdSource thead tr > * {
+            position: sticky !important;
+            z-index: 20;
+            background-clip: padding-box;
+        }
+
+        #grdSource tr > *.dayly-frozen-column {
+            position: sticky !important;
+            z-index: 50 !important;
+            background-clip: padding-box;
+        }
+
+        #grdSource thead tr > *.dayly-frozen-column {
+            z-index: 90 !important;
+        }
+
+        #grdSource tbody tr > td:not(.dayly-frozen-column) {
+            position: relative;
+            z-index: 1;
+        }
+
+        #grdSource tr > *.dayly-freeze-edge {
+            border-right: 4px solid #006f9f !important;
+            box-shadow: 8px 0 10px -7px rgba(0, 44, 70, .95) !important;
+        }
 
         tr {
             cursor: pointer;
@@ -148,6 +244,126 @@
             position: absolute;
             bottom: 2px;
             right: 20px;
+        }
+
+        /* Toolbar responsive: không để giờ/tổng số và bộ lọc chồng lên nhau. */
+        .divHeader {
+            display: flex;
+            height: auto !important;
+            min-height: 132px;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px 12px;
+            border: 1px solid #bfd5e6 !important;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f7fbff 0%, #e7f3fc 100%);
+            box-shadow: 0 5px 14px rgba(35, 83, 120, .10);
+        }
+
+        #topBar1 {
+            position: static !important;
+            display: flex;
+            width: 100% !important;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            text-align: center;
+        }
+
+        #topBar2 {
+            position: static !important;
+            display: flex;
+            width: 100% !important;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 16px;
+        }
+
+        #topBar2 span {
+            width: auto !important;
+            min-width: 92px;
+            padding: 5px 10px;
+            border: 1px solid #8eb7d7 !important;
+            border-radius: 6px;
+            background: #fff;
+            color: #174f7c;
+            white-space: nowrap;
+        }
+
+        #topBar3 {
+            position: static !important;
+            display: flex;
+            width: 100%;
+            min-height: 38px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        #topBar3 > *,
+        #topBar3 .checkbox,
+        #divSelectDate,
+        #ddlPERMTYPE,
+        #ddlSelect,
+        #ddlExport,
+        #ddlPageSize,
+        #lblTimeRefresh {
+            position: static !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            top: auto !important;
+            width: auto !important;
+            margin: 0 !important;
+        }
+
+        #topBar3 .checkbox {
+            display: flex;
+            min-width: 132px;
+            align-items: center;
+            margin-left: 10px !important;
+        }
+
+        #topBar3 .checkbox label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding-left: 0 !important;
+            white-space: nowrap;
+        }
+
+        #topBar3 .checkbox input[type="checkbox"] {
+            position: static;
+            margin: 0 !important;
+        }
+
+        #topBar3 select,
+        #divSelectDate select {
+            min-width: 90px;
+            height: 36px;
+            border: 1px solid #78a9cc;
+            border-radius: 6px;
+            background-color: #fff;
+            color: #164d76;
+        }
+
+        /* Hàng tìm kiếm riêng biệt, dễ nhận biết với header dữ liệu. */
+        #grdSource thead tr.Spec > td {
+            padding: 9px 8px !important;
+            border-top: 2px solid #2c8bc2 !important;
+            border-bottom: 2px solid #2c8bc2 !important;
+            background: #d9effc !important;
+        }
+
+        #grdSource thead tr.Spec input,
+        #grdSource thead tr.Spec select {
+            border: 1px solid #68a6cf !important;
+            border-radius: 6px !important;
+            background: #fff !important;
+            box-shadow: inset 0 1px 2px rgba(31, 78, 113, .08);
         }
 
 
@@ -1197,7 +1413,6 @@
     <script src="../Scripts/spectrum.js"></script>
     <script src="../Style/assets/js/ace-elements.min.js"></script>
     <script src="../Style/assets/js/ace.min.js"></script>
-    <script src="../Scripts/tableHeadFixer.js"></script>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script>
         var d = new Date();
@@ -1422,7 +1637,7 @@
 
                 $('#grdSource tbody tr').remove();
                 $('#grdSource tbody').append(array[0]);
-                $("#grdSource").tableHeadFixer({ "head": true, "left": 4 });
+                scheduleDaylyStickyFreeze();
                 unPreLoadData();
 
                 highlight_row();
@@ -1435,7 +1650,7 @@
             }
             if (context == 'LoadGrdSourceScroll') {
                 $('#grdSource tr').last().after(resulf).fadeIn();
-                $("#grdSource").tableHeadFixer({ "head": true, "left": 4 });
+                scheduleDaylyStickyFreeze();
                 unPreLoadData();
 
                 highlight_row();
@@ -2819,9 +3034,81 @@
         }
     </script>
     <script>
+        function applyDaylyStickyFreeze() {
+            var table = document.getElementById('grdSource');
+            if (!table || !table.tHead || !table.tHead.rows.length) return;
+
+            function isTransparentColor(color) {
+                return !color || color === 'transparent' ||
+                    color === 'rgba(0, 0, 0, 0)' ||
+                    /rgba\([^)]*,\s*0(?:\.0+)?\s*\)$/.test(color);
+            }
+
+            function getEffectiveBackground(cell) {
+                // Xóa màu đã chụp ở lần trước để đọc đúng class/màu trạng thái hiện tại.
+                cell.style.removeProperty('background-color');
+                var element = cell;
+                while (element && element !== table.parentNode) {
+                    var color = window.getComputedStyle(element).backgroundColor;
+                    if (!isTransparentColor(color)) return color;
+                    element = element.parentElement;
+                }
+                return '#ffffff';
+            }
+
+            var referenceRow = table.tHead.rows.length > 1
+                ? table.tHead.rows[table.tHead.rows.length - 1]
+                : table.tHead.rows[0];
+            var columnWidths = [];
+            for (var i = 0; i < 4 && i < referenceRow.cells.length; i++) {
+                columnWidths.push(referenceRow.cells[i].getBoundingClientRect().width);
+            }
+
+            var rows = table.rows;
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                var logicalColumn = 0;
+                for (var cellIndex = 0; cellIndex < rows[rowIndex].cells.length; cellIndex++) {
+                    var cell = rows[rowIndex].cells[cellIndex];
+                    var span = parseInt(cell.getAttribute('colspan') || '1', 10);
+                    if (logicalColumn < 4) {
+                        var left = 0;
+                        for (var col = 0; col < logicalColumn; col++) left += columnWidths[col] || 0;
+                        cell.classList.add('dayly-frozen-column');
+                        cell.style.left = Math.round(left) + 'px';
+                        // Sticky cell phải có nền riêng; nếu chỉ dùng nền của tr thì nền sẽ
+                        // cuộn đi và dữ liệu phía sau xuyên qua vùng freeze.
+                        cell.style.setProperty('background-color', getEffectiveBackground(cell));
+                        if (logicalColumn + span >= 4) cell.classList.add('dayly-freeze-edge');
+                    }
+                    logicalColumn += span;
+                }
+            }
+
+            var stickyTop = 0;
+            for (var headerIndex = 0; headerIndex < table.tHead.rows.length; headerIndex++) {
+                var headerRow = table.tHead.rows[headerIndex];
+                for (var headerCell = 0; headerCell < headerRow.cells.length; headerCell++) {
+                    headerRow.cells[headerCell].style.top = Math.round(stickyTop) + 'px';
+                }
+                stickyTop += headerRow.getBoundingClientRect().height;
+            }
+        }
+
+        function scheduleDaylyStickyFreeze() {
+            window.requestAnimationFrame(function () {
+                applyDaylyStickyFreeze();
+                window.requestAnimationFrame(applyDaylyStickyFreeze);
+            });
+        }
+
         $(document).ready(function () {
-             btnSearch_Onclick();
-            $("#grdSource").tableHeadFixer({ "head": true, "left": 2 });
+            btnSearch_Onclick();
+            scheduleDaylyStickyFreeze();
+            var resizeTimer;
+            $(window).on('resize.daylySticky', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(applyDaylyStickyFreeze, 120);
+            });
         });
 
         

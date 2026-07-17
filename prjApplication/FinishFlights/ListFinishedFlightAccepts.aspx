@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlights.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlights" %>
+<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlights.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlights" %>
 
 <%@ Import Namespace="prjBusinessLogic" %>
 <%@ Import Namespace="prjInfo" %>
@@ -284,7 +284,7 @@
             </div>
             <div class="export-popup-footer">
                 <button type="button" class="btn btn-default" onclick="closeExportPopup()">Hủy</button>
-                <button type="button" class="btn btn-primary" data-no-loading="true" onclick="executeSelectedExport()"><i class="fa fa-download"></i> Export Excel</button>
+                <button type="button" class="btn btn-primary" onclick="executeSelectedExport()"><i class="fa fa-download"></i> Export Excel</button>
             </div>
         </div>
     </div>
@@ -1842,8 +1842,6 @@
             }
             exportReportTitle = document.getElementById('txtExportReportTitle').value.replace(/^\s+|\s+$/g, '');
             closeExportPopup();
-            // Nút popup tự quản lý loading để listener toàn cục không can thiệp sự kiện export.
-            if (window.ATFMLoading) window.ATFMLoading.show('Đang chuẩn bị file Excel...');
             if (exportMode === 'cancel') LoadDataGrid_ExportCancel();
             else LoadDataGrid_Export();
         }
@@ -1949,8 +1947,6 @@
             downloadLink.onclick = destroyClickedElement;
             downloadLink.style.display = "none";
             document.body.appendChild(downloadLink);
-            // Đã tạo xong file và sắp mở hộp thoại lưu của trình duyệt, không giữ loading nữa.
-            if (window.ATFMLoading) window.ATFMLoading.forceHide();
             downloadLink.click();           
 
         }

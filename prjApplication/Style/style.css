@@ -1,5 +1,81 @@
 ﻿
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 
+html, body, input, button, select, textarea, table { font-family: 'Roboto', Arial, sans-serif !important; }
+body *:not(.fa):not(.ace-icon):not([class*="glyphicon"]) { font-family: 'Roboto', Arial, sans-serif !important; }
+body { background-color: #eef3f7; }
+
+/* Khung chứa nội dung của mọi Master trong suốt; card/bảng con vẫn giữ nền riêng. */
+#main-container > .main-content,
+#main-container > .atfm-workspace > .main-content,
+#main-container .main-content-inner,
+#main-container .page-content {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* Header xanh VATM phân tầng sáng/tối, tăng độ nổi cho nhận diện thương hiệu. */
+#navbar.atfm-header {
+    border: 0 !important;
+    border-bottom: 1px solid rgba(145, 201, 244, .48) !important;
+    background:
+        radial-gradient(circle at 58% -80%, rgba(100, 174, 231, .40) 0, rgba(100, 174, 231, 0) 48%),
+        linear-gradient(105deg, #123568 0%, #1c467f 34%, #285b99 62%, #1d467f 82%, #123568 100%) !important;
+    box-shadow: 0 5px 16px rgba(13, 45, 82, .24), inset 0 -1px 0 rgba(255, 255, 255, .12) !important;
+}
+
+#navbar.atfm-header .navbar-container {
+    background: linear-gradient(90deg, rgba(4, 28, 65, .14), transparent 28%, rgba(255, 255, 255, .035) 62%, rgba(4, 28, 65, .14)) !important;
+}
+
+#navbar.atfm-header .atfm-brand-logo {
+    filter: drop-shadow(0 3px 6px rgba(0, 15, 45, .34));
+}
+
+#navbar.atfm-header .atfm-brand-vatm {
+    color: #fff !important;
+    font-weight: 800 !important;
+    letter-spacing: .7px !important;
+    text-shadow: 0 2px 3px rgba(0, 19, 53, .50), 0 0 12px rgba(151, 211, 255, .12);
+}
+
+#navbar.atfm-header .atfm-brand-name {
+    color: #fff !important;
+    font-weight: 600 !important;
+    letter-spacing: .25px !important;
+    line-height: 1.45 !important;
+    text-shadow: 0 1px 2px rgba(0, 17, 49, .72);
+}
+
+#navbar.atfm-header .atfm-brand-name span:first-child {
+    font-weight: 700 !important;
+}
+
+.page-content .well, .page-content .panel, .page-content .widget-box,
+.page-content fieldset.box-border, .page-content .classSearchHeader {
+    border: 1px solid #dce5ee !important; border-radius: 10px !important;
+    background: #fff !important; box-shadow: 0 5px 16px rgba(31,55,78,.09) !important;
+}
+
+.atfm-ai-link { display:flex !important; align-items:center; justify-content:center; min-width:52px; height:100%; padding:0 8px !important; text-decoration:none !important; }
+.ace-nav > li.atfm-ai-action,
+.ace-nav > li > .atfm-ai-link,
+.ace-nav > li > .atfm-ai-link:hover,
+.ace-nav > li > .atfm-ai-link:focus,
+.ace-nav > li.user-min,
+.ace-nav > li.user-min > a.dropdown-toggle,
+.ace-nav > li.user-min > a.dropdown-toggle:hover,
+.ace-nav > li.user-min > a.dropdown-toggle:focus {
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.atfm-ai-orb { position:relative; display:flex; width:38px; height:38px; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.65); border-radius:50%; background:linear-gradient(135deg,#6f5cff,#18b8d9); color:#fff; font-size:13px; font-weight:700; letter-spacing:.5px; box-shadow:0 5px 14px rgba(42,101,190,.34); animation:atfmAiPulse 2.2s ease-in-out infinite; transition:transform .2s ease,box-shadow .2s ease; }
+.atfm-ai-orb:after { content:'✦'; position:absolute; top:-5px; right:-3px; color:#ffe071; font-size:13px; text-shadow:0 1px 3px rgba(0,0,0,.3); animation:atfmAiSpark 1.4s ease-in-out infinite; }
+.atfm-ai-link:hover .atfm-ai-orb { transform:translateY(-2px) scale(1.06); box-shadow:0 9px 20px rgba(42,101,190,.45); }
+@keyframes atfmAiPulse { 0%,100%{box-shadow:0 5px 14px rgba(42,101,190,.3)} 50%{box-shadow:0 5px 22px rgba(92,113,255,.7)} }
+@keyframes atfmAiSpark { 0%,100%{opacity:.5;transform:scale(.8) rotate(0)} 50%{opacity:1;transform:scale(1.2) rotate(20deg)} }
 .Head 
 {
     padding-top:15px;

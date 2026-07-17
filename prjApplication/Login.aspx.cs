@@ -91,7 +91,7 @@ namespace prjApplication
                     totalTimer.Stop();
                     TraceLoginTiming("TotalBeforeRedirect", totalTimer.ElapsedMilliseconds);
                     Response.AppendHeader("Server-Timing", "login;dur=" + totalTimer.ElapsedMilliseconds);
-                    Response.Redirect(Global.ApplicationPath + "/Common/Reports.aspx", false);
+                    Response.Redirect(Global.ApplicationPath + "/Common/ChartReport.aspx", false);
                     Context.ApplicationInstance.CompleteRequest();
                 }
                 else

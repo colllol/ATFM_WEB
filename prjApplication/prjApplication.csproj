@@ -616,6 +616,8 @@
     <Content Include="Common\Log_Export.aspx" />
     <Content Include="Common\Dashboard.aspx" />
     <Content Include="Common\ChartReport.aspx" />
+    <Content Include="Common\ChartReportAirport.aspx" />
+    <Content Include="Data\dashboard-flights.json" />
     <Content Include="Day_Flights\DayFlightNotRoute.aspx" />
     <Content Include="Day_Flights\DayFlightSearch.aspx" />
     <Content Include="Day_Flights\DaylyFlight.aspx" />
@@ -1915,6 +1917,10 @@
     </Compile>
     <Compile Include="Common\ChartReport.aspx.cs">
       <DependentUpon>ChartReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Common\ChartReportAirport.aspx.cs">
+      <DependentUpon>ChartReportAirport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Common\ChartReport.aspx.designer.cs">

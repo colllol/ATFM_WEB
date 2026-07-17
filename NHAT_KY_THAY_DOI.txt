@@ -1,0 +1,306 @@
+NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
+================================
+
+Quy ước:
+- File này ghi lại các tệp đang thay đổi/chưa được commit và nội dung thay đổi chính.
+- Sau mỗi lần sửa mã nguồn trong project, phải cập nhật thêm nhật ký mà không cần hỏi lại.
+- Không xóa lịch sử cũ khi bổ sung lần sửa mới.
+
+[16/07/2026] Tổng hợp các thay đổi đang chờ commit/push
+-------------------------------------------------------
+
+1. prjApplication/Common/ChartReport.aspx
+   - Thay giao diện biểu đồ cũ bằng dashboard quản lý chuyến bay hiện đại, responsive.
+   - Thêm biểu đồ tròn SVG chia theo Finished, Cancel, Delay và Wait.
+   - Thêm các thẻ thống kê tổng số và tỷ lệ phần trăm của từng trạng thái.
+   - Cho phép nhấn vào biểu đồ hoặc thẻ thống kê để lọc bảng chi tiết bên dưới.
+   - Đọc dữ liệu giả lập từ Data/dashboard-flights.json.
+   - Loại bỏ phụ thuộc Google jsapi.js/uds_api_contents.js và giao diện báo cáo cũ.
+
+2. prjApplication/Common/ChartReport.aspx.cs
+   - Loại bỏ truy vấn DAL/database thật và logic Google Chart cũ.
+   - Giữ code-behind tối giản; dashboard hiện dùng dữ liệu JSON phía client.
+
+3. prjApplication/Data/dashboard-flights.json
+   - File mới, đóng vai trò database giả lập cho dashboard.
+   - Chứa 20 chuyến bay mẫu thuộc 4 trạng thái Finished, Cancel, Delay và Wait.
+
+4. prjApplication/Login.aspx.cs
+   - Đổi trang chuyển hướng sau khi đăng nhập từ Common/Reports.aspx sang Common/ChartReport.aspx.
+
+5. prjApplication/Masters/ATFM_New.Master
+   - Đổi link logo VATM về Common/ChartReport.aspx.
+   - Nâng cấp giao diện link menu cấp 2 thành card bo góc, gradient, đổ bóng và hiệu ứng hover/focus.
+   - Thêm thanh màu nhấn và biểu tượng mũi tên cho từng link menu cấp 2.
+
+6. prjApplication/Masters/ATFM.Master
+   - Đổi link logo VATM về Common/ChartReport.aspx.
+
+7. prjApplication/Masters/ATFMNoneMenu.Master
+   - Đổi link logo VATM về Common/ChartReport.aspx.
+
+8. prjApplication/Masters/Atfm_Nofooter.Master
+   - Đổi link logo VATM về Common/ChartReport.aspx.
+
+9. prjApplication/FinishFlights/ListFinishedFlights.aspx
+   - Thêm popup chọn trường khi Export Excel, gồm chọn tất cả và nút Export.
+   - Chỉ xuất các cột được người dùng tích chọn.
+   - Thêm ô nhập tiêu đề báo cáo; tiêu đề được gộp theo số cột đã chọn trong Excel.
+   - Ép ngày xuất Excel thống nhất định dạng dd/mm/yyyy.
+   - Đổi màu hàng tiêu đề bảng sang màu btn-primary.
+   - Bổ sung CSS responsive để bảng phù hợp nhiều kích thước màn hình và hạn chế cuộn ngang.
+   - Điều chỉnh Blob/MIME và BOM khi tạo file Excel.
+
+10. prjApplication/Scripts/CustumStaticdata.js
+    - Thay urlApi từ http://localhost/QLB.API/ thành http://172.29.187.90:8888/ATFM_API/.
+    - Đây là thay đổi đã tồn tại trong danh sách chờ push khi lập nhật ký.
+
+11. prjApplication/prjApplication.csproj
+    - Đăng ký Data/dashboard-flights.json là Content để được đóng gói và triển khai cùng website.
+
+12. prjApplication/FinishFlights/ListFinishedFlightAccepts.aspx
+    - File mới chưa được Git theo dõi, sử dụng Master ATFM_New.Master và code-behind ListFinishedFlights.aspx.cs.
+    - Đây là file đã tồn tại trong danh sách chờ push khi lập nhật ký.
+
+13. AGENTS.md
+    - File mới lưu quy tắc bắt buộc tự động cập nhật NHAT_KY_THAY_DOI.txt sau mỗi lần sửa project.
+
+14. NHAT_KY_THAY_DOI.txt
+    - File nhật ký mới tổng hợp các thay đổi đang chờ commit/push.
+
+[16/07/2026] Bổ sung phân trang dashboard
+-------------------------------------------
+
+15. prjApplication/Common/ChartReport.aspx
+    - Thêm bộ chọn số hàng mỗi trang: 5, 10, 20 hoặc 50.
+    - Thêm phân trang với nút trang trước, trang sau và số trang hiện tại.
+    - Hiển thị thông tin phạm vi dòng đang xem, ví dụ 1–10 / 20.
+    - Khi lọc theo trạng thái, bảng và phân trang được cập nhật theo dữ liệu đã lọc và quay về trang đầu.
+
+16. prjApplication/Common/ChartReportAirport.aspx
+    - Tạo mới trang so sánh 1 hoặc 2 sân bay theo thời gian.
+    - Thêm bộ lọc số lượng sân bay, sân bay tương ứng và thời gian tương ứng.
+    - Hiển thị biểu đồ cột đôi theo Tổng chuyến bay, Finished, Cancel, Delay và Wait.
+    - Thêm phần chú thích màu và số liệu cho từng sân bay.
+    - Dùng dữ liệu giả lập dashboard-flights.json khi chưa có API.
+
+17. prjApplication/Common/ChartReportAirport.aspx.cs
+    - Tạo code-behind tối giản cho trang so sánh sân bay.
+
+18. prjApplication/prjApplication.csproj
+    - Đăng ký ChartReportAirport.aspx và code-behind mới vào project.
+
+[16/07/2026] Sửa lỗi chính tả tên trang
+----------------------------------------
+
+19. ChartReportAriport.aspx → ChartReportAirport.aspx
+    - Đổi tên file trang, code-behind và class từ Ariport thành Airport.
+    - Cập nhật CodeBehind, Inherits, project file và nhật ký thay đổi.
+
+[16/07/2026] Hoàn thiện so sánh hai mốc thời gian
+--------------------------------------------------
+
+20. prjApplication/Common/ChartReportAirport.aspx
+    - Khi chọn 1 sân bay, vẫn hiển thị 2 ô thời gian để so sánh hai thời điểm của cùng sân bay.
+    - Khi chọn 2 sân bay, ô thời gian thứ hai thuộc sân bay thứ hai như trước.
+    - Biểu đồ cột đôi và phần chú thích luôn hiển thị đủ hai bộ số liệu.
+
+[16/07/2026] Bổ sung thao tác bỏ lọc biểu đồ
+---------------------------------------------
+
+21. prjApplication/Common/ChartReport.aspx
+    - Nhấn lại lần thứ hai vào cùng một lát biểu đồ tròn sẽ hủy bộ lọc và trở về tổng quan tất cả chuyến bay.
+
+[16/07/2026] Thêm loading toàn cục
+-----------------------------------
+
+22. prjApplication/Masters/ATFM_New.Master
+    - Thêm lớp phủ trong mờ và hiệu ứng blur bao trùm toàn trang để chặn thao tác trong lúc tải.
+    - Thêm icon loading hai vòng chuyển động và thông báo trạng thái.
+    - Tự động hiển thị khi chuyển trang, submit form, gọi jQuery AJAX hoặc fetch.
+    - Tự động ẩn khi hoàn thành, khi quay lại bằng browser cache và có timeout an toàn 60 giây.
+    - Không thêm loading vào ATFM.Master vì các trang hiện hành chủ yếu dùng ATFM_New.Master.
+
+[16/07/2026] Mở rộng loading cho nút và sự kiện nội bộ
+-------------------------------------------------------
+
+23. prjApplication/Masters/ATFM_New.Master
+    - Bổ sung bắt sự kiện click của button/input thao tác như Thêm mới, Edit, Delete, Search và Export.
+    - Nút mở popup được tắt loading ngay sau khi popup hiện; các tác vụ AJAX bên trong vẫn được theo dõi.
+    - Bỏ qua nút đóng popup, checkbox và các control được đánh dấu data-no-loading.
+
+[16/07/2026] Sửa phạm vi bắt loading thao tác
+-----------------------------------------------
+
+24. prjApplication/Masters/ATFM_New.Master
+    - Không hiển thị loading khi người dùng click vào ô nhập text, select, checkbox hoặc radio.
+    - Chỉ bắt loading ở control thực thi như button, submit hoặc image button; Search chỉ loading sau khi nhấn nút.
+
+[16/07/2026] Bổ sung bind trực tiếp cho nút thao tác
+------------------------------------------------------
+
+25. prjApplication/Masters/ATFM_New.Master
+    - Bind trực tiếp các button/input action sau khi DOM tải xong để bao phủ nút Thêm mới, Lưu, Send, Export và các nút không có onclick.
+    - Ngăn xử lý loading trùng giữa listener trực tiếp và listener toàn cục.
+
+[16/07/2026] Sửa thời điểm tắt loading sau Search và Export
+------------------------------------------------------------
+
+26. prjApplication/Masters/ATFM_New.Master
+    - Dùng forceHide khi AJAX/fetch hoàn tất để loading luôn dừng sau khi Search trả dữ liệu, kể cả bộ đếm tác vụ bị lệch.
+
+27. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Tắt loading ngay trước khi kích hoạt tải file Excel và mở hộp thoại lưu, tránh giữ lớp phủ quá lâu.
+
+[16/07/2026] Khôi phục sự kiện nút Export trong popup
+-----------------------------------------------------
+
+28. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Loại nút Export trong popup khỏi listener loading toàn cục bằng data-no-loading.
+    - Điều khiển loading trực tiếp trong executeSelectedExport sau khi kiểm tra lựa chọn cột, tránh can thiệp chuỗi gọi API và tải file.
+
+[16/07/2026] Chuẩn hóa loading theo vòng đời tác vụ
+----------------------------------------------------
+
+29. prjApplication/Masters/ATFM_New.Master
+    - Loại bỏ cách bật loading theo mọi click button vì không xác định chính xác thời điểm hoàn thành.
+    - Loading chỉ bật theo vòng đời thật của AJAX, fetch, XMLHttpRequest, submit/postback và chuyển trang.
+    - Bổ sung native XMLHttpRequest loadend để hỗ trợ các API không dùng jQuery.
+    - Các nút chỉ mở popup, chọn dữ liệu hoặc thao tác tức thời không còn bị loading sai.
+
+[16/07/2026] Kiểm tra toàn bộ trang dùng ATFM_New.Master
+---------------------------------------------------------
+
+30. prjApplication/Masters/ATFM_New.Master
+    - Quét 192 trang hiện hành: 37 trang dùng jQuery AJAX, 2 trang dùng fetch, 137 trang dùng Web Forms postback và 16 trang điều hướng JavaScript.
+    - Bổ sung hook HTMLFormElement.submit và __doPostBack cho các nút Web Forms không phát sinh DOM submit event.
+    - Bổ sung PageRequestManager beginRequest/endRequest cho partial postback và UpdatePanel.
+    - Loading được tắt ở endRequest/loadend thay vì suy đoán theo click button.
+
+[16/07/2026] Sửa loading cho Export postback mở Save As
+--------------------------------------------------------
+
+31. prjApplication/Masters/ATFM_New.Master
+    - Nhận diện server postback Export/Excel qua eventTarget, id và nội dung nút.
+    - Giữ loading trong thời gian server chuẩn bị file và tắt ngay khi trình duyệt mất focus để mở hộp thoại Save As.
+    - Thêm timeout an toàn 30 giây nếu trình duyệt không phát sinh blur.
+
+[16/07/2026] Thêm loading trang đăng nhập
+------------------------------------------
+
+32. prjApplication/Login.aspx
+    - Thêm lớp phủ mờ chặn thao tác và icon loading hai vòng khi nhấn Đăng nhập.
+    - Hiển thị thông báo Đang xác thực tài khoản trong thời gian postback/xác thực và chuyển trang.
+    - Tự tắt loading khi trang đăng nhập được hiển thị lại sau đăng nhập thất bại hoặc browser cache.
+
+[16/07/2026] Sửa footer bị đè bởi nội dung dài
+-----------------------------------------------
+
+33. prjApplication/Masters/ATFM_New.Master
+    - Ép main-container, workspace, main-content và page-content tự tăng chiều cao theo nội dung.
+    - Loại bỏ overflow/height cố định gây footer nằm chồng lên textarea hoặc bảng dài.
+    - Đặt footer trong luồng document với position relative !important và overflow hiển thị.
+
+[16/07/2026] Tăng hiệu ứng thẻ trạng thái dashboard
+-----------------------------------------------------
+
+34. prjApplication/Common/ChartReport.aspx
+    - Khi chọn một trạng thái trên biểu đồ, thẻ thống kê tương ứng bên cạnh được đổ full màu theo màu biểu đồ.
+    - Đổi chữ, số lượng và phần trăm sang màu trắng; tăng đổ bóng để phân biệt rõ trạng thái đang chọn.
+
+[16/07/2026] Nâng cấp hiệu ứng menu cấp 1
+-------------------------------------------
+
+35. prjApplication/Masters/ATFM_New.Master
+    - Thêm hiệu ứng nâng nhẹ khi hover menu cấp 1.
+    - Thêm thanh nhấn bên trái cho mục active/open.
+    - Thêm hiệu ứng nổi cho icon và xoay mũi tên khi menu mở.
+    - Giữ nguyên cấu trúc menu và logic điều hướng hiện tại.
+
+[16/07/2026] Đồng bộ font, icon AI và tối ưu bảng chuyến bay ngày
+---------------------------------------------------------------
+
+36. prjApplication/Style/style.css
+    - Áp dụng Google Roboto cho giao diện dùng các master chung, giữ nguyên font biểu tượng.
+    - Làm nổi bật panel, well, widget và khung tìm kiếm bằng nền trắng, bo góc, đổ bóng.
+    - Thêm kiểu icon AI chuyển động và hiệu ứng hover/pulse.
+
+37. prjApplication/Style/login-modern.css
+    - Áp dụng Google Roboto cho trang đăng nhập và các control nhập liệu.
+
+38. prjApplication/Masters/ATFM_New.Master, ATFM.Master, Atfm_Nofooter.Master, ATFMNoneMenu.Master
+    - Thêm icon AI trên header, mở trợ lý AI trong tab mới qua địa chỉ ngrok được cấu hình.
+    - Đồng bộ các vị trí font Times New Roman còn lại sang Roboto.
+
+39. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Đổi bảng từ chiều cao 900px sang chiều cao theo màn hình để scrollbar luôn nằm trong viewport.
+    - Làm scrollbar lớn, tương phản, dễ kéo; thêm khung, nền trắng, bo góc và đổ bóng.
+    - Làm rõ header và vùng freeze 4 cột đầu, không thay đổi màu trạng thái chuyến bay.
+    - Loại bỏ một lần nạp trùng tableHeadFixer.js.
+
+[16/07/2026] Sửa nền icon header và độ mượt bảng freeze
+------------------------------------------------------
+
+40. prjApplication/Style/style.css, prjApplication/Masters/ATFM_New.Master,
+    prjApplication/Masters/ATFM.Master, prjApplication/Masters/Atfm_Nofooter.Master,
+    prjApplication/Masters/ATFMNoneMenu.Master
+    - Loại bỏ nền, viền và bóng bao ngoài icon AI và khu vực User ở trạng thái thường, hover và focus.
+    - Bổ sung class riêng cho vùng icon AI để không ảnh hưởng nút thông báo.
+
+41. prjApplication/Scripts/tableHeadFixer.js
+    - Không cộng dồn scroll handler khi bảng được nạp lại nhiều lần.
+    - Đồng bộ cập nhật freeze panel theo requestAnimationFrame để giảm giật khi cuộn bảng lớn.
+
+42. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Thống nhất freeze 4 cột ở lần tải đầu và các lần tải dữ liệu sau.
+    - Thêm đường phân cách màu cyan dày 4px và bóng đậm sau cột freeze thứ tư.
+
+[16/07/2026] Khôi phục footer trang chuyến bay ngày
+--------------------------------------------------
+
+43. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Chuyển trang từ Atfm_Nofooter.Master sang ATFM_New.Master để hiển thị lại footer.
+    - Giữ nguyên vùng bảng cuộn riêng và toàn bộ logic tải/freeze dữ liệu hiện tại.
+
+[16/07/2026] Thay cơ chế freeze và sắp xếp lại toolbar DaylyFlight
+----------------------------------------------------------------
+
+44. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Bỏ gọi tableHeadFixer trên trang và chuyển freeze hàng/cột sang CSS position sticky native.
+    - Tự tính vị trí left cho 4 cột freeze và top cho các hàng header sau mỗi lần tải dữ liệu/resize.
+    - Sắp xếp cụm khung giờ, đồng hồ, tổng số và bộ lọc bằng flex responsive để không chồng lên nhau.
+    - Đổi hàng tìm kiếm sang nền xanh nhạt, viền xanh và control nền trắng để nổi bật hơn header dữ liệu.
+
+[16/07/2026] Sửa lớp hiển thị vùng freeze và khoảng cách bộ lọc
+--------------------------------------------------------------
+
+45. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Tăng z-index và cô lập lớp render của 4 cột freeze, ngăn CallSign/dữ liệu cuộn xuyên lên vùng PERM.
+    - Đánh dấu chính xác mép cuối vùng freeze theo logical column để đường phân cách luôn đúng khi có colspan.
+    - Tách checkbox Auto Refresh khỏi ô ngày, căn giữa checkbox/label và thêm khoảng cách ổn định.
+
+[16/07/2026] Giữ nền màu cho các ô freeze khi cuộn ngang
+--------------------------------------------------------
+
+46. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Xác định màu nền hiệu lực từ chính ô, hàng hoặc vùng cha cho từng ô thuộc 4 cột freeze.
+    - Gán nền trực tiếp cho sticky cell sau mỗi lần render để màu hàng không bị cuộn khỏi vùng freeze.
+    - Luôn đọc lại màu trạng thái hiện tại trước khi gán, tránh giữ màu cũ sau khi dữ liệu thay đổi.
+
+[16/07/2026] Bỏ nền khung div chứa nội dung trên toàn hệ thống
+-------------------------------------------------------------
+
+47. prjApplication/Style/style.css
+    - Đặt main-content, main-content-inner và page-content thành nền trong suốt cho tất cả Master/trang.
+    - Chỉ loại bỏ lớp nền bao ngoài; giữ nguyên nền trắng, viền và bóng của card, bảng, panel con.
+
+[16/07/2026] Nâng cấp màu sắc và typography header
+-------------------------------------------------
+
+48. prjApplication/Style/style.css
+    - Giữ màu xanh VATM và bổ sung gradient nhiều vùng đậm/nhạt cùng ánh sáng trung tâm.
+    - Thêm đường sáng phía dưới, bóng ngoài và bóng trong để header có chiều sâu.
+    - Tăng font-weight, letter-spacing và text-shadow cho VATM/tên công ty; thêm bóng nhẹ cho logo.
+
+49. prjApplication/Masters/ATFMNoneMenu.Master
+    - Bổ sung class atfm-header để trang không có menu cũng nhận giao diện header mới.
