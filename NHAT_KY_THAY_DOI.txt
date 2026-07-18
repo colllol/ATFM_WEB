@@ -317,3 +317,122 @@ Quy ước:
 
 51. prjBusinessLogic/ResultFormAPI/clsResuftAPI.cs
     - Chuyển request PUT của GetTableWithObject sang HttpRequestMessage/SendAsync và gắn trực tiếp X-API-Key để bảo đảm API nhận được khóa xác thực.
+
+[18/07/2026] Bổ sung log chẩn đoán request GetInboxBySearch
+---------------------------------------------------------
+
+52. prjApplication/Receive_LogFile/Inbox.aspx
+    - Tách dữ liệu và URL request để log rõ request gửi đi; bổ sung callback done, fail và always nhằm hiển thị HTTP status, response và lỗi AJAX trong Console.
+    - Chỉ đọc ListValue khi request thành công và dữ liệu hợp lệ, tránh lỗi JavaScript phụ che mất nguyên nhân gốc.
+
+53. prjApplication/Receive_LogFile/InboxNew.aspx
+    - Bổ sung cùng cơ chế log chẩn đoán GetInboxBySearch và kiểm tra an toàn dữ liệu phản hồi cho trang Inbox mới.
+
+[18/07/2026] Ngăn sai lệch ngày Inbox do chuyển đổi múi giờ
+---------------------------------------------------------
+
+54. prjApplication/Receive_LogFile/Inbox.aspx
+    - Gửi P_FROMDATE và P_TODATE dưới dạng chuỗi ISO yyyy-MM-dd thay vì đối tượng Date, tránh JSON.stringify chuyển ngày giờ địa phương sang UTC của ngày hôm trước.
+    - Áp dụng cách định dạng ngày cho cả tìm kiếm dữ liệu hiện tại và dữ liệu log.
+
+55. prjApplication/Receive_LogFile/InboxNew.aspx
+    - Đồng bộ cách gửi chuỗi ngày không kèm múi giờ cho trang Inbox mới và chức năng tìm kiếm log.
+
+[18/07/2026] Bổ sung tham số phân trang cho GetInboxBySearch
+----------------------------------------------------------
+
+56. prjApplication/Receive_LogFile/Inbox.aspx
+    - Bổ sung P_START = 1 và P_END = 100 đúng theo chữ ký procedure MESSAGE_PKG.GetInboxBySearch.
+
+57. prjApplication/Receive_LogFile/InboxNew.aspx
+    - Đồng bộ tham số phạm vi dòng 1-100 khi gọi GetInboxBySearch trên trang Inbox mới.
+
+[18/07/2026] Ngăn gọi trùng GetInboxBySearch khi mở trang
+------------------------------------------------------
+
+58. prjApplication/Receive_LogFile/Inbox.aspx
+    - Bỏ lệnh LoadData tự động trong document.ready; procedure chỉ được gọi khi người dùng bấm Search, tránh tạo hai bản ghi t_log cho lần mở trang rồi tìm kiếm đầu tiên.
+
+[18/07/2026] Chặn request GetInboxBySearch đồng thời
+--------------------------------------------------
+
+59. prjApplication/Receive_LogFile/Inbox.aspx
+    - Khóa request đang chạy, vô hiệu hóa nút Search và cảnh báo Console nếu phát sinh lần gọi trùng trước khi request hiện tại hoàn tất.
+
+60. prjApplication/Receive_LogFile/InboxNew.aspx
+    - Đồng bộ cơ chế chặn request đồng thời và trạng thái nút Search trên trang Inbox mới.
+
+[18/07/2026] Sửa API thực thi stored procedure hai lần
+------------------------------------------------------
+
+61. E:/2020/QLB/Code_062020/atfm/atfm/API/QLB.BusinessLogic/DataProvido/oDataProvider.cs
+    - Bỏ các lệnh OracleCommand.ExecuteReader() dư thừa trước OracleDataAdapter.Fill() ở toàn bộ 7 vị trí đọc DataSet/DataTable, trong đó có ExecuteDataseForApiExtension.
+    - Tránh việc mỗi request ExcuteTable gọi procedure hai lần và tạo hai bản ghi log; giữ Fill() là thao tác duy nhất thực thi command.
+
+[18/07/2026] Chuẩn hóa LoadDataLogFile
+-----------------------------------
+
+62. prjApplication/Receive_LogFile/Inbox.aspx
+    - Đồng bộ LoadDataLogFile với LoadData: bổ sung payload phân trang/ngày, log gửi-thành công-thất bại-hoàn tất, kiểm tra an toàn response và chặn request đồng thời.
+
+[18/07/2026] Hiển thị tổng số bản ghi tìm kiếm Inbox
+----------------------------------------------------
+
+63. prjApplication/Receive_LogFile/Inbox.aspx
+    - Thêm nhãn tổng số bản ghi cạnh nút Search và cập nhật theo số phần tử ListValue trả về từ cả LoadData và LoadDataLogFile.
+
+[18/07/2026] Nhận tổng số bản ghi từ procedure Inbox
+----------------------------------------------------
+
+64. prjApplication/Receive_LogFile/Inbox.aspx
+    - Đọc cột TOTAL_RECORDS ở dòng đầu cursor để hiển thị tổng kết quả trước phân trang; giữ fallback theo độ dài ListValue để tương thích procedure cũ.
+
+[18/07/2026] Bổ sung phân trang Inbox
+-----------------------------------
+
+65. prjApplication/Receive_LogFile/Inbox.aspx
+    - Thêm nút trang trước/trang sau và chỉ báo trang hiện tại/tổng số trang.
+    - Tính P_START/P_END theo trang, sử dụng TOTAL_RECORDS để khóa nút ở đầu/cuối danh sách và giữ lại bộ lọc hiện tại khi chuyển trang.
+
+[18/07/2026] Đưa điều khiển phân trang cạnh tổng số bản ghi
+----------------------------------------------------------
+
+66. prjApplication/Receive_LogFile/Inbox.aspx
+    - Di chuyển cụm Previous/Trang/Next lên cùng hàng, ngay sau nhãn tổng số bản ghi theo yêu cầu giao diện.
+
+[18/07/2026] Hiển thị summary kết quả dưới hàng tìm kiếm
+-------------------------------------------------------
+
+67. prjApplication/Receive_LogFile/Inbox.aspx
+    - Gom tổng số bản ghi và phân trang thành một dòng ngay dưới bộ lọc tìm kiếm.
+    - Ẩn dòng summary khi mở trang hoặc bắt đầu request; chỉ hiển thị sau khi tìm kiếm thành công.
+
+[18/07/2026] Hiển thị con trỏ bàn tay cho dòng Inbox
+---------------------------------------------------
+
+68. prjApplication/Receive_LogFile/Inbox.aspx
+    - Thêm class inbox-item với cursor pointer cho các dòng CID/CSN của cả dữ liệu Inbox và LogFile.
+
+[18/07/2026] Kiểm tra khoảng ngày trước khi tìm Inbox
+----------------------------------------------------
+
+69. prjApplication/Receive_LogFile/Inbox.aspx
+    - Bổ sung kiểm tra định dạng ngày và chặn tìm kiếm khi ngày From lớn hơn ngày To.
+
+[18/07/2026] Tối ưu phân trang GetInboxBySearchLogFile trên Oracle
+------------------------------------------------------------------
+
+70. Database/Oracle/20260718_MESSAGE_PKG_before_inbox_optimization.sql
+    - Lưu bản sao đầy đủ package body ATFM.MESSAGE_PKG trước khi tối ưu để phục vụ đối chiếu và khôi phục khi cần.
+
+71. Database/Oracle/20260718_MESSAGE_PKG_optimize_inbox_log.sql
+    - Tối ưu GetInboxBySearchLogFile: bỏ ROW_NUMBER/COUNT OVER trên toàn bộ tập kết quả, sử dụng ROWNUM/STOPKEY để lấy đúng phạm vi trang.
+    - Chỉ tính TOTAL_RECORDS khi tải trang đầu; giữ nguyên chữ ký procedure và các cột cursor để tương thích API hiện tại.
+
+72. prjApplication/Receive_LogFile/Inbox.aspx
+    - LoadDataLogFile lưu tổng số bản ghi nhận được ở trang đầu và tái sử dụng khi chuyển trang, tránh yêu cầu procedure đếm lại.
+
+73. Database ATFM.MESSAGE_PKG và T_RECEIVE_LOGFILE
+    - Triển khai lại package body thành công; package specification/body đều VALID và không có compile error.
+    - Kiểm thử trang đầu trả TOTAL_RECORDS = 411027, trang sau trả đúng dữ liệu và không tính lại tổng số.
+    - Cập nhật statistics cho bảng T_RECEIVE_LOGFILE và toàn bộ index bằng DBMS_STATS; giữ nguyên hai index hiện có sau khi execution plan xác nhận index LETTERNBR_PK đang hoạt động cho khoảng ngày hẹp.

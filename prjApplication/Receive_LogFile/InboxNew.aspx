@@ -124,20 +124,76 @@
 
             return true;
         }
+        function formatDateForApi(value) {
+            var match = /^(\d{2})-(\d{2})-(\d{4})$/.exec($.trim(value));
+            return match ? match[3] + '-' + match[2] + '-' + match[1] : value;
+        }
+
+        var getInboxRequest = null;
+
         function LoadData() {
+            if (getInboxRequest && getInboxRequest.readyState !== 4) {
+                console.warn('[GetInboxBySearch] Duplicate request blocked');
+                return getInboxRequest;
+            }
+
             $('#lblNbr').html('');
-            var $request = $.ajax({
+            var requestUrl = urlApi + "api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearch";
+            var requestData = {
+                P_START: 1,
+                P_END: 100,
+                P_FROMDATE: formatDateForApi($('#txtFromDateSearch').val()),
+                P_TODATE: formatDateForApi($('#txtToDateSearch').val()),
+                P_NBR: $('#txtNbrSearch').val(),
+                P_ORIGIN: $('#txtOriginSearch').val(),
+                P_CONTENT: $('#txtContentSearch').val()
+            };
+
+            console.log('[GetInboxBySearch] Sending request', {
+                method: 'PUT',
+                url: requestUrl,
+                data: requestData
+            });
+
+            getInboxRequest = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearch",
-                data: JSON.stringify({ P_FROMDATE: new Date($('#txtFromDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_TODATE: new Date($('#txtToDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_NBR: $('#txtNbrSearch').val(), P_ORIGIN: $('#txtOriginSearch').val(), P_CONTENT: $('#txtContentSearch').val() })
-            }).always(function (data) {
-                if (data.ListValue[0] != null) {
+                url: requestUrl,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(requestData),
+                beforeSend: function () {
+                    $('#btnSeacrch').prop('disabled', true);
+                }
+            }).done(function (data, textStatus, jqXHR) {
+                console.log('[GetInboxBySearch] Success', {
+                    status: jqXHR.status,
+                    textStatus: textStatus,
+                    response: data
+                });
+
+                if (data && data.ListValue && data.ListValue[0] != null) {
                     $(data.ListValue).each(function (a, b) {
                         var c = "<div onclick=\"lblNbr_OnRowClick('" + b.TYPE + "', " + b.ID + "); $(this).addClass('select');\">" + b.NBR + "</div>";
                         $('#lblNbr').append(c);
                     })
                 }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.error('[GetInboxBySearch] Request failed', {
+                    url: requestUrl,
+                    status: jqXHR.status,
+                    statusText: jqXHR.statusText,
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    responseText: jqXHR.responseText,
+                    responseJSON: jqXHR.responseJSON,
+                    readyState: jqXHR.readyState
+                });
+            }).always(function (dataOrJqXHR, textStatus) {
+                console.log('[GetInboxBySearch] Request completed', { textStatus: textStatus });
+                $('#btnSeacrch').prop('disabled', false);
+                getInboxRequest = null;
             });
+
+            return getInboxRequest;
         }
 
         function LoadDataLogFile() {
@@ -145,7 +201,7 @@
             var $request = $.ajax({
                 method: "PUT",
                 url: urlApi + "api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearchLogFile",
-                data: JSON.stringify({ P_FROMDATE: new Date($('#txtFromDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_TODATE: new Date($('#txtToDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_NBR: $('#txtNbrSearch').val(), P_ORIGIN: $('#txtOriginSearch').val(), P_CONTENT: $('#txtContentSearch').val() })
+                data: JSON.stringify({ P_FROMDATE: formatDateForApi($('#txtFromDateSearch').val()), P_TODATE: formatDateForApi($('#txtToDateSearch').val()), P_NBR: $('#txtNbrSearch').val(), P_ORIGIN: $('#txtOriginSearch').val(), P_CONTENT: $('#txtContentSearch').val() })
             }).always(function (data) {
                 if (data.ListValue[0] != null) {
                     $(data.ListValue).each(function (a, b) {

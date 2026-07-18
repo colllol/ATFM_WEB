@@ -6,6 +6,9 @@
         .select {
         background-color: cadetblue;
         }
+        .inbox-item {
+            cursor: pointer;
+        }
     </style>
     <link href="../Style/assets/css/bootstrap.min.css" rel="stylesheet" />
     
@@ -20,6 +23,14 @@
         <label for="txtContentSearch">Content:</label>
         <input id="txtContentSearch" type="text" />
         <button id="btnSeacrch" type="button" class="btn btn-primary" onclick="btnSeacrch_OnClick()">Search</button>
+    </div>
+    <div id="inboxResultSummary" style="display: none; margin-top: 8px; font-weight: 600;">
+        <span id="lblTotalRecords">Tổng số bản ghi: 0</span>
+        <span id="inboxPager" style="margin-left: 16px; white-space: nowrap; font-weight: normal;">
+            <button id="btnInboxPrev" type="button" class="btn btn-xs btn-default" onclick="changeInboxPage(-1)" disabled="disabled">&lt;</button>
+            <span id="lblInboxPage" style="margin: 0 5px;">Trang 1/1</span>
+            <button id="btnInboxNext" type="button" class="btn btn-xs btn-default" onclick="changeInboxPage(1)" disabled="disabled">&gt;</button>
+        </span>
     </div>
     <hr />
     
@@ -64,8 +75,6 @@
             $('#txtToDateSearch').val(new Date().format('dd-mm-yyyy'));
             $('#txtFromDateSearch').multiDate();
             $('#txtToDateSearch').multiDate();
-            //$('#btnSeacrch').click();
-            LoadData();
         })
     </script>
     <script>
@@ -105,41 +114,218 @@
 
             return true;
         }
+        function formatDateForApi(value) {
+            var match = /^(\d{2})-(\d{2})-(\d{4})$/.exec($.trim(value));
+            return match ? match[3] + '-' + match[2] + '-' + match[1] : value;
+        }
+
+        function parseSearchDate(value) {
+            var match = /^(\d{2})-(\d{2})-(\d{4})$/.exec($.trim(value));
+            return match ? Date.UTC(parseInt(match[3], 10), parseInt(match[2], 10) - 1, parseInt(match[1], 10)) : null;
+        }
+
+        function getTotalRecords(data) {
+            if (!data || !data.ListValue || data.ListValue.length === 0) {
+                return 0;
+            }
+
+            var totalRecords = parseInt(data.ListValue[0].TOTAL_RECORDS, 10);
+            return isNaN(totalRecords) ? data.ListValue.length : totalRecords;
+        }
+
+        var inboxPageSize = 100;
+        var inboxPageIndex = 1;
+        var inboxTotalRecords = 0;
+
+        function updateInboxPager(totalRecords) {
+            inboxTotalRecords = totalRecords || 0;
+            var totalPages = Math.max(1, Math.ceil(inboxTotalRecords / inboxPageSize));
+            $('#lblInboxPage').text('Trang ' + inboxPageIndex + '/' + totalPages);
+            $('#btnInboxPrev').prop('disabled', inboxPageIndex <= 1);
+            $('#btnInboxNext').prop('disabled', inboxPageIndex >= totalPages);
+        }
+
+        function changeInboxPage(delta) {
+            var totalPages = Math.max(1, Math.ceil(inboxTotalRecords / inboxPageSize));
+            var nextPage = inboxPageIndex + delta;
+            if (nextPage < 1 || nextPage > totalPages) {
+                return;
+            }
+
+            inboxPageIndex = nextPage;
+            btnSeacrch_OnClick(false);
+        }
+
+        var getInboxRequest = null;
+
         function LoadData() {
+            if (getInboxRequest && getInboxRequest.readyState !== 4) {
+                console.warn('[GetInboxBySearch] Duplicate request blocked');
+                return getInboxRequest;
+            }
+
             $('#lblNbr').html('');
-            var $request = $.ajax({
+            $('#inboxResultSummary').hide();
+            var requestUrl = urlApi + "api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearch";
+            var requestData = {
+                P_START: ((inboxPageIndex - 1) * inboxPageSize) + 1,
+                P_END: inboxPageIndex * inboxPageSize,
+                P_FROMDATE: formatDateForApi($('#txtFromDateSearch').val()),
+                P_TODATE: formatDateForApi($('#txtToDateSearch').val()),
+                P_NBR: $('#txtNbrSearch').val(),
+                P_ORIGIN: $('#txtOriginSearch').val(),
+                P_CONTENT: $('#txtContentSearch').val()
+            };
+
+            console.log('[GetInboxBySearch] Sending request', {
+                method: 'PUT',
+                url: requestUrl,
+                data: requestData
+            });
+
+            getInboxRequest = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearch",
-                data: JSON.stringify({ P_FROMDATE: new Date($('#txtFromDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_TODATE: new Date($('#txtToDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_NBR: $('#txtNbrSearch').val(), P_ORIGIN: $('#txtOriginSearch').val(), P_CONTENT: $('#txtContentSearch').val() })
-            }).always(function (data) {
-                if (data.ListValue[0] != null) {
+                url: requestUrl,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(requestData),
+                beforeSend: function () {
+                    $('#btnSeacrch').prop('disabled', true);
+                }
+            }).done(function (data, textStatus, jqXHR) {
+                console.log('[GetInboxBySearch] Success', {
+                    status: jqXHR.status,
+                    textStatus: textStatus,
+                    response: data
+                });
+
+                var totalRecords = getTotalRecords(data);
+                updateInboxPager(totalRecords);
+                $('#lblTotalRecords').text('Tổng số bản ghi: ' + totalRecords);
+                $('#inboxResultSummary').show();
+
+                if (totalRecords > 0 && data.ListValue[0] != null) {
                     $(data.ListValue).each(function (a, b) {
-                        var c = "<div onclick=\"lblNbr_OnRowClick('" + b.TYPE + "', " + b.ID + "); $(this).addClass('select');\">" + b.NBR + "</div>";
+                        var c = "<div class=\"inbox-item\" onclick=\"lblNbr_OnRowClick('" + b.TYPE + "', " + b.ID + "); $(this).addClass('select');\">" + b.NBR + "</div>";
                         $('#lblNbr').append(c);
                     })
                 }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.error('[GetInboxBySearch] Request failed', {
+                    url: requestUrl,
+                    status: jqXHR.status,
+                    statusText: jqXHR.statusText,
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    responseText: jqXHR.responseText,
+                    responseJSON: jqXHR.responseJSON,
+                    readyState: jqXHR.readyState
+                });
+            }).always(function (dataOrJqXHR, textStatus) {
+                console.log('[GetInboxBySearch] Request completed', { textStatus: textStatus });
+                $('#btnSeacrch').prop('disabled', false);
+                getInboxRequest = null;
             });
+
+            return getInboxRequest;
         }
+
+        var getInboxLogRequest = null;
 
         function LoadDataLogFile() {
+            if (getInboxLogRequest && getInboxLogRequest.readyState !== 4) {
+                console.warn('[GetInboxBySearchLogFile] Duplicate request blocked');
+                return getInboxLogRequest;
+            }
+
             $('#lblNbr').html('');
-            var $request = $.ajax({
+            $('#inboxResultSummary').hide();
+            var requestUrl = urlApi + "api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearchLogFile";
+            var requestData = {
+                P_START: ((inboxPageIndex - 1) * inboxPageSize) + 1,
+                P_END: inboxPageIndex * inboxPageSize,
+                P_FROMDATE: formatDateForApi($('#txtFromDateSearch').val()),
+                P_TODATE: formatDateForApi($('#txtToDateSearch').val()),
+                P_NBR: $('#txtNbrSearch').val(),
+                P_ORIGIN: $('#txtOriginSearch').val(),
+                P_CONTENT: $('#txtContentSearch').val()
+            };
+
+            console.log('[GetInboxBySearchLogFile] Sending request', {
+                method: 'PUT',
+                url: requestUrl,
+                data: requestData
+            });
+
+            getInboxLogRequest = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearchLogFile",
-                data: JSON.stringify({ P_FROMDATE: new Date($('#txtFromDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_TODATE: new Date($('#txtToDateSearch').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')), P_NBR: $('#txtNbrSearch').val(), P_ORIGIN: $('#txtOriginSearch').val(), P_CONTENT: $('#txtContentSearch').val() })
-            }).always(function (data) {
-                if (data.ListValue[0] != null) {
+                url: requestUrl,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(requestData),
+                beforeSend: function () {
+                    $('#btnSeacrch').prop('disabled', true);
+                }
+            }).done(function (data, textStatus, jqXHR) {
+                console.log('[GetInboxBySearchLogFile] Success', {
+                    status: jqXHR.status,
+                    textStatus: textStatus,
+                    response: data
+                });
+
+                // Procedure chỉ tính TOTAL_RECORDS ở trang đầu; các trang sau dùng lại
+                // tổng số đã nhận khi người dùng thực hiện tìm kiếm.
+                var totalRecords = inboxPageIndex > 1
+                    ? inboxTotalRecords
+                    : getTotalRecords(data);
+                updateInboxPager(totalRecords);
+                $('#lblTotalRecords').text('Tổng số bản ghi: ' + totalRecords);
+                $('#inboxResultSummary').show();
+
+                if (totalRecords > 0 && data.ListValue[0] != null) {
                     $(data.ListValue).each(function (a, b) {
-                        var c = "<div onclick=\"lblNbr_OnRowClickLogFile('" + b.TYPE + "', " + b.ID + "); $(this).addClass('select');\">" + b.NBR + "</div>";
+                        var c = "<div class=\"inbox-item\" onclick=\"lblNbr_OnRowClickLogFile('" + b.TYPE + "', " + b.ID + "); $(this).addClass('select');\">" + b.NBR + "</div>";
                         $('#lblNbr').append(c);
                     })
                 }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.error('[GetInboxBySearchLogFile] Request failed', {
+                    url: requestUrl,
+                    status: jqXHR.status,
+                    statusText: jqXHR.statusText,
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    responseText: jqXHR.responseText,
+                    responseJSON: jqXHR.responseJSON,
+                    readyState: jqXHR.readyState
+                });
+            }).always(function (dataOrJqXHR, textStatus) {
+                console.log('[GetInboxBySearchLogFile] Request completed', { textStatus: textStatus });
+                $('#btnSeacrch').prop('disabled', false);
+                getInboxLogRequest = null;
             });
+
+            return getInboxLogRequest;
         }
 
 
 
-        function btnSeacrch_OnClick() {
+        function btnSeacrch_OnClick(resetPage) {
+            var fromDate = parseSearchDate($('#txtFromDateSearch').val());
+            var toDate = parseSearchDate($('#txtToDateSearch').val());
+
+            if (fromDate === null || toDate === null) {
+                alert('Vui lòng nhập ngày theo định dạng dd-mm-yyyy.');
+                return;
+            }
+
+            if (fromDate > toDate) {
+                alert('Ngày From không được lớn hơn ngày To.');
+                return;
+            }
+
+            if (resetPage !== false) {
+                inboxPageIndex = 1;
+            }
+
             var _date1 = new Date().format('mm-yyyy');
             var _date2 = $('#txtFromDateSearch').val().substring(3,($('#txtFromDateSearch').val().length));
             

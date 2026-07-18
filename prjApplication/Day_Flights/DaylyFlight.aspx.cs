@@ -339,7 +339,7 @@ namespace prjApplication.Day_Flights
             switch (obj.OptionDate)
             {
                 case "0":
-                    obj.FLIGHTDATE = DateTime.Today.AddDays(-1301);
+                    obj.FLIGHTDATE = DateTime.Today.AddDays(0);
                     //obj.FLIGHTDATE = DateTime.Today;
                     if (obj.RowStart.ToString()!="0")
                          _i = Int32.Parse(obj.RowStart.ToString());                   

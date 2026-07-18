@@ -555,7 +555,8 @@
             btnSearch_OnClick();
         }
         function btnExport_OnClick() {
-
+            //console.log(JSON.stringify({ P_DATEFLIGHT: new Date($('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')).format('yyyy-mm-dd'), P_USER: '<%= _user.UserName%>' }));
+              
             var c = checkValidCustomMinlenght('checkAccess');
             if (!c) return;
             var cf = confirm('Do you want export flights date: ' + $('#txtFromDate').val() + '?');
@@ -564,6 +565,7 @@
                     async: true,
                     method: "PUT",
                     url: urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=SCHEDULEDAYFLIGHTS_2020_PKG&storeName=RenderKeHoachBayNgay",
+
                     data: JSON.stringify({ P_DATEFLIGHT: new Date($('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')).format('yyyy-mm-dd'), P_USER: '<%= _user.UserName%>' }),
                     complete: function () {
                         unLoadingData('loadingAccess');
