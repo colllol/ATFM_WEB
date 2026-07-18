@@ -801,3 +801,27 @@ Quy ước:
 120. prjApplication/prjApplication.csproj, prjBusinessLogic/prjBusinessLogic.csproj, prjComponents/prjComponents.csproj, prjApplication/packages.config
     - Đồng nhất HtmlAgilityPack 1.5.1 và Newtonsoft.Json 10.0.3 theo package đã dùng trước khi đồng bộ.
     - Khớp với bindingRedirect của Web.config cục bộ, loại cảnh báo xung đột assembly có thể gây lỗi tải DLL trên IIS.
+
+[18/07/2026] Cập nhật dữ liệu từ GitHub nhánh agent/initial-atfm-import
+--------------------------------------------------------------------
+
+121. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit f65a4a4 lên a6ca77a theo origin/agent/initial-atfm-import.
+    - Nhận 1 commit mới gồm 51 file, bổ sung 2.942 dòng và xóa 302 dòng; không phát sinh merge conflict.
+    - Giữ nguyên file cục bộ chưa theo dõi prjApplication/bin.7z, không đưa vào thao tác đồng bộ.
+
+[18/07/2026] Sửa lỗi không tạo được prjComponents.dll
+----------------------------------------------------
+
+122. prjBusinessLogic/packages.config
+    - Bổ sung cấu trúc packages.config còn thiếu và khai báo HtmlAgilityPack 1.5.1, Microsoft.AspNet.WebApi.Client 5.2.3, Newtonsoft.Json 10.0.3 đúng với HintPath trong project.
+    - Restore NuGet thành công, build lại prjBusinessLogic và prjComponents để tạo prjComponents/bin/Debug/prjComponents.dll.
+    - Xác nhận prjApplication build thành công, không còn lỗi CS0006 thiếu metadata prjComponents.dll.
+
+[18/07/2026] Đồng bộ binding redirect thư viện JSON và HTML
+-----------------------------------------------------------
+
+123. prjApplication/Web.config
+    - Cập nhật binding redirect Newtonsoft.Json từ 6.0.0.0 lên 10.0.0.0, khớp DLL được NuGet restore và sao chép vào thư mục bin.
+    - Cập nhật đồng thời HtmlAgilityPack từ 1.4.6.0 lên 1.5.1.0 để tránh lỗi manifest tương tự khi chạy ứng dụng.
+    - Build prjApplication thành công với 0 error, xử lý lỗi FileLoadException tại ReadAsAsync<dynamic>().
