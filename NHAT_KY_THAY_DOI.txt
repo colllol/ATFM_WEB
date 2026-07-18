@@ -436,3 +436,368 @@ Quy ước:
     - Triển khai lại package body thành công; package specification/body đều VALID và không có compile error.
     - Kiểm thử trang đầu trả TOTAL_RECORDS = 411027, trang sau trả đúng dữ liệu và không tính lại tổng số.
     - Cập nhật statistics cho bảng T_RECEIVE_LOGFILE và toàn bộ index bằng DBMS_STATS; giữ nguyên hai index hiện có sau khi execution plan xác nhận index LETTERNBR_PK đang hoạt động cho khoảng ngày hẹp.
+[17/07/2026] Thêm điều khiển cuộn ngang phía trên bảng DaylyFlight
+----------------------------------------------------------------
+
+50. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Thêm thanh cuộn ngang phía trên bảng và đồng bộ hai chiều với thanh cuộn chính phía dưới.
+    - Thêm nút mũi tên nổi bên phải: nhấn nhanh cuộn sang phải một cột, nhấn giữ cuộn liên tục.
+    - Tự cập nhật độ rộng thanh cuộn trên sau khi tải dữ liệu, tính freeze hoặc resize cửa sổ.
+    - Điều chỉnh table-container thành flex để thanh cuộn trên không làm mất vùng hiển thị của bảng.
+
+[17/07/2026] Đưa nút cuộn ngang ra ngoài bảng DaylyFlight
+--------------------------------------------------------
+
+51. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Bọc bảng trong dayly-table-shell và chuyển nút mũi tên thành phần tử cùng cấp với table-container.
+    - Dành riêng 48px bên phải để nút nằm ngoài đường viền bảng, không che dữ liệu hoặc scrollbar.
+    - Giữ nguyên logic nhấn một lần/nhấn giữ và đồng bộ thanh cuộn.
+
+[17/07/2026] Thiết kế mới dashboard và bộ báo cáo ReportNew
+---------------------------------------------------------
+
+52. prjApplication/Common/ChartReport.aspx
+    - Thay dashboard cũ bằng dashboard Flight Analytics hiện đại: KPI, trạng thái, cất/hạ cánh, xu hướng và liên kết nhanh.
+
+53. prjApplication/ReportNew/ReportNew.css, ReportNew.js, ReportPageBase.cs
+    - Tạo hệ thống giao diện dùng chung responsive cho toàn bộ báo cáo mới.
+    - Bổ sung adapter endpoint theo API Aero, DayFlights, FinishedFlights, ReportStatistic và ReportDHB; dùng dữ liệu mẫu dự phòng khi chưa có API aggregate.
+    - Tạo biểu đồ cột đôi, donut phần trăm, biểu đồ xu hướng canvas, KPI, bảng chi tiết và bộ lọc sân bay/thời gian.
+
+54. prjApplication/ReportNew/AnomalyWarning.aspx
+    - Tạo trang placeholder cảnh báo dữ liệu bất thường theo yêu cầu tạm thời để trống.
+
+55. prjApplication/ReportNew/AirportTakeoffLanding.aspx, AirportActivitySummary.aspx
+    - Tạo báo cáo cất/hạ cánh và tổng hợp hoạt động sân bay; click cột để xem số lượt chi tiết.
+
+56. prjApplication/ReportNew/FlightStatusRate.aspx, FlightOperationOverview.aspx
+    - Tạo báo cáo tỷ lệ trạng thái và tổng quan khai thác; tổng chuyến gồm chuyến hiện tại cộng chuyến bổ sung.
+
+57. prjApplication/ReportNew/FlightTrendAnalysis.aspx
+    - Tạo biểu đồ so sánh quá khứ/hiện tại, bộ lọc khoảng thời gian và chế độ xem ngày/tháng.
+
+58. prjApplication/ReportNew/MilitaryFlightReport.aspx, CivilFlightSummary.aspx
+    - Tạo báo cáo quân sự theo tiêu chí mở rộng và báo cáo tổng hợp chuyến bay dân dụng.
+
+59. prjApplication/prjApplication.csproj
+    - Đăng ký các trang, CSS, JavaScript và lớp nền ReportNew vào project Web Application.
+
+[18/07/2026] Bổ sung tương tác biểu đồ trạng thái ReportNew
+----------------------------------------------------------
+
+60. prjApplication/ReportNew/ReportNew.js
+    - Chuyển donut từ nền conic-gradient sang các SVG segment có thể click độc lập.
+    - Click trạng thái để phóng lớn lát biểu đồ, làm mờ phần còn lại, đổ full màu thẻ bên cạnh và lọc bảng chi tiết.
+    - Click lại trạng thái đang chọn để trở về tổng số và hiển thị toàn bộ danh sách.
+    - Với Overview, Military và Civil: click cột sân bay sẽ tính lại donut theo sân bay được chọn và làm nổi cột đó.
+
+61. prjApplication/ReportNew/ReportInteractive.css
+    - Thêm hiệu ứng phóng to donut segment, full-color status card, bóng nổi, lọc hàng và highlight cột sân bay.
+
+62. prjApplication/prjApplication.csproj
+    - Đăng ký stylesheet tương tác ReportInteractive.css vào project.
+
+[18/07/2026] Tối ưu toolbar, chiều cao dòng và điều khiển cuộn DaylyFlight
+----------------------------------------------------------------------------
+
+63. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Gom bốn nút Thêm, Lưu, Tìm kiếm và Xóa điều kiện vào một cụm icon lớn, đồng nhất trên một hàng.
+    - Giảm padding, line-height và chiều cao các dòng dữ liệu để vừa nội dung.
+    - Xóa thanh cuộn ngang phía trên bảng; giữ thanh cuộn ngang chính phía dưới.
+    - Thêm nút mũi tên trái có chức năng ngược nút phải; hai nút xếp dọc ngoài bảng và hỗ trợ nhấn giữ.
+    - Nới rộng dayly-table-shell sang hai bên và dành vùng riêng cho cụm nút cuộn.
+
+[18/07/2026] Đồng bộ nhóm nút thao tác trên DaylyFlight
+------------------------------------------------------
+
+64. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Chuyển nút Tìm kiếm từ hàng filter của bảng lên cạnh nhóm gửi tin/xuất dữ liệu trên toolbar.
+    - Chuẩn hóa toàn bộ icon toolbar thành nút 34px có nền trắng, viền, bo góc, bóng và hiệu ứng hover.
+    - Làm nổi riêng nút Tìm kiếm bằng gradient xanh; căn lại badge thông báo trên từng nút.
+    - Thu gọn cụm thao tác trong bảng còn Thêm, Lưu và Xóa điều kiện.
+
+[18/07/2026] Cân chỉnh và mở rộng khung bảng DaylyFlight
+-------------------------------------------------------
+
+65. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Gộp ba cột đầu của hàng tìm kiếm thành một ô toolbar liền mạch, loại bỏ vùng trống và đường chia lệch bố cục.
+    - Cho table-container chiếm toàn bộ chiều rộng shell và mở rộng shell thêm 24px so với vùng nội dung.
+    - Không dành khoảng trống trong bảng cho nút cuộn; đưa cụm mũi tên ra ngoài mép phải 49px.
+    - Thêm đường phân cách cân đối sau toolbar và xử lý Total thiếu dữ liệu thành 0 thay vì undefined.
+
+[18/07/2026] Chuyển sự kiện tải thêm dữ liệu vào thanh cuộn bảng DaylyFlight
+----------------------------------------------------------------------------
+
+66. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Bỏ trigger tải thêm dữ liệu theo thanh cuộn chính của trang.
+    - Gắn sự kiện tải thêm vào thanh cuộn dọc riêng của bảng; chỉ gọi khi còn cách đáy bảng tối đa 40px.
+    - Thêm khóa chống gửi lặp API khi yêu cầu trước chưa hoàn thành và dừng gọi khi máy chủ không còn trả thêm dòng.
+    - Đặt lại trạng thái tải thêm sau mỗi lần tìm kiếm mới.
+
+[18/07/2026] Tối ưu DaylyFlight tự co giãn theo kích thước cửa sổ
+----------------------------------------------------------------
+
+67. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Loại bỏ chiều rộng âm và phần mở rộng ra ngoài viewport làm trang bị tràn ngang.
+    - Dành một gutter responsive bên trong vùng nội dung cho hai nút cuộn, giữ nút ở ngoài khung bảng nhưng không vượt khỏi cửa sổ.
+    - Cho chiều cao bảng tự điều chỉnh theo viewport bằng clamp và bổ sung breakpoint cho màn hình laptop, tablet, điện thoại.
+    - Cho toolbar, bộ lọc và nhóm nút tự xuống dòng, thu gọn khoảng cách và kích thước điều khiển trên màn hình hẹp.
+
+[18/07/2026] Căn khung bảng DaylyFlight và loại bỏ cuộn ngang toàn trang
+------------------------------------------------------------------------
+
+68. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Dịch khung bảng sang trái theo đúng gutter Bootstrap để thẳng mép với thẻ bộ lọc phía trên.
+    - Thu nhỏ gutter bên phải và hai nút điều hướng ngang, giúp tăng chiều rộng hữu dụng của bảng.
+    - Chặn overflow ngang ở cấp html/body để chỉ thanh cuộn nội bộ của bảng được hiển thị, không còn thanh cuộn ngang của trang chính.
+    - Điều chỉnh riêng khoảng lề và kích thước nút cho màn hình điện thoại.
+
+[18/07/2026] Đưa nút điều hướng sát thanh cuộn bảng DaylyFlight
+----------------------------------------------------------------
+
+69. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Giảm gutter bên phải để hai nút mũi tên chỉ cách mép thanh cuộn bảng khoảng 1-2px.
+    - Giữ cụm nút hoàn toàn trong chiều rộng vùng nội dung, không làm mở rộng trang hoặc phát sinh thanh cuộn ngang toàn trang.
+
+[18/07/2026] Đặt nút điều hướng cạnh thanh cuộn ngang DaylyFlight
+----------------------------------------------------------------
+
+70. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Chuyển cụm hai nút mũi tên từ giữa cạnh phải xuống góc phải phía dưới để nằm sát đầu cuối thanh cuộn ngang.
+    - Giữ nút trong gutter có sẵn, không thay đổi chiều rộng bảng và không phát sinh overflow ở trang chính.
+
+[18/07/2026] Cố định nút điều hướng cạnh thanh cuộn dọc trang chính
+------------------------------------------------------------------
+
+71. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Đưa cụm hai nút mũi tên trở lại giữa chiều cao màn hình và cố định theo viewport.
+    - Đặt nút sát thanh cuộn dọc ngoài cùng bên phải của trang chính; nút không tham gia kích thước layout nên không gây tràn ngang.
+    - Giảm khoảng cách với mép phải trên màn hình nhỏ để vẫn bám sát scrollbar.
+
+[18/07/2026] Đổi nền nội dung chính toàn hệ thống sang màu trắng
+----------------------------------------------------------------
+
+72. prjApplication/Style/style.css
+    - Đổi nền body và toàn bộ vùng main-content, main-content-inner, page-content sang màu trắng trên các master dùng chung.
+
+73. prjApplication/Masters/ATFM.Master
+    - Đổi nền main-container sang màu trắng.
+
+74. prjApplication/Masters/ATFM_New.Master
+    - Đổi các nền main-container, main-content và page-content từ xanh-xám sang màu trắng.
+
+75. prjApplication/Masters/Atfm_Nofooter.Master
+    - Đổi nền main-container của các trang không có footer sang màu trắng.
+
+[18/07/2026] Gắn nút điều hướng theo khung bảng DaylyFlight
+-----------------------------------------------------------
+
+76. prjApplication/Day_Flights/DaylyFlight.aspx
+    - Chuyển cụm hai nút mũi tên từ vị trí fixed theo viewport sang absolute theo dayly-table-shell.
+    - Giữ cụm nút ở chính giữa cạnh phải của bảng khi trang cuộn hoặc bảng thay đổi chiều cao.
+    - Thu gutter bên phải và đặt nút vào khe giữa mép bảng với scrollbar trang chính, sát cả hai phía mà không tham gia kích thước layout.
+    - Bổ sung vị trí và gutter tương ứng cho màn hình nhỏ.
+
+[18/07/2026] Đồng bộ bố cục bảng responsive trên toàn hệ thống
+----------------------------------------------------------------
+
+77. prjApplication/Scripts/ResponsiveTable.js
+    - Tạo bộ xử lý dùng chung cho 49 trang production có table-responsive, tự kiểm tra tràn ngang sau render, AJAX và resize.
+    - Chỉ tạo hai nút điều hướng trái/phải khi bảng thực sự rộng hơn vùng hiển thị; tự xóa nút và gutter khi dữ liệu đã hiển thị vừa.
+    - Hỗ trợ nhấn một lần để cuộn một cột và nhấn giữ để cuộn liên tục.
+    - Bỏ qua bảng trong modal và DaylyFlight.aspx vì trang này đã có điều khiển riêng.
+
+78. prjApplication/Style/style.css
+    - Thêm khung, scrollbar và cụm nút điều hướng responsive dùng chung theo bố cục DaylyFlight.
+
+79. prjApplication/Masters/ATFM.Master
+    - Nạp ResponsiveTable.js cho các trang dùng master chuẩn.
+
+80. prjApplication/Masters/ATFM_New.Master
+    - Nạp ResponsiveTable.js cho các trang dùng master giao diện mới.
+
+81. prjApplication/Masters/Atfm_Nofooter.Master
+    - Nạp ResponsiveTable.js cho các trang không có footer.
+
+82. prjApplication/Masters/ATFMNoneMenu.Master
+    - Nạp ResponsiveTable.js cho các trang không có menu.
+
+83. prjApplication/prjApplication.csproj
+    - Đăng ký ResponsiveTable.js vào project Web Application.
+
+[18/07/2026] Bao phủ các bảng cũ chưa có table-responsive
+---------------------------------------------------------
+
+84. prjApplication/Scripts/ResponsiveTable.js, prjApplication/Style/style.css
+    - Phát hiện thêm các bảng dữ liệu cũ #tblSource, #grdSource và table.table-bordered chưa được bọc responsive.
+    - Tự tạo vùng cuộn ngang nội bộ trước khi kiểm tra overflow, khắc phục các trang như CalendarFlight/CanlendarFlights.aspx bị tràn khỏi viewport.
+    - Giữ bảng tối thiểu bằng chiều rộng vùng nội dung và mở rộng theo tổng chiều rộng cột khi cần cuộn.
+    - Loại trừ bảng lồng, bảng trong modal và bảng DaylyFlight có bố cục riêng.
+
+[18/07/2026] Tạo màn hình quản lý dữ liệu T_KHH và T_SLOT_AERO
+----------------------------------------------------------------
+
+85. prjApplication/SLOTS/SlotsManagement.aspx
+    - Tạo giao diện quản lý SLOT theo phong cách DaylyFlight: hero, toolbar, tìm kiếm, chọn bảng, page size, bảng responsive và phân trang.
+    - Hiển thị động cột theo metadata thực tế; freeze ba cột đầu và sử dụng điều hướng ngang dùng chung khi bảng bị tràn.
+
+86. prjApplication/SLOTS/SlotsManagement.aspx.cs, SlotsManagement.aspx.designer.cs
+    - Kết nối hai nguồn T_KHH/T_SLOT_AERO bằng allow-list, đọc metadata cột, tìm kiếm có bind parameter và phân trang Oracle bằng ROW_NUMBER.
+    - Chuẩn hóa hiển thị ngày dd/MM/yyyy HH:mm:ss, mã hóa HTML và trả thông báo thân thiện khi lỗi kết nối.
+
+87. prjApplication/SLOTS/SlotsDataProvider.cs
+    - Tạo data provider riêng cho SLOTS, đọc connection string cấu hình và thực thi SELECT/Scalar có bind tham số theo tên.
+
+88. prjApplication/Web.config
+    - Thêm kết nối SlotsOracle riêng tới schema ATFM trên service PDBORCL; không thay đổi kết nối cũ của các chức năng hiện tại.
+
+89. prjApplication/prjApplication.csproj
+    - Đăng ký trang SLOTS, code-behind, designer và data provider vào Web Application.
+
+[18/07/2026] Tách riêng trang dữ liệu T_KHH và T_SLOT_AERO
+--------------------------------------------------------
+
+90. prjApplication/SLOTS/KHH.aspx, KHH.aspx.cs, KHH.aspx.designer.cs
+    - Tạo trang độc lập chỉ hiển thị và tra cứu dữ liệu bảng T_KHH.
+
+91. prjApplication/SLOTS/SlotAero.aspx, SlotAero.aspx.cs, SlotAero.aspx.designer.cs
+    - Tạo trang độc lập chỉ hiển thị và tra cứu dữ liệu bảng T_SLOT_AERO.
+
+92. prjApplication/SLOTS/SlotsTable.ascx, SlotsTable.ascx.cs, SlotsTable.ascx.designer.cs
+    - Tách giao diện, tìm kiếm, phân trang và bảng responsive thành user control dùng chung cho hai trang độc lập.
+    - Mỗi trang khóa cứng nguồn dữ liệu bằng allow-list, không còn bộ chọn gộp hai bảng trên cùng một màn hình.
+
+93. prjApplication/SLOTS/SlotsManagement.aspx, SlotsManagement.aspx.cs, SlotsManagement.aspx.designer.cs
+    - Xóa trang gộp hai bảng trước đây để tránh nhầm lẫn luồng sử dụng.
+
+94. prjApplication/prjApplication.csproj
+    - Thay đăng ký trang gộp bằng hai trang KHH/SlotAero và user control SlotsTable.
+
+[18/07/2026] Khắc phục lỗi OracleParameter trên hai trang SLOTS
+------------------------------------------------------------
+
+95. prjApplication/SLOTS/SlotsDataProvider.cs, SlotsTable.ascx.cs
+    - Chuyển riêng module SLOTS từ Oracle.DataAccess native sang Oracle.ManagedDataAccess để không phụ thuộc kiến trúc Oracle Client/IIS 32-bit hoặc 64-bit.
+
+96. prjApplication/packages.config, prjApplication/prjApplication.csproj
+    - Đăng ký gói và assembly Oracle.ManagedDataAccess 12.2.1100, tự sao chép DLL managed vào bin khi build.
+
+97. prjApplication/Web.config
+    - Đổi provider của kết nối SlotsOracle sang Oracle.ManagedDataAccess.Client; giữ nguyên máy chủ, service và schema ATFM.
+
+[18/07/2026] Tạo chức năng Đối chiếu và Kết quả SLOT
+---------------------------------------------------
+
+98. prjApplication/SLOTS/CreateSlotComparisonTables.sql
+    - Tạo script chạy lặp an toàn cho T_SLOT_COMPARE_RUN, T_SLOT_COMPARE_RESULT, hai sequence và index lọc kết quả.
+    - Đã áp dụng script trên schema ATFM để lưu lịch sử đối chiếu theo ngày trong thời hạn nghiệp vụ.
+
+99. prjApplication/SLOTS/SlotComparisonService.cs, SlotsDataProvider.cs
+    - Xây dựng logic KQ1–KQ4 từ T_SLOT_AERO, T_DAY_FLIGHTS và T_KHH theo callsign, ngày bay và chặng bay.
+    - Chuẩn hóa mã hãng IATA/ICAO bằng M_OPER, mã sân bay bằng M_AERO; bổ sung OPER vào dữ liệu lưu, bộ lọc và kết quả.
+    - Lưu lại kết quả theo ngày/OPER bằng transaction và hỗ trợ truy vấn phân trang, tổng hợp số lượng.
+
+100. prjApplication/SLOTS/SlotComparison.aspx, SlotComparison.aspx.cs, SlotComparison.aspx.designer.cs
+    - Tạo trang Đối chiếu với bộ lọc ngày, OPER, các nút KQ1–KQ4 và bảng kết quả vừa xử lý.
+
+101. prjApplication/SLOTS/SlotResults.aspx, SlotResults.aspx.cs, SlotResults.aspx.designer.cs
+    - Tạo trang Kết quả để đọc dữ liệu đối chiếu đã lưu, lọc ngày/OPER, chuyển KQ1–KQ4 và xuất Excel.
+
+102. prjApplication/SLOTS/SlotComparisonPanel.ascx, SlotComparisonPanel.ascx.cs, SlotComparisonPanel.ascx.designer.cs, SlotComparison.css
+    - Tạo control và giao diện dùng chung hiện đại cho hai trang; bảng kết quả responsive, có phân trang và trạng thái số lượng từng KQ.
+    - File Excel gồm No., Flightdate, OPER, CALLSIGN, FROM, TO, ETD, Remark theo cấu trúc tài liệu nghiệp vụ.
+
+103. prjApplication/prjApplication.csproj
+    - Đăng ký toàn bộ trang, control, CSS, service và script database của chức năng đối chiếu vào Web Application.
+
+104. prjApplication/SLOTS/SlotComparisonService.cs
+    - Sau kiểm thử dữ liệu thật, giới hạn OPER theo danh sách hãng xuất hiện trong T_KHH thay vì toàn bộ cờ IS_DOMESTIC của M_OPER.
+    - Loại các hãng ngoài phạm vi quy trình khỏi KQ1–KQ4 và chuẩn hóa VNA thành HVN trong bộ lọc.
+
+105. Database ATFM/T_MENUS
+    - Gán menu ID 917 “Đối chiếu” tới SLOTS/SlotComparison.aspx.
+    - Gán menu ID 918 “Kết quả” tới SLOTS/SlotResults.aspx; không thay đổi các menu SLOT khác.
+
+[18/07/2026] Hoàn thiện giao diện trang Đối chiếu và Kết quả
+---------------------------------------------------------
+
+106. prjApplication/SLOTS/SlotComparisonPanel.ascx, SlotComparisonPanel.ascx.cs, SlotComparisonPanel.ascx.designer.cs
+    - Khắc phục bốn nút KQ1–KQ4 bị mất chữ bằng cách gán Text trực tiếp và cập nhật số lượng sau mỗi lần tải dữ liệu.
+    - Thêm tooltip nghiệp vụ, ký hiệu xuất Excel và giữ trạng thái active theo KQ đang xem.
+
+107. prjApplication/SLOTS/SlotComparison.css
+    - Cân lại bố cục bộ lọc ngày/OPER/cụm hành động; thêm màu riêng, hover, active và shadow cho từng KQ.
+    - Cải thiện tiêu đề bảng, nút Excel và responsive cho màn hình nhỏ.
+
+[18/07/2026] Thêm nút tìm kiếm cho trang Kết quả SLOT
+---------------------------------------------------
+
+108. prjApplication/SLOTS/SlotComparisonPanel.ascx, SlotComparisonPanel.ascx.cs, SlotComparisonPanel.ascx.designer.cs
+    - Thêm nút Tìm kiếm chỉ hiển thị ở SlotResults.aspx; áp dụng ngày và OPER đang chọn cho KQ hiện tại rồi đưa phân trang về trang 1.
+    - Nút chỉ đọc kết quả đã lưu, không tự chạy lại nghiệp vụ đối chiếu.
+
+109. prjApplication/SLOTS/SlotComparison.css
+    - Tạo nút tìm kiếm màu xanh với icon kính lúp SVG, hiệu ứng hover và bố cục responsive.
+
+[18/07/2026] Ổn định ViewState trang Đối chiếu và Kết quả
+-------------------------------------------------------
+
+110. prjApplication/SLOTS/SlotComparison.aspx, SlotResults.aspx, SlotComparisonPanel.ascx
+    - Bật ViewStateModeById để ViewState được ánh xạ theo ID thay vì phụ thuộc vị trí control.
+    - Hạn chế lỗi Failed to load viewstate khi bổ sung hoặc điều chỉnh các nút trong cụm bộ lọc/KQ.
+
+111. prjApplication/SLOTS/SlotComparison.aspx, SlotResults.aspx, SlotComparisonPanel.ascx
+    - Gỡ ViewStateModeById do WebForms runtime của project không hỗ trợ thuộc tính này và phát sinh Parser Error.
+    - Giữ cây control cố định; lỗi ViewState cũ được xử lý bằng một lần tải GET mới sau khi triển khai.
+
+112. prjApplication/SLOTS/SlotComparison.css
+    - Sửa icon kính lúp đè lên chữ Tìm kiếm bằng cách khóa chiều rộng, tách vùng padding icon/chữ và ngăn flex co nút.
+    - Căn lại icon, chữ và trạng thái toàn chiều rộng trên màn hình di động.
+
+[18/07/2026] Tối ưu giao diện menu cấp 2
+----------------------------------------
+
+113. prjApplication/Masters/ATFM_New.Master
+    - Thu gọn menu cấp 2 thành panel nổi theo đúng số lượng chức năng, không còn phủ kín và che phần nội dung trang.
+    - Tự cân số cột (4 mục hiển thị 2 x 2), giới hạn kích thước theo cửa sổ và chỉ cuộn nội bộ khi danh sách dài.
+    - Bổ sung tiêu đề, icon, hiệu ứng mở panel, đóng khi click ra ngoài và bố cục riêng ổn định trên màn hình nhỏ.
+
+[18/07/2026] Giới hạn chiều cao các bảng dữ liệu dài
+----------------------------------------------------
+
+114. prjApplication/Scripts/ResponsiveTable.js
+    - Mở rộng nhận diện các bảng dữ liệu WebForms/Bootstrap cũ và chuẩn hóa trường hợp gắn sai class table-responsive trực tiếp lên table.
+    - Tự tính chiều cao bảng theo phần màn hình còn trống; bảng trên 12 hàng sẽ cuộn nội bộ thay vì kéo dài toàn bộ trang.
+    - Giữ cụm nút mũi tên ở giữa vùng bảng đã giới hạn để người dùng luôn thao tác được khi cuộn dọc.
+
+115. prjApplication/Style/style.css
+    - Bổ sung khung, thanh cuộn dọc, header bám trên và chiều cao responsive cho bảng dữ liệu dài.
+    - Giữ thanh cuộn ngang và hai nút điều hướng trong phạm vi trang, có điều chỉnh riêng cho màn hình nhỏ.
+
+[18/07/2026] Làm lại bảng dữ liệu tạm trang Import Perm For Month
+-----------------------------------------------------------------
+
+116. prjApplication/Tool/ImportPermForMonth.aspx
+    - Làm lại bố cục nội dung nhập, OPER, thanh thao tác và bảng dữ liệu thành các card responsive.
+    - Tách cố định hai hàng bộ lọc/tiêu đề để không còn chồng dữ liệu; thu gọn chiều cao hàng và giữ cuộn trong bảng.
+    - Bỏ hoàn toàn giao diện chuyển trang, Việt hóa các nút chính và cải thiện nút xóa từng dòng.
+
+117. prjApplication/Tool/ImportPermForMonth.aspx.cs, ImportPermForMonth.aspx.designer.cs
+    - Gỡ event/control phân trang và chuyển truy vấn về trang đầu với kích thước đủ lớn để trả toàn bộ dữ liệu vào vùng cuộn.
+    - Đánh lại STT liên tục theo danh sách kết quả không phân trang.
+
+[18/07/2026] Đồng bộ code đối tác trên nhánh agent/initial-atfm-import
+------------------------------------------------------------------
+
+118. Tích hợp GitHub
+    - Nhận đủ 4 commit mới từ origin, giữ toàn bộ lịch sử thay đổi của cả hai phía và hợp nhất các dependency/project reference.
+    - Giữ dashboard ReportNew mới khi xử lý xung đột ChartReport.aspx; nhận các tối ưu Inbox, API, SQL và cấu hình project từ đối tác.
+    - Bảo toàn Web.config đang chạy trên máy bằng skip-worktree và không đưa thông tin cấu hình cục bộ vào commit.
+
+119. prjBusinessLogic/prjBusinessLogic.csproj
+    - Loại lớp HttpContentJsonExtensions tương thích khỏi compile vì trùng extension ReadAsAsync/PostAsJsonAsync với Microsoft.AspNet.WebApi.Client 5.2.3.
+    - Giữ package chuẩn và các lời gọi DAL hiện tại, tránh lỗi biên dịch CS0121 sau khi hợp nhất code đối tác.
+
+120. prjApplication/prjApplication.csproj, prjBusinessLogic/prjBusinessLogic.csproj, prjComponents/prjComponents.csproj, prjApplication/packages.config
+    - Đồng nhất HtmlAgilityPack 1.5.1 và Newtonsoft.Json 10.0.3 theo package đã dùng trước khi đồng bộ.
+    - Khớp với bindingRedirect của Web.config cục bộ, loại cảnh báo xung đột assembly có thể gây lỗi tải DLL trên IIS.

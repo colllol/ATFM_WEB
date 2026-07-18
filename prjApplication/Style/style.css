@@ -3,14 +3,14 @@
 
 html, body, input, button, select, textarea, table { font-family: 'Roboto', Arial, sans-serif !important; }
 body *:not(.fa):not(.ace-icon):not([class*="glyphicon"]) { font-family: 'Roboto', Arial, sans-serif !important; }
-body { background-color: #eef3f7; }
+body { background-color: #fff; }
 
-/* Khung chứa nội dung của mọi Master trong suốt; card/bảng con vẫn giữ nền riêng. */
+/* Nền nội dung chính dùng màu trắng trên mọi Master; card/bảng con vẫn giữ viền và bóng riêng. */
 #main-container > .main-content,
 #main-container > .atfm-workspace > .main-content,
 #main-container .main-content-inner,
 #main-container .page-content {
-    background-color: transparent !important;
+    background-color: #fff !important;
     background-image: none !important;
 }
 
@@ -2044,4 +2044,128 @@ legend.box-border {
     font-weight: bold !important;
     text-align: left !important;
 
+}
+
+/* Bố cục bảng responsive dùng chung: chỉ hiện nút khi bảng thực sự tràn ngang. */
+.atfm-responsive-table-layout {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.atfm-responsive-table-layout.has-horizontal-overflow {
+    padding-right: 24px;
+}
+
+.atfm-responsive-table-layout > .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 9px;
+    scrollbar-color: #337ab7 #e5edf4;
+    scrollbar-width: auto;
+}
+
+.atfm-responsive-table-layout.has-vertical-overflow > .table-responsive {
+    max-height: var(--atfm-table-max-height, 520px);
+    border: 1px solid #c9dce9;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(30, 77, 112, .09);
+}
+
+.atfm-responsive-table-layout.has-vertical-overflow > .table-responsive table {
+    margin-bottom: 0;
+}
+
+.atfm-responsive-table-layout.has-vertical-overflow > .table-responsive table > thead {
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    box-shadow: 0 2px 0 rgba(31, 105, 154, .18);
+}
+
+.atfm-generated-table-responsive > table {
+    width: max-content;
+    min-width: 100%;
+    margin-bottom: 0;
+}
+
+.atfm-responsive-table-layout > .table-responsive::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+.atfm-responsive-table-layout > .table-responsive::-webkit-scrollbar-track {
+    background: #e5edf4;
+    border-radius: 8px;
+}
+
+.atfm-responsive-table-layout > .table-responsive::-webkit-scrollbar-thumb {
+    min-width: 42px;
+    min-height: 42px;
+    border: 3px solid #e5edf4;
+    border-radius: 8px;
+    background: #337ab7;
+}
+
+.atfm-responsive-table-layout > .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #205b8f;
+}
+
+.atfm-responsive-table-controls {
+    position: absolute;
+    top: 50%;
+    right: -11px;
+    z-index: 120;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transform: translateY(-50%);
+}
+
+.atfm-responsive-table-arrow {
+    display: inline-flex;
+    width: 34px;
+    height: 40px;
+    min-height: 0 !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 1px solid rgba(255,255,255,.75) !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg,#337ab7,#185d93) !important;
+    color: #fff !important;
+    box-shadow: 0 5px 14px rgba(20,68,105,.30) !important;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.atfm-responsive-table-arrow:hover,
+.atfm-responsive-table-arrow:focus {
+    outline: 0;
+    box-shadow: 0 7px 18px rgba(20,68,105,.40) !important;
+    transform: translateY(-1px);
+}
+
+.atfm-responsive-table-arrow:active,
+.atfm-responsive-table-arrow.is-holding {
+    transform: scale(.95);
+}
+
+@media (max-width: 767px) {
+    .atfm-responsive-table-layout.has-horizontal-overflow { padding-right: 22px; }
+    .atfm-responsive-table-controls { right: -7px; gap: 4px; }
+    .atfm-responsive-table-arrow { width: 30px; height: 36px; font-size: 16px; }
+
+    .atfm-responsive-table-layout.has-vertical-overflow > .table-responsive {
+        max-height: min(var(--atfm-table-max-height, 440px), 62vh);
+    }
 }

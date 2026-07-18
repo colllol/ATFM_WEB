@@ -53,7 +53,8 @@ namespace prjBusinessLogic
             {
                 // HPCDataProvider.Instance().ExecStore("[CMS_DeleteOneFromT_Menus]", new string[] { "@ID" }, new object[] { ID });
                 bool _done;
-                _done = new clsResuftAPI<T_Menus>().DeleteObj(ID.ToString(), "api/Ctry/DeleteCtry/");
+                //_done = new clsResuftAPI<T_Menus>().DeleteObj(ID.ToString(), "api/Ctry/DeleteCtry/");
+                _done = new clsResuftAPI<T_Menus>().DeleteObj(ID.ToString(), "api/Menus/DeleteMenus/"); 
             }
 
             catch (Exception ex)

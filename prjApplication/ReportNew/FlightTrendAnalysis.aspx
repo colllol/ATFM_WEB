@@ -1,0 +1,2 @@
+<%@ Page Title="Phân tích xu hướng khai thác" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" Inherits="prjApplication.ReportNew.ReportPageBase" %>
+<asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server"><link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportNew.css") %>" /><section class="rn-app" data-report-view="trend"></section><script src="<%= ResolveUrl("~/ReportNew/ReportNew.js") %>"></script></asp:Content>

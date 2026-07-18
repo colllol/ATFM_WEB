@@ -12,6 +12,12 @@
     <link href="../Style/assets/css/ace-skins.min.css" rel="stylesheet" />
     <link href="../Style/assets/css/ace-rtl.min.css" rel="stylesheet" />
     <style>
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         .sInputDb {
             border: 0px !important;
             width: 100%;
@@ -20,8 +26,14 @@
         }
 
         #table-container {
-            height: calc(100vh - 220px);
-            min-height: 520px;
+            position: relative;
+            display: flex;
+            height: clamp(420px, calc(100vh - 390px), 720px);
+            min-height: 0;
+            flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             margin: 10px 0 20px !important;
             overflow: hidden;
             border: 1px solid #c8d9e8;
@@ -30,9 +42,21 @@
             box-shadow: 0 7px 22px rgba(26, 67, 105, .13);
         }
 
+        .dayly-table-shell {
+            position: relative;
+            width: calc(100% + 15px);
+            max-width: calc(100% + 15px);
+            min-width: 0;
+            box-sizing: border-box;
+            margin-left: -15px;
+            padding-right: 24px;
+        }
+
         #table-container > .table-responsive {
+            flex: 1 1 auto;
             width: 100%;
-            height: 100%;
+            height: auto;
+            min-height: 0;
             max-height: 100%;
             overflow: auto !important;
             overscroll-behavior: contain;
@@ -61,6 +85,194 @@
         #table-container > .table-responsive::-webkit-scrollbar-thumb:hover {
             background: #205b8f;
         }
+
+        .dayly-top-scroll {
+            flex: 0 0 18px;
+            width: 100%;
+            height: 18px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border-bottom: 1px solid #c8d9e8;
+            background: #e5edf4;
+            scrollbar-color: #337ab7 #e5edf4;
+            scrollbar-width: auto;
+        }
+
+        .dayly-top-scroll-content {
+            height: 1px;
+        }
+
+        .dayly-top-scroll::-webkit-scrollbar {
+            height: 14px;
+        }
+
+        .dayly-top-scroll::-webkit-scrollbar-track {
+            background: #e5edf4;
+        }
+
+        .dayly-top-scroll::-webkit-scrollbar-thumb {
+            background: #337ab7;
+            border: 3px solid #e5edf4;
+            border-radius: 8px;
+        }
+
+        .dayly-scroll-right {
+            position: absolute;
+            top: 50%;
+            right: 3px;
+            z-index: 120;
+            display: flex;
+            width: 38px;
+            height: 54px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, .75);
+            border-radius: 10px 0 0 10px;
+            background: linear-gradient(135deg, #337ab7, #185d93);
+            color: #fff;
+            box-shadow: 0 5px 14px rgba(20, 68, 105, .30);
+            transform: translateY(-50%);
+            transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .dayly-scroll-right:hover,
+        .dayly-scroll-right:focus {
+            outline: 0;
+            background: linear-gradient(135deg, #2f8dcc, #174f7d);
+            box-shadow: 0 7px 18px rgba(20, 68, 105, .40);
+        }
+
+        .dayly-scroll-right:active,
+        .dayly-scroll-right.is-holding {
+            transform: translateY(-50%) scale(.96);
+        }
+
+        .dayly-scroll-right .fa {
+            font-size: 20px;
+        }
+
+        .dayly-scroll-controls {
+            position: absolute;
+            top: 50%;
+            right: -11px;
+            bottom: auto;
+            z-index: 120;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transform: translateY(-50%);
+        }
+
+        .dayly-scroll-controls .dayly-scroll-right {
+            position: static;
+            width: 34px;
+            height: 40px;
+            border-radius: 8px;
+            transform: none;
+        }
+
+        .dayly-scroll-controls .dayly-scroll-right .fa {
+            font-size: 16px;
+        }
+
+        .dayly-scroll-controls .dayly-scroll-right:active,
+        .dayly-scroll-controls .dayly-scroll-right.is-holding {
+            transform: scale(.95);
+        }
+
+        .dayly-table-actions {
+            display: flex;
+            min-width: 112px;
+            align-items: center;
+            gap: 7px;
+            padding: 2px 3px;
+        }
+
+        .dayly-table-actions a {
+            display: inline-flex;
+            width: 30px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #afd1e7;
+            border-radius: 8px;
+            background: #fff;
+            color: #237fb9 !important;
+            box-shadow: 0 3px 8px rgba(30, 89, 128, .12);
+            cursor: pointer;
+        }
+
+        .dayly-table-actions a:hover {
+            border-color: #2d8bc3;
+            background: #2d8bc3;
+            color: #fff !important;
+            transform: translateY(-2px);
+        }
+
+        .dayly-table-actions .glyphicon { font-size: 15px; }
+
+        #grdSource thead tr.Spec > td.dayly-action-cell {
+            min-width: 225px;
+            padding-left: 10px !important;
+            border-right: 2px solid #2d8bc3 !important;
+        }
+
+        .dayly-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 4px;
+        }
+
+        .dayly-top-actions > a {
+            position: relative !important;
+            display: inline-flex;
+            width: 34px !important;
+            height: 34px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #acd0e7;
+            border-radius: 9px;
+            background: #fff;
+            color: #267fb7 !important;
+            box-shadow: 0 3px 9px rgba(30, 89, 128, .12);
+            text-decoration: none;
+            transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+        }
+
+        .dayly-top-actions > a:hover,
+        .dayly-top-actions > a:focus {
+            outline: 0;
+            background: #287fbd;
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(31, 105, 155, .25);
+        }
+
+        .dayly-top-actions > a .glyphicon,
+        .dayly-top-actions > a .fa { font-size: 15px; }
+
+        .dayly-top-actions > a.dayly-search-action {
+            background: linear-gradient(135deg, #2f92cc, #1d6fa8);
+            color: #fff !important;
+        }
+
+        .dayly-top-actions .badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+        }
+
+        #grdSource tbody > tr > td {
+            height: auto !important;
+            padding: 4px 7px !important;
+            line-height: 1.2 !important;
+            vertical-align: middle !important;
+        }
+
+        #grdSource tbody > tr { height: auto !important; }
 
         #grdSource {
             margin-bottom: 0;
@@ -249,6 +461,9 @@
         /* Toolbar responsive: không để giờ/tổng số và bộ lọc chồng lên nhau. */
         .divHeader {
             display: flex;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             height: auto !important;
             min-height: 132px;
             flex-direction: column;
@@ -301,6 +516,82 @@
             justify-content: center;
             flex-wrap: wrap;
             gap: 8px;
+        }
+
+        @media (max-width: 1199px) {
+            #table-container {
+                height: clamp(380px, calc(100vh - 410px), 650px);
+            }
+
+            .divHeader {
+                padding-right: 8px;
+                padding-left: 8px;
+            }
+
+            #topBar1 {
+                gap: 3px;
+            }
+
+            #topBar1 .btn {
+                min-width: 32px;
+                padding-right: 8px;
+                padding-left: 8px;
+            }
+
+            #topBar3 {
+                gap: 6px;
+            }
+
+            #topBar3 .checkbox {
+                min-width: auto;
+                margin-left: 0 !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            #table-container {
+                height: max(360px, calc(100vh - 430px));
+                border-radius: 8px;
+            }
+
+            .dayly-table-shell {
+                width: calc(100% + 8px);
+                max-width: calc(100% + 8px);
+                margin-left: -8px;
+                padding-right: 22px;
+            }
+
+            .dayly-scroll-controls {
+                top: 50%;
+                right: -7px;
+                bottom: auto;
+                gap: 4px;
+                transform: translateY(-50%);
+            }
+
+            .dayly-scroll-controls .dayly-scroll-right {
+                width: 30px;
+                height: 36px;
+                border-radius: 7px;
+            }
+
+            .divHeader {
+                min-height: 0;
+            }
+
+            #topBar2,
+            #topBar3 {
+                justify-content: flex-start;
+            }
+
+            #topBar3 select,
+            #divSelectDate select {
+                min-width: 78px;
+            }
+
+            .dayly-top-actions {
+                flex-wrap: wrap;
+            }
         }
 
         #topBar3 > *,
@@ -731,7 +1022,10 @@
                 <span id="lblTimeRefresh"></span>
 
                 <div id="topbarNotificon"></div>
-                <div>
+                <div class="dayly-top-actions">
+                    <a id="btnSearch" class="dayly-search-action" onclick="btnSearch_Onclick()" data-toggle="tooltip" title="Tìm kiếm dữ liệu">
+                        <i class="glyphicon glyphicon-search"></i>
+                    </a>
                     <a href="#" onclick="window.open('<%= Page.ResolveUrl("~/SendMessage/SendMessageFlight.aspx") + "?Menu_Id=" + Request.Params["Menu_ID"] %>','_blank','toolbar=yes,scrollbars=yes,resizable=yes').resizeTo(window.screen.availWidth, window.screen.availHeight).moveTo(0,0)"
                         data-toggle="tooltip" title="Send message">
                         <i class="glyphicon glyphicon-send"></i>
@@ -772,30 +1066,18 @@
     </div>
 
 
-    <div class="row" id="table-container">
-        <div class="table-responsive">
+    <div class="dayly-table-shell">
+        <div class="row" id="table-container">
+            <div class="table-responsive">
 
             <table id="grdSource" class="table table-bordered">
                 <thead>
                     <tr class="Spec" data-isinsert="true">
-                        <td style="width: 10px" class="headSpec">
-                            <a id="btnInput" onclick="viewPopupInfoExtensionInsert(this);" data-id="0" title="Insert">
-                                <i class="glyphicon glyphicon glyphicon-plus"></i>
-                            </a>
-                            &nbsp;&nbsp;
-                            <a id="btnSave" onclick="UpdateInfosFlight();" title="Update All">
-                                <i class="glyphicon glyphicon-save"></i>
-                            </a>
-                        </td>
-                        <td class="headSpec" colspan="2" style="width: 100px;">
-                            <div class="action-buttons wid_50px">
-                                <a id="btnSearch" onclick="btnSearch_Onclick()" title="Search">
-                                    <i class="glyphicon glyphicon-search"></i>
-                                </a>
-                                <a id="btnClearInput" onclick="btnClearInput_Onclick();" title="Clear value search">
-                                    <i class="glyphicon glyphicon-trash"></i>
-                                </a>
-
+                        <td colspan="3" class="headSpec dayly-action-cell">
+                            <div class="dayly-table-actions">
+                                <a id="btnInput" onclick="viewPopupInfoExtensionInsert(this);" data-id="0" title="Thêm mới"><i class="glyphicon glyphicon-plus"></i></a>
+                                <a id="btnSave" onclick="UpdateInfosFlight();" title="Lưu tất cả"><i class="glyphicon glyphicon-save"></i></a>
+                                <a id="btnClearInput" onclick="btnClearInput_Onclick();" title="Xóa điều kiện tìm kiếm"><i class="glyphicon glyphicon-trash"></i></a>
                             </div>
                         </td>
                         <%--<td class="headSpec">
@@ -899,6 +1181,11 @@
 
             </table>
 
+            </div>
+        </div>
+        <div class="dayly-scroll-controls" aria-label="Điều khiển cuộn ngang">
+            <button id="daylyScrollLeft" class="dayly-scroll-right" type="button" title="Nhấn để sang trái một cột, giữ để cuộn liên tục" aria-label="Cuộn bảng sang trái"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+            <button id="daylyScrollRight" class="dayly-scroll-right" type="button" title="Nhấn để sang phải một cột, giữ để cuộn liên tục" aria-label="Cuộn bảng sang phải"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
         </div>
     </div>
 
@@ -1516,6 +1803,8 @@
         var isRefresh = false;
         var isSearch = false;
         var isSroll = false;
+        var isScrollRequestPending = false;
+        var hasMoreScrollData = true;
         var timeRefresh = 20;
         var cd = timeRefresh;
         var sObj = JSON.parse('<%= _ObjSearch%>');
@@ -1633,10 +1922,12 @@
 
                 //alert(array[1])
 
-                $("#totql").html("Total : <b>" + array[1] + "</b>");
+                $("#totql").html("Total : <b>" + (array.length > 1 && array[1] ? array[1] : 0) + "</b>");
 
                 $('#grdSource tbody tr').remove();
                 $('#grdSource tbody').append(array[0]);
+                isScrollRequestPending = false;
+                hasMoreScrollData = true;
                 scheduleDaylyStickyFreeze();
                 unPreLoadData();
 
@@ -1649,7 +1940,13 @@
                     notifyMe($('#divMessegeChange').html().replace(/<br>/gi, '\n'));
             }
             if (context == 'LoadGrdSourceScroll') {
-                $('#grdSource tr').last().after(resulf).fadeIn();
+                var appendedRows = $.trim(resulf || '');
+                if (appendedRows) {
+                    $('#grdSource tr').last().after(appendedRows).fadeIn();
+                } else {
+                    hasMoreScrollData = false;
+                }
+                isScrollRequestPending = false;
                 scheduleDaylyStickyFreeze();
                 unPreLoadData();
 
@@ -1693,6 +1990,8 @@
         }
         function btnSearch_Onclick() {
           console.log(getValueSearchDaylyFlight());
+	        isScrollRequestPending = false;
+	        hasMoreScrollData = true;
 	    isSearch = true;
             if (isSearch) {
                 preLoadData();
@@ -2539,30 +2838,32 @@
 
     </script>
     <script>
-        $(window).scroll(function () { //detact scroll
-            if ($(window).scrollTop() + $(window).height() >= $(document).height()) { //scrolled to bottom of the page
-               isSroll = true;
-               LoadGrdSourceScroll();
+        $(function () {
+            var $tableScroll = $('#table-container > .table-responsive');
+            $tableScroll.off('scroll.daylyLoadMore').on('scroll.daylyLoadMore', function () {
+                var scrollElement = this;
+                var distanceToBottom = scrollElement.scrollHeight
+                    - scrollElement.scrollTop
+                    - scrollElement.clientHeight;
+
+                if (scrollElement.scrollHeight <= scrollElement.clientHeight
+                    || distanceToBottom > 40
+                    || isScrollRequestPending
+                    || !hasMoreScrollData) return;
+
+                isScrollRequestPending = true;
+                isSroll = true;
+                LoadGrdSourceScroll();
                 isSroll = false;
-            }
+            });
         });
         function LoadGrdSourceScroll() {
             if (isSroll) {
                 GetArgWithPostBack(JSON.stringify(getValueSearchDaylyFlight()) + phanCachArg
     + 'LoadGrdSourceScroll', 'LoadGrdSourceScroll');
-                preLoadData()
+                preLoadData();
             }
         }
-        //$('.row').scroll(function () {
-        //    if ($(this)[0].scrollHeight > 998) {
-        //        if ($(this).scrollTop() + $(this).innerHeight() > $(this)[0].scrollHeight) {
-                    
-        //            isSroll = true;
-         //           LoadGrdSourceScroll();
-         //           isSroll = false;
-         //       }
-         //   }
-       // });
                 
         function sortTableSpan(f, n) {
             var rows = $('#grdSource tbody  tr').get();
@@ -3092,6 +3393,74 @@
                 }
                 stickyTop += headerRow.getBoundingClientRect().height;
             }
+
+        }
+
+        function initializeDaylyHorizontalControls() {
+            var container = document.getElementById('table-container');
+            var mainScroll = container ? container.querySelector('.table-responsive') : null;
+            var leftButton = document.getElementById('daylyScrollLeft');
+            var rightButton = document.getElementById('daylyScrollRight');
+            if (!mainScroll || !leftButton || !rightButton || rightButton.getAttribute('data-bound') === 'true') return;
+
+            rightButton.setAttribute('data-bound', 'true');
+            leftButton.setAttribute('data-bound', 'true');
+
+            function getOneColumnWidth() {
+                var table = document.getElementById('grdSource');
+                if (!table || !table.tHead || !table.tHead.rows.length) return 120;
+                var row = table.tHead.rows[table.tHead.rows.length - 1];
+                var cell = row.cells.length > 4 ? row.cells[4] : row.cells[row.cells.length - 1];
+                return cell ? Math.max(60, Math.round(cell.getBoundingClientRect().width)) : 120;
+            }
+
+            function bindDirectionButton(button, direction) {
+                var holdTimer = null;
+                var holdFrame = null;
+                var isHolding = false;
+
+                function scrollOneColumn() {
+                    mainScroll.scrollBy({ left: direction * getOneColumnWidth(), behavior: 'smooth' });
+                }
+
+                function continuousScroll() {
+                    mainScroll.scrollLeft += direction * 4;
+                    holdFrame = window.requestAnimationFrame(continuousScroll);
+                }
+
+                function beginHold(event) {
+                    if (event.button !== undefined && event.button !== 0) return;
+                    event.preventDefault();
+                    isHolding = false;
+                    if (button.setPointerCapture && event.pointerId !== undefined) button.setPointerCapture(event.pointerId);
+                    holdTimer = window.setTimeout(function () {
+                        isHolding = true;
+                        button.classList.add('is-holding');
+                        continuousScroll();
+                    }, 280);
+                }
+
+                function endHold(event) {
+                    if (holdTimer === null && holdFrame === null) return;
+                    window.clearTimeout(holdTimer);
+                    holdTimer = null;
+                    if (holdFrame !== null) window.cancelAnimationFrame(holdFrame);
+                    holdFrame = null;
+                    button.classList.remove('is-holding');
+                    if (!isHolding) scrollOneColumn();
+                    isHolding = false;
+                    if (event) event.preventDefault();
+                }
+
+                button.addEventListener('pointerdown', beginHold);
+                button.addEventListener('pointerup', endHold);
+                button.addEventListener('pointercancel', endHold);
+                button.addEventListener('lostpointercapture', endHold);
+                button.addEventListener('click', function (event) { if (event.detail === 0) scrollOneColumn(); });
+            }
+
+            bindDirectionButton(leftButton, -1);
+            bindDirectionButton(rightButton, 1);
         }
 
         function scheduleDaylyStickyFreeze() {
@@ -3103,6 +3472,7 @@
 
         $(document).ready(function () {
             btnSearch_Onclick();
+            initializeDaylyHorizontalControls();
             scheduleDaylyStickyFreeze();
             var resizeTimer;
             $(window).on('resize.daylySticky', function () {

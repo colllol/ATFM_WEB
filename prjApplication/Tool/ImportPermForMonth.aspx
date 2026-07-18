@@ -1,37 +1,249 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
     CodeBehind="ImportPermForMonth.aspx.cs" Inherits="prjApplication.Tool.ImportPermForMonth" %>
 
-<%@ Register Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
     <link href="../Style/assets/css/bootstrap.min.css" rel="stylesheet" />
     <style>
         input, textarea {
             text-transform: uppercase;
         }
+
+        .import-perm-page {
+            display: grid;
+            gap: 16px;
+        }
+
+        .import-perm-input-card,
+        .import-perm-table-card {
+            padding: 18px;
+            border: 1px solid #d3e2ed;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 7px 22px rgba(27, 73, 108, .09);
+        }
+
+        .import-perm-input-card textarea {
+            display: block;
+            width: 100%;
+            min-height: 150px;
+            max-height: 230px;
+            padding: 12px 14px;
+            resize: vertical;
+            border: 1px solid #bad3e5;
+            border-radius: 9px;
+            outline: 0;
+            background: #fbfdff;
+        }
+
+        .import-perm-oper {
+            display: flex;
+            max-width: 360px;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            color: #174f78;
+            font-weight: 700;
+        }
+
+        .import-perm-oper input,
+        .import-perm-date-filter input {
+            width: 100%;
+            height: 38px;
+            padding: 7px 10px;
+            border: 1px solid #b9d2e4;
+            border-radius: 8px;
+            outline: 0;
+            background: #fff;
+        }
+
+        .import-perm-table-card {
+            min-width: 0;
+            padding: 0;
+            overflow: visible;
+        }
+
+        .import-perm-table-title {
+            margin: 0;
+            padding: 16px 18px 12px;
+            border-bottom: 1px solid #dce8f1;
+            color: #155f91;
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .import-perm-toolbar {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 18px;
+            background: #f6faff;
+        }
+
+        .import-perm-actions,
+        .import-perm-date-filter {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .import-perm-date-field {
+            display: grid;
+            min-width: 170px;
+            gap: 5px;
+            color: #31536d;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .import-perm-toolbar .btn {
+            min-height: 38px;
+            padding: 8px 15px;
+            border: 0;
+            border-radius: 8px;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(28, 105, 159, .16);
+        }
+
+        .import-perm-toolbar .btn-danger-soft {
+            background: #e74c5e !important;
+            color: #fff !important;
+        }
+
+        .import-perm-table-scroll {
+            width: 100%;
+            max-height: clamp(360px, 55vh, 620px) !important;
+            margin: 0 !important;
+            overflow: auto !important;
+            border: 0 !important;
+            border-radius: 0 0 14px 14px !important;
+        }
+
+        #tblSource {
+            width: max-content;
+            min-width: 1180px;
+            margin: 0;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        #tblSource thead {
+            position: static;
+            box-shadow: none;
+        }
+
+        #tblSource thead th {
+            position: sticky;
+            padding: 7px 8px;
+            vertical-align: middle;
+            border-color: #c8dbe8;
+        }
+
+        #tblSource thead tr:first-child th {
+            top: 0;
+            z-index: 32;
+            height: 54px;
+            background: #eaf4fb;
+        }
+
+        #tblSource thead tr:nth-child(2) th {
+            top: 54px;
+            z-index: 31;
+            height: 40px;
+            background: #246b9c;
+            color: #fff;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        #tblSource thead input {
+            width: 100%;
+            height: 36px;
+            padding: 6px 8px;
+            border: 1px solid #b4cee1;
+            border-radius: 7px;
+            outline: 0;
+            background: #fff;
+        }
+
+        #tblSource tbody td {
+            height: 36px;
+            padding: 7px 9px;
+            overflow: hidden;
+            border-color: #dce6ee;
+            background: #fff;
+            line-height: 20px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #tblSource tbody tr:nth-child(even) td {
+            background: #f7fafc;
+        }
+
+        #tblSource tbody tr:hover td {
+            background: #e9f5fd;
+        }
+
+        #tblSource th:nth-child(1), #tblSource td:nth-child(1) { width: 52px; text-align: center; }
+        #tblSource th:nth-child(2), #tblSource td:nth-child(2) { width: 140px; }
+        #tblSource th:nth-child(3), #tblSource td:nth-child(3) { width: 105px; }
+        #tblSource th:nth-child(4), #tblSource td:nth-child(4) { width: 130px; }
+        #tblSource th:nth-child(5), #tblSource td:nth-child(5) { width: 130px; }
+        #tblSource th:nth-child(6), #tblSource td:nth-child(6),
+        #tblSource th:nth-child(7), #tblSource td:nth-child(7) { width: 100px; }
+        #tblSource th:nth-child(8), #tblSource td:nth-child(8),
+        #tblSource th:nth-child(9), #tblSource td:nth-child(9) { width: 95px; }
+        #tblSource th:nth-child(10), #tblSource td:nth-child(10) { width: 100px; }
+        #tblSource th:nth-child(11), #tblSource td:nth-child(11) { width: 85px; text-align: center; }
+
+        #tblSource .import-perm-delete {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .import-perm-toolbar { align-items: stretch; flex-direction: column; }
+            .import-perm-date-filter { width: 100%; }
+            .import-perm-date-field { flex: 1 1 160px; }
+        }
     </style>
 
-
-
-    <div>
+    <div class="import-perm-page">
+    <section class="import-perm-input-card">
         <textarea id="txtCONTENT" runat="server" cols="20" rows="15" class="wid_100"></textarea>
-    </div>
-    <div>
-        Oper<input id="txtOPER" runat="server" value="HVN" data-autocomplete="OPER" data-control="mUpdate"
-            data-minlenght="2" type="text" />
-    </div>
-    <fieldset>
-        <legend>Bang tam</legend>
-        <asp:Button ID="btnSearch" Text="Search" runat="server" CssClass="btn btn-primary"
-            OnClick="btnSearch_Click" />
-        <asp:Button runat="server" ID="btnImport" Text="Import" OnClick="btnImport_Click"
-            CssClass="btn btn-primary" />
-        <div style="float: right;">
-          From  Date<input id="txtFromDate" runat="server" type="text" />
-          To Date  
-        <input id="txtToDate" runat="server" type="text"/>
-            <asp:Button runat="server" ID="btnDeleteAll" OnClientClick="return validDelete();"
-                Text="Delete by date" CssClass="btn btn-primary" OnClick="btnDeleteAll_Click" />
+        <label class="import-perm-oper">
+            <span>Hãng khai thác (OPER)</span>
+            <input id="txtOPER" runat="server" value="HVN" data-autocomplete="OPER" data-control="mUpdate"
+                data-minlenght="2" type="text" />
+        </label>
+    </section>
+
+    <section class="import-perm-table-card">
+        <h3 class="import-perm-table-title">Dữ liệu tạm</h3>
+        <div class="import-perm-toolbar">
+            <div class="import-perm-actions">
+                <asp:Button ID="btnSearch" Text="Tìm kiếm" runat="server" CssClass="btn btn-primary"
+                    OnClick="btnSearch_Click" />
+                <asp:Button runat="server" ID="btnImport" Text="Nhập dữ liệu" OnClick="btnImport_Click"
+                    CssClass="btn btn-primary" />
+            </div>
+            <div class="import-perm-date-filter">
+                <label class="import-perm-date-field">
+                    <span>Từ ngày</span>
+                    <input id="txtFromDate" runat="server" type="text" />
+                </label>
+                <label class="import-perm-date-field">
+                    <span>Đến ngày</span>
+                    <input id="txtToDate" runat="server" type="text" />
+                </label>
+                <asp:Button runat="server" ID="btnDeleteAll" OnClientClick="return validDelete();"
+                    Text="Xóa theo ngày" CssClass="btn btn-danger-soft" OnClick="btnDeleteAll_Click" />
+            </div>
         </div>
+        <div class="table-responsive import-perm-table-scroll">
         <table id="tblSource" class="table table-bordered">
             <thead>
                 <tr>
@@ -74,7 +286,7 @@
                 <asp:Repeater runat="server" ID="rptSource">
                     <ItemTemplate>
                         <tr>
-                            <td><%# (Container.ItemIndex + 1)+(PhanTrang1.PageIndex*PhanTrang1.PageSize)  %>
+                            <td><%# Container.ItemIndex + 1 %>
                             </td>
                             <td><%# Eval("FLIGHT_DATE","{0:dd-MM-yyyy}") %></td>
                             <td><%# Eval("CRAFT_TYPE") %></td>
@@ -87,20 +299,17 @@
                             <td><%# Eval("OPER") %></td>
                             <td>
                                 <asp:LinkButton runat="server" ID="btnDeleteId" OnClientClick="return confirm('Do you want delete?');"
-                                    data-id='<%# Eval("ID") %>' OnClick="btnDeleteId_Click" Text="Delete"></asp:LinkButton>
+                                    data-id='<%# Eval("ID") %>' OnClick="btnDeleteId_Click" Text="Xóa"
+                                    CssClass="import-perm-delete"></asp:LinkButton>
                             </td>
                         </tr>
                     </ItemTemplate>
                 </asp:Repeater>
             </tbody>
         </table>
-        <div style="text-align: right">
-            <cc1:PhanTrang ID="PhanTrang1" runat="server" PageSize="100" OnPaging_IndexChange="PhanTrang1_Paging_IndexChange">
-            </cc1:PhanTrang>
-
         </div>
-
-    </fieldset>
+    </section>
+    </div>
 
 
 

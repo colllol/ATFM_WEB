@@ -1,0 +1,2 @@
+<%@ Page Title="Cảnh báo dữ liệu bất thường" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" Inherits="prjApplication.ReportNew.ReportPageBase" %>
+<asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server"><link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportNew.css") %>" /><section class="rn-app" data-report-view="anomaly"></section><script src="<%= ResolveUrl("~/ReportNew/ReportNew.js") %>"></script></asp:Content>

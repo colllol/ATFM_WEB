@@ -94,7 +94,7 @@
       <HintPath>..\..\dll\CrystalDecisions.Windows.Forms.dll</HintPath>
     </Reference>
     <Reference Include="HtmlAgilityPack">
-      <HintPath>..\Lib\HtmlAgilityPack.dll</HintPath>
+      <HintPath>..\packages\HtmlAgilityPack.1.5.1\lib\Net45\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
@@ -107,13 +107,16 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\..\dll\Microsoft.Office.Interop.Word.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.121.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Oracle.DataAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="Oracle.ManagedDataAccess, Version=4.122.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL">
+      <HintPath>..\packages\Oracle.ManagedDataAccess.12.2.1100\lib\net40\Oracle.ManagedDataAccess.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -610,6 +613,17 @@
     <Content Include="Common\ChartReport.aspx" />
     <Content Include="Common\ChartReportAirport.aspx" />
     <Content Include="Data\dashboard-flights.json" />
+    <Content Include="ReportNew\AnomalyWarning.aspx" />
+    <Content Include="ReportNew\AirportActivitySummary.aspx" />
+    <Content Include="ReportNew\AirportTakeoffLanding.aspx" />
+    <Content Include="ReportNew\CivilFlightSummary.aspx" />
+    <Content Include="ReportNew\FlightOperationOverview.aspx" />
+    <Content Include="ReportNew\FlightStatusRate.aspx" />
+    <Content Include="ReportNew\FlightTrendAnalysis.aspx" />
+    <Content Include="ReportNew\MilitaryFlightReport.aspx" />
+    <Content Include="ReportNew\ReportNew.css" />
+    <Content Include="ReportNew\ReportInteractive.css" />
+    <Content Include="ReportNew\ReportNew.js" />
     <Content Include="Day_Flights\DayFlightNotRoute.aspx" />
     <Content Include="Day_Flights\DayFlightSearch.aspx" />
     <Content Include="Day_Flights\DaylyFlight.aspx" />
@@ -1309,6 +1323,14 @@
     <Content Include="ScheduleFlights\ScheduleFlights.aspx" />
     <Content Include="ScheduleFlights\ScheduleFlights4ATS.aspx" />
     <Content Include="ScheduleFlights\Schedule_Flight.aspx" />
+    <Content Include="SLOTS\KHH.aspx" />
+    <Content Include="SLOTS\CreateSlotComparisonTables.sql" />
+    <Content Include="SLOTS\SlotComparison.aspx" />
+    <Content Include="SLOTS\SlotComparison.css" />
+    <Content Include="SLOTS\SlotComparisonPanel.ascx" />
+    <Content Include="SLOTS\SlotAero.aspx" />
+    <Content Include="SLOTS\SlotResults.aspx" />
+    <Content Include="SLOTS\SlotsTable.ascx" />
     <Content Include="Scripts\AutoFormatDatTime.js" />
     <Content Include="Scripts\Chart\bootstrap.min.css" />
     <Content Include="Scripts\Chart\Chart.min.js" />
@@ -1335,6 +1357,7 @@
     <Content Include="Scripts\Lib.js" />
     <Content Include="Scripts\loader.js" />
     <Content Include="Scripts\Reg.js" />
+    <Content Include="Scripts\ResponsiveTable.js" />
     <Content Include="Scripts\spectrum.js" />
     <Content Include="Scripts\tableHeadFixer.js" />
     <Content Include="Scripts\uds_api_contents.js" />
@@ -1911,6 +1934,7 @@
       <DependentUpon>ChartReport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="ReportNew\ReportPageBase.cs" />
     <Compile Include="Common\ChartReportAirport.aspx.cs">
       <DependentUpon>ChartReportAirport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -2025,6 +2049,48 @@
     </Compile>
     <Compile Include="Day_Flights\DaylyFlight.aspx.designer.cs">
       <DependentUpon>DaylyFlight.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\SlotsDataProvider.cs" />
+    <Compile Include="SLOTS\SlotComparisonService.cs" />
+    <Compile Include="SLOTS\SlotComparison.aspx.cs">
+      <DependentUpon>SlotComparison.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SLOTS\SlotComparison.aspx.designer.cs">
+      <DependentUpon>SlotComparison.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\SlotComparisonPanel.ascx.cs">
+      <DependentUpon>SlotComparisonPanel.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\SlotComparisonPanel.ascx.designer.cs">
+      <DependentUpon>SlotComparisonPanel.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\SlotResults.aspx.cs">
+      <DependentUpon>SlotResults.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SLOTS\SlotResults.aspx.designer.cs">
+      <DependentUpon>SlotResults.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\KHH.aspx.cs">
+      <DependentUpon>KHH.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SLOTS\KHH.aspx.designer.cs">
+      <DependentUpon>KHH.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\SlotAero.aspx.cs">
+      <DependentUpon>SlotAero.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SLOTS\SlotAero.aspx.designer.cs">
+      <DependentUpon>SlotAero.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\SlotsTable.ascx.cs">
+      <DependentUpon>SlotsTable.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\SlotsTable.ascx.designer.cs">
+      <DependentUpon>SlotsTable.ascx</DependentUpon>
     </Compile>
     <Compile Include="Day_Flights\DaylyFlightCancel.aspx.cs">
       <DependentUpon>DaylyFlightCancel.aspx</DependentUpon>

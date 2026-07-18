@@ -1,0 +1,16 @@
+.rn-donut { position: relative; width: 240px; height: 240px; margin: auto; border-radius: 0; background: none !important; }
+.rn-donut::after { display: none !important; }
+.rn-donut svg { display: block; width: 100%; height: 100%; overflow: visible; transform: rotate(-90deg); }
+.rn-donut-track { fill: none; stroke: #edf3f7; stroke-width: 28; }
+.rn-donut-segment { fill: none; stroke-width: 28; cursor: pointer; transform-origin: 120px 120px; transition: stroke-width .22s ease, opacity .22s ease, filter .22s ease; }
+.rn-donut-segment:hover, .rn-donut-segment.is-active { stroke-width: 36; filter: drop-shadow(0 5px 5px rgba(21,58,87,.28)); }
+.rn-donut.has-active .rn-donut-segment:not(.is-active) { opacity: .25; }
+.rn-donut-center { z-index: 2; pointer-events: none; }
+.rn-donut-center span { max-width: 125px; text-align: center; }
+.rn-status { border-left: 4px solid var(--status-color) !important; cursor: pointer; transition: transform .22s ease, box-shadow .22s ease, background .22s ease, color .22s ease, opacity .22s ease; }
+.rn-status:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(31,71,103,.13); }
+.rn-status.is-active { border-color: var(--status-color) !important; background: var(--status-color) !important; color: #fff; transform: translateY(-4px); box-shadow: 0 12px 24px rgba(31,71,103,.22); }
+.rn-status.is-active small { color: #fff; }
+.rn-status-list.has-active .rn-status:not(.is-active) { opacity: .5; }
+.rn-table tbody tr.rn-filter-hidden { display: none; }
+.rn-airport-selected .rn-bar { filter: saturate(1.15); box-shadow: 0 0 0 3px rgba(37,135,200,.16); transform: translateY(-5px); }

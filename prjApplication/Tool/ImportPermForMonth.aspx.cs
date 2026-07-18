@@ -60,10 +60,6 @@ namespace prjApplication.Tool
             else this.AlertMessage("Delete sussess!");
             btnSearch_Click(sender, e);
         }
-        protected void PhanTrang1_Paging_IndexChange(object sender, EventArgs e)
-        {
-            btnSearch_Click(sender,e);
-        }
         #endregion
         #region private
 
@@ -366,10 +362,9 @@ namespace prjApplication.Tool
                 P_FROM_AIRP = txtFROM_AIRP.Value.ToUpper(),
                 P_TO_AIRP = txtTO_AIRP.Value.ToUpper(),
                 P_OPER = txtOPER_Search.Value.ToUpper(),
-                P_PAGAINDEX = PhanTrang1.PageIndex,
-                P_PAGESIZE = PhanTrang1.PageSize
+                P_PAGAINDEX = 0,
+                P_PAGESIZE = 100000
             });
-            if (dt != null && dt.Rows.Count > 0) PhanTrang1.TotalRecord = Convert.ToInt32(dt.Rows[0]["RECORD_SUM"].ToString());
             rptSource.DataSource = dt;
             rptSource.DataBind();
         }
