@@ -8,6 +8,8 @@ namespace prjApplication.SLOTS
         protected global::System.Web.UI.WebControls.Panel pnlError;
         protected global::System.Web.UI.WebControls.Literal litError;
         protected global::System.Web.UI.WebControls.TextBox txtSearch;
+        protected global::System.Web.UI.WebControls.TextBox txtFilterDate;
+        protected global::System.Web.UI.WebControls.TextBox txtAirport;
         protected global::System.Web.UI.WebControls.Button btnSearch;
         protected global::System.Web.UI.WebControls.Button btnRefresh;
         protected global::System.Web.UI.WebControls.DropDownList ddlPageSize;

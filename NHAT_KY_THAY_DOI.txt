@@ -825,3 +825,74 @@ Quy ước:
     - Cập nhật binding redirect Newtonsoft.Json từ 6.0.0.0 lên 10.0.0.0, khớp DLL được NuGet restore và sao chép vào thư mục bin.
     - Cập nhật đồng thời HtmlAgilityPack từ 1.4.6.0 lên 1.5.1.0 để tránh lỗi manifest tương tự khi chạy ứng dụng.
     - Build prjApplication thành công với 0 error, xử lý lỗi FileLoadException tại ReadAsAsync<dynamic>().
+[18/07/2026] Bổ sung dependency AjaxMin bị thiếu sau Rebuild
+----------------------------------------------------------
+
+121. Lib/AjaxMin.dll, prjApplication/prjApplication.csproj
+    - Bổ sung AjaxMin đúng phiên bản 4.97.4951.28478 mà AjaxControlToolkit đang tham chiếu.
+    - Đặt Copy Local để Rebuild và triển khai IIS luôn tự sao chép AjaxMin.dll vào prjApplication/bin.
+
+[18/07/2026] Tích hợp luồng import Excel của ứng dụng Python vào trang KHH và SLOT
+-------------------------------------------------------------------------------
+
+122. prjApplication/SLOTS/SlotExcelImportService.cs
+    - Port đầy đủ thuật toán đọc KHH cho BAV, VAG, VJC, VNA, PIC, VFC và thuật toán đọc SLOT từ Python sang C#/.NET Framework.
+    - Giữ nguyên quy tắc lọc ngày, chuẩn hóa callsign/sân bay/thời gian, ETA qua ngày, kế thừa ETD, giới hạn độ dài và nhận diện sân bay từ tên file.
+    - Thêm kiểm tra schema, chống import trùng và ghi mảng Oracle trong transaction riêng cho từng file để tăng tốc và cô lập lỗi.
+
+123. prjApplication/SLOTS/SlotImportPanel.ascx, SlotImportPanel.ascx.cs, SlotImportPanel.ascx.designer.cs
+    - Tạo giao diện chọn ngày, upload nhiều file Excel và import trực tiếp trên web.
+    - Hiển thị kết quả chi tiết từng file gồm số dòng đã đọc, đã thêm, đã tồn tại và lỗi; file lỗi không làm dừng các file còn lại.
+
+124. prjApplication/SLOTS/KHH.aspx, KHH.aspx.cs, KHH.aspx.designer.cs
+    - Gắn bộ import KHH vào trang và tự làm mới bảng dữ liệu sau khi import thành công.
+
+125. prjApplication/SLOTS/SlotAero.aspx, SlotAero.aspx.cs, SlotAero.aspx.designer.cs
+    - Gắn bộ import SLOT vào trang và tự làm mới bảng dữ liệu sau khi import thành công.
+
+126. prjApplication/SLOTS/SlotsTable.ascx.cs
+    - Bổ sung hàm Rebind để hai trang cập nhật bảng ngay sau khi import.
+
+127. prjApplication/prjApplication.csproj, prjApplication/packages.config
+    - Thêm ClosedXML 0.95.4, DocumentFormat.OpenXml 2.7.2 và ExcelNumberFormat 1.0.10 để đọc .xlsx/.xlsm thuần .NET trên IIS, không phụ thuộc Python hoặc Microsoft Excel.
+
+[18/07/2026] Hoàn tác chức năng import Excel trên trang KHH và SLOT
+----------------------------------------------------------------
+
+128. prjApplication/SLOTS/KHH.aspx, KHH.aspx.cs, KHH.aspx.designer.cs
+    - Gỡ phần giao diện và sự kiện import KHH vừa bổ sung, khôi phục trang về trạng thái chỉ tra cứu dữ liệu.
+
+129. prjApplication/SLOTS/SlotAero.aspx, SlotAero.aspx.cs, SlotAero.aspx.designer.cs
+    - Gỡ phần giao diện và sự kiện import SLOT vừa bổ sung, khôi phục trang về trạng thái chỉ tra cứu dữ liệu.
+
+130. prjApplication/SLOTS/SlotsTable.ascx.cs
+    - Gỡ hàm Rebind chỉ phục vụ chức năng import đã hoàn tác.
+
+131. prjApplication/SLOTS/SlotExcelImportService.cs, SlotImportPanel.ascx, SlotImportPanel.ascx.cs, SlotImportPanel.ascx.designer.cs
+    - Xóa toàn bộ service port thuật toán Python và user control import vừa tạo.
+
+132. prjApplication/prjApplication.csproj, prjApplication/packages.config
+    - Gỡ khai báo file import và các dependency ClosedXML, DocumentFormat.OpenXml, ExcelNumberFormat vừa thêm.
+
+[19/07/2026] Tối ưu bộ lọc chuyến bay hoàn thành và dữ liệu SLOTS
+----------------------------------------------------------------
+
+133. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Thiết kế lại card bộ lọc theo bố cục responsive, nhóm riêng ngày/giờ bắt đầu và kết thúc để dễ nhập liệu.
+    - Gom Update, Delete, Clear Search, Export Excel, Export Excel Cancel, Export Bravo và Search vào cùng khu vực thao tác phía trên bảng; giữ nguyên ID và sự kiện JavaScript hiện có.
+
+134. prjApplication/SLOTS/SlotsTable.ascx, SlotsTable.ascx.designer.cs
+    - Thu nhỏ ô tìm kiếm và bổ sung bộ lọc Ngày bay, Sân bay cho giao diện dùng chung của KHH.aspx và SlotAero.aspx.
+    - Căn lại thanh công cụ responsive, không tự tải lại khi người dùng đang nhập điều kiện.
+
+135. prjApplication/SLOTS/SlotsTable.ascx.cs
+    - Bổ sung lọc ngày theo đúng cột Date/FLIGHT_DATE và lọc sân bay trên cả cột đi, cột đến tương ứng từng bảng.
+    - Dùng OracleParameter cho toàn bộ giá trị lọc, đồng thời xóa đủ điều kiện khi nhấn Làm mới.
+
+[19/07/2026] Cải thiện chọn ngày và bộ lọc TIME trong ListFinishedFlights
+-----------------------------------------------------------------------
+
+136. prjApplication/FinishFlights/ListFinishedFlights.aspx
+    - Thêm ô chọn ngày native type=date để mở lịch tháng giống giao diện KHH; vẫn giữ ô ngày nội bộ dd-mm-yyyy để không ảnh hưởng API và hàm lọc cũ.
+    - Đồng bộ ngày người dùng chọn sang giá trị nội bộ trước khi Search/Export.
+    - Đổi màu bộ lọc TIME sang nền xanh sáng, có trạng thái hover/focus và chữ tương phản tốt hơn.

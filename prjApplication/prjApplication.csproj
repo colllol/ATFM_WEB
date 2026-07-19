@@ -63,6 +63,10 @@
     <Reference Include="AjaxControlToolkit">
       <HintPath>..\..\..\..\..\2020\QLB\atfm_ThaiBanGiao\atfm\APP\prjApplication\Back22042020\bin\AjaxControlToolkit.dll</HintPath>
     </Reference>
+    <Reference Include="AjaxMin, Version=4.97.4951.28478, Culture=neutral, PublicKeyToken=21ef50ce11b5d80f, processorArchitecture=MSIL">
+      <HintPath>..\Lib\AjaxMin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Anthem">
       <HintPath>..\..\..\..\..\2020\QLB\atfm_ThaiBanGiao\atfm\APP\prjApplication\Back22042020\bin\Anthem.dll</HintPath>
     </Reference>

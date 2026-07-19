@@ -49,6 +49,8 @@ namespace prjApplication.SLOTS
         {
             CurrentPage = 1;
             txtSearch.Text = string.Empty;
+            txtFilterDate.Text = string.Empty;
+            txtAirport.Text = string.Empty;
             BindData();
         }
 
@@ -89,11 +91,13 @@ namespace prjApplication.SLOTS
                 if (columns.Count == 0) throw new InvalidOperationException("Bảng không có cột hợp lệ để hiển thị.");
 
                 string keyword = (txtSearch.Text ?? string.Empty).Trim();
-                string whereClause = BuildWhereClause(columns, keyword);
+                string airport = (txtAirport.Text ?? string.Empty).Trim().ToUpperInvariant();
+                DateTime? filterDate = ParseFilterDate(txtFilterDate.Text);
+                string whereClause = BuildWhereClause(columns, keyword, tableName, filterDate, airport);
                 int pageSize = GetPageSize();
                 int totalRecords = Convert.ToInt32(provider.ExecuteScalar(
                     "SELECT COUNT(1) FROM " + tableName + " q " + whereClause,
-                    CreateSearchParameter(keyword)) ?? 0, CultureInfo.InvariantCulture);
+                    CreateFilterParameters(keyword, filterDate, airport)) ?? 0, CultureInfo.InvariantCulture);
                 int totalPages = Math.Max(1, (int)Math.Ceiling(totalRecords / (double)pageSize));
                 if (CurrentPage > totalPages) CurrentPage = totalPages;
 
@@ -104,9 +108,7 @@ namespace prjApplication.SLOTS
                              "SELECT q.*, ROW_NUMBER() OVER (ORDER BY ROWID) ATFM_SLOT_ROW_NO FROM " + tableName + " q " + whereClause +
                              ") WHERE ATFM_SLOT_ROW_NO BETWEEN :P_ROW_START AND :P_ROW_END";
 
-                List<OracleParameter> parameters = new List<OracleParameter>();
-                OracleParameter searchParameter = CreateSearchParameter(keyword);
-                if (searchParameter != null) parameters.Add(searchParameter);
+                List<OracleParameter> parameters = CreateFilterParameters(keyword, filterDate, airport).ToList();
                 parameters.Add(new OracleParameter("P_ROW_START", OracleDbType.Int32) { Value = rowStart });
                 parameters.Add(new OracleParameter("P_ROW_END", OracleDbType.Int32) { Value = rowEnd });
                 DataTable data = provider.ExecuteQuery(sql, parameters.ToArray());
@@ -141,21 +143,63 @@ namespace prjApplication.SLOTS
             return int.TryParse(ddlPageSize.SelectedValue, out pageSize) && pageSize > 0 ? Math.Min(pageSize, 200) : 50;
         }
 
-        private static string BuildWhereClause(IEnumerable<SlotColumn> columns, string keyword)
+        private static string BuildWhereClause(IEnumerable<SlotColumn> columns, string keyword, string tableName,
+            DateTime? filterDate, string airport)
         {
-            if (string.IsNullOrWhiteSpace(keyword)) return string.Empty;
+            List<SlotColumn> availableColumns = columns.ToList();
+            List<string> groups = new List<string>();
             string[] searchableTypes = { "CHAR", "VARCHAR2", "NVARCHAR2", "NCHAR", "NUMBER", "FLOAT", "DATE", "TIMESTAMP" };
-            List<string> conditions = columns
-                .Where(column => searchableTypes.Any(type => column.DataType.StartsWith(type, StringComparison.OrdinalIgnoreCase)))
-                .Select(column => "UPPER(TO_CHAR(q.\"" + column.Name + "\")) LIKE :P_SEARCH")
-                .ToList();
-            return conditions.Count == 0 ? string.Empty : " WHERE (" + string.Join(" OR ", conditions) + ")";
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                List<string> searchConditions = availableColumns
+                    .Where(column => searchableTypes.Any(type => column.DataType.StartsWith(type, StringComparison.OrdinalIgnoreCase)))
+                    .Select(column => "UPPER(TO_CHAR(q.\"" + column.Name + "\")) LIKE :P_SEARCH")
+                    .ToList();
+                if (searchConditions.Count > 0) groups.Add("(" + string.Join(" OR ", searchConditions) + ")");
+            }
+
+            string dateColumn = tableName == "T_KHH" ? "Date" : "FLIGHT_DATE";
+            if (filterDate.HasValue && availableColumns.Any(column => column.Name == dateColumn))
+                groups.Add("q.\"" + dateColumn + "\" >= :P_FILTER_DATE AND q.\"" + dateColumn + "\" < :P_FILTER_DATE_TO");
+
+            if (!string.IsNullOrWhiteSpace(airport))
+            {
+                string[] airportColumns = tableName == "T_KHH"
+                    ? new[] { "From", "To" }
+                    : new[] { "FROM_AIRP", "TO_AIRP" };
+                List<string> airportConditions = airportColumns
+                    .Where(name => availableColumns.Any(column => column.Name == name))
+                    .Select(name => "UPPER(TO_CHAR(q.\"" + name + "\")) LIKE :P_AIRPORT")
+                    .ToList();
+                if (airportConditions.Count > 0) groups.Add("(" + string.Join(" OR ", airportConditions) + ")");
+            }
+
+            return groups.Count == 0 ? string.Empty : " WHERE " + string.Join(" AND ", groups);
         }
 
-        private static OracleParameter CreateSearchParameter(string keyword)
+        private static OracleParameter[] CreateFilterParameters(string keyword, DateTime? filterDate, string airport)
         {
-            if (string.IsNullOrWhiteSpace(keyword)) return null;
-            return new OracleParameter("P_SEARCH", OracleDbType.Varchar2) { Value = "%" + keyword.ToUpperInvariant() + "%" };
+            List<OracleParameter> parameters = new List<OracleParameter>();
+            if (!string.IsNullOrWhiteSpace(keyword))
+                parameters.Add(new OracleParameter("P_SEARCH", OracleDbType.Varchar2) { Value = "%" + keyword.ToUpperInvariant() + "%" });
+            if (filterDate.HasValue)
+            {
+                parameters.Add(new OracleParameter("P_FILTER_DATE", OracleDbType.Date) { Value = filterDate.Value.Date });
+                parameters.Add(new OracleParameter("P_FILTER_DATE_TO", OracleDbType.Date) { Value = filterDate.Value.Date.AddDays(1) });
+            }
+            if (!string.IsNullOrWhiteSpace(airport))
+                parameters.Add(new OracleParameter("P_AIRPORT", OracleDbType.Varchar2) { Value = "%" + airport + "%" });
+            return parameters.ToArray();
+        }
+
+        private static DateTime? ParseFilterDate(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            DateTime parsed;
+            string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "dd-MM-yyyy" };
+            if (DateTime.TryParseExact(value.Trim(), formats, CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out parsed)) return parsed.Date;
+            throw new InvalidOperationException("Ngày bay không đúng định dạng.");
         }
 
         private static string RenderTable(IList<SlotColumn> columns, DataTable data, int rowStart)
