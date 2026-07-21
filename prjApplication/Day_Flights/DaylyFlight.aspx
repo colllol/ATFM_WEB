@@ -2370,6 +2370,7 @@
                 method: "PUT",
                 url: urlApi + _urlPath,
                 data: JSON.stringify(_obj),
+
                 beforeSend: function () {
                 },
                 complete: function () {

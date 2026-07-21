@@ -1080,3 +1080,26 @@ Quy ước:
 2026-07-14 | prjApplication/Day_Flights/DaylyFlightDng.aspx.cs | Bổ sung fail-safe cho RenderTopBar: kiểm tra dữ liệu rỗng, bắt lỗi API bị hủy/timeout và ghi Trace để trang DNG không còn lỗi Server Error khi Top Bar thất bại.
 2026-07-14 | prjApplication/Day_Flights/DaylyFlightDng.aspx | Đồng bộ giao diện theo DaylyFlight.aspx: master có footer, toolbar responsive, cụm Search/Export/cài đặt, bảng cuộn nội bộ, freeze 2 hàng đầu và 4 cột trái, nút cuộn ngang hai chiều và tải thêm theo thanh cuộn bảng.
 2026-07-14 | prjApplication/Day_Flights/DaylyFlightDng.aspx | Loại bỏ lời gọi RenderTopBar đồng bộ không còn hiển thị trên giao diện, tránh trang phải chờ endpoint GetInfoTopBar3 và triệt tiêu nguyên nhân TaskCanceled khi tải trang.
+[20/07/2026] Cập nhật dữ liệu từ GitHub nhánh agent/initial-atfm-import
+--------------------------------------------------------------------
+
+155. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit 210b84d lên 62755c2 theo origin/agent/initial-atfm-import.
+    - Nhận 1 commit mới gồm 7 file, bổ sung 353 dòng và xóa 81 dòng; không phát sinh merge conflict.
+    - Tạm lưu và áp lại thành công các thay đổi cục bộ trong CustumStaticdata.js và Web.config, không làm mất cấu hình đang sử dụng.
+
+[20/07/2026] Tiếp tục cập nhật nhánh agent/initial-atfm-import
+------------------------------------------------------------
+
+156. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit 62755c2 lên 44ad7d3 theo origin/agent/initial-atfm-import.
+    - Nhận 1 commit mới gồm 13 file, bổ sung 1.219 dòng và xóa 173 dòng.
+    - Hợp nhất nhật ký và áp lại Web.config cục bộ; thay đổi CustumStaticdata.js local trùng với remote nên được Git tự động đồng bộ, không mất dữ liệu.
+
+[21/07/2026] Cập nhật nhánh agent/initial-atfm-import
+----------------------------------------------------
+
+157. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit 44ad7d3 lên 4ebcde9 theo origin/agent/initial-atfm-import.
+    - Nhận 1 commit mới gồm 38 file, bổ sung 3.527 dòng và xóa 229 dòng.
+    - Hợp nhất thành công thay đổi local trong DaylyFlight.aspx, bảo toàn Web.config và toàn bộ lịch sử nhật ký.
