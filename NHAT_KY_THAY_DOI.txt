@@ -1211,3 +1211,12 @@ Quy ước:
 2026-07-22 | tools/TracksSyncPython/main.py | Chuẩn hóa stdout/stderr UTF-8 để bản CLI không dừng vì UnicodeEncodeError khi ghi log tiếng Việt trên Windows.
 2026-07-22 | tools/build; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe | Build lại GUI và CLI, chuyển toàn bộ đầu ra PyInstaller vào thư mục tools; kiểm tra CLI đọc đúng cấu hình PostgreSQL 172.29.187.90.
 2026-07-22 | build; dist/ATFM-TracksSync.exe; dist/ATFM-TracksSync-CLI.exe | Xóa đầu ra build cũ ở thư mục gốc sau khi xác nhận bản mới trong tools hoạt động.
+2026-07-22 | tools/ATFMUnified/models.py; tools/ATFMUnified/scanner.py; tools/ATFMUnified/khh_importer.py; tools/ATFMUnified/slot_importer.py; tools/ATFMUnified/oracle_db.py | Đưa nguyên vẹn các module nghiệp vụ Excel Importer từ tool QLB vào project để bản hợp nhất có thể build và triển khai độc lập.
+2026-07-22 | tools/ATFMUnified/excel_panel.py | Chuyển cửa sổ Excel Importer thành panel nhúng, giữ nguyên luồng quét Excel, import Oracle, hàng đợi sự kiện và cơ chế hủy.
+2026-07-22 | tools/ATFMUnified/main.py | Tạo GUI hợp nhất hai panel độc lập; hỗ trợ chia đôi, thu gọn trái/phải, tiếp tục tác vụ khi panel bị ẩn và dừng an toàn khi đóng ứng dụng.
+2026-07-22 | tools/ATFMUnified/requirements.txt; tools/ATFMUnified/README.md | Bổ sung dependency và hướng dẫn vận hành/build tool hợp nhất.
+2026-07-22 | ATFM-Unified-Tools.spec; tools/build_unified_tool.ps1 | Thêm cấu hình PyInstaller và script build ATFM-Data-Tools.exe vào tools/build, tools/dist.
+2026-07-22 | tools/build/ATFM-Unified-Tools; tools/dist/ATFM-Data-Tools.exe | Build thành công bản hợp nhất one-file; kiểm tra EXE khởi động ổn định và không thoát sớm.
+2026-07-22 | tools/ATFMUnified/main.py | Sửa trạng thái thu gọn xóa ràng buộc uniform của lưới để panel còn lại mở rộng hết toàn bộ vùng trống.
+2026-07-22 | ATFM-Unified-Tools.spec | Loại bỏ hidden import/collect dư để giảm cảnh báo PyInstaller; psycopg binary tiếp tục được hook chính thức tự động đóng gói.
+2026-07-22 | tools/build/ATFM-Unified-Tools; tools/dist/ATFM-Data-Tools.exe | Build lại bản hợp nhất sau khi sửa giãn panel; EXE khởi động ổn định, kích thước 48.023.027 byte.
