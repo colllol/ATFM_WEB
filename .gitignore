@@ -1,0 +1,14 @@
+.vs/
+bin/
+obj/
+packages/
+ODAC*/
+*.user
+*.suo
+*.cache
+*.pdb
+*.xls
+*.xlsx
+*.zip
+*.scc
+**/Properties/PublishProfiles/

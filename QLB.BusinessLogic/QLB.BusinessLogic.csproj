@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{42FF6861-67A6-427B-9A87-8ACA348F414B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>QLB.BusinessLogic</RootNamespace>
+    <AssemblyName>QLB.BusinessLogic</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Oracle.DataAccess, Version=4.121.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ODAC121024Xcopy_x64\odp.net4\odp.net\bin\4\Oracle.DataAccess.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ShareDLL">
+      <HintPath>..\lib\ShareDLL.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Atkl\AtklDAL.cs" />
+    <Compile Include="CancelFlights\CancelFlightsDAL.cs" />
+    <Compile Include="Cant\CantRealizeDAL.cs" />
+    <Compile Include="Cant\CantSplitDAL.cs" />
+    <Compile Include="Cant\ErrorsDAL.cs" />
+    <Compile Include="Config\ConfigDAL.cs" />
+    <Compile Include="DataProvido\DateTimeHelper.cs" />
+    <Compile Include="Document\DocumentDAL.cs" />
+    <Compile Include="FinishFlights\FinishedFlightsDAL.cs" />
+    <Compile Include="FinishFlights\NotCompletedFlightsDAL.cs" />
+    <Compile Include="Flight_DayFlight\DayFlightsDAL.cs" />
+    <Compile Include="Flight_DayFlight\DaylyFlightTotalInfoDAL.cs" />
+    <Compile Include="FlyPlanType\FlyplanTypeDAL.cs" />
+    <Compile Include="PermissionInbox\PermissionInboxDAL.cs" />
+    <Compile Include="Perm\PermHistoryDAL.cs" />
+    <Compile Include="Perm\PermNoImpDAL.cs" />
+    <Compile Include="Perm\PermScImpDAL.cs" />
+    <Compile Include="Perm\RestorePermDAL.cs" />
+    <Compile Include="Perm\SearchPermExtensionDAL.cs" />
+    <Compile Include="PlanMessage\PlanMessageDAL.cs" />
+    <Compile Include="Recive_logfile\ReceiveLogFileDAL.cs" />
+    <Compile Include="Report\MenuReportDAL.cs" />
+    <Compile Include="Report\AdsBPerformanceDAL.cs" />
+    <Compile Include="Report\FlightAnalyticsDAL.cs" />
+    <Compile Include="Report\ReportAirportDAL.cs" />
+    <Compile Include="SLOTS\SlotComparisonDAL.cs" />
+    <Compile Include="SLOTS\SlotsTableDAL.cs" />
+    <Compile Include="Report\ReportBTCDAL.cs" />
+    <Compile Include="Report\ReportDHBDAL.cs" />
+    <Compile Include="Report\ReportStatisticDAL.cs" />
+    <Compile Include="ScheduleFlight\ScheduleDayFlightDAL.cs" />
+    <Compile Include="Static\AeroDAL.cs" />
+    <Compile Include="Static\AirlinesDAL.cs" />
+    <Compile Include="Static\AirportRouteDAL.cs" />
+    <Compile Include="DataProvido\oDataProvider.cs" />
+    <Compile Include="FlightPermission\CalendarBackupDAL.cs" />
+    <Compile Include="FlightPermission\CalendarDAL.cs" />
+    <Compile Include="FlightPermission\CalendarDetailDAL.cs" />
+    <Compile Include="DataProvido\clsData.cs" />
+    <Compile Include="Static\AlarmDAL.cs" />
+    <Compile Include="Static\AtsDAL.cs" />
+    <Compile Include="Static\CraftTypeDAL.cs" />
+    <Compile Include="Static\CtryDAL.cs" />
+    <Compile Include="Static\Flight_FixesDAL.cs" />
+    <Compile Include="Static\FlyPurposeDAL.cs" />
+    <Compile Include="Static\FpauthorDAL.cs" />
+    <Compile Include="Static\GadDAL.cs" />
+    <Compile Include="Static\GamDAL.cs" />
+    <Compile Include="Static\OperDAL.cs" />
+    <Compile Include="Static\ReportStaticDAL.cs" />
+    <Compile Include="Static\SectorsDAL.cs" />
+    <Compile Include="System\ActionHistoryDAL.cs" />
+    <Compile Include="System\GroupsDAL.cs" />
+    <Compile Include="System\MenusDAL.cs" />
+    <Compile Include="Perm\PermDetailNoDAL.cs" />
+    <Compile Include="Perm\PermDetailScDAL.cs" />
+    <Compile Include="Perm\PermMasterNoDAL.cs" />
+    <Compile Include="Perm\PermMasterScDAL.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Static\ReportingPointDAL.cs" />
+    <Compile Include="Static\ReportingRouteDAL.cs" />
+    <Compile Include="Static\RouteListDAL.cs" />
+    <Compile Include="Static\SubdivisionDAL.cs" />
+    <Compile Include="System\GroupMenuDAL.cs" />
+    <Compile Include="System\UserGroupsDAL.cs" />
+    <Compile Include="System\UserMenuDAL.cs" />
+    <Compile Include="System\UsersDAL.cs" />
+    <Compile Include="Thslb\SumPurQtDAL.cs" />
+    <Compile Include="Thslb\SumPurQtMonthDAL.cs" />
+    <Compile Include="Thslb\SumPurVnDAL.cs" />
+    <Compile Include="Thslb\SumPurVnMonthDAL.cs" />
+    <Compile Include="Thslb\SumQnDAL.cs" />
+    <Compile Include="Thslb\SumQtDAL.cs" />
+    <Compile Include="Via\ViaDAL.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QLB.Info\QLB.Info.csproj">
+      <Project>{00d9cc80-eba6-4e6f-a402-ea5cd5925c24}</Project>
+      <Name>QLB.Info</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
