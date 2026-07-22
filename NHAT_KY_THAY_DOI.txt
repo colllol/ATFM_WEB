@@ -1258,3 +1258,21 @@ Quy ước:
     - Merge 2 commit remote ab2e47e và 0f09357 vào commit local c68396f, giữ lịch sử của cả hai phía và không push.
     - Nhận trang AIReports, thay đổi bộ lọc báo cáo và bản cập nhật công cụ TracksSync; hợp nhất sạch prjApplication.csproj.
     - Giữ urlApi nội bộ http://172.29.79.49:5176/ trong CustumStaticdata.js thay cho giá trị localhost của remote; bảo toàn các sửa lỗi Package và netstandard local.
+
+[22/07/2026] Tối ưu FLIGHT_DAYFLIGHT.View_Message và lập bộ script triển khai
+--------------------------------------------------------------------------
+
+164. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_view_message_optimize.sql
+    - Bổ sung script kiểm tra index trùng, tạo IX_TPM_VIEW_MESSAGE ở trạng thái INVISIBLE, kiểm tra execution plan rồi mới chuyển VISIBLE.
+    - Thay riêng View_Message trong package body, giữ nguyên chữ ký public; đổi điều kiện TO_CHAR(FLIGHTDATE) sang TRUNC(FLIGHTDATE) với ngày được parse một lần theo FXDD/MM/YYYY.
+    - Kiểm tra lỗi biên dịch package, trạng thái object, thống kê index và execution plan sau triển khai; script dừng ngay khi phát hiện lỗi hoặc index tương đương tên khác.
+    - Đã triển khai trên ATFM@PDBORCL: IX_TPM_VIEW_MESSAGE (TRUNC(FLIGHTDATE), MESS_TYPE, PART_NO, ID, STATUS) là FUNCTION-BASED NORMAL, VALID, VISIBLE; giữ nguyên T_PLAN_MESSAGE_TUNE1(ID).
+    - Execution plan sau triển khai dùng INDEX RANGE SCAN IX_TPM_VIEW_MESSAGE, không còn TABLE ACCESS FULL và SORT ORDER BY cho View_Message.
+    - Kiểm thử View_Message ngày 11/07/2026 trả đủ 317 dòng trong khoảng 10 ms phía PL/SQL; package và package body FLIGHT_DAYFLIGHT đều VALID.
+
+165. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_view_message_rollback.sql
+    - Bổ sung script hoàn tác: khôi phục điều kiện TO_CHAR(FLIGHTDATE, 'dd/mm/yyyy') của View_Message, xác nhận package biên dịch thành công rồi mới xóa IX_TPM_VIEW_MESSAGE.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+166. Database/Oracle/client/sqlnet.ora
+    - Bổ sung cấu hình SQL*Net cục bộ SQLNET.AUTHENTICATION_SERVICES=(NONE) để SQL*Plus dùng xác thực mật khẩu trong phiên triển khai, không thay đổi cấu hình Oracle Client toàn hệ thống và không lưu thông tin đăng nhập.
