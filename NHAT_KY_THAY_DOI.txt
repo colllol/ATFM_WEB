@@ -1276,3 +1276,17 @@ Quy ước:
 
 166. Database/Oracle/client/sqlnet.ora
     - Bổ sung cấu hình SQL*Net cục bộ SQLNET.AUTHENTICATION_SERVICES=(NONE) để SQL*Plus dùng xác thực mật khẩu trong phiên triển khai, không thay đổi cấu hình Oracle Client toàn hệ thống và không lưu thông tin đăng nhập.
+
+[22/07/2026] Tối ưu nhóm procedure đọc T_PLAN_MESSAGE_NEW
+-------------------------------------------------------
+
+167. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_plan_message_new_optimize.sql
+    - Bổ sung script kiểm tra index trùng và tạo IX_TPMN_VIEW_MESSAGE (TRUNC(FLIGHTDATE), MESS_TYPE, PART_NO, ID, STATUS) theo quy trình INVISIBLE - kiểm tra plan - VISIBLE.
+    - Tối ưu 5 procedure View_MessageAirPort, View_MessageAirPort2023, View_MessageDetailAirPort, View_MessageZone và View_MessageDetailZone; giữ nguyên chữ ký public, parse ngày một lần theo FXDD/MM/YYYY và loại TO_CHAR trên FLIGHTDATE.
+    - Đã triển khai trên ATFM@PDBORCL: IX_TPMN_VIEW_MESSAGE là FUNCTION-BASED NORMAL, VALID, VISIBLE; giữ nguyên khóa chính T_PLAN_MESSAGE_NEW_PK(ID).
+    - Execution plan của danh sách vùng chuyển từ TABLE ACCESS FULL kèm SORT ORDER BY sang INDEX RANGE SCAN IX_TPMN_VIEW_MESSAGE, không còn bước sort.
+    - Kiểm thử ngày 11/07/2026: sân bay 148 dòng/180 ms, sân bay VVBM 2 dòng/10 ms, chi tiết sân bay 1 dòng/220 ms, vùng 127 dòng/0 ms và chi tiết vùng 5 dòng/220 ms; package và package body FLIGHT_DAYFLIGHT đều VALID.
+
+168. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_plan_message_new_rollback.sql
+    - Bổ sung script hoàn tác 5 procedure về điều kiện TO_CHAR(FLIGHTDATE, 'dd/mm/yyyy'), kiểm tra package biên dịch hợp lệ trước khi xóa IX_TPMN_VIEW_MESSAGE.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
