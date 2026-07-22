@@ -1,0 +1,5 @@
+- trang Common/ChartReportAirport.aspx sửa lỗi không hiển thị được nội dung của select sân bay.
+- trang Common/ChartReport.aspx bộ lọc từ ngày đến ngày mặc định là lấy DAYNOW to DAYNOW
+- trang ReportNew/FlightStatusRate.aspx fix lỗi không hiển thị được nội dung của select hãng bay.
+- trang ReportNew/FlightTrendAnalysis.aspx fix lỗi không hiển thị được nội dung của select hãng bay và bộ lọc từ ngày đến ngày mặc định là lấy DAYNOW to DAYNOW
+- trang ReportNew/AirportTakeoffLanding.aspx bộ lọc từ ngày đến ngày mặc định là lấy DAYNOW to DAYNOW.  

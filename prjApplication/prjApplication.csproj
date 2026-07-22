@@ -1371,6 +1371,9 @@
     <Content Include="ScheduleFlights\ScheduleFlights.aspx" />
     <Content Include="ScheduleFlights\ScheduleFlights4ATS.aspx" />
     <Content Include="ScheduleFlights\Schedule_Flight.aspx" />
+    <Content Include="SLOTS\AIReports.aspx" />
+    <Content Include="SLOTS\AIReports.css" />
+    <Content Include="SLOTS\AIReports.js" />
     <Content Include="SLOTS\FlightTrackingMap.aspx" />
     <Content Include="SLOTS\FlightTrackingMap.css" />
     <Content Include="SLOTS\FlightTrackingMap.js" />
@@ -2115,6 +2118,9 @@
     </Compile>
     <Compile Include="Day_Flights\DaylyFlight.aspx.designer.cs">
       <DependentUpon>DaylyFlight.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\AIReports.aspx.cs">
+      <DependentUpon>AIReports.aspx</DependentUpon>
     </Compile>
     <Compile Include="SLOTS\SlotsApiClient.cs" />
     <Compile Include="SLOTS\SlotsDataProvider.cs" />

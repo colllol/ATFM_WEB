@@ -180,11 +180,13 @@
         var from = app.querySelector('#rnFrom');
         var to = app.querySelector('#rnTo');
         var airport = app.querySelector('#rnAirport');
+        var filterBox = app.querySelector('.rn-filters');
+        filterBox.classList.add('rn-status-filters');
         from.value = iso;
         to.value = iso;
         airport.parentNode.querySelector('label').textContent = 'Sân bay';
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option><option>VVNB</option><option>VVTS</option><option>VVDN</option><option>VVCR</option><option>VVPQ</option><option>VVCI</option><option>VVDL</option><option>VVPC</option>';
-        airport.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
+        airport.parentNode.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
         var oper = app.querySelector('#rnOper');
 
         function isCurrentDay() { return from.value === iso && to.value === iso; }
