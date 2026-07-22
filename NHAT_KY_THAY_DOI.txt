@@ -1290,3 +1290,18 @@ Quy ước:
 168. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_plan_message_new_rollback.sql
     - Bổ sung script hoàn tác 5 procedure về điều kiện TO_CHAR(FLIGHTDATE, 'dd/mm/yyyy'), kiểm tra package biên dịch hợp lệ trước khi xóa IX_TPMN_VIEW_MESSAGE.
     - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+[22/07/2026] Tối ưu P_FLY.GenFromTable_day_flightsNotAll
+-----------------------------------------------------
+
+169. Database/Oracle/20260722_P_FLY_gen_day_flights_not_all_optimize.sql
+    - Bổ sung script kiểm tra index trùng, kiểm thử INVISIBLE và tạo IX_TFC_GEN_NOTALL(FLIGHTDATE, CALLSIGN, FROM_AIRP, TO_AIRP) cho điều kiện NOT EXISTS trên T_FLIGHTCANCEL.
+    - Không tạo thêm index T_DAY_FLIGHTS; tái sử dụng T_DAY_FLIGHTS_IDX_TUNE2(FLIGHTDATE, ISACCESS, FLIGHTNBR) hiện có bằng cách thay 44 điều kiện TO_CHAR(FLIGHTDATE) trong GenFromTable_day_flightsNotAll thành khoảng ngày [P_Date, P_Date + 1).
+    - Đổi P_Date sang DATE và parse on_day đúng một lần theo FXDD/MM/YYYY; giữ nguyên chữ ký public và các nhánh OVER, HKVN, KV1, KV2, KV3, OTHER.
+    - Đã triển khai trên ATFM@PDBORCL: P_FLY package/package body và IX_TFC_GEN_NOTALL đều VALID; index mới là NORMAL, NONUNIQUE, VISIBLE với thống kê 19.117 dòng.
+    - Plan nhánh HKVN chuyển từ full scan T_DAY_FLIGHTS và T_FLIGHTCANCEL sang INDEX RANGE SCAN trên T_DAY_FLIGHTS_IDX_TUNE2 và IX_TFC_GEN_NOTALL; truy vấn đại diện giữ nguyên 393 dòng, giảm từ 25,44 giây xuống 0,22 giây.
+    - Kiểm thử end-to-end GenFromTable_day_flightsNotAll('22/07/2026','HKVN') hoàn tất khoảng 320 ms, tạo CLOB 21.535 ký tự và danh sách flight ID dài 3.537 ký tự; function ghi một dòng T_LOG theo logic sẵn có.
+
+170. Database/Oracle/20260722_P_FLY_gen_day_flights_not_all_rollback.sql
+    - Bổ sung script hoàn tác có kiểm đếm đủ 44 điều kiện: khôi phục TO_CHAR(FLIGHTDATE), kiểu/khởi tạo P_Date cũ, kiểm tra P_FLY biên dịch hợp lệ rồi mới xóa IX_TFC_GEN_NOTALL.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
