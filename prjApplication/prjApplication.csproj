@@ -114,6 +114,10 @@
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Npgsql, Version=4.1.14.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Npgsql.4.1.14\lib\net461\Npgsql.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.121.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Oracle.DataAccess.dll</HintPath>
@@ -123,6 +127,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
@@ -131,6 +138,30 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.6.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.3\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.4.6.0\lib\netstandard2.0\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.4.6.0\lib\net461\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Web" />
@@ -618,6 +649,11 @@
     <Content Include="Common\ChartReportAirport.aspx" />
     <Content Include="Common\ChartReportAirport.js" />
     <Content Include="Data\dashboard-flights.json" />
+    <Content Include="App_Data\vietnam-fir-VVHM-VVHN.geojson" />
+    <Content Include="App_Data\southeast-asia-basemap.geojson" />
+    <Content Include="ReportNew\AdsBPerformanceReport.aspx" />
+    <Content Include="ReportNew\AdsBPerformanceReport.css" />
+    <Content Include="ReportNew\AdsBPerformanceReport.js" />
     <Content Include="ReportNew\AnomalyWarning.aspx" />
     <Content Include="ReportNew\AirportActivitySummary.aspx" />
     <Content Include="ReportNew\AirportTakeoffLanding.aspx" />
@@ -1333,6 +1369,9 @@
     <Content Include="ScheduleFlights\ScheduleFlights.aspx" />
     <Content Include="ScheduleFlights\ScheduleFlights4ATS.aspx" />
     <Content Include="ScheduleFlights\Schedule_Flight.aspx" />
+    <Content Include="SLOTS\FlightTrackingMap.aspx" />
+    <Content Include="SLOTS\FlightTrackingMap.css" />
+    <Content Include="SLOTS\FlightTrackingMap.js" />
     <Content Include="SLOTS\KHH.aspx" />
     <Content Include="SLOTS\CreateSlotComparisonTables.sql" />
     <Content Include="SLOTS\SlotComparison.aspx" />
@@ -1945,6 +1984,9 @@
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ReportNew\ReportPageBase.cs" />
+    <Compile Include="ReportNew\AdsBPerformanceReport.aspx.cs">
+      <DependentUpon>AdsBPerformanceReport.aspx</DependentUpon>
+    </Compile>
     <Compile Include="ReportNew\AirportTakeoffLanding.aspx.cs">
       <DependentUpon>AirportTakeoffLanding.aspx</DependentUpon>
     </Compile>
@@ -2073,6 +2115,9 @@
       <DependentUpon>DaylyFlight.aspx</DependentUpon>
     </Compile>
     <Compile Include="SLOTS\SlotsDataProvider.cs" />
+    <Compile Include="SLOTS\FlightTrackingMap.aspx.cs">
+      <DependentUpon>FlightTrackingMap.aspx</DependentUpon>
+    </Compile>
     <Compile Include="SLOTS\SlotComparisonService.cs" />
     <Compile Include="SLOTS\SlotComparison.aspx.cs">
       <DependentUpon>SlotComparison.aspx</DependentUpon>

@@ -81,11 +81,17 @@ namespace prjApplication.ReportNew
             DateTime to;
             ParseDateRange(fromDate, toDate, out from, out to);
             var values = new List<string>();
-            const string sql = @"SELECT DISTINCT UPPER(TRIM(OPER_ID)) OPER_ID
-                                   FROM T_FINISHED_FLIGHTS
-                                  WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
-                                    AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
-                                  ORDER BY OPER_ID";
+            const string sql = @"SELECT OPER_ID FROM (
+                                   SELECT UPPER(TRIM(OPER_ID)) OPER_ID
+                                     FROM T_FINISHED_FLIGHTS
+                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                      AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+                                   UNION
+                                   SELECT UPPER(TRIM(OPER_ID)) OPER_ID
+                                     FROM T_DAY_FLIGHTS_GOINGON
+                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                      AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+                                 ) ORDER BY OPER_ID";
             using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
             using (var command = new OracleCommand(sql, connection))
             {

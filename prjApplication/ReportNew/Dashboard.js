@@ -43,7 +43,6 @@
         var to = app.querySelector('#rnTo');
         var apply = app.querySelector('#rnApply');
         var today = new Date();
-        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         var resizeHandler = null;
         var selectedAirport = '';
         var selectedStatus = '';
@@ -52,12 +51,12 @@
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option>' + Object.keys(airportNames).map(function (code) {
             return '<option value="' + code + '">' + code + ' - ' + airportNames[code] + '</option>';
         }).join('');
-        from.value = formatDate(firstDay);
+        from.value = formatDate(today);
         to.value = formatDate(today);
         var heroSubtitle = app.querySelector('.rn-hero p');
         var liveNote = app.querySelector('.rn-live small');
         if (heroSubtitle) heroSubtitle.textContent = 'Tổng hợp trạng thái, khai thác sân bay và xu hướng từ dữ liệu thực tế';
-        if (liveNote) liveNote.textContent = 'Đồng bộ 3 báo cáo';
+        if (liveNote) liveNote.textContent = '';
 
         function syncAirports(items) {
             var selected = airport.value;

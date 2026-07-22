@@ -2003,6 +2003,8 @@
                 if (window.fetch) {
                     var originalFetch = window.fetch;
                     window.fetch = function () {
+                        var options = arguments.length > 1 ? arguments[1] : null;
+                        if (options && options.atfmSilent === true) return originalFetch.apply(this, arguments);
                         showLoading('Đang tải dữ liệu...');
                         return originalFetch.apply(this, arguments).then(function (response) { hideLoading(true); return response; }, function (error) { hideLoading(true); throw error; });
                     };

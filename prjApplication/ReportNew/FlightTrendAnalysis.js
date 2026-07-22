@@ -42,7 +42,6 @@
         var period = app.querySelector('#rnPeriod');
         var apply = app.querySelector('#rnApply');
         var today = new Date();
-        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         var resizeHandler = null;
 
         filters.classList.add('rn-trend-filters');
@@ -51,7 +50,7 @@
         }).join('');
         airport.parentNode.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnTrendOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
         var oper = app.querySelector('#rnTrendOper');
-        from.value = formatDate(firstDay);
+        from.value = formatDate(today);
         to.value = formatDate(today);
 
         var heroSubtitle = app.querySelector('.rn-hero p');

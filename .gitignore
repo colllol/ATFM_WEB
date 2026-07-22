@@ -27,6 +27,8 @@ prjApplicationOnline/
 # Machine-local configuration and uploaded/runtime data
 *.local.config
 *.secrets.config
+*.local.json
+*.watermark.log
 prjApplication/Upload/
 prjApplication/Uploads/
 prjApplication/App_Data/*.mdf

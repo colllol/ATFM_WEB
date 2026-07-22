@@ -6,6 +6,7 @@
 
     var endpoint = page.getAttribute('data-endpoint');
     var flights = [];
+    var defaultAirports = ['VVBM', 'VVCA', 'VVCI', 'VVCM', 'VVCR', 'VVCS', 'VVCT', 'VVDB', 'VVDH', 'VVDL', 'VVDN', 'VVNB', 'VVPC', 'VVPQ', 'VVRG', 'VVTH', 'VVTS', 'VVTX', 'VVVD', 'VVVH'];
     var statuses = [
         ['total', 'Tổng chuyến bay', '#244b74'],
         ['finished', 'Finished', '#20b486'],
@@ -39,6 +40,7 @@
     }
     function airportCodes() {
         var found = {};
+        defaultAirports.forEach(function (code) { found[code] = true; });
         flights.forEach(function (flight) {
             [flight.fromAirp, flight.toAirp].forEach(function (code) {
                 code = String(code || '').trim().toUpperCase();

@@ -44,9 +44,8 @@
         var to = app.querySelector('#rnTo');
         var apply = app.querySelector('#rnApply');
         var today = new Date();
-        var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         var toIso = formatDate(today);
-        var fromIso = formatDate(firstDay);
+        var fromIso = formatDate(today);
         var detailState = null;
 
         from.value = fromIso;

@@ -1,6 +1,33 @@
 NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
 ================================
 
+2026-07-22 | dist/ATFM-TracksSync.exe | Build lại bản GUI sau khi loại bỏ credential mặc định khỏi mã nguồn đóng gói.
+2026-07-22 | dist/ATFM-TracksSync-CLI.exe | Build lại bản CLI sau khi loại bỏ credential mặc định khỏi mã nguồn đóng gói.
+
+2026-07-22 | tools/TracksSyncPython/main.py | Loại bỏ host và mật khẩu database nội bộ khỏi giá trị mặc định trước khi đẩy mã nguồn lên GitHub; tool tiếp tục đọc cấu hình local hoặc biến môi trường.
+2026-07-22 | tools/TracksSyncPython/TracksSync.sample.json | Thay thông tin kết nối thật bằng placeholder an toàn để dùng làm file cấu hình mẫu trên repository.
+
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.js | Thêm trạng thái chọn marker máy bay, chuyển hiệu ứng sang marker mới và bỏ chọn khi click ra ngoài.
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.css | Thêm hiệu ứng tăng sáng, viền trắng và quầng sáng cho icon máy bay được chọn.
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.aspx | Tăng phiên bản cache CSS/JavaScript để tải ngay hiệu ứng marker được chọn.
+
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.js | Điều chỉnh marker máy bay tự thu nhỏ nhẹ theo mức phóng to bản đồ để hạn chế che khuất vị trí và vùng FIR.
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.aspx | Tăng phiên bản cache của JavaScript bản đồ để trình duyệt nhận ngay logic co giãn marker mới.
+
+2026-07-12 | prjApplication/Common/ChartReportAirport.js | Bổ sung danh sách sân bay mặc định để các ô chọn sân bay luôn có dữ liệu hiển thị.
+2026-07-12 | prjApplication/ReportNew/Dashboard.js | Đổi khoảng ngày mặc định của Dashboard thành từ ngày hiện tại đến ngày hiện tại.
+2026-07-12 | prjApplication/ReportNew/AirportTakeoffLanding.js | Đổi khoảng ngày mặc định thành từ ngày hiện tại đến ngày hiện tại.
+2026-07-12 | prjApplication/ReportNew/FlightTrendAnalysis.js | Đổi khoảng ngày mặc định thành từ ngày hiện tại đến ngày hiện tại.
+2026-07-12 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Mở rộng nguồn danh sách hãng khai thác từ cả T_DAY_FLIGHTS_GOINGON và T_FINISHED_FLIGHTS.
+2026-07-12 | prjApplication/ReportNew/FlightTrendAnalysis.aspx.cs | Mở rộng nguồn danh sách hãng khai thác từ cả dữ liệu hiện hành và dữ liệu chuyến bay hoàn thành.
+2026-07-12 | prjApplication/App_Data/southeast-asia-basemap.geojson | Thêm dữ liệu đường biên quốc gia Natural Earth đã lọc cho bản đồ Đông Nam Á hoạt động hoàn toàn offline.
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.aspx | Thêm lớp bản đồ nền offline, điều khiển zoom, thước tỷ lệ và đổi tông bản đồ xám giống mẫu.
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.aspx.cs | Trả thêm dữ liệu bản đồ nền Natural Earth từ App_Data cho giao diện bản đồ.
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.css | Tạo giao diện bản đồ nền xám, đường biên FIR tím, nhãn địa danh và cụm điều khiển bản đồ.
+2026-07-12 | prjApplication/SLOTS/FlightTrackingMap.js | Dựng nền quốc gia offline, hỗ trợ kéo/phóng to/thu nhỏ và cập nhật chuyến bay không bật overlay loading.
+2026-07-12 | prjApplication/Masters/ATFM_New.Master | Cho phép request nền khai báo atfmSilent để không kích hoạt overlay loading toàn trang.
+2026-07-12 | prjApplication/prjApplication.csproj | Đăng ký southeast-asia-basemap.geojson để được đóng gói khi build và publish.
+
 Quy ước:
 - File này ghi lại các tệp đang thay đổi/chưa được commit và nội dung thay đổi chính.
 - Sau mỗi lần sửa mã nguồn trong project, phải cập nhật thêm nhật ký mà không cần hỏi lại.
@@ -1103,3 +1130,39 @@ Quy ước:
     - Fast-forward nhánh local từ commit 44ad7d3 lên 4ebcde9 theo origin/agent/initial-atfm-import.
     - Nhận 1 commit mới gồm 38 file, bổ sung 3.527 dòng và xóa 229 dòng.
     - Hợp nhất thành công thay đổi local trong DaylyFlight.aspx, bảo toàn Web.config và toàn bộ lịch sử nhật ký.
+2026-07-22 | tools/TracksSyncPython/main.py | Tạo lại tool Python ATFM FIR Tracks Logger: đọc public.tracks, phân vùng VVHN/VVHM bằng geojson, đối chiếu T_DAY_FLIGHTS_GOINGON theo CALLSIGN và ngày updated_at_utc, ghi T_TRACKS_LOG, tự tạo/cập nhật schema và lưu watermark incremental.
+2026-07-22 | tools/TracksSyncPython/main.py | Bổ sung cơ chế bỏ qua các trường hợp T_DAY_FLIGHTS_GOINGON có nhiều dòng cùng CALLSIGN/ngày để tránh ghi sai FROM/TO khi public.tracks không đủ thông tin phân biệt chuyến.
+2026-07-22 | tools/TracksSyncPython/README.md | Thêm hướng dẫn luồng xử lý, cách chạy check/sync/verify/gui, chạy full và quy tắc cấu hình/watermark cho tool TracksSyncPython.
+2026-07-22 | tools/TracksSyncPython/TracksSync.sample.json | Thêm file cấu hình mẫu cho kết nối PostgreSQL, Oracle, đường dẫn geojson và watermark của tool.
+2026-07-22 | .gitignore | Bổ sung ignore cho *.local.json và *.watermark.log để tránh đưa cấu hình máy/mật khẩu và watermark runtime lên Git.
+2026-07-22 | tools/TracksSyncPython/main.py | Chỉnh đọc cấu hình JSON bằng utf-8-sig để tool nhận được cả file TracksSync.local.json có BOM và không BOM.
+2026-07-22 | tools/TracksSyncPython/main.py | Bổ sung fallback PostgreSQL driver psycopg v3 trước psycopg2 để tool chạy được với môi trường Python mới.
+2026-07-22 | tools/TracksSyncPython/requirements.txt | Thêm danh sách dependency cần cho tool: psycopg[binary], oracledb và pyinstaller.
+2026-07-22 | tools/TracksSyncPython/main.py | Tối ưu đối chiếu Oracle theo lô ngày và nhóm tối đa 800 CALLSIGN mỗi truy vấn, thay cho truy vấn từng dòng để giảm thời gian chạy; loại bỏ hàm đối chiếu tuần tự cũ.
+2026-07-22 | tools/TracksSyncPython/main.py | Khai báo trực tiếp module getpass mà oracledb nạp động để bản PyInstaller EXE kết nối Oracle không còn lỗi thiếu dependency.
+2026-07-22 | tools/TracksSyncPython/main.py | Đưa cryptography vào dependency tĩnh để bản EXE hỗ trợ python-oracledb Thin Mode khi xác thực kết nối PDBORCL.
+2026-07-22 | tools/TracksSyncPython/main.py | Khai báo đầy đủ x509, hashes, serialization, cipher và PBKDF2 được Oracle Thin Mode nạp động để bản one-file EXE không thiếu nhánh cryptography.
+2026-07-22 | tools/TracksSyncPython/README.md | Bổ sung đường dẫn hai bản EXE, chế độ dòng lệnh và lưu ý chỉ chế độ sync mới ghi dữ liệu nghiệp vụ/watermark.
+2026-07-22 | dist/ATFM-TracksSync.exe | Build lại bản giao diện Windows one-file từ tool TracksSyncPython và xác nhận chế độ check thoát thành công với mã 0.
+2026-07-22 | dist/ATFM-TracksSync-CLI.exe | Build bản CLI one-file, đóng gói đủ PostgreSQL/Oracle/cryptography và chạy check thực tế thành công.
+2026-07-22 | tools/TracksSyncPython/main.py | Sửa lỗi phân vùng FIR khi GeoJSON có hai đỉnh liên tiếp trùng nhau: đoạn biên độ dài 0 không còn khiến mọi tọa độ bị nhận nhầm là biên VVHN/STATUS 1.
+2026-07-22 | dist/ATFM-TracksSync.exe | Build lại bản GUI sau khi sửa phép kiểm tra biên GeoJSON; chạy check full thành công với mã thoát 0.
+2026-07-22 | dist/ATFM-TracksSync-CLI.exe | Build lại bản CLI, xóa dữ liệu T_TRACKS_LOG cũ và sync full 432 dòng; verify từng dòng đạt 432 đúng, 0 sai/thiếu.
+2026-07-22 | tools/TracksSyncPython/main.py | Bổ sung điều kiện hành trình: O/F được phép thiếu FROM hoặc TO; LD và các PERMTYPE khác phải có đủ FROM_AIRP và TO_AIRP trước khi được đối chiếu/ghi log.
+2026-07-22 | tools/TracksSyncPython/README.md | Ghi rõ quy tắc duyệt FROM/TO theo PERMTYPE O/F và LD.
+2026-07-22 | tools/TracksSyncPython/main.py | Tăng kiểm soát toàn vẹn T_TRACKS_LOG bằng unique index CALLSIGN+DATE; nâng verify để phát hiện riêng dòng sai, thiếu, thừa và khóa trùng bằng một lượt đọc bảng.
+2026-07-22 | tools/TracksSyncPython/README.md | Bổ sung mô tả unique index và phạm vi kiểm tra đầy đủ của chế độ verify.
+2026-07-22 | dist/ATFM-TracksSync.exe | Build lại GUI với quy tắc hành trình O/F-LD, kiểm soát unique key và verify đầy đủ.
+2026-07-22 | dist/ATFM-TracksSync-CLI.exe | Build lại CLI, xóa/sync full T_TRACKS_LOG và xác minh cuối: 432 đúng, 0 sai, 0 thiếu, 0 thừa, 0 trùng; không có LD thiếu FROM/TO.
+2026-07-22 | prjApplication/App_Data/vietnam-fir-VVHM-VVHN.geojson | Bổ sung dữ liệu biên FIR VVHN/VVHM nội bộ để trang bản đồ hoạt động offline, không phụ thuộc dịch vụ bản đồ ngoài.
+2026-07-22 | prjApplication/SLOTS/FlightTrackingMap.aspx | Tạo trang bản đồ theo dõi chuyến bay ADS-B trong FIR, hiển thị thống kê LD/O-F, trạng thái cập nhật và popup thông tin chuyến bay.
+2026-07-22 | prjApplication/SLOTS/FlightTrackingMap.aspx.cs | Tạo WebMethod đọc vị trí ngày hiện tại từ PostgreSQL public.tracks, chuẩn hóa callsign trước dấu gạch ngang và đối chiếu OPER_ID/PERMTYPE với T_DAY_FLIGHTS_GOINGON.
+2026-07-22 | prjApplication/SLOTS/FlightTrackingMap.css | Tạo giao diện responsive cho bản đồ FIR, marker máy bay xanh LD/cam O-F, chú thích, KPI và popup chi tiết.
+2026-07-22 | prjApplication/SLOTS/FlightTrackingMap.js | Dựng SVG bản đồ từ GeoJSON, lọc vị trí trong hoặc trên biên FIR và cập nhật riêng marker mỗi 5 giây không reload/loading toàn trang.
+2026-07-22 | prjApplication/ReportNew/AdsBPerformanceReport.aspx | Tạo trang “Tổng hợp chỉ số hiệu suất bay từ ADS-B” với bộ lọc ngày, PERMTYPE, OPER, KPI, biểu đồ và bảng chi tiết.
+2026-07-22 | prjApplication/ReportNew/AdsBPerformanceReport.aspx.cs | Tạo WebMethod đọc T_TRACKS_LOG, đối chiếu OPER từ T_DAY_FLIGHTS_GOINGON và tổng hợp số lượng LD/O-F theo ngày.
+2026-07-22 | prjApplication/ReportNew/AdsBPerformanceReport.css | Tạo giao diện báo cáo ADS-B responsive, biểu đồ hai đường, bảng cuộn và phân trang phía client.
+2026-07-22 | prjApplication/ReportNew/AdsBPerformanceReport.js | Bổ sung lọc dữ liệu, tải danh sách OPER, biểu đồ SVG có tooltip số lượng khi rê chuột và bảng chi tiết phân trang.
+2026-07-22 | prjApplication/Web.config | Bổ sung connection string TracksPostgres dùng cho bản đồ theo dõi chuyến bay trên máy local.
+2026-07-22 | prjApplication/packages.config | Đăng ký Npgsql 4.1.14 có strong-name hợp lệ và các dependency tương thích .NET Framework 4.8.
+2026-07-22 | prjApplication/prjApplication.csproj | Đăng ký hai trang mới, GeoJSON, CSS/JS, code-behind và các assembly PostgreSQL để build/publish đầy đủ.

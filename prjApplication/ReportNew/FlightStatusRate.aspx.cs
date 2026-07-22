@@ -99,9 +99,18 @@ namespace prjApplication.ReportNew
             if (!DateTime.TryParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out from) ||
                 !DateTime.TryParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out to))
                 throw new ArgumentException("Ngày lọc không hợp lệ.");
-            string table = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS";
             var values = new List<string>();
-            string sql = "SELECT DISTINCT UPPER(TRIM(OPER_ID)) OPER_ID FROM " + table + " WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate ORDER BY OPER_ID";
+            const string sql = @"SELECT OPER_ID FROM (
+                                   SELECT UPPER(TRIM(OPER_ID)) OPER_ID
+                                     FROM T_DAY_FLIGHTS_GOINGON
+                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                      AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+                                   UNION
+                                   SELECT UPPER(TRIM(OPER_ID)) OPER_ID
+                                     FROM T_FINISHED_FLIGHTS
+                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                      AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+                                 ) ORDER BY OPER_ID";
             using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
             using (var command = new OracleCommand(sql, connection))
             {
