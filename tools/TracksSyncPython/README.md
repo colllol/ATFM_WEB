@@ -23,6 +23,7 @@ Bang log duoc bao ve bang unique index `CALLSIGN + DATE`; che do verify kiem tra
 python .\tools\TracksSyncPython\main.py --mode check
 python .\tools\TracksSyncPython\main.py --mode sync
 python .\tools\TracksSyncPython\main.py --mode verify
+python .\tools\TracksSyncPython\main.py --mode all
 ```
 
 Chay lai toan bo, bo qua watermark:
@@ -37,10 +38,21 @@ Mo giao dien:
 python .\tools\TracksSyncPython\main.py
 ```
 
-## Ban EXE
+## Build va ban EXE
 
-- `dist\ATFM-TracksSync.exe`: giao dien Windows, dung cac nut Kiem tra/Ghi/Xac minh.
-- `dist\ATFM-TracksSync-CLI.exe`: ban dong lenh, ho tro `--mode check|sync|verify` va `--full`.
+Build ca hai ban bang lenh:
+
+```powershell
+.\tools\build_tracks_sync.ps1
+```
+
+- `tools\dist\ATFM-TracksSync.exe`: giao dien Windows, dung cac nut Kiem tra/Ghi/Xac minh va Auto theo chu ky giay.
+- `tools\dist\ATFM-TracksSync-CLI.exe`: ban dong lenh, ho tro `--mode check|sync|verify|all` va `--full`.
+- Toan bo file trung gian cua PyInstaller nam trong `tools\build`.
+
+Che do Auto chay lien tuc theo thu tu Kiem tra -> Ghi -> Xac minh tren cung tap du lieu moi.
+Sau khi mot luot hoan tat, tool moi dem nguoc so giay da nhap va bat dau luot ke tiep.
+Auto chi dung khi dong ung dung.
 
 Nen chay `check` truoc. Chi `sync` moi ghi `T_TRACKS_LOG` va cap nhat watermark; `check` va `verify` khong ghi du lieu nghiep vu.
 
@@ -51,5 +63,9 @@ Tool uu tien doc config theo thu tu:
 1. Bien moi truong `TRACKS_CONFIG`.
 2. File `TracksSync.local.json` cung thu muc voi exe/source.
 3. File `prjApplication/App_Data/TracksSync.local.json`.
+
+Với bản EXE trong `tools\dist`, tool tự tìm thư mục gốc project để đọc
+`prjApplication\App_Data\TracksSync.local.json`. Khi triển khai riêng file EXE, cần đặt
+`TracksSync.local.json` cùng thư mục với EXE.
 
 Xem mau tai `TracksSync.sample.json`. File `*.local.json` va `*.watermark.log` khong nen dua len Git.

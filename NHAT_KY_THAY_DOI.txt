@@ -1233,3 +1233,28 @@ Quy ước:
     - Thêm assembly netstandard Version 2.0.0.0 vào compilation/assemblies để các trang CodeFile sử dụng Npgsql, System.Memory và dependency netstandard biên dịch được trên IIS.
     - Khắc phục CS0012 tại AdsBPerformanceReport.aspx.cs khi thực hiện LINQ GroupBy trên dữ liệu báo cáo ADS-B.
     - Xác nhận build project 0 error, ASP.NET CompileFile của AdsBPerformanceReport.aspx thành công và URL local không còn trả lỗi HTTP 500.
+2026-07-22 | prjApplication/SLOTS/AIReports.aspx; prjApplication/SLOTS/AIReports.aspx.cs | Tạo trang báo cáo hoạt động AI và proxy phía server gọi GET /api/reports/ai với header X-API-Key, không để khóa API xuất hiện ở trình duyệt.
+2026-07-22 | prjApplication/SLOTS/AIReports.css; prjApplication/SLOTS/AIReports.js | Tạo dashboard KPI, bộ lọc, bảng phân trang và popup chi tiết câu hỏi, SQL, câu trả lời, thực thi công cụ và lỗi của từng yêu cầu AI.
+2026-07-22 | prjApplication/prjApplication.csproj | Đăng ký trang AIReports cùng code-behind, CSS và JavaScript để build/publish đầy đủ.
+2026-07-22 | prjApplication/ReportNew/FlightStatusRate.js; prjApplication/ReportNew/ReportInteractive.css; prjApplication/ReportNew/FlightStatusRate.aspx | Sửa ô hãng bay bị lồng trong ô sân bay và bố trí toàn bộ bộ lọc trạng thái trên một hàng ở desktop; giữ responsive trên màn hình nhỏ.
+2026-07-22 | prjApplication/Common/ChartReportAirport.aspx | Thu gọn bộ lọc so sánh sân bay thành một hàng gồm số lượng sân bay, hai sân bay, hai thời điểm và nút so sánh; cập nhật cache tài nguyên.
+2026-07-22 | prjApplication/Masters/ATFM_New.Master | Loại bỏ overlay loading khi người dùng chọn hoặc đổi bộ lọc ngày trên toàn bộ trang dùng master mới; vẫn giữ loading cho Search, Áp dụng, Lưu, Export và chuyển trang.
+2026-07-22 | tools/TracksSyncPython/main.py | Chuẩn hóa tiếng Việt trên các nút GUI; thay “Chạy lại toàn bộ” bằng Auto có ô chu kỳ giây, chạy liên tục Kiểm tra - Ghi - Xác minh và chỉ dừng khi đóng ứng dụng.
+2026-07-22 | tools/TracksSyncPython/README.md | Bổ sung hướng dẫn chế độ all và cơ chế Auto chạy lặp sau khi hoàn tất từng chu kỳ.
+2026-07-22 | dist/ATFM-TracksSync.exe; dist/ATFM-TracksSync-CLI.exe | Build lại hai bản EXE với giao diện tiếng Việt, chế độ Auto theo chu kỳ giây và CLI hỗ trợ mode all.
+2026-07-22 | tools/TracksSyncPython/main.py | Sửa bản PyInstaller nhận đúng project root từ thư mục dist, tìm được TracksSync.local.json trong App_Data; bổ sung kiểm tra cấu hình PostgreSQL và log nguồn cấu hình/host đang dùng.
+2026-07-22 | tools/TracksSyncPython/README.md | Bổ sung quy tắc tìm cấu hình khi chạy EXE trong project hoặc triển khai độc lập.
+2026-07-22 | tools/TracksSyncPython/main.py | Hỗ trợ bản EXE nằm trong tools/dist vẫn tự nhận đúng thư mục gốc project và cấu hình App_Data.
+2026-07-22 | tools/build_tracks_sync.ps1 | Thêm lệnh build thống nhất, đưa file trung gian vào tools/build và hai bản EXE vào tools/dist.
+2026-07-22 | tools/TracksSyncPython/README.md | Cập nhật hướng dẫn build và đường dẫn đầu ra mới trong thư mục tools.
+2026-07-22 | tools/TracksSyncPython/main.py | Chuẩn hóa stdout/stderr UTF-8 để bản CLI không dừng vì UnicodeEncodeError khi ghi log tiếng Việt trên Windows.
+2026-07-22 | tools/build; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe | Build lại GUI và CLI, chuyển toàn bộ đầu ra PyInstaller vào thư mục tools; kiểm tra CLI đọc đúng cấu hình PostgreSQL 172.29.187.90.
+2026-07-22 | build; dist/ATFM-TracksSync.exe; dist/ATFM-TracksSync-CLI.exe | Xóa đầu ra build cũ ở thư mục gốc sau khi xác nhận bản mới trong tools hoạt động.
+
+[22/07/2026] Hợp nhất dữ liệu mới từ agent/initial-atfm-import
+-------------------------------------------------------------
+
+163. Toàn bộ project ATFM_WEB
+    - Merge 2 commit remote ab2e47e và 0f09357 vào commit local c68396f, giữ lịch sử của cả hai phía và không push.
+    - Nhận trang AIReports, thay đổi bộ lọc báo cáo và bản cập nhật công cụ TracksSync; hợp nhất sạch prjApplication.csproj.
+    - Giữ urlApi nội bộ http://172.29.79.49:5176/ trong CustumStaticdata.js thay cho giá trị localhost của remote; bảo toàn các sửa lỗi Package và netstandard local.
