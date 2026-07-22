@@ -404,15 +404,15 @@ def read_tracks(cfg: Dict, polygons: Dict, sink: MessageSink, full: bool = False
     rows: List[TrackCandidate] = []
     max_updated: Optional[datetime] = since
     query = (
-        "SELECT flight_id_current, updated_at_utc, last_lat, last_lon "
+        "SELECT flight_id_current, NULLIF(TRIM(updated_at_utc), '')::timestamp, last_lat, last_lon "
         "FROM public.tracks "
         "WHERE last_lat IS NOT NULL AND last_lon IS NOT NULL "
     )
     params: List[object] = []
     if since is not None:
-        query += "AND updated_at_utc > %s "
+        query += "AND NULLIF(TRIM(updated_at_utc), '')::timestamp > %s "
         params.append(since)
-    query += "ORDER BY updated_at_utc"
+    query += "ORDER BY NULLIF(TRIM(updated_at_utc), '')::timestamp"
     with pg_connect(cfg) as conn:
         with conn.cursor() as cur:
             cur.execute(query, params)

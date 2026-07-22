@@ -2,8 +2,10 @@
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.css?v=20260722-1") %>" />
     <section class="adsb-report-page"
-        data-endpoint="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.aspx/GetData") %>"
-        data-operators-endpoint="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.aspx/GetOperators") %>">
+            data-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetData"
+            data-operators-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetOperators">
+        <!-- data-endpoint="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.aspx/GetData") %>"
+        data-operators-endpoint="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.aspx/GetOperators") %>"> -->
         <header class="adsb-hero">
             <div><span>VATM • ADS-B PERFORMANCE</span><h1>Tổng hợp chỉ số hiệu suất bay từ ADS-B</h1><p>Theo dõi lưu lượng LD và O/F dựa trên dữ liệu T_TRACKS_LOG.</p></div>
             <div class="adsb-hero-badge"><small>Dữ liệu cập nhật</small><strong id="adsbUpdatedAt">--:--</strong><em>T_TRACKS_LOG</em></div>

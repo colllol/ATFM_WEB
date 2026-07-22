@@ -1,6 +1,24 @@
 NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
 ================================
 
+2026-07-22 | prjApplication/ReportNew/FlightStatusRate.js | Nạp sẵn danh sách hãng bay và hợp nhất kết quả API, bảo đảm select hãng có nội dung kể cả khi endpoint trả rỗng hoặc lỗi.
+2026-07-22 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Bổ sung nguồn hãng bay T_KHH cho WebMethod GetOperators dự phòng.
+2026-07-22 | prjApplication/ReportNew/FlightStatusRate.aspx | Tăng phiên bản cache JavaScript để trình duyệt nhận ngay danh sách hãng bay mới.
+
+2026-07-22 | prjApplication/ReportNew/FlightTrendAnalysis.aspx.cs | Bổ sung nguồn hãng bay từ T_KHH để select vẫn có dữ liệu khi khoảng ngày hiện tại chưa có chuyến trong bảng thống kê.
+2026-07-22 | prjApplication/ReportNew/FlightTrendAnalysis.js | Nạp danh sách hãng mặc định và hợp nhất với kết quả API, tránh select hãng bay bị rỗng khi API không có dữ liệu hoặc tạm lỗi.
+2026-07-22 | prjApplication/ReportNew/FlightTrendAnalysis.aspx | Tăng phiên bản cache JavaScript để trình duyệt tải ngay logic danh sách hãng bay mới.
+
+2026-07-22 | dist/ATFM-TracksSync.exe | Build lại GUI sau khi sửa phép so sánh watermark với cột updated_at_utc kiểu text.
+2026-07-22 | dist/ATFM-TracksSync-CLI.exe | Build lại CLI và chạy check thực tế thành công: đọc 275 dòng trong FIR, đối chiếu được 236 dòng, không ghi dữ liệu ở chế độ check.
+
+2026-07-22 | tools/TracksSyncPython/main.py | Sửa truy vấn incremental PostgreSQL bằng cách ép updated_at_utc từ text sang timestamp trước khi so sánh watermark và sắp xếp.
+
+2026-07-22 | dist/TracksSync.local.json | Sao chép cấu hình database local cạnh executable để tool chạy trực tiếp trên máy hiện tại; file được Git bỏ qua để không lộ credential.
+
+2026-07-22 | dist/ATFM-TracksSync.exe | Build lại bản executable giao diện Windows từ mã nguồn TracksSyncPython hiện tại.
+2026-07-22 | dist/ATFM-TracksSync-CLI.exe | Build lại bản executable dòng lệnh từ mã nguồn TracksSyncPython hiện tại và kiểm tra lệnh trợ giúp.
+
 2026-07-22 | dist/ATFM-TracksSync.exe | Build lại bản GUI sau khi loại bỏ credential mặc định khỏi mã nguồn đóng gói.
 2026-07-22 | dist/ATFM-TracksSync-CLI.exe | Build lại bản CLI sau khi loại bỏ credential mặc định khỏi mã nguồn đóng gói.
 
@@ -1166,3 +1184,8 @@ Quy ước:
 2026-07-22 | prjApplication/Web.config | Bổ sung connection string TracksPostgres dùng cho bản đồ theo dõi chuyến bay trên máy local.
 2026-07-22 | prjApplication/packages.config | Đăng ký Npgsql 4.1.14 có strong-name hợp lệ và các dependency tương thích .NET Framework 4.8.
 2026-07-22 | prjApplication/prjApplication.csproj | Đăng ký hai trang mới, GeoJSON, CSS/JS, code-behind và các assembly PostgreSQL để build/publish đầy đủ.
+2026-07-22 | prjApplication/Masters/ATFM_New.Master | Khai báo reportApiBase dùng chung từ cấu hình ApplicationPath.API để các trang báo cáo gọi API theo môi trường triển khai.
+2026-07-22 | prjApplication/Common/ChartReportAirport.js; prjApplication/ReportNew/AirportTakeoffLanding.js; prjApplication/ReportNew/Dashboard.js; prjApplication/ReportNew/FlightOperationOverview.js | Chuyển luồng tải dữ liệu báo cáo sang API dùng chung, chuẩn hóa cấu trúc phản hồi Code/ListValue và tên thuộc tính dữ liệu.
+2026-07-22 | prjApplication/ReportNew/AdsBPerformanceReport.aspx; prjApplication/ReportNew/AdsBPerformanceReport.js | Chuyển báo cáo ADS-B sang endpoint API cấu hình theo môi trường và chuẩn hóa dữ liệu API trước khi dựng KPI, biểu đồ, bảng.
+2026-07-22 | prjApplication/ReportNew/FlightStatusRate.aspx; prjApplication/ReportNew/FlightStatusRate.aspx.cs; prjApplication/ReportNew/FlightStatusRate.js | Bổ sung nguồn hãng bay T_KHH, danh sách dự phòng phía trình duyệt và cập nhật cache JavaScript để bộ lọc hãng bay luôn có dữ liệu.
+2026-07-22 | prjApplication/ReportNew/FlightTrendAnalysis.aspx; prjApplication/ReportNew/FlightTrendAnalysis.aspx.cs; prjApplication/ReportNew/FlightTrendAnalysis.js | Bổ sung nguồn hãng bay T_KHH, danh sách dự phòng phía trình duyệt, chuẩn hóa phản hồi API và cập nhật cache JavaScript.

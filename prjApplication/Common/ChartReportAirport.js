@@ -4,7 +4,7 @@
     var page = document.querySelector('.airport-page');
     if (!page) return;
 
-    var endpoint = page.getAttribute('data-endpoint');
+    var endpoint = window.reportApiBase + 'api/ChartReportAirport/GetData';
     var flights = [];
     var defaultAirports = ['VVBM', 'VVCA', 'VVCI', 'VVCM', 'VVCR', 'VVCS', 'VVCT', 'VVDB', 'VVDH', 'VVDL', 'VVDN', 'VVNB', 'VVPC', 'VVPQ', 'VVRG', 'VVTH', 'VVTS', 'VVTX', 'VVVD', 'VVVH'];
     var statuses = [
@@ -76,8 +76,17 @@
             if (!response.ok) throw new Error('Máy chủ trả về HTTP ' + response.status + '.');
             return response.json();
         }).then(function (response) {
-            var data = response.d;
-            return typeof data === 'string' ? JSON.parse(data) : data;
+            if (response.Code && response.Code !== '00') throw new Error(response.Message || 'Không thể tải dữ liệu.');
+            var data = Object.prototype.hasOwnProperty.call(response, 'ListValue') ? response.ListValue : response.d;
+            data = typeof data === 'string' ? JSON.parse(data) : data;
+            if (data && data.Flights) {
+                data.flights = data.Flights.map(function (item) { return {
+                    flightDate: item.FlightDate, callsign: item.Callsign, oper: item.Oper, registration: item.Registration,
+                    permType: item.PermType, fromAirp: item.FromAirp, toAirp: item.ToAirp, atdDay: item.AtdDay,
+                    ataDay: item.AtaDay, eobtDay: item.EobtDay, status: item.Status
+                }; });
+            }
+            return data;
         });
     }
     function values(airport, date) {

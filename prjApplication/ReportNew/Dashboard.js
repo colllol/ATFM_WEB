@@ -1,4 +1,5 @@
 (function () {
+    function camelize(value) { if (Array.isArray(value)) return value.map(camelize); if (!value || typeof value !== 'object') return value; var result = {}; Object.keys(value).forEach(function (key) { result[key.charAt(0).toLowerCase() + key.slice(1)] = camelize(value[key]); }); return result; }
     var airportNames = {
         VVNB: 'Nội Bài', VVTS: 'Tân Sơn Nhất', VVDN: 'Đà Nẵng', VVCR: 'Cam Ranh',
         VVPQ: 'Phú Quốc', VVCI: 'Cát Bi', VVDL: 'Liên Khương', VVPC: 'Phù Cát',
@@ -14,8 +15,8 @@
             body: JSON.stringify(data)
         }).then(function (response) {
             return response.json().then(function (result) {
-                if (!response.ok || result.Message) throw new Error(result.Message || 'Không thể tải dữ liệu dashboard.');
-                return result.d;
+                if (!response.ok || (result.Code && result.Code !== '00')) throw new Error(result.Message || 'Không thể tải dữ liệu dashboard.');
+                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);
             });
         });
     }
@@ -294,9 +295,9 @@
             var dayCount = Math.round((toValue - fromValue) / 86400000) + 1;
             var trendPeriod = dayCount > 62 ? 'month' : 'day';
             Promise.all([
-                post('../ReportNew/FlightStatusRate.aspx/GetData', { fromDate: from.value, toDate: to.value, oper: 'ALL', airport: airport.value, currentDay: currentDay }),
-                post('../ReportNew/FlightOperationOverview.aspx/GetData', { fromDate: from.value, toDate: to.value, airport: airport.value }),
-                post('../ReportNew/FlightTrendAnalysis.aspx/GetTrend', { fromDate: from.value, toDate: to.value, airport: airport.value, oper: 'ALL', period: trendPeriod })
+                post(window.reportApiBase + 'api/FlightStatusRate/GetData', { fromDate: from.value, toDate: to.value, oper: 'ALL', airport: airport.value, currentDay: currentDay }),
+                post(window.reportApiBase + 'api/FlightOperationOverview/GetData', { fromDate: from.value, toDate: to.value, airport: airport.value }),
+                post(window.reportApiBase + 'api/FlightTrendAnalysis/GetTrend', { fromDate: from.value, toDate: to.value, airport: airport.value, oper: 'ALL', period: trendPeriod })
             ]).then(render).catch(function (error) {
                 alert(error.message);
             }).then(function () {

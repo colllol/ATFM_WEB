@@ -15,13 +15,56 @@
     }
     function post(url, payload) {
         return fetch(url, {
-            method: 'POST', credentials: 'same-origin',
+            // method: 'POST', credentials: 'same-origin',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(payload || {})
         }).then(function (response) {
             if (!response.ok) return response.text().then(function (body) { throw new Error(body || ('HTTP ' + response.status)); });
             return response.json();
-        }).then(function (result) { return result && Object.prototype.hasOwnProperty.call(result, 'd') ? result.d : result; });
+            // }).then(function (result) { return result && Object.prototype.hasOwnProperty.call(result, 'd') ? result.d : result; });
+        }).then(function (result) {
+            if (result && Object.prototype.hasOwnProperty.call(result, 'd')) result = result.d;
+            if (result && result.Code && result.Code !== '00') throw new Error(result.Message || 'Không thể lấy dữ liệu.');
+            return result && Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result;
+        });
+    }
+    function normalizeTrend(item) {
+        return {
+            key: item.Key != null ? item.Key : item.key,
+            label: item.Label != null ? item.Label : item.label,
+            ld: item.Ld != null ? item.Ld : item.ld,
+            of: item.Of != null ? item.Of : item.of
+        };
+    }
+    function normalizeRow(row) {
+        return {
+            no: row.No != null ? row.No : row.no,
+            id: row.Id != null ? row.Id : row.id,
+            callsign: row.Callsign != null ? row.Callsign : row.callsign,
+            oper: row.Oper != null ? row.Oper : row.oper,
+            permType: row.PermType != null ? row.PermType : row.permType,
+            fromAirp: row.FromAirp != null ? row.FromAirp : row.fromAirp,
+            toAirp: row.ToAirp != null ? row.ToAirp : row.toAirp,
+            etd: row.Etd != null ? row.Etd : row.etd,
+            eta: row.Eta != null ? row.Eta : row.eta,
+            status: row.Status != null ? row.Status : row.status,
+            statusText: row.StatusText != null ? row.StatusText : row.statusText,
+            date: row.Date != null ? row.Date : row.date,
+            updatedAtUtc: row.UpdatedAtUtc != null ? row.UpdatedAtUtc : row.updatedAtUtc
+        };
+    }
+    function normalizeData(data) {
+        data = data || {};
+        return {
+            total: data.Total != null ? data.Total : data.total,
+            ld: data.Ld != null ? data.Ld : data.ld,
+            of: data.Of != null ? data.Of : data.of,
+            operatorCount: data.OperatorCount != null ? data.OperatorCount : data.operatorCount,
+            serverTime: data.ServerTime != null ? data.ServerTime : data.serverTime,
+            trend: (data.Trend || data.trend || []).map(normalizeTrend),
+            rows: (data.Rows || data.rows || []).map(normalizeRow)
+        };
     }
     function iso(date) {
         var y = date.getFullYear(), m = String(date.getMonth() + 1).padStart(2, '0'), d = String(date.getDate()).padStart(2, '0');
@@ -117,8 +160,13 @@
         byId('adsbPrev').disabled = pageIndex <= 1; byId('adsbNext').disabled = pageIndex >= pages;
     }
     function loadData() {
+        // var button = byId('adsbApply'); button.disabled = true; hideError();
+        // return post(page.dataset.endpoint, payload(true)).then(function (data) {
+        // rows = data.rows || []; currentTrend = data.trend || []; pageIndex = 1; renderKpis(data); renderChart(currentTrend); renderTable();
+
         var button = byId('adsbApply'); button.disabled = true; hideError();
         return post(page.dataset.endpoint, payload(true)).then(function (data) {
+            data = normalizeData(data);
             rows = data.rows || []; currentTrend = data.trend || []; pageIndex = 1; renderKpis(data); renderChart(currentTrend); renderTable();
         }).catch(showError).then(function () { button.disabled = false; });
     }

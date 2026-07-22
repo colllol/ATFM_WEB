@@ -1,4 +1,5 @@
 (function () {
+    function camelize(value) { if (Array.isArray(value)) return value.map(camelize); if (!value || typeof value !== 'object') return value; var result = {}; Object.keys(value).forEach(function (key) { result[key.charAt(0).toLowerCase() + key.slice(1)] = camelize(value[key]); }); return result; }
     var airportNames = {
         VVNB: 'Nội Bài', VVTS: 'Tân Sơn Nhất', VVDN: 'Đà Nẵng', VVCR: 'Cam Ranh',
         VVPQ: 'Phú Quốc', VVCI: 'Cát Bi', VVDL: 'Liên Khương', VVPC: 'Phù Cát',
@@ -7,15 +8,21 @@
         VVDH: 'Đồng Hới', VVRG: 'Rạch Giá', VVCM: 'Cà Mau', VVCS: 'Côn Đảo', VVVD: 'Vân Đồn'
     };
 
+    var defaultOperators = [
+        'AAR', 'APG', 'AXM', 'BAV', 'CAL', 'CEB', 'CES', 'CQH', 'DKH', 'ETD',
+        'FDX', 'HVN', 'JAL', 'KAL', 'KHV', 'KLM', 'MAS', 'MKR', 'MXD', 'PIC',
+        'QTR', 'SIA', 'THA', 'UAE', 'UAL', 'VAG', 'VJC'
+    ];
+
     function post(method, data) {
-        return fetch('FlightTrendAnalysis.aspx/' + method, {
+        return fetch(window.reportApiBase + 'api/FlightTrendAnalysis/' + method, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         }).then(function (response) {
             return response.json().then(function (result) {
-                if (!response.ok || result.Message) throw new Error(result.Message || 'Không thể tải dữ liệu xu hướng.');
-                return result.d;
+                if (!response.ok || (result.Code && result.Code !== '00')) throw new Error(result.Message || 'Không thể tải dữ liệu xu hướng.');
+                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);
             });
         });
     }
@@ -56,17 +63,30 @@
         var heroSubtitle = app.querySelector('.rn-hero p');
         var liveNote = app.querySelector('.rn-live small');
         if (heroSubtitle) heroSubtitle.textContent = 'So sánh chuyến hoàn thành và delay với đúng cùng kỳ năm trước';
-        if (liveNote) liveNote.textContent = 'Nguồn T_FINISHED_FLIGHTS';
+        if (liveNote) liveNote.textContent = '';
+
+        function renderOperators(items, selected) {
+            var unique = {};
+            defaultOperators.concat(items || []).forEach(function (item) {
+                var code = String(item || '').trim().toUpperCase();
+                if (code && code !== 'ALL') unique[code] = true;
+            });
+            oper.innerHTML = '<option value="ALL">Tất cả hãng bay</option>' + Object.keys(unique).sort().map(function (item) {
+                return '<option value="' + esc(item) + '">' + esc(item) + '</option>';
+            }).join('');
+            if (oper.querySelector('option[value="' + selected + '"]')) oper.value = selected;
+        }
 
         function loadOperators() {
             var selected = oper.value;
             return post('GetOperators', { fromDate: from.value, toDate: to.value }).then(function (items) {
-                oper.innerHTML = '<option value="ALL">Tất cả hãng bay</option>' + (items || []).map(function (item) {
-                    return '<option value="' + esc(item) + '">' + esc(item) + '</option>';
-                }).join('');
-                if (oper.querySelector('option[value="' + selected + '"]')) oper.value = selected;
+                renderOperators(items, selected);
+            }).catch(function () {
+                renderOperators([], selected);
             });
         }
+
+        renderOperators([], 'ALL');
 
         function renderKpis(data) {
             var changeColor = data.difference >= 0 ? '#20b486' : '#ef5b5b';

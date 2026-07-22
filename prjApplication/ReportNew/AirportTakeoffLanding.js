@@ -1,4 +1,5 @@
 (function () {
+    function camelize(value) { if (Array.isArray(value)) return value.map(camelize); if (!value || typeof value !== 'object') return value; var result = {}; Object.keys(value).forEach(function (key) { result[key.charAt(0).toLowerCase() + key.slice(1)] = camelize(value[key]); }); return result; }
     var airportNames = {
         VVNB: 'Nội Bài', VVTS: 'Tân Sơn Nhất', VVDN: 'Đà Nẵng', VVCR: 'Cam Ranh',
         VVPQ: 'Phú Quốc', VVCI: 'Cát Bi', VVDL: 'Liên Khương', VVPC: 'Phù Cát',
@@ -8,15 +9,15 @@
     };
 
     function post(method, data) {
-        return fetch('AirportTakeoffLanding.aspx/' + method, {
+        return fetch(window.reportApiBase + 'api/AirportTakeoffLanding/' + method, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         })
             .then(function (response) { return response.json(); })
             .then(function (result) {
-                if (result.Message) throw new Error(result.Message);
-                return result.d;
+                if (result.Code && result.Code !== '00') throw new Error(result.Message || 'Không thể tải dữ liệu.');
+                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);
             });
     }
 

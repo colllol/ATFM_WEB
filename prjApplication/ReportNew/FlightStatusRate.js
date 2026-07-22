@@ -1,14 +1,27 @@
 (function () {
+    var defaultOperators = [
+        'AAR', 'APG', 'AXM', 'BAV', 'CAL', 'CEB', 'CES', 'CQH', 'DKH', 'ETD',
+        'FDX', 'HVN', 'JAL', 'KAL', 'KHV', 'KLM', 'MAS', 'MKR', 'MXD', 'PIC',
+        'QTR', 'SIA', 'THA', 'UAE', 'UAL', 'VAG', 'VJC'
+    ];
+
+    function camelize(value) {
+        if (Array.isArray(value)) return value.map(camelize);
+        if (!value || typeof value !== 'object') return value;
+        var result = {};
+        Object.keys(value).forEach(function (key) { result[key.charAt(0).toLowerCase() + key.slice(1)] = camelize(value[key]); });
+        return result;
+    }
     function post(method, data) {
-        return fetch('FlightStatusRate.aspx/' + method, {
+        return fetch(window.reportApiBase + 'api/FlightStatusRate/' + method, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         })
             .then(function (response) { return response.json(); })
             .then(function (result) {
-                if (result.Message) throw new Error(result.Message);
-                return result.d;
+                if (result.Code && result.Code !== '00') throw new Error(result.Message || 'Không thể tải dữ liệu.');
+                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);
             });
     }
 
@@ -170,15 +183,26 @@
         var oper = app.querySelector('#rnOper');
 
         function isCurrentDay() { return from.value === iso && to.value === iso; }
+        function renderOperators(values, selected) {
+            var unique = {};
+            defaultOperators.concat(values || []).forEach(function (value) {
+                var code = String(value || '').trim().toUpperCase();
+                if (code && code !== 'ALL') unique[code] = true;
+            });
+            oper.innerHTML = '<option value="ALL">Tất cả hãng bay</option>' + Object.keys(unique).sort().map(function (value) {
+                return '<option value="' + esc(value) + '">' + esc(value) + '</option>';
+            }).join('');
+            if (oper.querySelector('option[value="' + selected + '"]')) oper.value = selected;
+        }
         function loadOperators() {
+            var selected = oper.value;
             post('GetOperators', { fromDate: from.value, toDate: to.value, currentDay: isCurrentDay() }).then(function (values) {
-                var selected = oper.value;
-                oper.innerHTML = '<option value="ALL">Tất cả hãng bay</option>' + values.map(function (value) {
-                    return '<option value="' + esc(value) + '">' + esc(value) + '</option>';
-                }).join('');
-                oper.value = selected;
+                renderOperators(values, selected);
+            }).catch(function () {
+                renderOperators([], selected);
             });
         }
+        renderOperators([], 'ALL');
         function load() {
             var button = app.querySelector('#rnApply');
             button.disabled = true;

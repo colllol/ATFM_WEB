@@ -91,6 +91,11 @@ namespace prjApplication.ReportNew
                                      FROM T_DAY_FLIGHTS_GOINGON
                                     WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+                                   UNION
+                                   SELECT CASE WHEN UPPER(TRIM(""OPER""))='VNA' THEN 'HVN'
+                                               ELSE UPPER(TRIM(""OPER"")) END OPER_ID
+                                     FROM T_KHH
+                                    WHERE ""OPER"" IS NOT NULL
                                  ) ORDER BY OPER_ID";
             using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
             using (var command = new OracleCommand(sql, connection))
