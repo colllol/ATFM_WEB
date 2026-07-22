@@ -813,7 +813,6 @@
     <Content Include="Images\dot_w.gif" />
     <Content Include="Images\downicon.png" />
     <Content Include="Images\edit.gif" />
-    <Content Include="Images\edit1 %282%29.gif" />
     <Content Include="Images\email_attach.png" />
     <Content Include="Images\email_go.png" />
     <Content Include="Images\english.gif" />
@@ -1008,10 +1007,6 @@
     <Content Include="Images\Master\Apple\L03.png" />
     <Content Include="Images\Master\Apple\Pane01.png" />
     <Content Include="Images\Master\Apple\Pane02.png" />
-    <Content Include="Images\Master\Backbase\menu-bg.gif" />
-    <Content Include="Images\Master\Backbase\menu-divider.gif" />
-    <Content Include="Images\Master\Backbase\menu-left.gif" />
-    <Content Include="Images\Master\Backbase\menu-right.gif" />
     <Content Include="Images\Master\Blue\0.gif" />
     <Content Include="Images\Master\Blue\1.gif" />
     <Content Include="Images\Master\Blue\1.jpg" />
@@ -1418,8 +1413,6 @@
     <Content Include="SendMessage\SendMessageFlight.aspx" />
     <Content Include="SendMessage\SendMessageFlightAMHS.aspx" />
     <Content Include="Service\WebService.asmx" />
-    <Content Include="Sound\DayFlight\2a6a7a6877.mp3" />
-    <Content Include="Sound\DayFlight\sNotifi.mp3" />
     <Content Include="Static\AddressAftn\EditAddressAftn.aspx" />
     <Content Include="Static\AddressAftn\ListAddressAftn.aspx" />
     <Content Include="Static\AERO\EditAero.aspx" />
@@ -1985,21 +1978,28 @@
       <DependentUpon>ChartReport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="ReportNew\ReportPageBase.cs" />
+    <Compile Include="ReportNew\ReportPageBase.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="ReportNew\AdsBPerformanceReport.aspx.cs">
       <DependentUpon>AdsBPerformanceReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ReportNew\AirportTakeoffLanding.aspx.cs">
       <DependentUpon>AirportTakeoffLanding.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ReportNew\FlightOperationOverview.aspx.cs">
       <DependentUpon>FlightOperationOverview.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ReportNew\FlightTrendAnalysis.aspx.cs">
       <DependentUpon>FlightTrendAnalysis.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ReportNew\FlightStatusRate.aspx.cs">
       <DependentUpon>FlightStatusRate.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Common\ChartReportAirport.aspx.cs">
       <DependentUpon>ChartReportAirport.aspx</DependentUpon>
@@ -2120,6 +2120,7 @@
     <Compile Include="SLOTS\SlotsDataProvider.cs" />
     <Compile Include="SLOTS\FlightTrackingMap.aspx.cs">
       <DependentUpon>FlightTrackingMap.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SLOTS\SlotComparisonService.cs" />
     <Compile Include="SLOTS\SlotComparison.aspx.cs">
@@ -2131,6 +2132,7 @@
     </Compile>
     <Compile Include="SLOTS\SlotComparisonPanel.ascx.cs">
       <DependentUpon>SlotComparisonPanel.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SLOTS\SlotComparisonPanel.ascx.designer.cs">
       <DependentUpon>SlotComparisonPanel.ascx</DependentUpon>
@@ -2158,6 +2160,7 @@
     </Compile>
     <Compile Include="SLOTS\SlotsTable.ascx.cs">
       <DependentUpon>SlotsTable.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SLOTS\SlotsTable.ascx.designer.cs">
       <DependentUpon>SlotsTable.ascx</DependentUpon>
@@ -4232,13 +4235,14 @@
     <Content Include="Masters\ATFM - Copy.Master" />
     <Content Include="Masters\Atfm_Nofooter - Copy.Master" />
     <!-- Bản lưu giao diện các trang danh sách mở trực tiếp từ menu cấp 2. -->
-    <Content Include="**\* - Copy.aspx" Exclude="Masters\**\*">
+    <Content Include="**\* - Copy.aspx" Exclude="Masters\**\*;obj\**\*;bin\**\*">
       <ExcludeFromPackage>True</ExcludeFromPackage>
     </Content>
-    <None Include="**\* - Copy.aspx.cs" Exclude="Masters\**\*" />
-    <None Include="**\* - Copy.aspx.designer.cs" Exclude="Masters\**\*" />
+    <None Include="**\* - Copy.aspx.cs" Exclude="Masters\**\*;obj\**\*;bin\**\*" />
+    <None Include="**\* - Copy.aspx.designer.cs" Exclude="Masters\**\*;obj\**\*;bin\**\*" />
     <None Include="Properties\001 hungtn\PublishProfiles\22.pubxml" />
     <None Include="Properties\PublishProfiles\aftm.pubxml" />
+    <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Resources\Strings.resx">
       <SubType>Designer</SubType>
     </None>
@@ -4587,7 +4591,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
     <Folder Include="log\" />
     <Folder Include="ReportSystem\OverFlights\" />
     <Folder Include="Template\" />

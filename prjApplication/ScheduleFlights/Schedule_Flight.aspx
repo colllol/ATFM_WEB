@@ -424,7 +424,7 @@
             return val == null ? "" : val;
         }
         function LoadDataGrid() {   
-			console.log(GetObjectSearch());
+            console.log(urlApi);
             var $request = $.ajax({
                 method: "PUT",
                 url: urlApi + "api/ScheduleFlights/GetBySearchAll",

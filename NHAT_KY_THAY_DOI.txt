@@ -1194,3 +1194,42 @@ Quy ước:
 2026-07-22 | prjApplication/ReportNew/MilitaryFlightReport.js; prjApplication/ReportNew/MilitaryFlightReport.aspx; prjApplication/ReportNew/ReportInteractive.css | Hoàn thiện bộ lọc, bảng chi tiết, phân trang và xuất Excel cho báo cáo chuyến bay quân sự.
 2026-07-22 | prjApplication/Masters/ATFM_New.Master; prjApplication/ReportNew/AirportTakeoffLanding.js; prjApplication/ReportNew/Dashboard.js; prjApplication/ReportNew/FlightStatusRate.js | Chuẩn hóa URL API, xử lý lỗi HTTP và gom dữ liệu dashboard qua endpoint ChartReport.
 2026-07-22 | prjApplication/prjApplication.csproj | Đăng ký các JavaScript báo cáo mới và SlotsApiClient để được build, publish đầy đủ.
+[22/07/2026] Cập nhật nhánh agent/initial-atfm-import
+----------------------------------------------------
+
+158. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit 9de37c0 lên cac0a42 theo origin/agent/initial-atfm-import, nhận 2 commit mới.
+    - Nhận thay đổi trên 33 file, bổ sung 7.024 dòng và xóa 46 dòng; không phát sinh merge conflict.
+    - Bảo toàn và áp lại nguyên trạng các thay đổi local trong DaylyFlight.aspx, Schedule_Flight.aspx, CustumStaticdata.js và Web.config.
+
+[22/07/2026] Sửa lỗi thiếu asset khi Package Release
+----------------------------------------------------
+
+159. prjApplication/prjApplication.csproj
+    - Loại 7 khai báo Content trỏ tới file không tồn tại: nhóm Images/Master/Backbase, Images/edit1 %282%29.gif và hai file âm thanh DayFlight.
+    - Xác nhận không còn Content Include nào trỏ tới file thiếu trong project.
+    - Chạy lại target Package cấu hình Release thành công với 0 error, khắc phục lỗi copy Images/Master/Backbase/menu-bg.gif.
+
+[22/07/2026] Ngăn wildcard Package quét đệ quy thư mục obj
+---------------------------------------------------------
+
+160. prjApplication/prjApplication.csproj
+    - Bổ sung loại trừ obj/** và bin/** cho các wildcard thu thập file "* - Copy.aspx", code-behind và designer.
+    - Ngăn PackageTmp bị đưa ngược vào gói publish và tạo đường dẫn obj/Release/Package/PackageTmp lồng nhau.
+    - Clean và Package lại cấu hình Release thành công với 0 error; PackageTmp không còn thư mục obj lồng và file prjApplication.zip được tạo bình thường.
+
+[22/07/2026] Tiếp tục cập nhật nhánh agent/initial-atfm-import
+------------------------------------------------------------
+
+161. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit cac0a42 lên 1121917 theo origin/agent/initial-atfm-import.
+    - Nhận 1 commit mới trên 14 file, bổ sung 572 dòng và xóa 172 dòng.
+    - Hợp nhất thành công prjApplication.csproj, giữ các bản sửa Package local cùng thay đổi API SLOT/báo cáo mới; bảo toàn các file giao diện và Web.config cục bộ.
+
+[22/07/2026] Bổ sung netstandard cho biên dịch runtime ASP.NET
+-----------------------------------------------------------
+
+162. prjApplication/Web.config
+    - Thêm assembly netstandard Version 2.0.0.0 vào compilation/assemblies để các trang CodeFile sử dụng Npgsql, System.Memory và dependency netstandard biên dịch được trên IIS.
+    - Khắc phục CS0012 tại AdsBPerformanceReport.aspx.cs khi thực hiện LINQ GroupBy trên dữ liệu báo cáo ADS-B.
+    - Xác nhận build project 0 error, ASP.NET CompileFile của AdsBPerformanceReport.aspx thành công và URL local không còn trả lỗi HTTP 500.

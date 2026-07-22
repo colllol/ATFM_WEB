@@ -533,7 +533,7 @@
         /* Toolbar responsive: không để giờ/tổng số và bộ lọc chồng lên nhau. */
         .divHeader {
             display: flex;
-            width: 100%;
+            width: 97%;
             max-width: 100%;
             box-sizing: border-box;
             height: auto !important;
