@@ -1305,3 +1305,17 @@ Quy ước:
 170. Database/Oracle/20260722_P_FLY_gen_day_flights_not_all_rollback.sql
     - Bổ sung script hoàn tác có kiểm đếm đủ 44 điều kiện: khôi phục TO_CHAR(FLIGHTDATE), kiểu/khởi tạo P_Date cũ, kiểm tra P_FLY biên dịch hợp lệ rồi mới xóa IX_TFC_GEN_NOTALL.
     - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+[22/07/2026] Sửa và tối ưu SYS_PKG.CMS_GetRole4UserMenu
+------------------------------------------------------
+
+171. Database/Oracle/20260722_SYS_PKG_cms_getrole4usermenu_optimize.sql
+    - Bổ sung script kiểm tra index trùng, tạo IX_TUM_USER_MENU(USER_ID, MENU_ID) theo quy trình INVISIBLE - kiểm tra plan - VISIBLE và thu thập thống kê index.
+    - Sửa CMS_GetRole4UserMenu sử dụng đúng P_UserName/p_Menu_ID: join T_USERS với T_USERMENU và chỉ trả quyền của đúng tài khoản/menu; loại hành vi cũ trả toàn bộ 3.188 dòng T_USERMENU khiến kiểm tra IsAccept luôn thành công.
+    - Đã triển khai trên ATFM@PDBORCL: SYS_PKG package/package body và IX_TUM_USER_MENU đều VALID; plan dùng INDEX RANGE SCAN IX_TUM_USER_MENU.
+    - Kiểm thử procedure: trucbantruong/Menu 89 trả 1 dòng; menu 999999 và username không tồn tại trả 0 dòng.
+    - Kiểm thử endpoint ApiExtension thực tế: trường hợp có quyền trả Code=00/1 dòng khoảng 446 ms, menu không được gán trả Code=00/0 dòng khoảng 81 ms.
+
+172. Database/Oracle/20260722_SYS_PKG_cms_getrole4usermenu_rollback.sql
+    - Bổ sung script hoàn tác có cảnh báo: khôi phục procedure cũ trả toàn bộ T_USERMENU, kiểm tra SYS_PKG biên dịch hợp lệ rồi mới xóa IX_TUM_USER_MENU.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
