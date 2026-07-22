@@ -60,6 +60,17 @@ class MessageSink:
         print(text)
 
 
+def configure_console_encoding() -> None:
+    """Tranh CLI bi dung khi Windows dang dung code page khong ho tro tieng Viet."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8", errors="replace")
+            except (OSError, ValueError):
+                pass
+
+
 def app_root() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
@@ -67,6 +78,13 @@ def app_root() -> Path:
 
 
 def project_root() -> Path:
+    if getattr(sys, "frozen", False):
+        # EXE duoc build vao <project>/tools/dist. Van ho tro ca cau truc
+        # <project>/dist cu de co the tim App_Data khi nang cap tai cho.
+        for candidate in (app_root().parent, app_root().parent.parent):
+            if (candidate / "prjApplication").is_dir():
+                return candidate
+        return app_root().parent
     return Path(__file__).resolve().parents[2]
 
 
@@ -100,14 +118,18 @@ def load_config() -> Dict:
         "fir": {"geojson_path": os.environ.get("TRACKS_FIR_GEOJSON", DEFAULT_GEOJSON_PATH)},
         "watermark_path": os.environ.get("TRACKS_WATERMARK", ""),
     }
+    config_source = "environment/default"
     for path in config_candidates():
         if path.exists():
             with path.open("r", encoding="utf-8-sig") as handle:
                 file_cfg = json.load(handle)
             deep_update(cfg, file_cfg)
+            config_source = str(path.resolve())
             break
     if not cfg.get("fir", {}).get("geojson_path"):
-        cfg["fir"]["geojson_path"] = DEFAULT_GEOJSON_PATH
+        bundled_geojson = project_root() / "prjApplication" / "App_Data" / "vietnam-fir-VVHM-VVHN.geojson"
+        cfg["fir"]["geojson_path"] = str(bundled_geojson) if bundled_geojson.exists() else DEFAULT_GEOJSON_PATH
+    cfg["_config_source"] = config_source
     return cfg
 
 
@@ -348,6 +370,11 @@ def import_oracle():
 def pg_connect(cfg: Dict):
     psycopg2 = import_postgres()
     pg = cfg["postgres"]
+    if not pg.get("host") or not (pg.get("username") or pg.get("user")) or not pg.get("password"):
+        raise RuntimeError(
+            "Cấu hình PostgreSQL chưa đầy đủ (host/username/password). "
+            "Hãy đặt TracksSync.local.json cạnh file EXE hoặc trong prjApplication/App_Data."
+        )
     return psycopg2.connect(
         host=pg.get("host"),
         port=int(pg.get("port", 5432)),
@@ -710,6 +737,12 @@ def build_log_rows(candidates: Sequence[TrackCandidate], flights: Dict[Tuple[str
 def execute(mode: str, full: bool = False, sink: Optional[MessageSink] = None) -> None:
     sink = sink or MessageSink()
     cfg = load_config()
+    pg = cfg.get("postgres", {})
+    sink.write(f"Cấu hình: {cfg.get('_config_source', 'environment/default')}")
+    sink.write(
+        "PostgreSQL: %s:%s/%s"
+        % (pg.get("host") or "(trống)", pg.get("port", 5432), pg.get("database") or "(trống)")
+    )
     polygons = load_fir_polygons(cfg["fir"]["geojson_path"])
     sink.write("Dang doc tracks va phan vung FIR...")
     candidates, max_updated = read_tracks(cfg, polygons, sink, full=full)
@@ -731,11 +764,20 @@ def execute(mode: str, full: bool = False, sink: Optional[MessageSink] = None) -
                 sink.write(f"Watermark moi: {max_updated.strftime(WATERMARK_FORMAT)}")
         elif mode == "verify":
             verify_logs(conn, rows, sink)
+        elif mode == "all":
+            sink.write(f"[1/3] Kiem tra doi chieu xong: {len(rows)} dong hop le.")
+            written = merge_logs(conn, rows)
+            sink.write(f"[2/3] Da ghi/cap nhat {written} dong T_TRACKS_LOG.")
+            verify_logs(conn, rows, sink, report_extra=False)
+            sink.write("[3/3] Da xac minh cac dong trong chu ky.")
+            write_watermark(cfg, max_updated)
+            if max_updated:
+                sink.write(f"Watermark moi: {max_updated.strftime(WATERMARK_FORMAT)}")
         else:
             raise ValueError(f"Mode khong hop le: {mode}")
 
 
-def verify_logs(conn, expected: Sequence[LogRow], sink: MessageSink) -> None:
+def verify_logs(conn, expected: Sequence[LogRow], sink: MessageSink, report_extra: bool = True) -> None:
     if not expected:
         sink.write("Khong co dong du kien de xac minh.")
         return
@@ -773,7 +815,7 @@ def verify_logs(conn, expected: Sequence[LogRow], sink: MessageSink) -> None:
     expected_keys = set(expected_map)
     actual_keys = set(actual_map)
     missing_keys = expected_keys - actual_keys
-    extra_keys = actual_keys - expected_keys
+    extra_keys = actual_keys - expected_keys if report_extra else set()
     common_keys = expected_keys & actual_keys
     mismatch_keys = {key for key in common_keys if expected_map[key] != actual_map[key]}
     ok = len(common_keys) - len(mismatch_keys)
@@ -787,42 +829,134 @@ def verify_logs(conn, expected: Sequence[LogRow], sink: MessageSink) -> None:
 def run_gui() -> None:
     import threading
     import tkinter as tk
-    from tkinter import scrolledtext
+    from tkinter import messagebox, scrolledtext
+
+    stop_event = threading.Event()
+    state = {"busy": False, "auto": False}
 
     class TkSink(MessageSink):
         def __init__(self, widget):
             self.widget = widget
 
         def write(self, text: str) -> None:
-            self.widget.after(0, lambda: append_log(self.widget, text))
+            if stop_event.is_set():
+                return
+            try:
+                self.widget.after(0, lambda: append_log(self.widget, text))
+            except tk.TclError:
+                pass
 
     def append_log(widget, text: str) -> None:
         widget.insert("end", text + "\n")
         widget.see("end")
 
+    def set_manual_controls(enabled: bool) -> None:
+        value = "normal" if enabled else "disabled"
+        for button in manual_buttons:
+            button.configure(state=value)
+        if not state["auto"]:
+            auto_button.configure(state=value)
+            interval_entry.configure(state=value)
+
+    def finish_manual() -> None:
+        state["busy"] = False
+        set_manual_controls(True)
+        auto_status.set("Sẵn sàng")
+
     def start(mode: str, full: bool = False) -> None:
+        if state["busy"] or state["auto"]:
+            return
+        state["busy"] = True
+        set_manual_controls(False)
+        auto_status.set("Đang xử lý...")
+
         def worker():
             try:
-                sink.write("Dang chay, vui long cho...")
+                sink.write("Đang chạy, vui lòng chờ...")
                 execute(mode, full=full, sink=sink)
             except Exception:
                 sink.write(traceback.format_exc())
+            finally:
+                if not stop_event.is_set():
+                    root.after(0, finish_manual)
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def update_auto_countdown(remaining: int, iteration: int) -> None:
+        auto_status.set(f"Lượt {iteration} hoàn tất · chạy lại sau {remaining} giây")
+
+    def start_auto() -> None:
+        if state["busy"] or state["auto"]:
+            return
+        try:
+            interval = int(interval_value.get().strip())
+            if interval <= 0:
+                raise ValueError
+        except ValueError:
+            messagebox.showwarning("Chu kỳ không hợp lệ", "Vui lòng nhập số giây là số nguyên lớn hơn 0.")
+            interval_entry.focus_set()
+            return
+
+        state["auto"] = True
+        state["busy"] = True
+        set_manual_controls(False)
+        auto_button.configure(text="Auto đang chạy", state="disabled")
+        interval_entry.configure(state="disabled")
+
+        def auto_worker():
+            iteration = 0
+            while not stop_event.is_set():
+                iteration += 1
+                sink.write("\n========== AUTO - LƯỢT %d ==========" % iteration)
+                root.after(0, lambda current=iteration: auto_status.set(f"Đang chạy lượt {current}..."))
+                try:
+                    execute("all", full=False, sink=sink)
+                    sink.write("Auto lượt %d đã hoàn thành." % iteration)
+                except Exception:
+                    sink.write("Auto lượt %d gặp lỗi:\n%s" % (iteration, traceback.format_exc()))
+
+                if stop_event.is_set():
+                    break
+                for remaining in range(interval, 0, -1):
+                    if stop_event.is_set():
+                        break
+                    root.after(0, lambda value=remaining, current=iteration: update_auto_countdown(value, current))
+                    if stop_event.wait(1):
+                        break
+
+        threading.Thread(target=auto_worker, daemon=True).start()
+
+    def close_app() -> None:
+        stop_event.set()
+        root.destroy()
 
     root = tk.Tk()
     root.title("ATFM FIR Tracks Logger")
     root.geometry("1120x720")
-    header = tk.Label(root, text="ATFM - FIR Tracks Logger", font=("Arial", 18, "bold"), bg="#155b83", fg="white", pady=18)
+    root.protocol("WM_DELETE_WINDOW", close_app)
+    header = tk.Label(root, text="ATFM - FIR Tracks Logger", font=("Segoe UI", 18, "bold"), bg="#155b83", fg="white", pady=18)
     header.pack(fill="x")
     desc = tk.Label(root, text="public.tracks -> FIR VVHN/VVHM -> T_DAY_FLIGHTS_GOINGON -> T_TRACKS_LOG", anchor="w", padx=18, pady=12)
     desc.pack(fill="x")
     bar = tk.Frame(root)
-    bar.pack(fill="x", padx=18)
-    tk.Button(bar, text="Kiem tra doi chieu", command=lambda: start("check"), bg="#2d8ac4", fg="white", padx=16, pady=10).pack(side="left", padx=(0, 8))
-    tk.Button(bar, text="Ghi T_TRACKS_LOG", command=lambda: start("sync"), bg="#14966d", fg="white", padx=16, pady=10).pack(side="left", padx=(0, 8))
-    tk.Button(bar, text="Xac minh ket qua", command=lambda: start("verify"), bg="#7059b8", fg="white", padx=16, pady=10).pack(side="left", padx=(0, 8))
-    tk.Button(bar, text="Chay lai toan bo", command=lambda: start("sync", full=True), bg="#d9822b", fg="white", padx=16, pady=10).pack(side="left", padx=(0, 8))
+    bar.pack(fill="x", padx=18, pady=(0, 4))
+    button_style = {"fg": "white", "padx": 16, "pady": 10, "font": ("Segoe UI", 9, "bold"), "relief": "flat", "cursor": "hand2"}
+    manual_buttons = [
+        tk.Button(bar, text="Kiểm tra đối chiếu", command=lambda: start("check"), bg="#2d8ac4", **button_style),
+        tk.Button(bar, text="Ghi T_TRACKS_LOG", command=lambda: start("sync"), bg="#14966d", **button_style),
+        tk.Button(bar, text="Xác minh kết quả", command=lambda: start("verify"), bg="#7059b8", **button_style),
+    ]
+    for button in manual_buttons:
+        button.pack(side="left", padx=(0, 8))
+
+    auto_button = tk.Button(bar, text="Auto", command=start_auto, bg="#d9822b", **button_style)
+    auto_button.pack(side="left", padx=(0, 8))
+    tk.Label(bar, text="Chu kỳ (giây):", font=("Segoe UI", 9, "bold"), fg="#294c68").pack(side="left", padx=(5, 6))
+    interval_value = tk.StringVar(value="10")
+    interval_entry = tk.Entry(bar, textvariable=interval_value, width=7, justify="center", font=("Segoe UI", 10))
+    interval_entry.pack(side="left", ipady=7)
+    auto_status = tk.StringVar(value="Sẵn sàng")
+    tk.Label(root, textvariable=auto_status, anchor="w", padx=18, pady=5, fg="#47677d", font=("Segoe UI", 9)).pack(fill="x")
     log = scrolledtext.ScrolledText(root, bg="#102531", fg="#e8f7ff", insertbackground="white", font=("Consolas", 10))
     log.pack(fill="both", expand=True, padx=18, pady=12)
     sink = TkSink(log)
@@ -830,8 +964,9 @@ def run_gui() -> None:
 
 
 def main() -> None:
+    configure_console_encoding()
     parser = argparse.ArgumentParser(description="ATFM FIR Tracks Logger")
-    parser.add_argument("--mode", choices=["check", "sync", "verify", "gui"], default="gui")
+    parser.add_argument("--mode", choices=["check", "sync", "verify", "all", "gui"], default="gui")
     parser.add_argument("--full", action="store_true", help="Bo qua watermark va doc lai toan bo public.tracks.")
     args = parser.parse_args()
     if args.mode == "gui":
