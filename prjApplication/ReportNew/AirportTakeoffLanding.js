@@ -14,7 +14,12 @@
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         })
-            .then(function (response) { return response.json(); })
+            .then(function (response) {
+                return response.json().then(function (result) {
+                    if (!response.ok) throw new Error(result.Message || result.message || ('HTTP ' + response.status));
+                    return result;
+                });
+            })
             .then(function (result) {
                 if (result.Code && result.Code !== '00') throw new Error(result.Message || 'Không thể tải dữ liệu.');
                 return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);

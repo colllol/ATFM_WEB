@@ -659,6 +659,7 @@
     <Content Include="ReportNew\AirportTakeoffLanding.aspx" />
     <Content Include="ReportNew\AirportTakeoffLanding.js" />
     <Content Include="ReportNew\CivilFlightSummary.aspx" />
+    <Content Include="ReportNew\FlightSummaryReports.js" />
     <Content Include="ReportNew\Dashboard.js" />
     <Content Include="ReportNew\FlightOperationOverview.aspx" />
     <Content Include="ReportNew\FlightOperationOverview.js" />
@@ -667,6 +668,7 @@
     <Content Include="ReportNew\FlightTrendAnalysis.aspx" />
     <Content Include="ReportNew\FlightTrendAnalysis.js" />
     <Content Include="ReportNew\MilitaryFlightReport.aspx" />
+    <Content Include="ReportNew\MilitaryFlightReport.js" />
     <Content Include="ReportNew\ReportNew.css" />
     <Content Include="ReportNew\ReportInteractive.css" />
     <Content Include="ReportNew\ReportNew.js" />
@@ -2114,6 +2116,7 @@
     <Compile Include="Day_Flights\DaylyFlight.aspx.designer.cs">
       <DependentUpon>DaylyFlight.aspx</DependentUpon>
     </Compile>
+    <Compile Include="SLOTS\SlotsApiClient.cs" />
     <Compile Include="SLOTS\SlotsDataProvider.cs" />
     <Compile Include="SLOTS\FlightTrackingMap.aspx.cs">
       <DependentUpon>FlightTrackingMap.aspx</DependentUpon>

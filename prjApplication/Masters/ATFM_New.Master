@@ -8,7 +8,7 @@
     <meta http-equiv="REFRESH" content="5400" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="robots" content="noindex, nofollow" />
-    <script>window.reportApiBase = '<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>';</script>
+    <script>window.reportApiBase = ('<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>' || '').replace(/\/?$/, '/');</script>
     <title>VIETNAM AIR TRAFFIC MANAGEMENT CORPORATION</title>
 
     <meta name="description" content="AIR TRAFFIC FLOW MANAGEMENT" />

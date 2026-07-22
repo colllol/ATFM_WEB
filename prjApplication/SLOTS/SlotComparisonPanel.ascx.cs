@@ -14,6 +14,7 @@ namespace prjApplication.SLOTS
     {
         private const int PageSize = 100;
         private readonly SlotComparisonService service = new SlotComparisonService();
+        private readonly SlotsApiClient apiClient = new SlotsApiClient();
 
         public string Mode { get; set; }
 
@@ -36,8 +37,17 @@ namespace prjApplication.SLOTS
             ConfigureMode();
             if (!IsPostBack)
             {
-                txtCompareDate.Text = service.GetDefaultDate().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                BindOperators();
+                if (IsComparisonMode)
+                {
+                    txtCompareDate.Text = service.GetDefaultDate().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                    BindOperators(service.GetOperators());
+                }
+                else
+                {
+                    SlotComparisonBootstrapApiResponse bootstrap = apiClient.GetComparisonBootstrap();
+                    txtCompareDate.Text = bootstrap.DefaultDate;
+                    BindOperators(bootstrap.Operators ?? new List<string>());
+                }
                 BindResult();
             }
         }
@@ -87,7 +97,9 @@ namespace prjApplication.SLOTS
             try
             {
                 DateTime date = GetSelectedDate();
-                IList<SlotComparisonRow> rows = service.GetAllResults(date, ddlOper.SelectedValue, CurrentResultType);
+                IList<SlotComparisonRow> rows = IsComparisonMode
+                    ? service.GetAllResults(date, ddlOper.SelectedValue, CurrentResultType)
+                    : GetAllApiResults(date).Select(ToServiceRow).ToList();
                 string fileName = string.Format("{0}_{1}_{2}.xls", CurrentResultType, date.ToString("ddMMyy", CultureInfo.InvariantCulture), ddlOper.SelectedValue);
                 string html = BuildExcelHtml(rows, date, ddlOper.SelectedValue, CurrentResultType);
                 Response.Clear();
@@ -118,11 +130,11 @@ namespace prjApplication.SLOTS
                 : "Tra cứu kết quả đã lưu và xuất Excel theo biểu mẫu BM.QLL-ĐCKSPK.";
         }
 
-        private void BindOperators()
+        private void BindOperators(IEnumerable<string> operators)
         {
             ddlOper.Items.Clear();
             ddlOper.Items.Add(new ListItem("Tất cả hãng", "ALL"));
-            foreach (string oper in service.GetOperators()) ddlOper.Items.Add(new ListItem(oper, oper));
+            foreach (string oper in operators) ddlOper.Items.Add(new ListItem(oper, oper));
         }
 
         private void BindResultSafely()
@@ -135,6 +147,11 @@ namespace prjApplication.SLOTS
         private void BindResult()
         {
             DateTime date = GetSelectedDate();
+            if (!IsComparisonMode)
+            {
+                BindApiResult(date);
+                return;
+            }
             int totalRecords;
             IList<SlotComparisonRow> rows = service.GetResults(date, ddlOper.SelectedValue, CurrentResultType, CurrentPage, PageSize, out totalRecords);
             int totalPages = Math.Max(1, (int)Math.Ceiling(totalRecords / (double)PageSize));
@@ -152,6 +169,89 @@ namespace prjApplication.SLOTS
             litResultTable.Text = RenderTable(rows, ((CurrentPage - 1) * PageSize) + 1);
             ApplyActiveButton();
             BindSummary(date);
+        }
+
+        private void BindApiResult(DateTime date)
+        {
+            SlotComparisonApiResponse result = apiClient.GetComparisonResults(
+                date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), ddlOper.SelectedValue,
+                CurrentResultType, CurrentPage, PageSize);
+            CurrentPage = Math.Max(1, result.PageIndex);
+            litResultTitle.Text = HttpUtility.HtmlEncode(CurrentResultType + " - " + GetResultName(CurrentResultType));
+            litResultDescription.Text = string.Format("Ngày {0:dd/MM/yyyy} · OPER: {1}", date, ddlOper.SelectedValue);
+            lblResultTotal.Text = string.Format("{0:N0} kết quả", result.TotalRecords);
+            lblPaging.Text = string.Format("Trang {0}/{1}", CurrentPage, Math.Max(1, result.TotalPages));
+            btnPrevious.Enabled = CurrentPage > 1;
+            btnNext.Enabled = CurrentPage < result.TotalPages;
+            litResultTable.Text = RenderApiTable(result.Rows ?? new List<SlotComparisonApiRow>(),
+                ((CurrentPage - 1) * PageSize) + 1);
+            ApplyActiveButton();
+            ApplyApiSummary(result.Summary);
+        }
+
+        private void ApplyApiSummary(IDictionary<string, int> summary)
+        {
+            summary = summary ?? new Dictionary<string, int>();
+            btnKQ1.Text = string.Format(CultureInfo.InvariantCulture, "KQ1 ({0:N0})", GetCount(summary, "KQ1"));
+            btnKQ2.Text = string.Format(CultureInfo.InvariantCulture, "KQ2 ({0:N0})", GetCount(summary, "KQ2"));
+            btnKQ3.Text = string.Format(CultureInfo.InvariantCulture, "KQ3 ({0:N0})", GetCount(summary, "KQ3"));
+            btnKQ4.Text = string.Format(CultureInfo.InvariantCulture, "KQ4 ({0:N0})", GetCount(summary, "KQ4"));
+        }
+
+        private static int GetCount(IDictionary<string, int> summary, string key)
+        {
+            int count;
+            return summary.TryGetValue(key, out count) ? count : 0;
+        }
+
+        private IList<SlotComparisonApiRow> GetAllApiResults(DateTime date)
+        {
+            var rows = new List<SlotComparisonApiRow>();
+            int page = 1;
+            SlotComparisonApiResponse result;
+            do
+            {
+                result = apiClient.GetComparisonResults(date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    ddlOper.SelectedValue, CurrentResultType, page, 8000);
+                if (result.Rows != null) rows.AddRange(result.Rows);
+                page++;
+            } while (page <= result.TotalPages);
+            return rows;
+        }
+
+        private static SlotComparisonRow ToServiceRow(SlotComparisonApiRow row)
+        {
+            DateTime flightDate;
+            DateTime.TryParseExact(row.FlightDate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out flightDate);
+            return new SlotComparisonRow
+            {
+                FlightDate = flightDate,
+                Oper = row.Oper,
+                Callsign = row.Callsign,
+                FromAirp = row.FromAirp,
+                ToAirp = row.ToAirp,
+                Etd = row.Etd,
+                Remark = row.Remark
+            };
+        }
+
+        private static string RenderApiTable(IList<SlotComparisonApiRow> rows, int startNumber)
+        {
+            if (rows.Count == 0) return "<div class=\"slot-result-empty\">Chưa có kết quả đối chiếu phù hợp.</div>";
+            StringBuilder html = new StringBuilder("<table class=\"slot-result-table\"><thead><tr><th>No.</th><th>Flightdate</th><th>OPER</th><th>CALLSIGN</th><th>FROM</th><th>TO</th><th>ETD</th><th>Remark</th></tr></thead><tbody>");
+            for (int index = 0; index < rows.Count; index++)
+            {
+                SlotComparisonApiRow row = rows[index];
+                DateTime flightDate;
+                string dateText = DateTime.TryParseExact(row.FlightDate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out flightDate) ? flightDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) : row.FlightDate;
+                html.Append("<tr><td>").Append(startNumber + index).Append("</td><td>").Append(Encode(dateText))
+                    .Append("</td><td>").Append(Encode(row.Oper)).Append("</td><td>").Append(Encode(row.Callsign))
+                    .Append("</td><td>").Append(Encode(row.FromAirp)).Append("</td><td>").Append(Encode(row.ToAirp))
+                    .Append("</td><td>").Append(Encode(row.Etd)).Append("</td><td>").Append(Encode(row.Remark)).Append("</td></tr>");
+            }
+            return html.Append("</tbody></table>").ToString();
         }
 
         private void BindSummary(DateTime date)
