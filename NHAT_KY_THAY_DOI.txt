@@ -1319,3 +1319,13 @@ Quy ước:
 172. Database/Oracle/20260722_SYS_PKG_cms_getrole4usermenu_rollback.sql
     - Bổ sung script hoàn tác có cảnh báo: khôi phục procedure cũ trả toàn bộ T_USERMENU, kiểm tra SYS_PKG biên dịch hợp lệ rồi mới xóa IX_TUM_USER_MENU.
     - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+[22/07/2026] Chuẩn bị lưu trữ T_DAY_FLIGHTS trước năm 2026
+---------------------------------------------------------
+
+173. Database/Oracle/20260722_archive_T_DAY_FLIGHTS_before_2026.sql
+    - Tạo script có khóa xác nhận để sao chép toàn bộ T_DAY_FLIGHTS sang T_DAY_FLIGHTS_BAK2026 bằng CTAS, xác minh tổng dòng/dòng trước 2026/null ngày/min-max FLIGHT_ID và FLIGHTDATE trước khi cho phép xóa.
+    - Xóa theo batch các dòng FLIGHTDATE nhỏ hơn 01/01/2026, kiểm tra không còn dữ liệu ngoài ngưỡng giữ lại, cập nhật optimizer statistics và xuất báo cáo cuối.
+    - Bổ sung tiền kiểm bảng backup chưa tồn tại, dung lượng tablespace tối thiểu 120% segment nguồn, yêu cầu dừng IIS/API/job và mẫu phục hồi thủ công từ bảng backup.
+    - Số liệu khảo sát ngày 22/07/2026: nguồn 11.340.890 dòng, 9.941.629 dòng trước 2026, segment bảng khoảng 2.426 MB, index khoảng 944 MB và USERS còn khoảng 4.898 MB.
+    - Đã kiểm thử cờ mặc định NO: script dừng tại ORA-20401 trước mọi DDL/DML và xác nhận T_DAY_FLIGHTS_BAK2026 chưa tồn tại; chưa thực thi CTAS hoặc DELETE trên database.
