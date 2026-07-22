@@ -56,11 +56,42 @@ namespace QLB.BusinessLogic
 
         public MilitaryFlightResponse GetMilitary(FlightAnalyticsRequest request)
         {
-            DateTime from,to; Validate(request,out from,out to); var rows=Load(from,to,Filter(request.Oper),Filter(request.Airport),request.CurrentDay,"O/F");
-            // Dữ liệu nguồn không có cột loại nhiệm vụ chuẩn hóa; VIP được nhận diện bảo thủ từ số phép/callsign, phần còn lại là quân sự.
-            int vip=rows.Count(x=>(x.Callsign??"").IndexOf("VIP",StringComparison.OrdinalIgnoreCase)>=0);
-            return new MilitaryFlightResponse { Source=request.CurrentDay?"T_DAY_FLIGHTS_GOINGON":"T_FINISHED_FLIGHTS",Total=rows.Count,Vip=vip,Military=rows.Count-vip,Airports=AirportRows(rows),Flights=rows };
+            DateTime from,to; Validate(request,out from,out to);
+            var allRows=LoadMilitaryReport(from,to);
+            string airport=Filter(request.Airport), purpose=Filter(request.Purpose);
+            var rows=allRows.Where(x=>(airport==null||x.FromAirp==airport||x.ToAirp==airport)&&(purpose==null||String.Equals(x.Purpose,purpose,StringComparison.OrdinalIgnoreCase))).ToList();
+            var airports=allRows.SelectMany(x=>new[]{x.FromAirp,x.ToAirp}).Where(x=>!String.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x=>x).ToList();
+            var purposes=allRows.Select(x=>x.Purpose).Where(x=>!String.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x=>x).ToList();
+            return new MilitaryFlightResponse { Source="T_FINISHFLIGHTS_MILITARY",Total=rows.Count,Airports=airports,Purposes=purposes,Flights=rows };
         }
+
+        private static List<MilitaryFlightRow> LoadMilitaryReport(DateTime from, DateTime to)
+        {
+            const string sql=@"SELECT P_TYPE,FROM_AIRP,TO_AIRP,ETD,ETA,ATD,ATA,PURPOSE,FLIGHTDATE
+FROM T_FINISHFLIGHTS_MILITARY
+WHERE FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+ORDER BY FLIGHTDATE,P_TYPE,FROM_AIRP,TO_AIRP";
+            var rows=new List<MilitaryFlightRow>();
+            using(var connection=Connection()) using(var command=new OracleCommand(sql,connection))
+            {
+                command.BindByName=true;
+                command.CommandTimeout=120;
+                command.Parameters.Add("fromDate",OracleDbType.Date).Value=from.Date;
+                command.Parameters.Add("toDate",OracleDbType.Date).Value=to.Date.AddDays(1);
+                connection.Open();
+                using(var reader=command.ExecuteReader())
+                {
+                    while(reader.Read()) rows.Add(new MilitaryFlightRow {
+                        PType=ReaderCell(reader,"P_TYPE"),FromAirp=ReaderCell(reader,"FROM_AIRP").ToUpperInvariant(),ToAirp=ReaderCell(reader,"TO_AIRP").ToUpperInvariant(),
+                        Etd=ReaderCell(reader,"ETD"),Eta=ReaderCell(reader,"ETA"),Atd=ReaderCell(reader,"ATD"),Ata=ReaderCell(reader,"ATA"),Purpose=ReaderCell(reader,"PURPOSE"),
+                        FlightDate=reader["FLIGHTDATE"]==DBNull.Value?String.Empty:Convert.ToDateTime(reader["FLIGHTDATE"]).ToString("yyyy-MM-dd")
+                    });
+                }
+            }
+            return rows;
+        }
+
+        private static string ReaderCell(OracleDataReader reader,string column){return reader[column]==DBNull.Value?String.Empty:Convert.ToString(reader[column]).Trim();}
 
         private static List<FlightAnalyticsRow> Load(DateTime from,DateTime to,string oper,string airport,bool current,string permType)
         {
