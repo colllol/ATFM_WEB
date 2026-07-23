@@ -1245,7 +1245,6 @@
             display: flex;
             height: 96px;
             align-items: center;
-            gap: 8px;
         }
 
         #navbar.atfm-header .ace-nav > li {
@@ -1254,34 +1253,14 @@
             background: transparent;
         }
 
-        #navbar.atfm-header .ace-nav > li.atfm-header-action {
-            display: flex;
-            min-height: 52px;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-        }
-
-        #navbar.atfm-header .atfm-ai-link,
-        #navbar.atfm-header .atfm-notification-button {
-            box-sizing: border-box;
-            width: 42px;
-            min-width: 42px;
-            height: 42px;
-            margin: 0;
-            padding: 0 !important;
-        }
-
-        #navbar.atfm-header .atfm-ai-orb {
-            box-sizing: border-box;
-            width: 42px;
-            height: 42px;
-        }
-
         #navbar.atfm-header .atfm-notification-button {
             display: flex;
+            width: 42px;
+            height: 42px;
             align-items: center;
             justify-content: center;
+            margin-right: 12px;
+            padding: 0;
             border: 1px solid rgba(255, 255, 255, .32);
             border-radius: 50%;
             outline: 0;

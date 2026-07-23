@@ -162,7 +162,7 @@
         .calendar-filter-field select:focus { border-color: #2388c6 !important; box-shadow: 0 0 0 3px rgba(35,136,198,.14); }
         .calendar-filter-actions {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             flex-wrap: wrap;
             gap: 8px;
             padding: 11px 15px 13px;
@@ -170,6 +170,16 @@
             background: #f8fbfd;
         }
         .calendar-filter-actions .btn { width: auto !important; min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
+        .calendar-bottom-buttons {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(96px, 1fr));
+            flex: 1 1 680px;
+            gap: 8px;
+        }
+        .calendar-bottom-buttons .btn {
+            width: 100% !important;
+            min-width: 0;
+        }
         .calendar-inline-actions { display: flex; align-items: flex-end; gap: 8px; flex: 0 0 auto; }
         .calendar-inline-actions .btn { min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
         .calendar-bottom-status { display: flex; flex-direction: column; gap: 5px; flex: 0 1 190px; min-width: 155px; }
@@ -259,6 +269,10 @@
         @media (max-width: 767px) {
             .calendar-filter-field { flex: 1 1 145px; }
             .calendar-filter-actions .btn { flex: 1 1 140px; }
+            .calendar-bottom-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                flex-basis: 100%;
+            }
         }
     </style>
     <div id="abcxyz" class="calendar-filter-card">
@@ -268,10 +282,7 @@
                 <label class="calendar-filter-label" for="txtFromDate">NGÀY XỬ LÝ</label>
                 <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text" placeholder="CHỌN NGÀY" />
             </div>
-            <div class="calendar-filter-field calendar-date">
-                <label class="calendar-filter-label" for="txtFilterDatePicker">NGÀY BAY CẦN LỌC</label>
-                <input id="txtFilterDatePicker" type="date" onchange="calendarFilterDate_OnChange()" />
-            </div>
+
             <div class="calendar-filter-field calendar-export-type">
                 <label class="calendar-filter-label" for="ddlSelect">LOẠI XUẤT</label>
                 <select id="ddlSelect">
@@ -319,13 +330,20 @@
                     <option value="chkKhbNotInSchedule">KHB HÃNG QT</option>
                 </select>
             </div>
-            <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">Update all</button>
-            <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">Search</button>
-            <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()">Delete</button>
-            <button type="button" id="btnDeleteByCheckedRemark" class="btn btn-sm btn-primary" onclick="btnDeleteRemarkByChecked_Onclick()">Del Remark</button>
-            <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()">Clear search</button>
-            <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="LoadDataGrid_Export()">Export Excel</button>
-            <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()">Export Bravo</button>
+            <div class="calendar-filter-field calendar-date">
+                <label class="calendar-filter-label" for="txtFilterDatePicker">NGÀY BAY CẦN LỌC</label>
+                <input id="txtFilterDatePicker" type="date" onchange="calendarFilterDate_OnChange()" />
+            </div>
+
+            <div class="calendar-bottom-buttons">
+                <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">Search</button>
+                <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()">Delete</button>
+                <button type="button" id="btnDeleteByCheckedRemark" class="btn btn-sm btn-primary" onclick="btnDeleteRemarkByChecked_Onclick()">Del Remark</button>
+                <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()">Clear search</button>
+                <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="LoadDataGrid_Export()">Export Excel</button>
+                <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()">Export Bravo</button>
+                <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">Update all</button>
+            </div>
         </div>
         <div class="calendar-legacy-radios" aria-hidden="true">
             <input id="chkKhb" checked="checked" type="radio" name="optradio" />
