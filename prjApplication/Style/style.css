@@ -2071,7 +2071,7 @@ legend.box-border {
 }
 
 .atfm-responsive-table-layout.has-vertical-overflow > .table-responsive {
-    max-height: var(--atfm-table-max-height, 520px);
+    max-height: var(--atfm-table-max-height, 1020px);
     border: 1px solid #c9dce9;
     background: #fff;
     box-shadow: 0 6px 18px rgba(30, 77, 112, .09);

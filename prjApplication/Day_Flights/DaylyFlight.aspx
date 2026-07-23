@@ -295,7 +295,7 @@
             padding: 0 !important;
             align-items: center;
             justify-content: center;
-            border: 1px solid #87badd !important;
+            border: 0px solid #87badd !important;
             border-radius: 9px !important;
             background: linear-gradient(145deg, #ffffff 0%, #e7f4fc 100%) !important;
             color: #267fb7 !important;
@@ -331,7 +331,7 @@
             left: auto !important;
             max-height: min(520px, calc(100vh - 180px));
             overflow-y: auto;
-            border: 1px solid #b9d2e5;
+            border: 0px solid #b9d2e5;
             border-radius: 10px;
             box-shadow: 0 12px 28px rgba(20, 66, 101, .22);
             z-index: 1500 !important;
@@ -533,7 +533,7 @@
         /* Toolbar responsive: không để giờ/tổng số và bộ lọc chồng lên nhau. */
         .divHeader {
             display: flex;
-            width: 100%;
+            width: 97%;
             max-width: 100%;
             box-sizing: border-box;
             height: auto !important;

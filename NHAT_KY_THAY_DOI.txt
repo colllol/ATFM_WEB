@@ -1194,6 +1194,45 @@ Quy ước:
 2026-07-22 | prjApplication/ReportNew/MilitaryFlightReport.js; prjApplication/ReportNew/MilitaryFlightReport.aspx; prjApplication/ReportNew/ReportInteractive.css | Hoàn thiện bộ lọc, bảng chi tiết, phân trang và xuất Excel cho báo cáo chuyến bay quân sự.
 2026-07-22 | prjApplication/Masters/ATFM_New.Master; prjApplication/ReportNew/AirportTakeoffLanding.js; prjApplication/ReportNew/Dashboard.js; prjApplication/ReportNew/FlightStatusRate.js | Chuẩn hóa URL API, xử lý lỗi HTTP và gom dữ liệu dashboard qua endpoint ChartReport.
 2026-07-22 | prjApplication/prjApplication.csproj | Đăng ký các JavaScript báo cáo mới và SlotsApiClient để được build, publish đầy đủ.
+[22/07/2026] Cập nhật nhánh agent/initial-atfm-import
+----------------------------------------------------
+
+158. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit 9de37c0 lên cac0a42 theo origin/agent/initial-atfm-import, nhận 2 commit mới.
+    - Nhận thay đổi trên 33 file, bổ sung 7.024 dòng và xóa 46 dòng; không phát sinh merge conflict.
+    - Bảo toàn và áp lại nguyên trạng các thay đổi local trong DaylyFlight.aspx, Schedule_Flight.aspx, CustumStaticdata.js và Web.config.
+
+[22/07/2026] Sửa lỗi thiếu asset khi Package Release
+----------------------------------------------------
+
+159. prjApplication/prjApplication.csproj
+    - Loại 7 khai báo Content trỏ tới file không tồn tại: nhóm Images/Master/Backbase, Images/edit1 %282%29.gif và hai file âm thanh DayFlight.
+    - Xác nhận không còn Content Include nào trỏ tới file thiếu trong project.
+    - Chạy lại target Package cấu hình Release thành công với 0 error, khắc phục lỗi copy Images/Master/Backbase/menu-bg.gif.
+
+[22/07/2026] Ngăn wildcard Package quét đệ quy thư mục obj
+---------------------------------------------------------
+
+160. prjApplication/prjApplication.csproj
+    - Bổ sung loại trừ obj/** và bin/** cho các wildcard thu thập file "* - Copy.aspx", code-behind và designer.
+    - Ngăn PackageTmp bị đưa ngược vào gói publish và tạo đường dẫn obj/Release/Package/PackageTmp lồng nhau.
+    - Clean và Package lại cấu hình Release thành công với 0 error; PackageTmp không còn thư mục obj lồng và file prjApplication.zip được tạo bình thường.
+
+[22/07/2026] Tiếp tục cập nhật nhánh agent/initial-atfm-import
+------------------------------------------------------------
+
+161. Toàn bộ project ATFM_WEB
+    - Fast-forward nhánh local từ commit cac0a42 lên 1121917 theo origin/agent/initial-atfm-import.
+    - Nhận 1 commit mới trên 14 file, bổ sung 572 dòng và xóa 172 dòng.
+    - Hợp nhất thành công prjApplication.csproj, giữ các bản sửa Package local cùng thay đổi API SLOT/báo cáo mới; bảo toàn các file giao diện và Web.config cục bộ.
+
+[22/07/2026] Bổ sung netstandard cho biên dịch runtime ASP.NET
+-----------------------------------------------------------
+
+162. prjApplication/Web.config
+    - Thêm assembly netstandard Version 2.0.0.0 vào compilation/assemblies để các trang CodeFile sử dụng Npgsql, System.Memory và dependency netstandard biên dịch được trên IIS.
+    - Khắc phục CS0012 tại AdsBPerformanceReport.aspx.cs khi thực hiện LINQ GroupBy trên dữ liệu báo cáo ADS-B.
+    - Xác nhận build project 0 error, ASP.NET CompileFile của AdsBPerformanceReport.aspx thành công và URL local không còn trả lỗi HTTP 500.
 2026-07-22 | prjApplication/SLOTS/AIReports.aspx; prjApplication/SLOTS/AIReports.aspx.cs | Tạo trang báo cáo hoạt động AI và proxy phía server gọi GET /api/reports/ai với header X-API-Key, không để khóa API xuất hiện ở trình duyệt.
 2026-07-22 | prjApplication/SLOTS/AIReports.css; prjApplication/SLOTS/AIReports.js | Tạo dashboard KPI, bộ lọc, bảng phân trang và popup chi tiết câu hỏi, SQL, câu trả lời, thực thi công cụ và lỗi của từng yêu cầu AI.
 2026-07-22 | prjApplication/prjApplication.csproj | Đăng ký trang AIReports cùng code-behind, CSS và JavaScript để build/publish đầy đủ.
@@ -1211,6 +1250,84 @@ Quy ước:
 2026-07-22 | tools/TracksSyncPython/main.py | Chuẩn hóa stdout/stderr UTF-8 để bản CLI không dừng vì UnicodeEncodeError khi ghi log tiếng Việt trên Windows.
 2026-07-22 | tools/build; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe | Build lại GUI và CLI, chuyển toàn bộ đầu ra PyInstaller vào thư mục tools; kiểm tra CLI đọc đúng cấu hình PostgreSQL 172.29.187.90.
 2026-07-22 | build; dist/ATFM-TracksSync.exe; dist/ATFM-TracksSync-CLI.exe | Xóa đầu ra build cũ ở thư mục gốc sau khi xác nhận bản mới trong tools hoạt động.
+[22/07/2026] Hợp nhất dữ liệu mới từ agent/initial-atfm-import
+-------------------------------------------------------------
+
+163. Toàn bộ project ATFM_WEB
+    - Merge 2 commit remote ab2e47e và 0f09357 vào commit local c68396f, giữ lịch sử của cả hai phía và không push.
+    - Nhận trang AIReports, thay đổi bộ lọc báo cáo và bản cập nhật công cụ TracksSync; hợp nhất sạch prjApplication.csproj.
+    - Giữ urlApi nội bộ http://172.29.79.49:5176/ trong CustumStaticdata.js thay cho giá trị localhost của remote; bảo toàn các sửa lỗi Package và netstandard local.
+
+[22/07/2026] Tối ưu FLIGHT_DAYFLIGHT.View_Message và lập bộ script triển khai
+--------------------------------------------------------------------------
+
+164. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_view_message_optimize.sql
+    - Bổ sung script kiểm tra index trùng, tạo IX_TPM_VIEW_MESSAGE ở trạng thái INVISIBLE, kiểm tra execution plan rồi mới chuyển VISIBLE.
+    - Thay riêng View_Message trong package body, giữ nguyên chữ ký public; đổi điều kiện TO_CHAR(FLIGHTDATE) sang TRUNC(FLIGHTDATE) với ngày được parse một lần theo FXDD/MM/YYYY.
+    - Kiểm tra lỗi biên dịch package, trạng thái object, thống kê index và execution plan sau triển khai; script dừng ngay khi phát hiện lỗi hoặc index tương đương tên khác.
+    - Đã triển khai trên ATFM@PDBORCL: IX_TPM_VIEW_MESSAGE (TRUNC(FLIGHTDATE), MESS_TYPE, PART_NO, ID, STATUS) là FUNCTION-BASED NORMAL, VALID, VISIBLE; giữ nguyên T_PLAN_MESSAGE_TUNE1(ID).
+    - Execution plan sau triển khai dùng INDEX RANGE SCAN IX_TPM_VIEW_MESSAGE, không còn TABLE ACCESS FULL và SORT ORDER BY cho View_Message.
+    - Kiểm thử View_Message ngày 11/07/2026 trả đủ 317 dòng trong khoảng 10 ms phía PL/SQL; package và package body FLIGHT_DAYFLIGHT đều VALID.
+
+165. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_view_message_rollback.sql
+    - Bổ sung script hoàn tác: khôi phục điều kiện TO_CHAR(FLIGHTDATE, 'dd/mm/yyyy') của View_Message, xác nhận package biên dịch thành công rồi mới xóa IX_TPM_VIEW_MESSAGE.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+166. Database/Oracle/client/sqlnet.ora
+    - Bổ sung cấu hình SQL*Net cục bộ SQLNET.AUTHENTICATION_SERVICES=(NONE) để SQL*Plus dùng xác thực mật khẩu trong phiên triển khai, không thay đổi cấu hình Oracle Client toàn hệ thống và không lưu thông tin đăng nhập.
+
+[22/07/2026] Tối ưu nhóm procedure đọc T_PLAN_MESSAGE_NEW
+-------------------------------------------------------
+
+167. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_plan_message_new_optimize.sql
+    - Bổ sung script kiểm tra index trùng và tạo IX_TPMN_VIEW_MESSAGE (TRUNC(FLIGHTDATE), MESS_TYPE, PART_NO, ID, STATUS) theo quy trình INVISIBLE - kiểm tra plan - VISIBLE.
+    - Tối ưu 5 procedure View_MessageAirPort, View_MessageAirPort2023, View_MessageDetailAirPort, View_MessageZone và View_MessageDetailZone; giữ nguyên chữ ký public, parse ngày một lần theo FXDD/MM/YYYY và loại TO_CHAR trên FLIGHTDATE.
+    - Đã triển khai trên ATFM@PDBORCL: IX_TPMN_VIEW_MESSAGE là FUNCTION-BASED NORMAL, VALID, VISIBLE; giữ nguyên khóa chính T_PLAN_MESSAGE_NEW_PK(ID).
+    - Execution plan của danh sách vùng chuyển từ TABLE ACCESS FULL kèm SORT ORDER BY sang INDEX RANGE SCAN IX_TPMN_VIEW_MESSAGE, không còn bước sort.
+    - Kiểm thử ngày 11/07/2026: sân bay 148 dòng/180 ms, sân bay VVBM 2 dòng/10 ms, chi tiết sân bay 1 dòng/220 ms, vùng 127 dòng/0 ms và chi tiết vùng 5 dòng/220 ms; package và package body FLIGHT_DAYFLIGHT đều VALID.
+
+168. Database/Oracle/20260722_FLIGHT_DAYFLIGHT_plan_message_new_rollback.sql
+    - Bổ sung script hoàn tác 5 procedure về điều kiện TO_CHAR(FLIGHTDATE, 'dd/mm/yyyy'), kiểm tra package biên dịch hợp lệ trước khi xóa IX_TPMN_VIEW_MESSAGE.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+[22/07/2026] Tối ưu P_FLY.GenFromTable_day_flightsNotAll
+-----------------------------------------------------
+
+169. Database/Oracle/20260722_P_FLY_gen_day_flights_not_all_optimize.sql
+    - Bổ sung script kiểm tra index trùng, kiểm thử INVISIBLE và tạo IX_TFC_GEN_NOTALL(FLIGHTDATE, CALLSIGN, FROM_AIRP, TO_AIRP) cho điều kiện NOT EXISTS trên T_FLIGHTCANCEL.
+    - Không tạo thêm index T_DAY_FLIGHTS; tái sử dụng T_DAY_FLIGHTS_IDX_TUNE2(FLIGHTDATE, ISACCESS, FLIGHTNBR) hiện có bằng cách thay 44 điều kiện TO_CHAR(FLIGHTDATE) trong GenFromTable_day_flightsNotAll thành khoảng ngày [P_Date, P_Date + 1).
+    - Đổi P_Date sang DATE và parse on_day đúng một lần theo FXDD/MM/YYYY; giữ nguyên chữ ký public và các nhánh OVER, HKVN, KV1, KV2, KV3, OTHER.
+    - Đã triển khai trên ATFM@PDBORCL: P_FLY package/package body và IX_TFC_GEN_NOTALL đều VALID; index mới là NORMAL, NONUNIQUE, VISIBLE với thống kê 19.117 dòng.
+    - Plan nhánh HKVN chuyển từ full scan T_DAY_FLIGHTS và T_FLIGHTCANCEL sang INDEX RANGE SCAN trên T_DAY_FLIGHTS_IDX_TUNE2 và IX_TFC_GEN_NOTALL; truy vấn đại diện giữ nguyên 393 dòng, giảm từ 25,44 giây xuống 0,22 giây.
+    - Kiểm thử end-to-end GenFromTable_day_flightsNotAll('22/07/2026','HKVN') hoàn tất khoảng 320 ms, tạo CLOB 21.535 ký tự và danh sách flight ID dài 3.537 ký tự; function ghi một dòng T_LOG theo logic sẵn có.
+
+170. Database/Oracle/20260722_P_FLY_gen_day_flights_not_all_rollback.sql
+    - Bổ sung script hoàn tác có kiểm đếm đủ 44 điều kiện: khôi phục TO_CHAR(FLIGHTDATE), kiểu/khởi tạo P_Date cũ, kiểm tra P_FLY biên dịch hợp lệ rồi mới xóa IX_TFC_GEN_NOTALL.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+[22/07/2026] Sửa và tối ưu SYS_PKG.CMS_GetRole4UserMenu
+------------------------------------------------------
+
+171. Database/Oracle/20260722_SYS_PKG_cms_getrole4usermenu_optimize.sql
+    - Bổ sung script kiểm tra index trùng, tạo IX_TUM_USER_MENU(USER_ID, MENU_ID) theo quy trình INVISIBLE - kiểm tra plan - VISIBLE và thu thập thống kê index.
+    - Sửa CMS_GetRole4UserMenu sử dụng đúng P_UserName/p_Menu_ID: join T_USERS với T_USERMENU và chỉ trả quyền của đúng tài khoản/menu; loại hành vi cũ trả toàn bộ 3.188 dòng T_USERMENU khiến kiểm tra IsAccept luôn thành công.
+    - Đã triển khai trên ATFM@PDBORCL: SYS_PKG package/package body và IX_TUM_USER_MENU đều VALID; plan dùng INDEX RANGE SCAN IX_TUM_USER_MENU.
+    - Kiểm thử procedure: trucbantruong/Menu 89 trả 1 dòng; menu 999999 và username không tồn tại trả 0 dòng.
+    - Kiểm thử endpoint ApiExtension thực tế: trường hợp có quyền trả Code=00/1 dòng khoảng 446 ms, menu không được gán trả Code=00/0 dòng khoảng 81 ms.
+
+172. Database/Oracle/20260722_SYS_PKG_cms_getrole4usermenu_rollback.sql
+    - Bổ sung script hoàn tác có cảnh báo: khôi phục procedure cũ trả toàn bộ T_USERMENU, kiểm tra SYS_PKG biên dịch hợp lệ rồi mới xóa IX_TUM_USER_MENU.
+    - Không thực thi rollback trong đợt này vì triển khai và kiểm thử thành công.
+
+[22/07/2026] Chuẩn bị lưu trữ T_DAY_FLIGHTS trước năm 2026
+---------------------------------------------------------
+
+173. Database/Oracle/20260722_archive_T_DAY_FLIGHTS_before_2026.sql
+    - Tạo script có khóa xác nhận để sao chép toàn bộ T_DAY_FLIGHTS sang T_DAY_FLIGHTS_BAK2026 bằng CTAS, xác minh tổng dòng/dòng trước 2026/null ngày/min-max FLIGHT_ID và FLIGHTDATE trước khi cho phép xóa.
+    - Xóa theo batch các dòng FLIGHTDATE nhỏ hơn 01/01/2026, kiểm tra không còn dữ liệu ngoài ngưỡng giữ lại, cập nhật optimizer statistics và xuất báo cáo cuối.
+    - Bổ sung tiền kiểm bảng backup chưa tồn tại, dung lượng tablespace tối thiểu 120% segment nguồn, yêu cầu dừng IIS/API/job và mẫu phục hồi thủ công từ bảng backup.
+    - Số liệu khảo sát ngày 22/07/2026: nguồn 11.340.890 dòng, 9.941.629 dòng trước 2026, segment bảng khoảng 2.426 MB, index khoảng 944 MB và USERS còn khoảng 4.898 MB.
+    - Đã kiểm thử cờ mặc định NO: script dừng tại ORA-20401 trước mọi DDL/DML và xác nhận T_DAY_FLIGHTS_BAK2026 chưa tồn tại; chưa thực thi CTAS hoặc DELETE trên database.
 2026-07-22 | tools/ATFMUnified/models.py; tools/ATFMUnified/scanner.py; tools/ATFMUnified/khh_importer.py; tools/ATFMUnified/slot_importer.py; tools/ATFMUnified/oracle_db.py | Đưa nguyên vẹn các module nghiệp vụ Excel Importer từ tool QLB vào project để bản hợp nhất có thể build và triển khai độc lập.
 2026-07-22 | tools/ATFMUnified/excel_panel.py | Chuyển cửa sổ Excel Importer thành panel nhúng, giữ nguyên luồng quét Excel, import Oracle, hàng đợi sự kiện và cơ chế hủy.
 2026-07-22 | tools/ATFMUnified/main.py | Tạo GUI hợp nhất hai panel độc lập; hỗ trợ chia đôi, thu gọn trái/phải, tiếp tục tác vụ khi panel bị ẩn và dừng an toàn khi đóng ứng dụng.
@@ -1274,3 +1391,27 @@ Quy ước:
 2026-07-23 | ATFM.sln; ../GitHub/API/QLB.API.sln; API Notifications local | Build lại APP/API thành công sau review; parser JavaScript của trang và hai master, XML csproj, encoding và diff-check đều đạt. Gọi endpoint local xác nhận GetState=2/2 chưa đọc, GetPage tất cả=6 dòng, lọc chưa đọc=2 dòng và MarkRead ID không tồn tại trả update-count 0, không thay đổi dữ liệu nghiệp vụ.
 2026-07-23 | ATFM.T_NOTIFICATION (Oracle) | Chèn 300 thông báo mẫu trong một transaction, đánh dấu tiêu đề bằng [DEMO-20260723 #001..300] để dễ nhận diện: 200 STATUS=0 và 100 STATUS=1. Sau khi chèn bảng có tổng 306 dòng, gồm 202 chưa đọc và 104 đã đọc; API xác nhận popup giới hạn 50, phân trang 100 dòng có trang cuối 6 dòng và dữ liệu tiếng Việt hiển thị đúng. Handler seed tạm đã được xóa, không để lại endpoint hoặc thay đổi mã API.
 2026-07-23 | prjApplication/Web.config (cấu hình local, skip-worktree) | Tạm comment API cũ http://172.29.79.49:5176/ do bản IIS chưa có GetPage/MarkRead và trỏ applicationpath.api sang http://localhost:50590/. API local xác nhận cả ba bộ lọc GetPage trả Code=00 với tổng 306 dòng; MarkRead thực trả Code=00, Updated=1, làm giảm tổng chưa đọc và loại đúng ID khỏi popup. Thay đổi Web.config làm recycle WEB và có thể yêu cầu đăng nhập lại.
+
+[23/07/2026] Hợp nhất dữ liệu mới từ agent/initial-atfm-import
+-------------------------------------------------------------
+
+174. Toàn bộ project ATFM_WEB
+    - Fetch và merge 7 commit remote từ 5d4b5ee đến 2cccf48 vào nhánh local agent/initial-atfm-import, giữ toàn bộ 7 commit tối ưu Oracle cục bộ và không push.
+    - Nhận tool ATFM hợp nhất, cập nhật đồng bộ tọa độ LAT/LON, API/menu phân quyền tải một lần và trung tâm thông báo polling.
+    - Giải quyết xung đột NHAT_KY_THAY_DOI.txt bằng cách giữ nguyên đầy đủ lịch sử của cả local và remote.
+    - Bảo toàn để áp lại nguyên trạng thay đổi chưa commit của người dùng trong DaylyFlight.aspx và MessManagementAirPort.aspx sau merge.
+
+[23/07/2026] Sửa cơ chế đọc ATFM API key
+-------------------------------------------------------------
+
+175. prjBusinessLogic/ResultFormAPI/clsResuftAPI.cs; prjApplication/Handlers/Notification.ashx.cs
+    - Ưu tiên đọc biến môi trường ATFM_API_KEY; nếu tiến trình IIS không có biến này thì đọc đúng appSettings ATFM_API_KEY, sau đó mới tương thích ngược với khóa APIKey.
+    - Loại bỏ khoảng trắng đầu/cuối trước khi gửi header X-API-Key.
+
+[23/07/2026] Hợp nhất notification với 10 commit mới từ remote
+-------------------------------------------------------------
+
+176. Toàn bộ project ATFM_WEB
+    - Merge origin/agent/initial-atfm-import tại fc995ac vào nhánh local, giữ đầy đủ lịch sử tối ưu Oracle, menu/API-key, các cập nhật giao diện nghiệp vụ và chức năng notification mới.
+    - Giải quyết xung đột NHAT_KY_THAY_DOI.txt bằng cách giữ nguyên nội dung của cả hai phía; Notification.ashx.cs và prjApplication.csproj được Git hợp nhất tự động và sẽ được build kiểm tra trước khi push.
+    - Web.config cùng ImportDynamic/oDataProvider.cs chứa cấu hình máy cục bộ được bảo toàn ngoài commit merge, không đưa endpoint/credential local lên remote.
