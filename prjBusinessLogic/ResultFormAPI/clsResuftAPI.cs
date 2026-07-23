@@ -462,9 +462,11 @@ public class clsResuftAPI
         client.BaseAddress = new Uri(System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"]);
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        client.DefaultRequestHeaders.Add(
-            "X-API-Key",
-            ConfigurationManager.AppSettings["APIKey"]);
+        string apiKey = Environment.GetEnvironmentVariable("ATFM_API_KEY");
+        if (string.IsNullOrWhiteSpace(apiKey))
+            apiKey = ConfigurationManager.AppSettings["APIKey"];
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
     }
 
     #endregion
@@ -530,6 +532,18 @@ public class clsResuftAPI
 
         }
         return dt;
+    }
+    public DataTable GetAllMenu4User(string urlPath, int userID)
+    {
+        HttpResponseMessage response = client.GetAsync($"{urlPath}?UserID={userID}").Result;
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var result = response.Content.ReadAsAsync<dynamic>().Result;
+        if (result.Code != "00")
+            return null;
+
+        return JsonConvert.DeserializeObject<DataTable>(result.ListValue.ToString());
     }
     public DataTable GetTableObj(string urlPath)
     {

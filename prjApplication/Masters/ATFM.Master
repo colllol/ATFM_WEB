@@ -700,6 +700,119 @@
             font-size: 19px;
         }
 
+        #navbar.atfm-header .atfm-notification {
+            position: relative;
+        }
+
+        #navbar.atfm-header .atfm-notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -7px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            border: 2px solid #155b83;
+            border-radius: 10px;
+            background: #d83b3b;
+            color: #fff;
+            font: 700 11px/15px "Segoe UI", sans-serif;
+            text-align: center;
+        }
+
+        #navbar.atfm-header .atfm-notification-panel {
+            position: absolute;
+            z-index: 1050;
+            top: 52px;
+            right: 10px;
+            width: min(390px, calc(100vw - 24px));
+            border: 1px solid #ccd8e2;
+            border-radius: 6px;
+            background: #fff;
+            box-shadow: 0 12px 30px rgba(20, 45, 65, .22);
+            color: #263746;
+        }
+
+        #navbar.atfm-header .atfm-notification-panel[hidden],
+        #navbar.atfm-header .atfm-notification-badge[hidden] {
+            display: none !important;
+        }
+
+        .atfm-notification-panel-header {
+            display: flex;
+            min-height: 46px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-bottom: 1px solid #e1e8ee;
+        }
+
+        .atfm-notification-panel-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .atfm-notification-read-all {
+            padding: 5px 8px;
+            border: 0;
+            background: transparent;
+            color: #1769aa;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .atfm-notification-read-all:disabled {
+            color: #8796a3;
+            cursor: default;
+        }
+
+        .atfm-notification-list {
+            max-height: 430px;
+            overflow-y: auto;
+        }
+
+        .atfm-notification-item {
+            padding: 11px 13px;
+            border-bottom: 1px solid #edf1f4;
+        }
+
+        .atfm-notification-item.is-unread {
+            border-left: 3px solid #1686c8;
+            background: #f3f9fd;
+            padding-left: 10px;
+        }
+
+        .atfm-notification-item-title {
+            margin: 0 0 4px;
+            color: #1f3342;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 18px;
+            overflow-wrap: anywhere;
+        }
+
+        .atfm-notification-item-content {
+            margin: 0 0 6px;
+            color: #506473;
+            font-size: 12px;
+            line-height: 17px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .atfm-notification-item-time,
+        .atfm-notification-empty {
+            color: #778996;
+            font-size: 11px;
+        }
+
+        .atfm-notification-empty {
+            margin: 0;
+            padding: 24px 14px;
+            text-align: center;
+        }
+
         #navbar.atfm-header .user-min > a.dropdown-toggle {
             display: flex;
             min-height: 52px;
@@ -782,9 +895,19 @@
                     <ul class="nav ace-nav">
                         <li class="atfm-ai-action"><a class="atfm-ai-link" href="https://backwash-january-glare.ngrok-free.dev" target="_blank" rel="noopener noreferrer" title="Trợ lý AI"><span class="atfm-ai-orb">AI</span></a></li>
                         <li class="atfm-notification">
-                            <button type="button" class="atfm-notification-button" title="Thông báo" aria-label="Thông báo">
+                            <button type="button" class="atfm-notification-button" title="Thông báo" aria-label="Thông báo" aria-expanded="false" aria-controls="atfm-notification-panel">
                                 <i class="ace-icon fa fa-bell" aria-hidden="true"></i>
+                                <span class="atfm-notification-badge" aria-label="0 thông báo chưa đọc" hidden>0</span>
                             </button>
+                            <div id="atfm-notification-panel" class="atfm-notification-panel" role="dialog" aria-label="Danh sách thông báo" hidden>
+                                <div class="atfm-notification-panel-header">
+                                    <h2 class="atfm-notification-panel-title">Thông báo</h2>
+                                    <button type="button" class="atfm-notification-read-all" disabled>Đọc hết</button>
+                                </div>
+                                <div class="atfm-notification-list" aria-live="polite">
+                                    <p class="atfm-notification-empty">Đang tải...</p>
+                                </div>
+                            </div>
                         </li>
 
                         <li >
@@ -1140,6 +1263,127 @@
                     initializeVerticalMenu();
                 }
             })();
+        </script>
+        <script type="text/javascript">
+            (function ($) {
+                var endpoint = '<%= ResolveUrl("~/Handlers/Notification.ashx") %>';
+                var requestInFlight = false;
+                var loadedOnce = false;
+                var $root = $('.atfm-notification');
+                var $button = $root.find('.atfm-notification-button');
+                var $badge = $root.find('.atfm-notification-badge');
+                var $panel = $root.find('.atfm-notification-panel');
+                var $list = $root.find('.atfm-notification-list');
+                var $readAll = $root.find('.atfm-notification-read-all');
+
+                function parseDate(value) {
+                    if (!value) return null;
+                    var match = /\/Date\((\d+)/.exec(value);
+                    var date = match ? new Date(parseInt(match[1], 10)) : new Date(value);
+                    return isNaN(date.getTime()) ? null : date;
+                }
+
+                function formatDate(value) {
+                    var date = parseDate(value);
+                    if (!date) return '';
+                    var pad = function (number) { return number < 10 ? '0' + number : number; };
+                    return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear()
+                        + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+                }
+
+                function setUnreadCount(value) {
+                    var count = Math.max(0, parseInt(value, 10) || 0);
+                    $badge.text(count > 99 ? '99+' : count)
+                        .attr('aria-label', count + ' thông báo chưa đọc')
+                        .prop('hidden', count === 0);
+                    $readAll.prop('disabled', count === 0);
+                }
+
+                function renderItems(items) {
+                    $list.empty();
+                    if (!items || !items.length) {
+                        $('<p>').addClass('atfm-notification-empty').text('Chưa có thông báo.').appendTo($list);
+                        return;
+                    }
+
+                    $.each(items.slice(0, 5), function (_, item) {
+                        var $entry = $('<article>').addClass('atfm-notification-item');
+                        if (parseInt(item.STATUS, 10) === 0) $entry.addClass('is-unread');
+                        $('<h3>').addClass('atfm-notification-item-title').text(item.TITLE || '').appendTo($entry);
+                        $('<p>').addClass('atfm-notification-item-content').text(item.CONTENT || '').appendTo($entry);
+                        $('<time>').addClass('atfm-notification-item-time')
+                            .attr('datetime', item.DATETIME || '')
+                            .text(formatDate(item.DATETIME))
+                            .appendTo($entry);
+                        $entry.appendTo($list);
+                    });
+                }
+
+                function loadNotifications(force) {
+                    if (requestInFlight || (!force && document.hidden)) return;
+                    requestInFlight = true;
+                    $.ajax({ url: endpoint, method: 'GET', cache: false, dataType: 'json' })
+                        .done(function (response) {
+                            if (!response || response.Code !== '00') return;
+                            loadedOnce = true;
+                            setUnreadCount(response.Value);
+                            renderItems(response.ListValue || []);
+                        })
+                        .fail(function () {
+                            if (!loadedOnce) {
+                                $list.empty();
+                                $('<p>').addClass('atfm-notification-empty').text('Không thể tải thông báo.').appendTo($list);
+                            }
+                        })
+                        .always(function () { requestInFlight = false; });
+                }
+
+                $button.on('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var willOpen = $panel.prop('hidden');
+                    $panel.prop('hidden', !willOpen);
+                    $button.attr('aria-expanded', willOpen ? 'true' : 'false');
+                    if (willOpen) loadNotifications(true);
+                });
+
+                $readAll.on('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if ($readAll.prop('disabled')) return;
+                    $readAll.prop('disabled', true);
+                    $.ajax({
+                        url: endpoint + '?action=markAllRead',
+                        method: 'POST',
+                        data: {},
+                        dataType: 'json',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).done(function (response) {
+                        if (response && response.Code === '00') {
+                            setUnreadCount(0);
+                            $list.find('.atfm-notification-item').removeClass('is-unread');
+                            loadNotifications(true);
+                        }
+                    }).fail(function () {
+                        loadNotifications(true);
+                    });
+                });
+
+                $(document).on('click', function (event) {
+                    if (!$root[0].contains(event.target)) {
+                        $panel.prop('hidden', true);
+                        $button.attr('aria-expanded', 'false');
+                    }
+                }).on('keydown', function (event) {
+                    if (event.key === 'Escape' || event.keyCode === 27) {
+                        $panel.prop('hidden', true);
+                        $button.attr('aria-expanded', 'false').focus();
+                    }
+                });
+
+                loadNotifications(true);
+                window.setInterval(function () { loadNotifications(false); }, 30000);
+            })(window.jQuery);
         </script>
         <script src="<%=Global.ApplicationPath%>/Scripts/ResponsiveTable.js"></script>
     </form>

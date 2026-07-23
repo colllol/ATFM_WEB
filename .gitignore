@@ -10,6 +10,10 @@
 *.cache
 *.log
 
+# Python runtime bytecode
+**/__pycache__/
+*.py[cod]
+
 # NuGet packages are restored by setup.ps1
 packages/
 

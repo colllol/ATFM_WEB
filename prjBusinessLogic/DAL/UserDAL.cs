@@ -505,6 +505,10 @@ namespace prjBusinessLogic
                 throw ex;
             }
         }
+        public DataTable GetAllMenu4User(int UserID)
+        {
+            return new clsResuftAPI().GetAllMenu4User("api/Users/GetAllMenu4User", UserID);
+        }
 
         public DataTable BindNavigationByUserID(int UserID)
         {

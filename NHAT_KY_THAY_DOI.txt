@@ -1250,7 +1250,6 @@ Quy ước:
 2026-07-22 | tools/TracksSyncPython/main.py | Chuẩn hóa stdout/stderr UTF-8 để bản CLI không dừng vì UnicodeEncodeError khi ghi log tiếng Việt trên Windows.
 2026-07-22 | tools/build; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe | Build lại GUI và CLI, chuyển toàn bộ đầu ra PyInstaller vào thư mục tools; kiểm tra CLI đọc đúng cấu hình PostgreSQL 172.29.187.90.
 2026-07-22 | build; dist/ATFM-TracksSync.exe; dist/ATFM-TracksSync-CLI.exe | Xóa đầu ra build cũ ở thư mục gốc sau khi xác nhận bản mới trong tools hoạt động.
-
 [22/07/2026] Hợp nhất dữ liệu mới từ agent/initial-atfm-import
 -------------------------------------------------------------
 
@@ -1329,3 +1328,59 @@ Quy ước:
     - Bổ sung tiền kiểm bảng backup chưa tồn tại, dung lượng tablespace tối thiểu 120% segment nguồn, yêu cầu dừng IIS/API/job và mẫu phục hồi thủ công từ bảng backup.
     - Số liệu khảo sát ngày 22/07/2026: nguồn 11.340.890 dòng, 9.941.629 dòng trước 2026, segment bảng khoảng 2.426 MB, index khoảng 944 MB và USERS còn khoảng 4.898 MB.
     - Đã kiểm thử cờ mặc định NO: script dừng tại ORA-20401 trước mọi DDL/DML và xác nhận T_DAY_FLIGHTS_BAK2026 chưa tồn tại; chưa thực thi CTAS hoặc DELETE trên database.
+2026-07-22 | tools/ATFMUnified/models.py; tools/ATFMUnified/scanner.py; tools/ATFMUnified/khh_importer.py; tools/ATFMUnified/slot_importer.py; tools/ATFMUnified/oracle_db.py | Đưa nguyên vẹn các module nghiệp vụ Excel Importer từ tool QLB vào project để bản hợp nhất có thể build và triển khai độc lập.
+2026-07-22 | tools/ATFMUnified/excel_panel.py | Chuyển cửa sổ Excel Importer thành panel nhúng, giữ nguyên luồng quét Excel, import Oracle, hàng đợi sự kiện và cơ chế hủy.
+2026-07-22 | tools/ATFMUnified/main.py | Tạo GUI hợp nhất hai panel độc lập; hỗ trợ chia đôi, thu gọn trái/phải, tiếp tục tác vụ khi panel bị ẩn và dừng an toàn khi đóng ứng dụng.
+2026-07-22 | tools/ATFMUnified/requirements.txt; tools/ATFMUnified/README.md | Bổ sung dependency và hướng dẫn vận hành/build tool hợp nhất.
+2026-07-22 | ATFM-Unified-Tools.spec; tools/build_unified_tool.ps1 | Thêm cấu hình PyInstaller và script build ATFM-Data-Tools.exe vào tools/build, tools/dist.
+2026-07-22 | tools/build/ATFM-Unified-Tools; tools/dist/ATFM-Data-Tools.exe | Build thành công bản hợp nhất one-file; kiểm tra EXE khởi động ổn định và không thoát sớm.
+2026-07-22 | tools/ATFMUnified/main.py | Sửa trạng thái thu gọn xóa ràng buộc uniform của lưới để panel còn lại mở rộng hết toàn bộ vùng trống.
+2026-07-22 | ATFM-Unified-Tools.spec | Loại bỏ hidden import/collect dư để giảm cảnh báo PyInstaller; psycopg binary tiếp tục được hook chính thức tự động đóng gói.
+2026-07-22 | tools/build/ATFM-Unified-Tools; tools/dist/ATFM-Data-Tools.exe | Build lại bản hợp nhất sau khi sửa giãn panel; EXE khởi động ổn định, kích thước 48.023.027 byte.
+2026-07-23 | tools/TracksSyncPython/main.py | Bổ sung LAT/LON từ public.tracks; bản ghi trùng CALLSIGN+DATE chỉ cập nhật tọa độ, bản ghi mới chèn đầy đủ dữ liệu và tọa độ; verify kiểm tra vị trí mới nhất.
+2026-07-23 | Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql | Thêm migration Oracle idempotent tạo hai cột LAT và LON kiểu NUMBER cho ATFM.T_TRACKS_LOG.
+2026-07-23 | tools/TracksSyncPython/README.md | Cập nhật luồng insert/update tọa độ, tự nâng cấp schema và hướng dẫn backfill bằng sync --full.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung kiểm thử hồi quy cho truyền tọa độ, nâng cấp schema, MERGE chỉ cập nhật LAT/LON và verify tọa độ.
+2026-07-23 | tools/TracksSyncPython/__pycache__; tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build lại ba bản EXE sau khi bổ sung LAT/LON; CLI check thành công và hai GUI khởi động ổn định.
+2026-07-23 | ATFM.T_TRACKS_LOG (Oracle) | Đã tạo LAT/LON kiểu NUMBER và backfill 421 dòng hiện có bằng CLI mới; tổng số dòng giữ nguyên 495, verify đạt 421 đúng, 0 sai/thiếu/thừa/trùng khóa.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md | Nâng verify chế độ all: khóa cũ chỉ so tọa độ theo yêu cầu giữ nguyên dữ liệu, khóa vừa insert được kiểm tra đầy đủ mọi cột.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung test tập khóa đã tồn tại, verify toàn bộ dòng insert, tọa độ null và nội dung CREATE TABLE LAT/LON.
+2026-07-23 | .gitignore | Bỏ qua thư mục __pycache__ và bytecode Python sinh tự động để không đưa artifact kiểm thử tạm vào commit.
+2026-07-23 | tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build lại lần cuối sau khi nâng verify; CLI all --full đạt 421 đúng, 0 sai/thiếu/thừa/trùng khóa và hai GUI khởi động ổn định.
+2026-07-23 | tools/TracksSyncPython/main.py; tests/test_tracks_sync.py | Đồng bộ phép nhận diện khóa đã tồn tại với MERGE theo so sánh exact CALLSIGN+DATE; bổ sung test lowercase, khoảng trắng và suffix.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql | Khi full sync, backfill trước rồi xóa log cũ còn thiếu tọa độ và đặt LAT/LON NOT NULL; cập nhật hướng dẫn vận hành.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung kiểm thử xóa dòng tọa độ null, ALTER LAT/LON NOT NULL và schema bảng mới không cho phép null.
+2026-07-23 | ATFM.T_TRACKS_LOG (Oracle) | Phân loại 74 dòng null gồm 65 khóa không còn trong public.tracks và 9 khóa ngoài FIR; full sync đã xóa các dòng không hợp lệ, còn 421/421 dòng đủ tọa độ và đặt LAT/LON NOT NULL.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung kiểm thử full cleanup chạy lặp an toàn khi LAT/LON đã có ràng buộc NOT NULL.
+2026-07-23 | tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build lại với cleanup full và LAT/LON NOT NULL; CLI lặp lại đạt 421 đúng, xóa 0 dòng, hai GUI khởi động ổn định.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql | Giới hạn an toàn full sync: không tự xóa log thiếu tọa độ; chỉ báo số lượng còn null và chỉ đặt NOT NULL khi dữ liệu đã đầy đủ.
+2026-07-23 | tests/test_tracks_sync.py | Thay test xóa dữ liệu bằng test giữ nguyên log null, đặt constraint khi đủ dữ liệu và chạy lặp idempotent.
+2026-07-23 | tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build bản cuối không có DELETE tự động; CLI all --full đạt 421 đúng, LAT/LON NOT NULL và hai GUI khởi động ổn định.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; tests/test_tracks_sync.py | Khi trùng CALLSIGN+DATE, cập nhật thêm UPDATED_AT_UTC cùng với LAT/LON; cập nhật tài liệu và test hồi quy.
+2026-07-23 | Database/Oracle/20260723_ATFM_MENU_PKG_get_all_menu_4_user.sql | Tạo package ATFM_MENU_PKG.GET_ALL_MENU_4_USER; một cursor duy nhất trả menu cha và menu con đang hiển thị theo quyền T_USERMENU của P_USER_ID, loại trùng và sắp xếp theo thứ tự menu. Script mới chỉ được kiểm tra source, chưa triển khai lên Oracle.
+2026-07-23 | ../GitHub/API/QLB.BusinessLogic/System/UsersDAL.cs | Thêm GetAllMenu4User gọi đúng một lần ATFM_MENU_PKG.GET_ALL_MENU_4_USER bằng bind P_USER_ID, không ghép chuỗi điều kiện SQL từ request.
+2026-07-23 | ../GitHub/API/QLB.API/Data/System/UsersRepository.cs; ../GitHub/API/QLB.API/Controllers/System/UsersController.cs | Thêm endpoint GET api/Users/GetAllMenu4User?UserID=...; kiểm tra UserID dương và trả toàn bộ menu cha/con trong một JSON response qua hợp đồng ReponseReportEntity hiện có.
+2026-07-23 | ../GitHub/API/QLB.API/Filters/ApiKeyAuthorizeAttribute.cs; ../GitHub/API/QLB.API/QLB.API.csproj; ../GitHub/API/QLB.API/Web.config | Bảo vệ riêng API menu bằng X-API-Key, so sánh hash thời gian cố định, fail closed khi chưa cấu hình; ưu tiên biến môi trường ATFM_API_KEY để không hard-code secret và đăng ký filter vào project build.
+2026-07-23 | prjBusinessLogic/ResultFormAPI/clsResuftAPI.cs; prjBusinessLogic/DAL/UserDAL.cs | Thêm client chuyên biệt GetAllMenu4User, gửi API-key từ ATFM_API_KEY hoặc appSettings, kiểm tra HTTP/response code và chuyển JSON ListValue thành DataTable cho tầng đăng nhập.
+2026-07-23 | prjApplication/Login.aspx.cs | Sau khi xác thực user active, tải menu trước khi phát FormsAuth cookie; gọi API tối đa một lần khi cache miss, lưu DataTable vào Session kèm owner UserID, xóa menu session cũ nếu đổi user, fail closed nếu response sai schema. Cache server theo UserID trong 30 phút cho phép đăng xuất/đăng nhập lại cùng user không gọi lại API nhưng không tái sử dụng session ID cũ.
+2026-07-23 | prjApplication/Masters/ATFM.Master.cs | Master chỉ đọc menu đã xác thực từ Session, kiểm tra owner UserID khớp identity, dựng cây cha/con và render HTML; thiếu/sai session thì đăng xuất và quay lại Login. Giữ nguyên loader nhiều API cũ dưới #if false để có thể phục hồi khi cần.
+2026-07-23 | ATFM.sln; ../GitHub/API/QLB.API.sln | Build Debug thành công cả web và API sau thay đổi; còn các cảnh báo legacy về Oracle AMD64/MSIL và biến không sử dụng, không có lỗi biên dịch.
+2026-07-23 | ATFM.T_MENUS; ATFM.T_USERMENU (Oracle, chỉ đọc) | Chạy trực tiếp truy vấn của package với user có nhiều quyền nhất để kiểm chứng hợp đồng: trả 142 dòng gồm 15 menu cha, 127 menu con và đủ 6 cột ID/MENUNAME/MENUORDER/PARRENTID/MENUURL/MENUICON; không thay đổi dữ liệu database.
+2026-07-23 | ATFM_MENU_PKG (Oracle) | Triển khai script 20260723_ATFM_MENU_PKG_get_all_menu_4_user.sql lên database; xác nhận PACKAGE và PACKAGE BODY đều VALID.
+2026-07-23 | prjApplication/Web.config (cấu hình local, skip-worktree); ../GitHub/API/QLB.API/Web.config | Cấu hình cùng API-key ngẫu nhiên cho APP và API local, không ghi giá trị khóa vào nhật ký/Git; gọi GET GetAllMenu4User với header X-API-Key đạt Code=00 và trả đủ 142 menu.
+2026-07-23 | Database/Oracle/20260723_T_NOTIFICATION_and_package.sql | Tạo script idempotent cho T_NOTIFICATION gồm ID identity tự tăng, TITLE, CONTENT, DATETIME, STATUS chỉ nhận 0/1 và index trạng thái/thời gian; tạo NOTIFICATION_PKG.GET_STATE trả tối đa 5 dòng mới nhất kèm tổng chưa đọc trong một cursor và MARK_ALL_READ cập nhật/commit toàn bộ STATUS=0 thành 1.
+2026-07-23 | ATFM.T_NOTIFICATION; ATFM.NOTIFICATION_PKG (Oracle) | Triển khai bảng, index và package lên database; xác nhận TABLE/PACKAGE/PACKAGE BODY đều VALID. Kiểm thử tích hợp chèn tạm 6 dòng: API trả 5 dòng mới nhất, UnreadCount=6, MarkAllRead cập nhật 6 dòng; đã xóa sạch 6 dòng test, bảng còn 0 dòng.
+2026-07-23 | ../GitHub/API/QLB.BusinessLogic/System/NotificationsDAL.cs; ../GitHub/API/QLB.BusinessLogic/QLB.BusinessLogic.csproj | Thêm DAL gọi một lần NOTIFICATION_PKG.GET_STATE cho mỗi lượt lấy trạng thái và gọi MARK_ALL_READ cho thao tác đọc hết; đăng ký file vào project API legacy.
+2026-07-23 | ../GitHub/API/QLB.API/Controllers/System/NotificationsController.cs; ../GitHub/API/QLB.API/Data/System/NotificationsRepository.cs; ../GitHub/API/QLB.API/QLB.API.csproj | Thêm GET api/Notifications/GetState trả ListValue tối đa 5, Value là tổng STATUS=0 và POST api/Notifications/MarkAllRead; cả hai được bảo vệ bằng ApiKeyAuthorize và không trả chi tiết exception ra client.
+2026-07-23 | prjApplication/Handlers/Notification.ashx; prjApplication/Handlers/Notification.ashx.cs; prjApplication/prjApplication.csproj | Thêm proxy same-origin có Forms Authentication + Session validation, giữ X-API-Key ở server, chặn POST không có X-Requested-With, tắt cache response và chuyển tiếp hai API notification cho trình duyệt; đăng ký handler vào project.
+2026-07-23 | prjApplication/Masters/ATFM.Master | Nâng icon chuông thành panel thông báo: badge bằng số STATUS=0 và ẩn khi bằng 0, hiển thị tối đa 5 mục gồm tiêu đề/nội dung/thời gian, đánh dấu trực quan dòng chưa đọc, nút Đọc hết, đóng khi click ngoài/Escape; gọi ngay và polling mỗi 30 giây, chống request chồng/tab ẩn, render bằng text để tránh stored XSS và hỗ trợ mobile.
+2026-07-23 | ATFM.sln; ../GitHub/API/QLB.API.sln | Build Debug thành công cả APP và API; endpoint rỗng trả Code=00/Unread=0/Count=0. Chưa kiểm tra pixel trực tiếp vì Orca computer-use runtime chưa được khởi động; build, API, database và DOM/JS đã được kiểm tra độc lập.
+
+[23/07/2026] Hợp nhất dữ liệu mới từ agent/initial-atfm-import
+-------------------------------------------------------------
+
+174. Toàn bộ project ATFM_WEB
+    - Fetch và merge 7 commit remote từ 5d4b5ee đến 2cccf48 vào nhánh local agent/initial-atfm-import, giữ toàn bộ 7 commit tối ưu Oracle cục bộ và không push.
+    - Nhận tool ATFM hợp nhất, cập nhật đồng bộ tọa độ LAT/LON, API/menu phân quyền tải một lần và trung tâm thông báo polling.
+    - Giải quyết xung đột NHAT_KY_THAY_DOI.txt bằng cách giữ nguyên đầy đủ lịch sử của cả local và remote.
+    - Bảo toàn để áp lại nguyên trạng thay đổi chưa commit của người dùng trong DaylyFlight.aspx và MessManagementAirPort.aspx sau merge.
