@@ -1776,14 +1776,10 @@
         </script>
         <script type="text/javascript">
             (function () {
-                // Để trống cho đến khi có API. Ví dụ: '/atfm/api/notifications'.
-                var NOTIFICATION_API_URL = '';
-
-                function escapeHtml(value) {
-                    var node = document.createElement('div');
-                    node.appendChild(document.createTextNode(value == null ? '' : String(value)));
-                    return node.innerHTML;
-                }
+                var NOTIFICATION_API_URL = '<%= ResolveUrl("~/Handlers/Notification.ashx") %>';
+                var notificationRequestInFlight = false;
+                var notificationsLoadedOnce = false;
+                var currentUnreadCount = 0;
 
                 function closeHeaderPopups(except) {
                     var actions = document.querySelectorAll('#navbar .atfm-header-action');
@@ -1794,66 +1790,84 @@
                     }
                 }
 
-                function renderNotifications(items) {
-                    var list = document.getElementById('atfmNotificationList');
-                    var badge = document.getElementById('atfmNotificationBadge');
-                    if (!list || !badge) return;
-
-                    items = Object.prototype.toString.call(items) === '[object Array]' ? items : [];
-                    var unread = 0;
-                    var html = '';
-                    for (var i = 0; i < items.length; i++) {
-                        var item = items[i] || {};
-                        if (!item.isRead) unread++;
-                        html += '<a class="atfm-notification-item' + (!item.isRead ? ' is-unread' : '') + '" href="' + escapeHtml(item.url || '#') + '">' +
-                            '<span class="atfm-notification-title">' + escapeHtml(item.title || 'Thông báo') + '</span>' +
-                            '<span class="atfm-notification-message">' + escapeHtml(item.message || '') + '</span>' +
-                            '<span class="atfm-notification-time">' + escapeHtml(item.createdAt || '') + '</span></a>';
-                    }
-
-                    list.innerHTML = html || '<div class="atfm-empty-notification"><i class="fa fa-bell-slash-o"></i>Chưa có thông báo</div>';
-                    badge.textContent = unread > 99 ? '99+' : String(unread);
-                    badge.classList.toggle('is-empty', unread === 0);
+                function parseNotificationDate(value) {
+                    if (!value) return null;
+                    var match = /\/Date\((\d+)/.exec(value);
+                    var date = match ? new Date(parseInt(match[1], 10)) : new Date(value);
+                    return isNaN(date.getTime()) ? null : date;
                 }
 
-                function loadNotifications() {
-                    if (!NOTIFICATION_API_URL) {
-                        renderNotifications([
-                            {
-                                title: 'Cập nhật kế hoạch bay',
-                                message: 'Kế hoạch bay VN123 đã được cập nhật thành công.',
-                                createdAt: '5 phút trước',
-                                url: '#',
-                                isRead: false
-                            },
-                            {
-                                title: 'Thông báo hệ thống',
-                                message: 'Hệ thống sẽ bảo trì định kỳ vào lúc 22:00 hôm nay.',
-                                createdAt: '30 phút trước',
-                                url: '#',
-                                isRead: false
-                            },
-                            {
-                                title: 'Phê duyệt chuyến bay',
-                                message: 'Yêu cầu cấp phép chuyến bay mới đang chờ xử lý.',
-                                createdAt: '2 giờ trước',
-                                url: '#',
-                                isRead: true
-                            }
-                        ]);
-                        return;
+                function formatNotificationDate(value) {
+                    var date = parseNotificationDate(value);
+                    if (!date) return '';
+                    var pad = function (number) { return number < 10 ? '0' + number : String(number); };
+                    return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear()
+                        + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+                }
+
+                function setUnreadCount(value) {
+                    var badge = document.getElementById('atfmNotificationBadge');
+                    var markRead = document.getElementById('atfmMarkAllRead');
+                    currentUnreadCount = Math.max(0, parseInt(value, 10) || 0);
+                    if (badge) {
+                        badge.textContent = currentUnreadCount > 99 ? '99+' : String(currentUnreadCount);
+                        badge.classList.toggle('is-empty', currentUnreadCount === 0);
+                        badge.setAttribute('aria-label', currentUnreadCount + ' thông báo chưa đọc');
+                    }
+                    if (markRead) markRead.disabled = currentUnreadCount === 0;
+                }
+
+                function appendNotificationText(parent, className, value) {
+                    var element = document.createElement('span');
+                    element.className = className;
+                    element.textContent = value == null ? '' : String(value);
+                    parent.appendChild(element);
+                }
+
+                function renderNotifications(items, unreadCount) {
+                    var list = document.getElementById('atfmNotificationList');
+                    if (!list) return;
+
+                    items = Object.prototype.toString.call(items) === '[object Array]' ? items : [];
+                    while (list.firstChild) list.removeChild(list.firstChild);
+                    for (var i = 0; i < items.length && i < 5; i++) {
+                        var item = items[i] || {};
+                        var entry = document.createElement('div');
+                        entry.className = 'atfm-notification-item' + (parseInt(item.STATUS, 10) === 0 ? ' is-unread' : '');
+                        appendNotificationText(entry, 'atfm-notification-title', item.TITLE || 'Thông báo');
+                        appendNotificationText(entry, 'atfm-notification-message', item.CONTENT || '');
+                        appendNotificationText(entry, 'atfm-notification-time', formatNotificationDate(item.DATETIME));
+                        list.appendChild(entry);
                     }
 
+                    if (!items.length) {
+                        var empty = document.createElement('div');
+                        empty.className = 'atfm-empty-notification';
+                        empty.textContent = 'Chưa có thông báo';
+                        list.appendChild(empty);
+                    }
+                    setUnreadCount(unreadCount);
+                }
+
+                function loadNotifications(force) {
+                    if (notificationRequestInFlight || (!force && document.hidden)) return;
+                    notificationRequestInFlight = true;
                     $.ajax({
                         type: 'GET',
                         url: NOTIFICATION_API_URL,
-                        dataType: 'json',
-                        success: function (response) {
-                            renderNotifications(response && response.data ? response.data : response);
-                        },
-                        error: function () {
-                            renderNotifications([]);
+                        cache: false,
+                        dataType: 'json'
+                    }).done(function (response) {
+                        if (!response || response.Code !== '00') return;
+                        notificationsLoadedOnce = true;
+                        renderNotifications(response.ListValue || [], response.Value);
+                    }).fail(function () {
+                        if (!notificationsLoadedOnce) {
+                            var list = document.getElementById('atfmNotificationList');
+                            if (list) list.textContent = 'Không thể tải thông báo.';
                         }
+                    }).always(function () {
+                        notificationRequestInFlight = false;
                     });
                 }
 
@@ -1870,6 +1884,7 @@
                                 closeHeaderPopups(action);
                                 action.classList.toggle('is-open', willOpen);
                                 toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                                if (willOpen && action.id === 'atfmNotification') loadNotifications(true);
                             });
                         })(actions[i]);
                     }
@@ -1882,18 +1897,36 @@
                     }
 
                     var markRead = document.getElementById('atfmMarkAllRead');
-                    if (markRead) markRead.addEventListener('click', function () {
-                        var unreadItems = document.querySelectorAll('#atfmNotificationList .is-unread');
-                        for (var j = 0; j < unreadItems.length; j++) unreadItems[j].classList.remove('is-unread');
-                        var badge = document.getElementById('atfmNotificationBadge');
-                        if (badge) { badge.textContent = '0'; badge.classList.add('is-empty'); }
+                    if (markRead) markRead.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (markRead.disabled || currentUnreadCount === 0) return;
+                        markRead.disabled = true;
+                        $.ajax({
+                            type: 'POST',
+                            url: NOTIFICATION_API_URL + '?action=markAllRead',
+                            dataType: 'json',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        }).done(function (response) {
+                            if (response && response.Code === '00') {
+                                setUnreadCount(0);
+                                var unreadItems = document.querySelectorAll('#atfmNotificationList .is-unread');
+                                for (var j = 0; j < unreadItems.length; j++) unreadItems[j].classList.remove('is-unread');
+                                loadNotifications(true);
+                            }
+                        }).fail(function () {
+                            loadNotifications(true);
+                        }).always(function () {
+                            markRead.disabled = currentUnreadCount === 0;
+                        });
                     });
 
                     document.addEventListener('click', function () { closeHeaderPopups(null); });
                     document.addEventListener('keydown', function (event) {
                         if (event.key === 'Escape' || event.keyCode === 27) closeHeaderPopups(null);
                     });
-                    loadNotifications();
+                    loadNotifications(true);
+                    window.setInterval(function () { loadNotifications(false); }, 30000);
                 }
 
                 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeHeaderPopups);
