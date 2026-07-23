@@ -82,8 +82,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="ShareDLL">
-      <HintPath>..\lib\ShareDLL.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\..\..\..\..\2020\QLB\atfm_ThaiBanGiao\atfm\API\QLB.BusinessLogic\bin\Debug\ShareDLL.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
