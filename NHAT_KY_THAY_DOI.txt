@@ -1220,3 +1220,22 @@ Quy ước:
 2026-07-22 | tools/ATFMUnified/main.py | Sửa trạng thái thu gọn xóa ràng buộc uniform của lưới để panel còn lại mở rộng hết toàn bộ vùng trống.
 2026-07-22 | ATFM-Unified-Tools.spec | Loại bỏ hidden import/collect dư để giảm cảnh báo PyInstaller; psycopg binary tiếp tục được hook chính thức tự động đóng gói.
 2026-07-22 | tools/build/ATFM-Unified-Tools; tools/dist/ATFM-Data-Tools.exe | Build lại bản hợp nhất sau khi sửa giãn panel; EXE khởi động ổn định, kích thước 48.023.027 byte.
+2026-07-23 | tools/TracksSyncPython/main.py | Bổ sung LAT/LON từ public.tracks; bản ghi trùng CALLSIGN+DATE chỉ cập nhật tọa độ, bản ghi mới chèn đầy đủ dữ liệu và tọa độ; verify kiểm tra vị trí mới nhất.
+2026-07-23 | Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql | Thêm migration Oracle idempotent tạo hai cột LAT và LON kiểu NUMBER cho ATFM.T_TRACKS_LOG.
+2026-07-23 | tools/TracksSyncPython/README.md | Cập nhật luồng insert/update tọa độ, tự nâng cấp schema và hướng dẫn backfill bằng sync --full.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung kiểm thử hồi quy cho truyền tọa độ, nâng cấp schema, MERGE chỉ cập nhật LAT/LON và verify tọa độ.
+2026-07-23 | tools/TracksSyncPython/__pycache__; tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build lại ba bản EXE sau khi bổ sung LAT/LON; CLI check thành công và hai GUI khởi động ổn định.
+2026-07-23 | ATFM.T_TRACKS_LOG (Oracle) | Đã tạo LAT/LON kiểu NUMBER và backfill 421 dòng hiện có bằng CLI mới; tổng số dòng giữ nguyên 495, verify đạt 421 đúng, 0 sai/thiếu/thừa/trùng khóa.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md | Nâng verify chế độ all: khóa cũ chỉ so tọa độ theo yêu cầu giữ nguyên dữ liệu, khóa vừa insert được kiểm tra đầy đủ mọi cột.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung test tập khóa đã tồn tại, verify toàn bộ dòng insert, tọa độ null và nội dung CREATE TABLE LAT/LON.
+2026-07-23 | .gitignore | Bỏ qua thư mục __pycache__ và bytecode Python sinh tự động để không đưa artifact kiểm thử tạm vào commit.
+2026-07-23 | tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build lại lần cuối sau khi nâng verify; CLI all --full đạt 421 đúng, 0 sai/thiếu/thừa/trùng khóa và hai GUI khởi động ổn định.
+2026-07-23 | tools/TracksSyncPython/main.py; tests/test_tracks_sync.py | Đồng bộ phép nhận diện khóa đã tồn tại với MERGE theo so sánh exact CALLSIGN+DATE; bổ sung test lowercase, khoảng trắng và suffix.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql | Khi full sync, backfill trước rồi xóa log cũ còn thiếu tọa độ và đặt LAT/LON NOT NULL; cập nhật hướng dẫn vận hành.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung kiểm thử xóa dòng tọa độ null, ALTER LAT/LON NOT NULL và schema bảng mới không cho phép null.
+2026-07-23 | ATFM.T_TRACKS_LOG (Oracle) | Phân loại 74 dòng null gồm 65 khóa không còn trong public.tracks và 9 khóa ngoài FIR; full sync đã xóa các dòng không hợp lệ, còn 421/421 dòng đủ tọa độ và đặt LAT/LON NOT NULL.
+2026-07-23 | tests/test_tracks_sync.py | Bổ sung kiểm thử full cleanup chạy lặp an toàn khi LAT/LON đã có ràng buộc NOT NULL.
+2026-07-23 | tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build lại với cleanup full và LAT/LON NOT NULL; CLI lặp lại đạt 421 đúng, xóa 0 dòng, hai GUI khởi động ổn định.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql | Giới hạn an toàn full sync: không tự xóa log thiếu tọa độ; chỉ báo số lượng còn null và chỉ đặt NOT NULL khi dữ liệu đã đầy đủ.
+2026-07-23 | tests/test_tracks_sync.py | Thay test xóa dữ liệu bằng test giữ nguyên log null, đặt constraint khi đủ dữ liệu và chạy lặp idempotent.
+2026-07-23 | tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build bản cuối không có DELETE tự động; CLI all --full đạt 421 đúng, LAT/LON NOT NULL và hai GUI khởi động ổn định.

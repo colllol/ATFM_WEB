@@ -2,13 +2,14 @@ import argparse
 import cryptography  # PyInstaller: oracledb thin mode can goi goi ma hoa nay dong.
 import getpass  # PyInstaller: oracledb nap dong module nay khi khoi tao.
 import json
+import math
 import os
 import sys
 import traceback
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 # python-oracledb Thin Mode nap cac nhanh cryptography nay bang import dong.
 # Import truc tiep de ban PyInstaller one-file dong goi du dependency.
@@ -29,6 +30,8 @@ class TrackCandidate:
     flight_date: str
     update_text: str
     status: int
+    lat: float
+    lon: float
 
 
 @dataclass
@@ -53,6 +56,8 @@ class LogRow:
     flight_date: str
     updated_at_utc: str
     permtype: str
+    lat: float
+    lon: float
 
 
 class MessageSink:
@@ -460,6 +465,8 @@ def read_tracks(cfg: Dict, polygons: Dict, sink: MessageSink, full: bool = False
                         flight_date=display_date(updated_dt),
                         update_text=updated_dt.strftime(WATERMARK_FORMAT),
                         status=status,
+                        lat=float(lat),
+                        lon=float(lon),
                     )
                 )
     sink.write(f"Doc public.tracks: {len(rows)} dong nam trong FIR can doi chieu.")
@@ -492,7 +499,9 @@ def ensure_schema(conn) -> None:
                     STATUS NUMBER(1),
                     "DATE" VARCHAR2(10),
                     UPDATED_AT_UTC VARCHAR2(19),
-                    PERMTYPE VARCHAR2(50)
+                    PERMTYPE VARCHAR2(50),
+                    LAT NUMBER NOT NULL,
+                    LON NUMBER NOT NULL
                 )';
             EXCEPTION
                 WHEN OTHERS THEN
@@ -526,6 +535,8 @@ def ensure_schema(conn) -> None:
         add_column_if_missing(cur, "T_TRACKS_LOG", "DATE", '"DATE" VARCHAR2(10)')
         add_column_if_missing(cur, "T_TRACKS_LOG", "UPDATED_AT_UTC", "UPDATED_AT_UTC VARCHAR2(19)")
         add_column_if_missing(cur, "T_TRACKS_LOG", "PERMTYPE", "PERMTYPE VARCHAR2(50)")
+        add_column_if_missing(cur, "T_TRACKS_LOG", "LAT", "LAT NUMBER")
+        add_column_if_missing(cur, "T_TRACKS_LOG", "LON", "LON NUMBER")
         ensure_unique_log_key(cur)
         conn.commit()
     finally:
@@ -539,6 +550,35 @@ def add_column_if_missing(cur, table_name: str, column_name: str, ddl: str) -> N
     )
     if int(cur.fetchone()[0]) == 0:
         cur.execute(f"ALTER TABLE {table_name} ADD ({ddl})")
+
+
+def enforce_coordinate_constraints(conn) -> int:
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT COUNT(*) FROM T_TRACKS_LOG WHERE LAT IS NULL OR LON IS NULL")
+        remaining_null = int(cur.fetchone()[0])
+        if remaining_null:
+            return remaining_null
+        cur.execute(
+            """
+            SELECT COLUMN_NAME, NULLABLE
+            FROM USER_TAB_COLUMNS
+            WHERE TABLE_NAME = 'T_TRACKS_LOG'
+              AND COLUMN_NAME IN ('LAT', 'LON')
+            """
+        )
+        nullable_columns = sorted(
+            column_name
+            for column_name, nullable in cur.fetchall()
+            if nullable == "Y" and column_name in ("LAT", "LON")
+        )
+        if nullable_columns:
+            definitions = ", ".join(f"{column_name} NOT NULL" for column_name in nullable_columns)
+            cur.execute(f"ALTER TABLE T_TRACKS_LOG MODIFY ({definitions})")
+            conn.commit()
+        return 0
+    finally:
+        cur.close()
 
 
 def ensure_unique_log_key(cur) -> None:
@@ -654,6 +694,21 @@ def row_to_flight(row: Sequence[object]) -> FlightInfo:
     )
 
 
+def read_existing_log_keys(conn, rows: Sequence[LogRow]) -> Set[Tuple[str, str]]:
+    requested = {(row.callsign, row.flight_date) for row in rows}
+    if not requested:
+        return set()
+    cur = conn.cursor()
+    try:
+        cur.execute('SELECT CALLSIGN, "DATE" FROM T_TRACKS_LOG')
+        return {
+            (as_text(callsign), as_text(flight_date))
+            for callsign, flight_date in cur.fetchall()
+        } & requested
+    finally:
+        cur.close()
+
+
 def merge_logs(conn, rows: Sequence[LogRow]) -> int:
     if not rows:
         return 0
@@ -668,7 +723,9 @@ def merge_logs(conn, rows: Sequence[LogRow]) -> int:
                    :eta ETA,
                    :status STATUS,
                    :updated_at_utc UPDATED_AT_UTC,
-                   :permtype PERMTYPE
+                   :permtype PERMTYPE,
+                   :lat LAT,
+                   :lon LON
             FROM DUAL
         ) source
         ON (
@@ -676,18 +733,13 @@ def merge_logs(conn, rows: Sequence[LogRow]) -> int:
             AND target."DATE" = source."DATE"
         )
         WHEN MATCHED THEN UPDATE SET
-            target.FROM_AIRP = source.FROM_AIRP,
-            target.TO_AIRP = source.TO_AIRP,
-            target.ETD = source.ETD,
-            target.ETA = source.ETA,
-            target.STATUS = source.STATUS,
-            target.UPDATED_AT_UTC = source.UPDATED_AT_UTC,
-            target.PERMTYPE = source.PERMTYPE
+            target.LAT = source.LAT,
+            target.LON = source.LON
         WHEN NOT MATCHED THEN INSERT
-            (TRLOG_ID, CALLSIGN, FROM_AIRP, TO_AIRP, ETD, ETA, STATUS, "DATE", UPDATED_AT_UTC, PERMTYPE)
+            (TRLOG_ID, CALLSIGN, FROM_AIRP, TO_AIRP, ETD, ETA, STATUS, "DATE", UPDATED_AT_UTC, PERMTYPE, LAT, LON)
         VALUES
             (T_TRACKS_LOG_SEQ.NEXTVAL, source.CALLSIGN, source.FROM_AIRP, source.TO_AIRP, source.ETD, source.ETA,
-             source.STATUS, source."DATE", source.UPDATED_AT_UTC, source.PERMTYPE)
+             source.STATUS, source."DATE", source.UPDATED_AT_UTC, source.PERMTYPE, source.LAT, source.LON)
     """
     cur = conn.cursor()
     try:
@@ -702,6 +754,8 @@ def merge_logs(conn, rows: Sequence[LogRow]) -> int:
                 "status": row.status,
                 "updated_at_utc": row.updated_at_utc,
                 "permtype": row.permtype,
+                "lat": row.lat,
+                "lon": row.lon,
             }
             for row in rows
         ]
@@ -729,6 +783,8 @@ def build_log_rows(candidates: Sequence[TrackCandidate], flights: Dict[Tuple[str
                 flight_date=item.flight_date,
                 updated_at_utc=item.update_text,
                 permtype=flight.permtype,
+                lat=item.lat,
+                lon=item.lon,
             )
         )
     return rows
@@ -755,20 +811,38 @@ def execute(mode: str, full: bool = False, sink: Optional[MessageSink] = None) -
         missing = len(keys) - len(flights)
         sink.write(f"Match T_DAY_FLIGHTS_GOINGON: {len(flights)}; khong match: {missing}.")
         if mode == "check":
-            sink.write(f"Kiem tra xong. Neu ghi se cap nhat {len(rows)} dong T_TRACKS_LOG.")
+            sink.write(f"Kiem tra xong. Neu ghi se them moi/cap nhat toa do {len(rows)} dong T_TRACKS_LOG.")
         elif mode == "sync":
             written = merge_logs(conn, rows)
+            if full:
+                remaining_null = enforce_coordinate_constraints(conn)
+                if remaining_null:
+                    sink.write(
+                        f"Con {remaining_null} dong log cu thieu LAT/LON; giu nguyen de xu ly co chu dich."
+                    )
+                else:
+                    sink.write("LAT/LON da day du va dat NOT NULL.")
             write_watermark(cfg, max_updated)
-            sink.write(f"Da ghi/cap nhat {written} dong T_TRACKS_LOG.")
+            sink.write(f"Da them moi/cap nhat toa do {written} dong T_TRACKS_LOG.")
             if max_updated:
                 sink.write(f"Watermark moi: {max_updated.strftime(WATERMARK_FORMAT)}")
         elif mode == "verify":
             verify_logs(conn, rows, sink)
         elif mode == "all":
             sink.write(f"[1/3] Kiem tra doi chieu xong: {len(rows)} dong hop le.")
+            existing_keys = read_existing_log_keys(conn, rows)
             written = merge_logs(conn, rows)
-            sink.write(f"[2/3] Da ghi/cap nhat {written} dong T_TRACKS_LOG.")
-            verify_logs(conn, rows, sink, report_extra=False)
+            sink.write(f"[2/3] Da them moi/cap nhat toa do {written} dong T_TRACKS_LOG.")
+            if full:
+                remaining_null = enforce_coordinate_constraints(conn)
+                if remaining_null:
+                    sink.write(
+                        f"Con {remaining_null} dong log cu thieu LAT/LON; giu nguyen de xu ly co chu dich."
+                    )
+                else:
+                    sink.write("LAT/LON da day du va dat NOT NULL.")
+            inserted_keys = {(row.callsign, row.flight_date) for row in rows} - existing_keys
+            verify_logs(conn, rows, sink, report_extra=False, full_row_keys=inserted_keys)
             sink.write("[3/3] Da xac minh cac dong trong chu ky.")
             write_watermark(cfg, max_updated)
             if max_updated:
@@ -777,30 +851,29 @@ def execute(mode: str, full: bool = False, sink: Optional[MessageSink] = None) -
             raise ValueError(f"Mode khong hop le: {mode}")
 
 
-def verify_logs(conn, expected: Sequence[LogRow], sink: MessageSink, report_extra: bool = True) -> None:
+def verify_logs(
+    conn,
+    expected: Sequence[LogRow],
+    sink: MessageSink,
+    report_extra: bool = True,
+    full_row_keys: Optional[Set[Tuple[str, str]]] = None,
+) -> None:
     if not expected:
         sink.write("Khong co dong du kien de xac minh.")
         return
     expected_map = {
-        (row.callsign, row.flight_date): (
-            row.from_airp,
-            row.to_airp,
-            row.etd,
-            row.eta,
-            str(row.status),
-            row.updated_at_utc,
-            row.permtype,
-        )
+        (row.callsign, row.flight_date): row
         for row in expected
     }
-    actual_map: Dict[Tuple[str, str], Tuple[str, ...]] = {}
+    full_row_keys = full_row_keys or set()
+    actual_map: Dict[Tuple[str, str], Tuple[object, ...]] = {}
     duplicate_count = 0
     cur = conn.cursor()
     try:
         cur.execute(
             '''
             SELECT CALLSIGN, "DATE", FROM_AIRP, TO_AIRP, ETD, ETA,
-                   STATUS, UPDATED_AT_UTC, PERMTYPE
+                   STATUS, UPDATED_AT_UTC, PERMTYPE, LAT, LON
             FROM T_TRACKS_LOG
             '''
         )
@@ -808,7 +881,7 @@ def verify_logs(conn, expected: Sequence[LogRow], sink: MessageSink, report_extr
             key = (normalize_callsign(found[0]), as_text(found[1]))
             if key in actual_map:
                 duplicate_count += 1
-            actual_map[key] = tuple(as_text(value) for value in found[2:])
+            actual_map[key] = tuple(found[2:])
     finally:
         cur.close()
 
@@ -817,13 +890,53 @@ def verify_logs(conn, expected: Sequence[LogRow], sink: MessageSink, report_extr
     missing_keys = expected_keys - actual_keys
     extra_keys = actual_keys - expected_keys if report_extra else set()
     common_keys = expected_keys & actual_keys
-    mismatch_keys = {key for key in common_keys if expected_map[key] != actual_map[key]}
+    mismatch_keys = {
+        key for key in common_keys
+        if not log_row_matches(expected_map[key], actual_map[key], key in full_row_keys)
+    }
     ok = len(common_keys) - len(mismatch_keys)
     sink.write(
         "Xac minh T_TRACKS_LOG: "
         f"dung {ok}, sai {len(mismatch_keys)}, thieu {len(missing_keys)}, "
         f"thua {len(extra_keys)}, trung khoa {duplicate_count}."
     )
+
+
+def as_optional_float(value: object) -> Optional[float]:
+    if value is None or not str(value).strip():
+        return None
+    return float(value)
+
+
+def coordinates_match(
+    expected: Tuple[float, float],
+    actual: Tuple[Optional[float], Optional[float]],
+) -> bool:
+    if actual[0] is None or actual[1] is None:
+        return False
+    return math.isclose(expected[0], actual[0], rel_tol=0.0, abs_tol=1e-9) and math.isclose(
+        expected[1], actual[1], rel_tol=0.0, abs_tol=1e-9
+    )
+
+
+def log_row_matches(expected: LogRow, actual: Sequence[object], compare_all: bool) -> bool:
+    if len(actual) != 9:
+        return False
+    actual_coordinates = (as_optional_float(actual[7]), as_optional_float(actual[8]))
+    if not coordinates_match((expected.lat, expected.lon), actual_coordinates):
+        return False
+    if not compare_all:
+        return True
+    expected_values = (
+        expected.from_airp,
+        expected.to_airp,
+        expected.etd,
+        expected.eta,
+        str(expected.status),
+        expected.updated_at_utc,
+        expected.permtype,
+    )
+    return expected_values == tuple(as_text(value) for value in actual[:7])
 
 
 def run_gui() -> None:

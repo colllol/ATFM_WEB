@@ -12,10 +12,20 @@ doi chieu voi `ATFM.T_DAY_FLIGHTS_GOINGON` va ghi ket qua vao `ATFM.T_TRACKS_LOG
 5. Chi ghi khi `CALLSIGN + DATE` match dung 1 dong trong `T_DAY_FLIGHTS_GOINGON`.
 6. `PERMTYPE = O/F` duoc phep thieu `FROM_AIRP` hoac `TO_AIRP`; `LD` va cac loai khac phai co du ca hai san bay.
 7. Neu nam VVHN hoac bien chung VVHN/VVHM thi `STATUS = 1`; neu nam VVHM thi `STATUS = 2`.
-8. Sau moi lan sync thanh cong, tool ghi watermark `yyyy-mm-dd hh:mm:ss` de lan sau chi doc ban ghi moi hon.
+8. Neu `CALLSIGN + DATE` da co trong `T_TRACKS_LOG`, tool chi cap nhat `LAT/LON`; neu chua co thi chen day du du lieu chuyen bay va toa do.
+9. Sau moi lan sync thanh cong, tool ghi watermark `yyyy-mm-dd hh:mm:ss` de lan sau chi doc ban ghi moi hon.
 
 Neu `T_DAY_FLIGHTS_GOINGON` co nhieu dong cung `FLIGHTNBR + FLIGHTDATE`, tool se bo qua dong do de tranh gan sai route.
-Bang log duoc bao ve bang unique index `CALLSIGN + DATE`; che do verify kiem tra ca dong sai, thieu, thua va khoa trung.
+Bang log duoc bao ve bang unique index `CALLSIGN + DATE`. Trong mot luot `all`, verify kiem tra toan bo
+du lieu cua dong vua insert va chi kiem tra toa do cua dong da ton tai; dong thieu, dong thua va khoa trung
+van duoc thong ke rieng.
+Lan chay dau sau khi nang cap se tu them hai cot `LAT NUMBER`, `LON NUMBER`. Co the chay script
+`Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql` neu can nang cap schema rieng truoc khi mo tool.
+
+De dien toa do cho cac dong log cu, chay `sync --full` hoac `all --full` mot lan sau khi nang cap. Tool backfill
+cac khoa con du dieu kien va dat hai cot thanh `NOT NULL` khi khong con dong thieu toa do. Neu van con log lich
+su khong the backfill, tool bao so luong va giu nguyen de tranh tu dong xoa du lieu. Cac lan chay thuong tiep
+tuc dung watermark.
 
 ## Chay bang Python
 
