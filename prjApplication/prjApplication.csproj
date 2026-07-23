@@ -2391,6 +2391,9 @@
       <DependentUpon>ATFM.Master</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="Handlers\Notification.ashx.cs">
+      <DependentUpon>Notification.ashx</DependentUpon>
+    </Compile>
     <Compile Include="Masters\ATFM.Master.designer.cs">
       <DependentUpon>ATFM.Master</DependentUpon>
     </Compile>
@@ -4231,6 +4234,7 @@
     <Content Include="ckeditor\plugins\insert_image\Web.config" />
     <Content Include="ckeditor\plugins\youtube\images\Thumbs.db" />
     <Content Include="Masters\ATFM.Master" />
+    <Content Include="Handlers\Notification.ashx" />
     <Content Include="Masters\ATFM_New.Master" />
     <Content Include="packages.config" />
     <Content Include="Masters\ATFMNoneMenu.Master" />
