@@ -1239,3 +1239,4 @@ Quy ước:
 2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql | Giới hạn an toàn full sync: không tự xóa log thiếu tọa độ; chỉ báo số lượng còn null và chỉ đặt NOT NULL khi dữ liệu đã đầy đủ.
 2026-07-23 | tests/test_tracks_sync.py | Thay test xóa dữ liệu bằng test giữ nguyên log null, đặt constraint khi đủ dữ liệu và chạy lặp idempotent.
 2026-07-23 | tools/build/ATFM-TracksSync; tools/build/ATFM-TracksSync-CLI; tools/build/ATFM-Unified-Tools; tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe | Build bản cuối không có DELETE tự động; CLI all --full đạt 421 đúng, LAT/LON NOT NULL và hai GUI khởi động ổn định.
+2026-07-23 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; tests/test_tracks_sync.py | Khi trùng CALLSIGN+DATE, cập nhật thêm UPDATED_AT_UTC cùng với LAT/LON; cập nhật tài liệu và test hồi quy.

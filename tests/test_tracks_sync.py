@@ -156,7 +156,7 @@ class TracksSyncTests(unittest.TestCase):
         self.assertEqual(0, conn.commits)
         self.assertTrue(cursor.closed)
 
-    def test_merge_updates_only_coordinates_and_inserts_all_fields(self):
+    def test_merge_updates_coordinates_and_timestamp_and_inserts_all_fields(self):
         cursor = FakeCursor()
         conn = FakeConnection(cursor)
         row = log_row()
@@ -168,13 +168,13 @@ class TracksSyncTests(unittest.TestCase):
         )[0]
         self.assertIn("target.LAT = source.LAT", matched_sql)
         self.assertIn("target.LON = source.LON", matched_sql)
+        self.assertIn("target.UPDATED_AT_UTC = source.UPDATED_AT_UTC", matched_sql)
         for preserved_column in (
             "target.FROM_AIRP",
             "target.TO_AIRP",
             "target.ETD",
             "target.ETA",
             "target.STATUS",
-            "target.UPDATED_AT_UTC",
             "target.PERMTYPE",
         ):
             self.assertNotIn(preserved_column, matched_sql)

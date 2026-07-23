@@ -734,7 +734,8 @@ def merge_logs(conn, rows: Sequence[LogRow]) -> int:
         )
         WHEN MATCHED THEN UPDATE SET
             target.LAT = source.LAT,
-            target.LON = source.LON
+            target.LON = source.LON,
+            target.UPDATED_AT_UTC = source.UPDATED_AT_UTC
         WHEN NOT MATCHED THEN INSERT
             (TRLOG_ID, CALLSIGN, FROM_AIRP, TO_AIRP, ETD, ETA, STATUS, "DATE", UPDATED_AT_UTC, PERMTYPE, LAT, LON)
         VALUES
