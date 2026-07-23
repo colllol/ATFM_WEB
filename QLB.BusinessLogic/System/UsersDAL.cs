@@ -83,6 +83,13 @@ namespace QLB.BusinessLogic
                 throw ex;
             }
         }
+        public DataSet GetAllMenu4User(Int64 UserId)
+        {
+            return new oDataProvider().ExecuteDatase(
+                "ATFM_MENU_PKG",
+                "GET_ALL_MENU_4_USER",
+                new OracleParameter("P_USER_ID", UserId));
+        }
         public int CreateUsers(Users obj)
         {
             //return DataProvider.Instance().InsertObjectReturn_Oracle(obj, "SYS_PKG.T_USERS_INSERT");

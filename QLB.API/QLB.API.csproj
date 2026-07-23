@@ -289,6 +289,7 @@
     <Compile Include="Controllers\System\UserGroupsController.cs" />
     <Compile Include="Controllers\System\UserMenuController.cs" />
     <Compile Include="Controllers\System\UsersController.cs" />
+    <Compile Include="Controllers\System\NotificationsController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Controllers\Via\ViaController.cs" />
     <Compile Include="Data\CancelFlights\CancelFlightsRepository.cs" />
@@ -353,10 +354,12 @@
     <Compile Include="Data\System\UserGroupsRepository.cs" />
     <Compile Include="Data\System\UserMenuRepository.cs" />
     <Compile Include="Data\System\UsersRepository.cs" />
+    <Compile Include="Data\System\NotificationsRepository.cs" />
     <Compile Include="Data\Thslb\SumPurQtRepository.cs" />
     <Compile Include="Data\Via\ViaRepository.cs" />
     <Compile Include="Filters\AddChallengeOnUnauthorizedResult.cs" />
     <Compile Include="Filters\AuthenticationFailureResult.cs" />
+    <Compile Include="Filters\ApiKeyAuthorizeAttribute.cs" />
     <Compile Include="Filters\HttpAuthenticationChallengeContextExtensions.cs" />
     <Compile Include="Filters\JwtAuthenticationAttribute.cs" />
     <Compile Include="Global.asax.cs">

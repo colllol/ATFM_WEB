@@ -477,6 +477,10 @@ namespace QLB.API.Data
         {
             return new ReponseEntityHelper().GetTable(new UsersDAL().GetMenu4User(UserID).Tables[0]);
         }
+        public ReponseReportEntity GetAllMenu4User(int UserID)
+        {
+            return new ReponseEntityHelper().GetTable(new UsersDAL().GetAllMenu4User(UserID).Tables[0]);
+        }
         public ReponseReportEntity BindGridMenuByUser(int ParrentID,int UserID)
         {
             return new ReponseEntityHelper().GetTable(new UsersDAL().BindGridMenuByUser(ParrentID,UserID).Tables[0]);

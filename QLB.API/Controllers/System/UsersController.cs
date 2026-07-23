@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using QLB.API.Data;
 using QLB.API.Models;
 using QLB.Info;
+using QLB.API.Filters;
 
 namespace QLB.API.Controllers
 {
@@ -101,6 +102,16 @@ namespace QLB.API.Controllers
         {
             return UsersRepository.GetMenu4User(UserID);
 
+        }
+
+        [AcceptVerbs("Get")]
+        [ApiKeyAuthorize]
+        public ReponseReportEntity GetAllMenu4User(int UserID)
+        {
+            if (UserID <= 0)
+                throw new HttpResponseException(global::System.Net.HttpStatusCode.BadRequest);
+
+            return UsersRepository.GetAllMenu4User(UserID);
         }
 
         [AcceptVerbs("Get")]

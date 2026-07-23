@@ -161,6 +161,7 @@
     <Compile Include="Static\RouteListDAL.cs" />
     <Compile Include="Static\SubdivisionDAL.cs" />
     <Compile Include="System\GroupMenuDAL.cs" />
+    <Compile Include="System\NotificationsDAL.cs" />
     <Compile Include="System\UserGroupsDAL.cs" />
     <Compile Include="System\UserMenuDAL.cs" />
     <Compile Include="System\UsersDAL.cs" />

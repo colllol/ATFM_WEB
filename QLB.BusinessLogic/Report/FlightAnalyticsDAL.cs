@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using Oracle.DataAccess.Client;
@@ -92,6 +93,20 @@ ORDER BY FLIGHTDATE,P_TYPE,FROM_AIRP,TO_AIRP";
         }
 
         private static string ReaderCell(OracleDataReader reader,string column){return reader[column]==DBNull.Value?String.Empty:Convert.ToString(reader[column]).Trim();}
+
+        private static string Cell(DataRow row, string column)
+        {
+            return row.Table.Columns.Contains(column) && row[column] != DBNull.Value ? Convert.ToString(row[column]).Trim() : String.Empty;
+        }
+
+        private static bool TryDate(DataRow row, string column, out DateTime value)
+        {
+            value = DateTime.MinValue;
+            if (!row.Table.Columns.Contains(column) || row[column] == DBNull.Value) return false;
+            if (row[column] is DateTime) { value = (DateTime)row[column]; return true; }
+            return DateTime.TryParse(Convert.ToString(row[column]), CultureInfo.InvariantCulture, DateTimeStyles.None, out value)
+                || DateTime.TryParse(Convert.ToString(row[column]), new CultureInfo("vi-VN"), DateTimeStyles.None, out value);
+        }
 
         private static List<FlightAnalyticsRow> Load(DateTime from,DateTime to,string oper,string airport,bool current,string permType)
         {
