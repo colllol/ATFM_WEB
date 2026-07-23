@@ -363,7 +363,7 @@
         }
 
         #navbar.atfm-header .atfm-notification-panel {
-            width: 360px;
+            width: 390px;
             max-width: calc(100vw - 24px);
         }
 
@@ -382,14 +382,33 @@
             color: #1686c8;
         }
 
+        #navbar.atfm-header .atfm-popup-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        #navbar.atfm-header .atfm-view-all,
         #navbar.atfm-header .atfm-mark-read {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             padding: 5px 0;
             border: 0;
             background: transparent;
             color: #2879b9;
             font-size: 12px;
             cursor: pointer;
+            text-decoration: none;
         }
+
+        #navbar.atfm-header .atfm-view-all:hover,
+        #navbar.atfm-header .atfm-view-all:focus,
+        #navbar.atfm-header .atfm-mark-read:hover,
+        #navbar.atfm-header .atfm-mark-read:focus { color: #145f98; }
+
+        #navbar.atfm-header .atfm-mark-read:disabled { color: #9aa8b5; cursor: default; }
 
         #navbar.atfm-header .atfm-notification-list {
             max-height: 390px;
@@ -398,7 +417,9 @@
         }
 
         #navbar.atfm-header .atfm-notification-item {
-            display: block;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
             margin-bottom: 8px;
             padding: 12px;
             border: 1px solid #e0e8f0;
@@ -407,12 +428,29 @@
             background: #f8fafc;
             color: #34495e;
             text-decoration: none;
+            transform: translateX(0);
+            transition: opacity .22s ease, transform .22s ease, max-height .26s ease,
+                margin .26s ease, padding .26s ease, border-width .26s ease;
+        }
+
+        #navbar.atfm-header .atfm-notification-item.is-removing {
+            overflow: hidden;
+            max-height: 0 !important;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-top-width: 0;
+            border-bottom-width: 0;
+            opacity: 0;
+            transform: translateX(18px);
         }
 
         #navbar.atfm-header .atfm-notification-item.is-unread {
             background: #f1f7fd;
             border-left-color: #1686c8;
         }
+
+        #navbar.atfm-header .atfm-notification-copy { min-width: 0; }
 
         #navbar.atfm-header .atfm-notification-title {
             display: block;
@@ -429,6 +467,28 @@
         }
 
         #navbar.atfm-header .atfm-notification-time { margin-top: 7px; color: #98a6b5; }
+
+        #navbar.atfm-header .atfm-notification-read-one {
+            align-self: end;
+            display: inline-flex;
+            min-width: 54px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 0 8px;
+            border: 1px solid #8fc3e4;
+            border-radius: 6px;
+            background: #fff;
+            color: #2078b2;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #navbar.atfm-header .atfm-notification-read-one:hover,
+        #navbar.atfm-header .atfm-notification-read-one:focus { border-color: #1686c8; background: #eaf5fc; }
+        #navbar.atfm-header .atfm-notification-read-one:disabled { opacity: .55; cursor: wait; }
 
         #navbar.atfm-header .atfm-empty-notification {
             padding: 46px 20px;
@@ -1370,7 +1430,10 @@
                             <div class="atfm-header-popup atfm-notification-panel" role="dialog" aria-label="Danh sách thông báo">
                                 <div class="atfm-popup-header">
                                     <span class="atfm-popup-title"><i class="fa fa-bell-o"></i>THÔNG BÁO</span>
-                                    <button type="button" class="atfm-mark-read" id="atfmMarkAllRead"><i class="fa fa-check"></i> Đọc hết</button>
+                                    <span class="atfm-popup-actions">
+                                        <a class="atfm-view-all" href="<%= ResolveUrl("~/SLOTS/Notifications.aspx") %>"><i class="fa fa-list"></i>Xem tất cả</a>
+                                        <button type="button" class="atfm-mark-read" id="atfmMarkAllRead"><i class="fa fa-check"></i>Đọc hết</button>
+                                    </span>
                                 </div>
                                 <div class="atfm-notification-list" id="atfmNotificationList">
                                     <div class="atfm-empty-notification"><i class="fa fa-bell-slash-o"></i>Chưa có thông báo</div>
@@ -1778,6 +1841,7 @@
             (function () {
                 var NOTIFICATION_API_URL = '<%= ResolveUrl("~/Handlers/Notification.ashx") %>';
                 var notificationRequestInFlight = false;
+                var notificationReloadPending = false;
                 var notificationsLoadedOnce = false;
                 var currentUnreadCount = 0;
 
@@ -1824,27 +1888,63 @@
                     parent.appendChild(element);
                 }
 
+                function renderEmptyNotification(list) {
+                    var empty = document.createElement('div');
+                    empty.className = 'atfm-empty-notification';
+                    empty.textContent = 'Chưa có thông báo chưa đọc';
+                    list.appendChild(empty);
+                }
+
+                function animateNotificationRemoval(elements, callback) {
+                    elements = Array.prototype.slice.call(elements || []);
+                    if (!elements.length) {
+                        if (callback) callback();
+                        return;
+                    }
+
+                    for (var i = 0; i < elements.length; i++) {
+                        elements[i].style.maxHeight = elements[i].offsetHeight + 'px';
+                    }
+                    window.setTimeout(function () {
+                        for (var j = 0; j < elements.length; j++) elements[j].classList.add('is-removing');
+                    }, 10);
+                    window.setTimeout(function () {
+                        for (var k = 0; k < elements.length; k++) {
+                            if (elements[k].parentNode) elements[k].parentNode.removeChild(elements[k]);
+                        }
+                        if (callback) callback();
+                    }, 280);
+                }
+
                 function renderNotifications(items, unreadCount) {
                     var list = document.getElementById('atfmNotificationList');
                     if (!list) return;
 
                     items = Object.prototype.toString.call(items) === '[object Array]' ? items : [];
                     while (list.firstChild) list.removeChild(list.firstChild);
-                    for (var i = 0; i < items.length && i < 5; i++) {
+                    for (var i = 0; i < items.length && i < 50; i++) {
                         var item = items[i] || {};
                         var entry = document.createElement('div');
-                        entry.className = 'atfm-notification-item' + (parseInt(item.STATUS, 10) === 0 ? ' is-unread' : '');
-                        appendNotificationText(entry, 'atfm-notification-title', item.TITLE || 'Thông báo');
-                        appendNotificationText(entry, 'atfm-notification-message', item.CONTENT || '');
-                        appendNotificationText(entry, 'atfm-notification-time', formatNotificationDate(item.DATETIME));
+                        entry.className = 'atfm-notification-item is-unread';
+                        entry.setAttribute('data-notification-id', item.ID);
+                        var copy = document.createElement('div');
+                        copy.className = 'atfm-notification-copy';
+                        appendNotificationText(copy, 'atfm-notification-title', item.TITLE || 'Thông báo');
+                        appendNotificationText(copy, 'atfm-notification-message', item.CONTENT || '');
+                        appendNotificationText(copy, 'atfm-notification-time', formatNotificationDate(item.DATETIME));
+                        entry.appendChild(copy);
+                        var readButton = document.createElement('button');
+                        readButton.type = 'button';
+                        readButton.className = 'atfm-notification-read-one';
+                        readButton.setAttribute('data-notification-id', item.ID);
+                        readButton.setAttribute('title', 'Đánh dấu đã đọc');
+                        readButton.innerHTML = '<i class="fa fa-check" aria-hidden="true"></i><span>Đọc</span>';
+                        entry.appendChild(readButton);
                         list.appendChild(entry);
                     }
 
                     if (!items.length) {
-                        var empty = document.createElement('div');
-                        empty.className = 'atfm-empty-notification';
-                        empty.textContent = 'Chưa có thông báo';
-                        list.appendChild(empty);
+                        renderEmptyNotification(list);
                     }
                     setUnreadCount(unreadCount);
                 }
@@ -1862,7 +1962,11 @@
                 }
 
                 function loadNotifications(force) {
-                    if (notificationRequestInFlight || (!force && document.hidden)) return;
+                    if (notificationRequestInFlight) {
+                        notificationReloadPending = true;
+                        return;
+                    }
+                    if (!force && document.hidden) return;
                     notificationRequestInFlight = true;
                     sendNotificationRequest({
                         type: 'GET',
@@ -1880,6 +1984,10 @@
                         }
                     }).always(function () {
                         notificationRequestInFlight = false;
+                        if (notificationReloadPending) {
+                            notificationReloadPending = false;
+                            loadNotifications(true);
+                        }
                     });
                 }
 
@@ -1909,6 +2017,42 @@
                     }
 
                     var markRead = document.getElementById('atfmMarkAllRead');
+                    var notificationList = document.getElementById('atfmNotificationList');
+                    if (notificationList) notificationList.addEventListener('click', function (event) {
+                        var button = event.target;
+                        while (button && button !== notificationList && !button.classList.contains('atfm-notification-read-one')) {
+                            button = button.parentNode;
+                        }
+                        if (!button || button === notificationList || button.disabled) return;
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var id = parseInt(button.getAttribute('data-notification-id'), 10);
+                        if (!id) return;
+                        button.disabled = true;
+                        sendNotificationRequest({
+                            type: 'POST',
+                            url: NOTIFICATION_API_URL + '?action=markRead&id=' + encodeURIComponent(id),
+                            dataType: 'json',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        }).done(function (response) {
+                            if (!response || response.Code !== '00') {
+                                button.disabled = false;
+                                return;
+                            }
+                            setUnreadCount(Math.max(0, currentUnreadCount - 1));
+                            var entry = button.parentNode;
+                            animateNotificationRemoval([entry], function () {
+                                if (!notificationList.querySelector('.atfm-notification-item')) {
+                                    renderEmptyNotification(notificationList);
+                                }
+                                loadNotifications(true);
+                            });
+                        }).fail(function () {
+                            button.disabled = false;
+                        });
+                    });
+
                     if (markRead) markRead.addEventListener('click', function (event) {
                         event.preventDefault();
                         event.stopPropagation();
@@ -1922,9 +2066,11 @@
                         }).done(function (response) {
                             if (response && response.Code === '00') {
                                 setUnreadCount(0);
-                                var unreadItems = document.querySelectorAll('#atfmNotificationList .is-unread');
-                                for (var j = 0; j < unreadItems.length; j++) unreadItems[j].classList.remove('is-unread');
-                                loadNotifications(true);
+                                var unreadItems = document.querySelectorAll('#atfmNotificationList .atfm-notification-item');
+                                animateNotificationRemoval(unreadItems, function () {
+                                    renderNotifications([], 0);
+                                    loadNotifications(true);
+                                });
                             }
                         }).fail(function () {
                             loadNotifications(true);
@@ -1937,6 +2083,7 @@
                     document.addEventListener('keydown', function (event) {
                         if (event.key === 'Escape' || event.keyCode === 27) closeHeaderPopups(null);
                     });
+                    document.addEventListener('atfm:notifications-changed', function () { loadNotifications(true); });
                     loadNotifications(true);
                     window.setInterval(function () { loadNotifications(false); }, 30000);
                 }

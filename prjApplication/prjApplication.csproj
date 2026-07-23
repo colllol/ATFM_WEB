@@ -1379,6 +1379,9 @@
     <Content Include="SLOTS\FlightTrackingMap.js" />
     <Content Include="SLOTS\KHH.aspx" />
     <Content Include="SLOTS\CreateSlotComparisonTables.sql" />
+    <Content Include="SLOTS\Notifications.aspx" />
+    <Content Include="SLOTS\Notifications.css" />
+    <Content Include="SLOTS\Notifications.js" />
     <Content Include="SLOTS\SlotComparison.aspx" />
     <Content Include="SLOTS\SlotComparison.css" />
     <Content Include="SLOTS\SlotComparisonPanel.ascx" />
@@ -2126,6 +2129,13 @@
     <Compile Include="SLOTS\SlotsDataProvider.cs" />
     <Compile Include="SLOTS\FlightTrackingMap.aspx.cs">
       <DependentUpon>FlightTrackingMap.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SLOTS\Notifications.aspx.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SLOTS\Notifications.aspx.designer.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
     </Compile>
     <Compile Include="SLOTS\SlotComparisonService.cs" />
     <Compile Include="SLOTS\SlotComparison.aspx.cs">

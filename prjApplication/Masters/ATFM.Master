@@ -752,7 +752,18 @@
             font-weight: 700;
         }
 
+        .atfm-notification-panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .atfm-notification-view-all,
         .atfm-notification-read-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             padding: 5px 8px;
             border: 0;
             background: transparent;
@@ -760,6 +771,7 @@
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
+            text-decoration: none;
         }
 
         .atfm-notification-read-all:disabled {
@@ -773,8 +785,24 @@
         }
 
         .atfm-notification-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 9px;
             padding: 11px 13px;
             border-bottom: 1px solid #edf1f4;
+            transform: translateX(0);
+            transition: opacity .22s ease, transform .22s ease, max-height .26s ease,
+                padding .26s ease, border-width .26s ease;
+        }
+
+        .atfm-notification-item.is-removing {
+            overflow: hidden;
+            max-height: 0 !important;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-bottom-width: 0;
+            opacity: 0;
+            transform: translateX(18px);
         }
 
         .atfm-notification-item.is-unread {
@@ -782,6 +810,28 @@
             background: #f3f9fd;
             padding-left: 10px;
         }
+
+        .atfm-notification-copy { min-width: 0; }
+
+        .atfm-notification-read-one {
+            align-self: end;
+            display: inline-flex;
+            min-width: 54px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 0 8px;
+            border: 1px solid #91c3df;
+            border-radius: 6px;
+            background: #fff;
+            color: #1976aa;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .atfm-notification-read-one:disabled { opacity: .55; cursor: wait; }
 
         .atfm-notification-item-title {
             margin: 0 0 4px;
@@ -902,7 +952,10 @@
                             <div id="atfm-notification-panel" class="atfm-notification-panel" role="dialog" aria-label="Danh sách thông báo" hidden>
                                 <div class="atfm-notification-panel-header">
                                     <h2 class="atfm-notification-panel-title">Thông báo</h2>
-                                    <button type="button" class="atfm-notification-read-all" disabled>Đọc hết</button>
+                                    <div class="atfm-notification-panel-actions">
+                                        <a class="atfm-notification-view-all" href="<%= ResolveUrl("~/SLOTS/Notifications.aspx") %>"><i class="fa fa-list"></i>Xem tất cả</a>
+                                        <button type="button" class="atfm-notification-read-all" disabled><i class="fa fa-check"></i>Đọc hết</button>
+                                    </div>
                                 </div>
                                 <div class="atfm-notification-list" aria-live="polite">
                                     <p class="atfm-notification-empty">Đang tải...</p>
@@ -1268,6 +1321,7 @@
             (function ($) {
                 var endpoint = '<%= ResolveUrl("~/Handlers/Notification.ashx") %>';
                 var requestInFlight = false;
+                var reloadPending = false;
                 var loadedOnce = false;
                 var $root = $('.atfm-notification');
                 var $button = $root.find('.atfm-notification-button');
@@ -1275,6 +1329,7 @@
                 var $panel = $root.find('.atfm-notification-panel');
                 var $list = $root.find('.atfm-notification-list');
                 var $readAll = $root.find('.atfm-notification-read-all');
+                var currentUnreadCount = 0;
 
                 function parseDate(value) {
                     if (!value) return null;
@@ -1292,11 +1347,11 @@
                 }
 
                 function setUnreadCount(value) {
-                    var count = Math.max(0, parseInt(value, 10) || 0);
-                    $badge.text(count > 99 ? '99+' : count)
-                        .attr('aria-label', count + ' thông báo chưa đọc')
-                        .prop('hidden', count === 0);
-                    $readAll.prop('disabled', count === 0);
+                    currentUnreadCount = Math.max(0, parseInt(value, 10) || 0);
+                    $badge.text(currentUnreadCount > 99 ? '99+' : currentUnreadCount)
+                        .attr('aria-label', currentUnreadCount + ' thông báo chưa đọc')
+                        .prop('hidden', currentUnreadCount === 0);
+                    $readAll.prop('disabled', currentUnreadCount === 0);
                 }
 
                 function renderItems(items) {
@@ -1306,23 +1361,50 @@
                         return;
                     }
 
-                    $.each(items.slice(0, 5), function (_, item) {
-                        var $entry = $('<article>').addClass('atfm-notification-item');
-                        if (parseInt(item.STATUS, 10) === 0) $entry.addClass('is-unread');
-                        $('<h3>').addClass('atfm-notification-item-title').text(item.TITLE || '').appendTo($entry);
-                        $('<p>').addClass('atfm-notification-item-content').text(item.CONTENT || '').appendTo($entry);
+                    $.each(items.slice(0, 50), function (_, item) {
+                        var $entry = $('<article>').addClass('atfm-notification-item is-unread')
+                            .attr('data-notification-id', item.ID);
+                        var $copy = $('<div>').addClass('atfm-notification-copy').appendTo($entry);
+                        $('<h3>').addClass('atfm-notification-item-title').text(item.TITLE || '').appendTo($copy);
+                        $('<p>').addClass('atfm-notification-item-content').text(item.CONTENT || '').appendTo($copy);
                         $('<time>').addClass('atfm-notification-item-time')
                             .attr('datetime', item.DATETIME || '')
                             .text(formatDate(item.DATETIME))
+                            .appendTo($copy);
+                        $('<button type="button"><i class="fa fa-check" aria-hidden="true"></i><span>Đọc</span></button>')
+                            .addClass('atfm-notification-read-one')
+                            .attr('data-notification-id', item.ID)
+                            .attr('title', 'Đánh dấu đã đọc')
                             .appendTo($entry);
                         $entry.appendTo($list);
                     });
                 }
 
+                function notificationAjax(options) {
+                    return $.ajax($.extend({}, options, { global: false }));
+                }
+
+                function animateRemoval($items, callback) {
+                    if (!$items.length) {
+                        if (callback) callback();
+                        return;
+                    }
+                    $items.each(function () { this.style.maxHeight = this.offsetHeight + 'px'; });
+                    window.setTimeout(function () { $items.addClass('is-removing'); }, 10);
+                    window.setTimeout(function () {
+                        $items.remove();
+                        if (callback) callback();
+                    }, 280);
+                }
+
                 function loadNotifications(force) {
-                    if (requestInFlight || (!force && document.hidden)) return;
+                    if (requestInFlight) {
+                        reloadPending = true;
+                        return;
+                    }
+                    if (!force && document.hidden) return;
                     requestInFlight = true;
-                    $.ajax({ url: endpoint, method: 'GET', cache: false, dataType: 'json' })
+                    notificationAjax({ url: endpoint, method: 'GET', cache: false, dataType: 'json' })
                         .done(function (response) {
                             if (!response || response.Code !== '00') return;
                             loadedOnce = true;
@@ -1335,7 +1417,13 @@
                                 $('<p>').addClass('atfm-notification-empty').text('Không thể tải thông báo.').appendTo($list);
                             }
                         })
-                        .always(function () { requestInFlight = false; });
+                        .always(function () {
+                            requestInFlight = false;
+                            if (reloadPending) {
+                                reloadPending = false;
+                                loadNotifications(true);
+                            }
+                        });
                 }
 
                 $button.on('click', function (event) {
@@ -1347,12 +1435,39 @@
                     if (willOpen) loadNotifications(true);
                 });
 
+                $list.on('click', '.atfm-notification-read-one', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var $readButton = $(this);
+                    var id = parseInt($readButton.attr('data-notification-id'), 10);
+                    if (!id || $readButton.prop('disabled')) return;
+                    $readButton.prop('disabled', true);
+                    notificationAjax({
+                        url: endpoint + '?action=markRead&id=' + encodeURIComponent(id),
+                        method: 'POST',
+                        dataType: 'json',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).done(function (response) {
+                        if (!response || response.Code !== '00') {
+                            $readButton.prop('disabled', false);
+                            return;
+                        }
+                        setUnreadCount(Math.max(0, currentUnreadCount - 1));
+                        animateRemoval($readButton.closest('.atfm-notification-item'), function () {
+                            if (!$list.find('.atfm-notification-item').length) {
+                                $('<p>').addClass('atfm-notification-empty').text('Chưa có thông báo chưa đọc.').appendTo($list);
+                            }
+                            loadNotifications(true);
+                        });
+                    }).fail(function () { $readButton.prop('disabled', false); });
+                });
+
                 $readAll.on('click', function (event) {
                     event.preventDefault();
                     event.stopPropagation();
                     if ($readAll.prop('disabled')) return;
                     $readAll.prop('disabled', true);
-                    $.ajax({
+                    notificationAjax({
                         url: endpoint + '?action=markAllRead',
                         method: 'POST',
                         data: {},
@@ -1361,8 +1476,10 @@
                     }).done(function (response) {
                         if (response && response.Code === '00') {
                             setUnreadCount(0);
-                            $list.find('.atfm-notification-item').removeClass('is-unread');
-                            loadNotifications(true);
+                            animateRemoval($list.find('.atfm-notification-item'), function () {
+                                renderItems([]);
+                                loadNotifications(true);
+                            });
                         }
                     }).fail(function () {
                         loadNotifications(true);
@@ -1380,6 +1497,8 @@
                         $button.attr('aria-expanded', 'false').focus();
                     }
                 });
+
+                document.addEventListener('atfm:notifications-changed', function () { loadNotifications(true); });
 
                 loadNotifications(true);
                 window.setInterval(function () { loadNotifications(false); }, 30000);
