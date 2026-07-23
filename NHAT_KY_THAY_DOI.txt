@@ -1420,3 +1420,8 @@ Quy ước:
     - Merge origin/api tại 2eed8f2 với endpoint notification và commit local, tạo merge commit 5656884; giữ toàn bộ lịch sử hai phía.
     - Sửa cấu hình project sau merge: bỏ publish profile không tồn tại, phục hồi URL local 50590 và đưa ShareDLL từ đường dẫn tuyệt đối của máy khác về lib/ShareDLL.dll.
     - Build Debug WEB/API thành công; JavaScript/XML hợp lệ. API local xác nhận GetState và GetPage Code=00, tổng 306 dòng, trang đầu 100 dòng; MarkRead id=0 trả HTTP 400 đúng validation thay vì 404.
+
+178. ../GitHub/API nhánh api (chuẩn bị push public)
+    - Do repository public, giữ commit a7fd909 có credential/artifact máy cá nhân trong nhánh backup/api-with-local-artifacts-20260723 và không đưa commit này lên remote.
+    - Tạo lại nhánh api sạch từ origin/api 2eed8f2, áp endpoint notification thành ef120eb và sửa project portable thành d5bf761; bổ sung lib/ShareDLL.dll cần thiết để bản clone mới build được.
+    - Build lại QLB.API.sln thành công trên nhánh sạch; chỉ còn các warning legacy về kiến trúc Oracle và mã chưa dùng.
