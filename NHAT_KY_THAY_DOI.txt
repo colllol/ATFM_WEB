@@ -1384,3 +1384,10 @@ Quy ước:
     - Nhận tool ATFM hợp nhất, cập nhật đồng bộ tọa độ LAT/LON, API/menu phân quyền tải một lần và trung tâm thông báo polling.
     - Giải quyết xung đột NHAT_KY_THAY_DOI.txt bằng cách giữ nguyên đầy đủ lịch sử của cả local và remote.
     - Bảo toàn để áp lại nguyên trạng thay đổi chưa commit của người dùng trong DaylyFlight.aspx và MessManagementAirPort.aspx sau merge.
+
+[23/07/2026] Sửa cơ chế đọc ATFM API key
+-------------------------------------------------------------
+
+175. prjBusinessLogic/ResultFormAPI/clsResuftAPI.cs; prjApplication/Handlers/Notification.ashx.cs
+    - Ưu tiên đọc biến môi trường ATFM_API_KEY; nếu tiến trình IIS không có biến này thì đọc đúng appSettings ATFM_API_KEY, sau đó mới tương thích ngược với khóa APIKey.
+    - Loại bỏ khoảng trắng đầu/cuối trước khi gửi header X-API-Key.

@@ -83,9 +83,11 @@ namespace prjApplication.Handlers
 
             string apiKey = Environment.GetEnvironmentVariable("ATFM_API_KEY");
             if (string.IsNullOrWhiteSpace(apiKey))
+                apiKey = ConfigurationManager.AppSettings["ATFM_API_KEY"];
+            if (string.IsNullOrWhiteSpace(apiKey))
                 apiKey = ConfigurationManager.AppSettings["APIKey"];
             if (!string.IsNullOrWhiteSpace(apiKey))
-                client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+                client.DefaultRequestHeaders.Add("X-API-Key", apiKey.Trim());
             return client;
         }
 
