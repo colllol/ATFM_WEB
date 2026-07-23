@@ -89,7 +89,7 @@
         </div>
 
  </div>
-    <div class="col-xs-1 w3-example" style="  overflow-y: scroll;height:calc(100% - 50px);" >
+    <div class="col-xs-1 w3-example" style="  overflow-y: scroll;height:calc(100% - 50px);width:18.33%" >
         <div class="scroll-area1">
            <div class="table-responsive">
            <table id="tblSource" class="table table-bordered table-responsive">
@@ -125,7 +125,7 @@
     
        </div>
 
-            <div class="col-xs-1 w3-example" style="  overflow-y: scroll;height:calc(100% - 50px);" >
+            <div class="col-xs-1 w3-example" style="  overflow-y: scroll;height:calc(100% - 50px);width:18.33%" >
         <div class="scroll-area1">
            <div class="table-responsive">
            <table id="tblSource" class="table table-bordered table-responsive">
@@ -163,7 +163,7 @@
     
        </div>
 
-            <div class="col-xs-1 w3-example" style="  overflow-y: scroll;height:calc(100% - 50px);" >
+            <div class="col-xs-1 w3-example" style="  overflow-y: scroll;height:calc(100% - 50px);width:18.33%" >
         <div class="scroll-area1">
            <div class="table-responsive">
            <table id="tblSource" class="table table-bordered table-responsive">
