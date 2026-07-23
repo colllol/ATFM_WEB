@@ -1415,3 +1415,8 @@ Quy ước:
     - Merge origin/agent/initial-atfm-import tại fc995ac vào nhánh local, giữ đầy đủ lịch sử tối ưu Oracle, menu/API-key, các cập nhật giao diện nghiệp vụ và chức năng notification mới.
     - Giải quyết xung đột NHAT_KY_THAY_DOI.txt bằng cách giữ nguyên nội dung của cả hai phía; Notification.ashx.cs và prjApplication.csproj được Git hợp nhất tự động và sẽ được build kiểm tra trước khi push.
     - Web.config cùng ImportDynamic/oDataProvider.cs chứa cấu hình máy cục bộ được bảo toàn ngoài commit merge, không đưa endpoint/credential local lên remote.
+
+177. ATFM.sln; ../GitHub/API/QLB.API.sln; project API
+    - Merge origin/api tại 2eed8f2 với endpoint notification và commit local, tạo merge commit 5656884; giữ toàn bộ lịch sử hai phía.
+    - Sửa cấu hình project sau merge: bỏ publish profile không tồn tại, phục hồi URL local 50590 và đưa ShareDLL từ đường dẫn tuyệt đối của máy khác về lib/ShareDLL.dll.
+    - Build Debug WEB/API thành công; JavaScript/XML hợp lệ. API local xác nhận GetState và GetPage Code=00, tổng 306 dòng, trang đầu 100 dòng; MarkRead id=0 trả HTTP 400 đúng validation thay vì 404.
