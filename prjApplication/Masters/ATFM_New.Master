@@ -1849,10 +1849,22 @@
                     setUnreadCount(unreadCount);
                 }
 
+                function sendNotificationRequest(options) {
+                    options = $.extend({}, options, {
+                        global: false,
+                        xhr: function () {
+                            var xhr = $.ajaxSettings.xhr();
+                            xhr.atfmSuppressLoading = true;
+                            return xhr;
+                        }
+                    });
+                    return $.ajax(options);
+                }
+
                 function loadNotifications(force) {
                     if (notificationRequestInFlight || (!force && document.hidden)) return;
                     notificationRequestInFlight = true;
-                    $.ajax({
+                    sendNotificationRequest({
                         type: 'GET',
                         url: NOTIFICATION_API_URL,
                         cache: false,
@@ -1902,7 +1914,7 @@
                         event.stopPropagation();
                         if (markRead.disabled || currentUnreadCount === 0) return;
                         markRead.disabled = true;
-                        $.ajax({
+                        sendNotificationRequest({
                             type: 'POST',
                             url: NOTIFICATION_API_URL + '?action=markAllRead',
                             dataType: 'json',
@@ -2087,7 +2099,7 @@
                 if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
                     var originalXhrSend = window.XMLHttpRequest.prototype.send;
                     window.XMLHttpRequest.prototype.send = function () {
-                        if (shouldSuppressLoading()) return originalXhrSend.apply(this, arguments);
+                        if (this.atfmSuppressLoading === true || shouldSuppressLoading()) return originalXhrSend.apply(this, arguments);
                         showLoading('Đang tải dữ liệu...');
                         var xhr = this;
                         var finishLoading = function () { xhr.removeEventListener('loadend', finishLoading, false); hideLoading(true); };
