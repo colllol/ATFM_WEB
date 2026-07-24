@@ -294,11 +294,23 @@
             var toValue = new Date(to.value + 'T00:00:00');
             var dayCount = Math.round((toValue - fromValue) / 86400000) + 1;
             var trendPeriod = dayCount > 62 ? 'month' : 'day';
-            post(window.reportApiBase + 'api/ChartReport/GetData', {
-                fromDate: from.value, toDate: to.value, airport: airport.value,
-                oper: 'ALL', currentDay: currentDay, period: trendPeriod
-            }).then(function (data) {
-                render([data.status, data.overview, data.trend]);
+            var statusUrl = '../ReportNew/FlightStatusRate.aspx/GetData';
+            var overviewUrl = '../ReportNew/FlightOperationOverview.aspx/GetData';
+            var trendUrl = '../ReportNew/FlightTrendAnalysis.aspx/GetTrend';
+            Promise.all([
+                post(statusUrl, {
+                    fromDate: from.value, toDate: to.value, airport: airport.value,
+                    oper: 'ALL', currentDay: currentDay
+                }),
+                post(overviewUrl, {
+                    fromDate: from.value, toDate: to.value, airport: airport.value
+                }),
+                post(trendUrl, {
+                    fromDate: from.value, toDate: to.value, airport: airport.value,
+                    oper: 'ALL', period: trendPeriod
+                })
+            ]).then(function (data) {
+                render(data);
             }).catch(function (error) {
                 alert(error.message);
             }).then(function () {

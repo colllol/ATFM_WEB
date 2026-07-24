@@ -4,5 +4,5 @@
     <link rel="stylesheet" data-report-interactive="true" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260714-2") %>" />
     <section class="rn-app" data-report-view="dashboard"></section>
     <script src="<%= ResolveUrl("~/ReportNew/ReportNew.js") %>"></script>
-    <script src="<%= ResolveUrl("~/ReportNew/Dashboard.js?v=20260714-1") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/Dashboard.js?v=20260724-2") %>"></script>
 </asp:Content>
