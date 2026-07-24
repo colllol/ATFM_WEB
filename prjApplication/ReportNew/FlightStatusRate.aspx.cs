@@ -89,7 +89,8 @@ namespace prjApplication.ReportNew
                                                   NULLIF(TRIM(ATD),'') ATDDAY, NULLIF(TRIM(ATA),'') ATADAY,
                                                   NULLIF(TRIM(ETD),'') EOBTDAY
                                              FROM T_DAY_FLIGHTS_CANCEL
-                                            WHERE FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate";
+                                            WHERE PERMTYPE='LD'
+                                              AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate";
                 using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
                 using (var command = new OracleCommand(cancelSql, connection))
                 {
