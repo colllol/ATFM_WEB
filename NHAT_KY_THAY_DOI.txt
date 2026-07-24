@@ -1449,3 +1449,4 @@ Quy ước:
 2026-07-24 | prjApplication/ReportNew/FlightStatusRate.js, FlightStatusRate.aspx | Sửa lỗi null khi tìm label sau khi select được bọc bởi bộ tìm kiếm, đặt bộ lọc hãng bay đúng cấp và tăng phiên bản cache.
 2026-07-24 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Khi đọc T_DAY_FLIGHTS_CANCEL chỉ giới hạn theo khoảng ngày báo cáo, bỏ điều kiện PERMTYPE, OPER_ID, hãng bay và sân bay; mọi bản ghi được tính trực tiếp là CANCEL.
 2026-07-24 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Khôi phục điều kiện PERMTYPE='LD' cho truy vấn chuyến hủy, phù hợp phạm vi báo cáo FlightStatusRate.
+2026-07-24 | prjApplication/ReportNew/FlightStatusRate.aspx.cs, Common/ChartReportAirport.aspx.cs | Sửa biên ngày lịch sử thành FLIGHTDATE >= ngày đầu và FLIGHTDATE < ngày thứ hai; chỉ nhánh daynow mới cộng một ngày để lấy trọn ngày hiện tại.

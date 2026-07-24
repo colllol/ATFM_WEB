@@ -47,7 +47,7 @@ namespace prjApplication.Common
                 command.BindByName = true;
                 command.CommandTimeout = 120;
                 command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
+                command.Parameters.Add("toDate", OracleDbType.Date).Value = currentDay ? to.AddDays(1) : to;
                 command.Parameters.Add("oper", OracleDbType.Varchar2).Value = DBNull.Value;
                 command.Parameters.Add("airport", OracleDbType.Varchar2).Value = DBNull.Value;
 
@@ -91,7 +91,7 @@ namespace prjApplication.Common
                     command.BindByName = true;
                     command.CommandTimeout = 120;
                     command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                    command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
+                    command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
                     connection.Open();
                     using (var reader = command.ExecuteReader())
                     {
