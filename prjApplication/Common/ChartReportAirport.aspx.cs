@@ -84,7 +84,7 @@ namespace prjApplication.Common
                 const string cancelSql = @"SELECT FLIGHTDATE, FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE,
                                                   FROM_AIRP, TO_AIRP, NULLIF(TRIM(ATD),'') ATDDAY,
                                                   NULLIF(TRIM(ATA),'') ATADAY,
-                                                  COALESCE(NULLIF(TRIM(EOBTDATE),''),NULLIF(TRIM(EOBT),'')) EOBTDAY
+                                                  NULLIF(TRIM(ETD),'') EOBTDAY
                                              FROM ATFM.T_DAY_FLIGHTS_CANCEL
                                             WHERE PERMTYPE='LD'
                                               AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate";

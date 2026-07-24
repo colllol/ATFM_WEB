@@ -87,7 +87,7 @@ namespace prjApplication.ReportNew
             {
                 const string cancelSql = @"SELECT FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
                                                   NULLIF(TRIM(ATD),'') ATDDAY, NULLIF(TRIM(ATA),'') ATADAY,
-                                                  COALESCE(NULLIF(TRIM(EOBTDATE),''),NULLIF(TRIM(EOBT),'')) EOBTDAY
+                                                  NULLIF(TRIM(ETD),'') EOBTDAY
                                              FROM T_DAY_FLIGHTS_CANCEL
                                             WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
                                               AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
