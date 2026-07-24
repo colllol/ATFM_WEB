@@ -182,13 +182,14 @@
         var from = app.querySelector('#rnFrom');
         var to = app.querySelector('#rnTo');
         var airport = app.querySelector('#rnAirport');
+        var airportField = airport.closest('.rn-field');
         var filterBox = app.querySelector('.rn-filters');
         filterBox.classList.add('rn-status-filters');
         from.value = iso;
         to.value = iso;
-        airport.parentNode.querySelector('label').textContent = 'Sân bay';
+        airportField.querySelector('label').textContent = 'Sân bay';
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option><option>VVNB</option><option>VVTS</option><option>VVDN</option><option>VVCR</option><option>VVPQ</option><option>VVCI</option><option>VVDL</option><option>VVPC</option>';
-        airport.parentNode.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
+        airportField.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
         var oper = app.querySelector('#rnOper');
         filterBox.insertAdjacentHTML('beforeend', '<button class="rn-filter-button rn-export-button" type="button" id="rnStatusExport"><i class="fa fa-file-excel-o"></i> Export Excel</button>');
         if (window.ReportControls) window.ReportControls.enhanceAll(filterBox);

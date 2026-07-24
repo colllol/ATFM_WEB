@@ -1446,3 +1446,4 @@ Quy ước:
 2026-07-24 | prjApplication/Common/ChartReportAirport.js, ChartReportAirport.aspx | Ưu tiên WebMethod cục bộ đã áp dụng nguồn hủy lịch sử, chuẩn hóa phản hồi WebMethod/API và tăng phiên bản cache JavaScript.
 2026-07-24 | prjApplication/Common/ChartReportAirport.aspx.cs, ReportNew/FlightStatusRate.aspx.cs | Sửa lỗi Oracle ORA-00904 gây HTTP 500: bảng T_DAY_FLIGHTS_CANCEL không có EOBT/EOBTDATE, dùng cột ETD làm giờ kế hoạch.
 2026-07-24 | prjApplication/Common/ChartReportAirport.aspx.cs, ReportNew/FlightStatusRate.aspx.cs | Tách nguồn theo ngày: đúng daynow dùng T_DAY_FLIGHTS_GOINGON; các kỳ khác lấy toàn bộ chuyến hủy từ T_DAY_FLIGHTS_CANCEL chỉ với điều kiện khoảng ngày.
+2026-07-24 | prjApplication/ReportNew/FlightStatusRate.js, FlightStatusRate.aspx | Sửa lỗi null khi tìm label sau khi select được bọc bởi bộ tìm kiếm, đặt bộ lọc hãng bay đúng cấp và tăng phiên bản cache.
