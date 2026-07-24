@@ -1,7 +1,7 @@
-<%@ Page Title="Báo cáo Email" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" %>
+<%@ Page Title="Báo cáo Email" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeFile="EmailReports.aspx.cs" Inherits="prjApplication.SLOTS.EmailReports" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/EmailReports.css?v=20260724-1") %>" />
-    <section id="emailReportsPage" class="email-reports-page" data-api-endpoint="http://192.168.100.131:8080/api/reports/emails">
+    <section id="emailReportsPage" class="email-reports-page">
         <header class="email-hero">
             <div><span class="email-eyebrow"><i class="fa fa-envelope"></i> VATM · EMAIL REPORTS</span><h1>Báo cáo Email</h1><p>Tra cứu, lọc và xem chi tiết email từ hệ thống báo cáo.</p></div>
             <div class="email-live"><i class="email-live-dot"></i><div><small>Trạng thái kết nối</small><strong id="emailConnectionState">Chưa tải</strong></div></div>
@@ -31,5 +31,5 @@
         </section>
         <div id="emailDetailBackdrop" class="email-detail-backdrop" hidden><article class="email-detail"><header><h2 id="emailDetailSubject">Chi tiết email</h2><button id="emailDetailClose" type="button">&times;</button></header><div id="emailDetailMeta" class="email-detail-meta"></div><pre id="emailDetailBody" class="email-detail-body"></pre></article></div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260724-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260724-2") %>"></script>
 </asp:Content>

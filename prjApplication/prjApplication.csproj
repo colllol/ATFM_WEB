@@ -2130,6 +2130,10 @@
       <DependentUpon>AIReports.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="SLOTS\EmailReports.aspx.cs">
+      <DependentUpon>EmailReports.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="SLOTS\SlotsApiClient.cs" />
     <Compile Include="SLOTS\SlotsDataProvider.cs" />
     <Compile Include="SLOTS\FlightTrackingMap.aspx.cs">

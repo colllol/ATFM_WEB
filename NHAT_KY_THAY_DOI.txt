@@ -1456,3 +1456,4 @@ Quy ước:
 2026-07-24 | prjApplication/ReportNew/Dashboard.js, Common/ChartReport.aspx | Chuyển dashboard sang ghép ba WebMethod cục bộ của các báo cáo ReportNew, tránh API ChartReport dùng logic cũ; tăng phiên bản cache.
 2026-07-24 | prjApplication/SLOTS/EmailReports.aspx, EmailReports.css, EmailReports.js | Tạo trang báo cáo email với lọc tìm kiếm/trạng thái/ngày, phân trang, KPI trạng thái và cửa sổ xem chi tiết; kết nối API /api/reports/emails.
 2026-07-24 | prjApplication/prjApplication.csproj | Đăng ký các tài nguyên EmailReports là nội dung ứng dụng web.
+2026-07-24 | prjApplication/SLOTS/EmailReports.aspx, EmailReports.aspx.cs, EmailReports.js, prjApplication/prjApplication.csproj | Chuyển truy vấn API email từ trình duyệt sang WebMethod proxy cùng miền; thêm timeout và thông báo khi máy chủ ATFM không kết nối được API nội bộ.

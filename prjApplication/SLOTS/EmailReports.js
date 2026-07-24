@@ -2,7 +2,7 @@
     'use strict';
     var page = document.getElementById('emailReportsPage');
     if (!page) return;
-    var endpoint = page.getAttribute('data-api-endpoint');
+    var endpoint = 'EmailReports.aspx/GetEmails';
     var allItems = [], filteredItems = [], currentPage = 1, pageSize = 50;
     var $ = function (id) { return document.getElementById(id); };
     function esc(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
@@ -48,7 +48,13 @@
     }
     function load() {
         setConnection(false, 'Đang kết nối...');
-        fetch(endpoint, { headers: { Accept: 'application/json' } }).then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); }).then(function (payload) {
+        fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: '{}' }).then(function (response) {
+            return response.json().catch(function () { return null; }).then(function (payload) {
+                if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
+                return payload;
+            });
+        }).then(function (payload) {
+            if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
             allItems = payloadItems(payload); filteredItems = allItems.slice(); currentPage = 1;
             var statuses = {}; allItems.forEach(function (item) { statuses[status(item)] = true; });
             $('emailStatus').innerHTML = '<option value="">Tất cả trạng thái</option>' + Object.keys(statuses).sort().map(function (value) { return '<option value="' + esc(value) + '">' + esc(value) + '</option>'; }).join('');
