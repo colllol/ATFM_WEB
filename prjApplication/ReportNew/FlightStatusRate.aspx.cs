@@ -89,18 +89,13 @@ namespace prjApplication.ReportNew
                                                   NULLIF(TRIM(ATD),'') ATDDAY, NULLIF(TRIM(ATA),'') ATADAY,
                                                   NULLIF(TRIM(ETD),'') EOBTDAY
                                              FROM T_DAY_FLIGHTS_CANCEL
-                                            WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
-                                              AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
-                                              AND (:oper IS NULL OR UPPER(TRIM(OPER_ID))=:oper)
-                                              AND (:airport IS NULL OR UPPER(TRIM(FROM_AIRP))=:airport OR UPPER(TRIM(TO_AIRP))=:airport)";
+                                            WHERE FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate";
                 using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
                 using (var command = new OracleCommand(cancelSql, connection))
                 {
                     command.BindByName = true;
                     command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
                     command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
-                    command.Parameters.Add("oper", OracleDbType.Varchar2).Value = String.IsNullOrWhiteSpace(oper) || oper == "ALL" ? (object)DBNull.Value : oper.Trim().ToUpperInvariant();
-                    command.Parameters.Add("airport", OracleDbType.Varchar2).Value = String.IsNullOrWhiteSpace(airport) || airport == "ALL" ? (object)DBNull.Value : airport.Trim().ToUpperInvariant();
                     connection.Open();
                     using (var reader = command.ExecuteReader())
                     {
