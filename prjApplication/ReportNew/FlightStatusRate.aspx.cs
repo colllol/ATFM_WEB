@@ -277,6 +277,12 @@ namespace prjApplication.ReportNew
             return BuildSql(BuildHistoricalFplCtes(), fromClause, plannedTime, false);
         }
 
+        internal static string BuildCurrentStatusSql()
+        {
+            string plannedTime = BuildEobtFallbackSql("f.EOBTDATE", "f.EOBT", "NULL");
+            return BuildSql(String.Empty, "T_DAY_FLIGHTS_GOINGON f", plannedTime, true);
+        }
+
         private static string BuildSql(string auxiliaryCtes, string fromClause, string plannedTime, bool currentDay)
         {
             string plannedTimestamp = BuildFlightTimestampSql("planned_raw");
