@@ -27,7 +27,7 @@
         var title = military ? 'Báo cáo chuyến bay quân sự' : 'Tổng hợp chuyến bay dân dụng';
         var subtitle = military ? 'Dữ liệu nghiệp vụ VIP, quân sự từ REPORT_DHB' : 'Tổng hợp trực tiếp dữ liệu chuyến bay dân dụng';
         app.innerHTML = '<header class="rn-hero"><div><span class="rn-eyebrow">VATM • FLIGHT ANALYTICS</span><h1>' + title + '</h1><p>' + subtitle + '</p></div><div class="rn-live"><span>Nguồn dữ liệu</span><strong id="summarySource">API</strong><small id="summaryState">Sẵn sàng</small></div></header>' +
-            '<div class="rn-filters"><div class="rn-field"><label>Sân bay</label><input id="summaryAirport" maxlength="4" placeholder="ALL / VVNB" value="ALL"></div><div class="rn-field"><label>Từ ngày</label><input id="summaryFrom" type="date" value="' + today(-30) + '"></div><div class="rn-field"><label>Đến ngày</label><input id="summaryTo" type="date" value="' + today(0) + '"></div><button class="rn-filter-button" id="summaryApply" type="button"><i class="fa fa-filter"></i> Áp dụng</button></div>' +
+            '<div class="rn-filters"><div class="rn-field"><label>Sân bay</label><select id="summaryAirport"><option value="ALL">Tất cả sân bay</option></select></div><div class="rn-field"><label>Từ ngày</label><input id="summaryFrom" type="date" value="' + today(-30) + '"></div><div class="rn-field"><label>Đến ngày</label><input id="summaryTo" type="date" value="' + today(0) + '"></div><button class="rn-filter-button" id="summaryApply" type="button"><i class="fa fa-filter"></i> Áp dụng</button></div>' +
             '<div id="summaryError" class="rn-card wide" style="display:none;color:#b42318"></div><div id="summaryContent"><article class="rn-card wide rn-empty"><h2>Đang tải dữ liệu...</h2></article></div>';
     }
 
@@ -36,7 +36,7 @@
     }
 
     function airportTable(items) {
-        return '<article class="rn-card"><h2>Lưu lượng sân bay</h2><p class="rn-card-subtitle">Các đầu mối có lưu lượng cao nhất</p><div class="rn-table-wrap"><table class="rn-table"><thead><tr><th>Sân bay</th><th>Đi</th><th>Đến</th><th>Tổng</th></tr></thead><tbody>' +
+        return '<article class="rn-card wide rn-civil-airport-table"><h2>Lưu lượng sân bay</h2><p class="rn-card-subtitle">Các đầu mối có lưu lượng cao nhất</p><div class="rn-table-wrap"><table class="rn-table"><thead><tr><th>Sân bay</th><th>Đi</th><th>Đến</th><th>Tổng</th></tr></thead><tbody>' +
             (items || []).slice(0, 12).map(function (x) { return '<tr><td><b>' + escapeHtml(x.Code) + '</b></td><td>' + number(x.Departures) + '</td><td>' + number(x.Arrivals) + '</td><td>' + number(x.Total) + '</td></tr>'; }).join('') + '</tbody></table></div></article>';
     }
 
@@ -63,6 +63,12 @@
         ];
         document.getElementById('summarySource').textContent = data.Source || 'API';
         document.getElementById('summaryState').textContent = 'Đã cập nhật';
+        var airportSelect = document.getElementById('summaryAirport');
+        var selectedAirport = airportSelect.value;
+        airportSelect.innerHTML = '<option value="ALL">Tất cả sân bay</option>' + (data.Airports || []).map(function (item) {
+            return '<option value="' + escapeHtml(item.Code) + '">' + escapeHtml(item.Code) + '</option>';
+        }).join('');
+        airportSelect.value = selectedAirport;
         document.getElementById('summaryContent').innerHTML = kpis(items) + '<div class="rn-grid">' + airportTable(data.Airports) + flightTable(data.Flights, military) + '</div>';
     }
 
@@ -71,6 +77,7 @@
         if (!app) return;
         var military = app.getAttribute('data-report-view') === 'military';
         shell(app, military);
+        if (window.ReportControls) window.ReportControls.enhanceAll(app);
         function load() {
             var error = document.getElementById('summaryError'); error.style.display = 'none';
             document.getElementById('summaryState').textContent = 'Đang tải...';

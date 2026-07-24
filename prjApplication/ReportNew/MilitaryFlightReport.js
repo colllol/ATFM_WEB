@@ -103,6 +103,20 @@
 
     function exportExcel(app) {
         if (!currentFlights.length) return;
+        if (window.ReportControls) {
+            window.ReportControls.exportExcel({
+                fileName: 'MilitaryFlightReport_' + app.querySelector('#rnFrom').value + '_' + app.querySelector('#rnTo').value,
+                rows: currentFlights,
+                columns: [
+                    { label: 'No', key: '__no' }, { label: 'P_TYPE', key: 'pType' },
+                    { label: 'FROM_AIRP', key: 'fromAirp' }, { label: 'TO_AIRP', key: 'toAirp' },
+                    { label: 'ETD', key: 'etd' }, { label: 'ETA', key: 'eta' },
+                    { label: 'ATD', key: 'atd' }, { label: 'ATA', key: 'ata' },
+                    { label: 'PURPOSE', key: 'purpose' }, { label: 'FLIGHTDATE', key: 'flightDate', format: displayDate }
+                ]
+            });
+            return;
+        }
         var headers = ['P_TYPE', 'FROM_AIRP', 'TO_AIRP', 'ETD', 'ETA', 'ATD', 'ATA', 'PURPOSE', 'FLIGHTDATE'];
         var keys = ['pType', 'fromAirp', 'toAirp', 'etd', 'eta', 'atd', 'ata', 'purpose', 'flightDate'];
         var rows = '<Row>' + headers.map(function (header) { return '<Cell><Data ss:Type="String">' + header + '</Data></Cell>'; }).join('') + '</Row>' +
@@ -125,6 +139,7 @@
         var app = document.querySelector('.rn-app[data-report-view="military"]');
         if (!app) return;
         renderShell(app);
+        if (window.ReportControls) window.ReportControls.enhanceAll(app);
 
         function load() {
             var from = app.querySelector('#rnFrom').value;

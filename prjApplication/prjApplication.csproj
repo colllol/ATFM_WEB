@@ -671,6 +671,7 @@
     <Content Include="ReportNew\MilitaryFlightReport.js" />
     <Content Include="ReportNew\ReportNew.css" />
     <Content Include="ReportNew\ReportInteractive.css" />
+    <Content Include="ReportNew\ReportControls.js" />
     <Content Include="ReportNew\ReportNew.js" />
     <Content Include="Day_Flights\DayFlightNotRoute.aspx" />
     <Content Include="Day_Flights\DayFlightSearch.aspx" />

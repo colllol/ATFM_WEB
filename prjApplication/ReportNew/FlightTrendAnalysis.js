@@ -57,6 +57,7 @@
         }).join('');
         airport.parentNode.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnTrendOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
         var oper = app.querySelector('#rnTrendOper');
+        if (window.ReportControls) window.ReportControls.enhanceAll(filters);
         from.value = formatDate(today);
         to.value = formatDate(today);
 

@@ -47,6 +47,8 @@
         var from = app.querySelector('#rnFrom');
         var to = app.querySelector('#rnTo');
         var apply = app.querySelector('#rnApply');
+        app.querySelector('.rn-filters').insertAdjacentHTML('beforeend', '<button class="rn-filter-button rn-export-button" type="button" id="rnOverviewExport"><i class="fa fa-file-excel-o"></i> Export Excel</button>');
+        if (window.ReportControls) window.ReportControls.enhanceAll(app.querySelector('.rn-filters'));
         var today = new Date();
         var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         var data = null;
@@ -235,6 +237,22 @@
         }
 
         apply.onclick = load;
+        app.querySelector('#rnOverviewExport').onclick = function () {
+            var rows = detailFlights();
+            if (!rows.length) { alert('Không có dữ liệu để xuất Excel.'); return; }
+            window.ReportControls.exportExcel({
+                fileName: 'FlightOperationOverview_' + from.value + '_' + to.value,
+                rows: rows,
+                columns: [
+                    { label: 'No', key: '__no' }, { label: 'CALLSIGN', key: 'callsign' },
+                    { label: 'OPER', key: 'oper' }, { label: 'REGISTRATION', key: 'registration' },
+                    { label: 'PERMTYPE', key: 'permType' }, { label: 'FROM_AIRP', key: 'fromAirp' },
+                    { label: 'TO_AIRP', key: 'toAirp' }, { label: 'ATDDAY', key: 'atdDay' },
+                    { label: 'ATADAY', key: 'ataDay' }, { label: 'EOBTDAY', key: 'eobtDay' },
+                    { label: 'TRẠNG THÁI', key: 'status', format: statusLabel }
+                ]
+            });
+        };
         load();
     }
 

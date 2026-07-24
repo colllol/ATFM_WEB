@@ -1,4 +1,5 @@
 (function () {
+    var currentStatusFlights = [];
     var defaultOperators = [
         'AAR', 'APG', 'AXM', 'BAV', 'CAL', 'CEB', 'CES', 'CQH', 'DKH', 'ETD',
         'FDX', 'HVN', 'JAL', 'KAL', 'KHV', 'KLM', 'MAS', 'MKR', 'MXD', 'PIC',
@@ -62,6 +63,7 @@
             { key: 'wait', name: 'Chưa thực hiện', value: data.wait, color: '#4d8df7' }
         ];
         var flights = data.flights || [];
+        currentStatusFlights = flights;
         var total = data.total || 0;
         var circumference = 2 * Math.PI * 82;
         var offset = 0;
@@ -188,6 +190,8 @@
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option><option>VVNB</option><option>VVTS</option><option>VVDN</option><option>VVCR</option><option>VVPQ</option><option>VVCI</option><option>VVDL</option><option>VVPC</option>';
         airport.parentNode.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
         var oper = app.querySelector('#rnOper');
+        filterBox.insertAdjacentHTML('beforeend', '<button class="rn-filter-button rn-export-button" type="button" id="rnStatusExport"><i class="fa fa-file-excel-o"></i> Export Excel</button>');
+        if (window.ReportControls) window.ReportControls.enhanceAll(filterBox);
 
         function isCurrentDay() { return from.value === iso && to.value === iso; }
         function renderOperators(values, selected) {
@@ -224,6 +228,21 @@
         }
 
         app.querySelector('#rnApply').onclick = load;
+        app.querySelector('#rnStatusExport').onclick = function () {
+            if (!currentStatusFlights.length) { alert('Không có dữ liệu để xuất Excel.'); return; }
+            window.ReportControls.exportExcel({
+                fileName: 'FlightStatusRate_' + from.value + '_' + to.value,
+                rows: currentStatusFlights,
+                columns: [
+                    { label: 'No', key: '__no' }, { label: 'CALLSIGN', key: 'callsign' },
+                    { label: 'OPER', key: 'oper' }, { label: 'REGISTRATION', key: 'registration' },
+                    { label: 'PERMTYPE', key: 'permType' }, { label: 'FROM_AIRP', key: 'fromAirp' },
+                    { label: 'TO_AIRP', key: 'toAirp' }, { label: 'ATDDAY', key: 'atdDay' },
+                    { label: 'ATADAY', key: 'ataDay' }, { label: 'EOBTDAY', key: 'eobtDay' },
+                    { label: 'TRẠNG THÁI', key: 'status', format: statusLabel }
+                ]
+            });
+        };
         from.onchange = loadOperators;
         to.onchange = loadOperators;
         load();

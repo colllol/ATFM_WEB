@@ -61,6 +61,9 @@ namespace prjApplication.ReportNew
                     while (reader.Read())
                     {
                         string state = Convert.ToString(reader["FLIGHT_STATE"]);
+                        // Với kỳ quá khứ, danh sách hủy phải lấy duy nhất từ bảng chuyên biệt bên dưới.
+                        if (!currentDay && state == "CANCEL")
+                            continue;
                         if (state == "FINISHED") finished++;
                         else if (state == "CANCEL") cancel++;
                         else if (state.StartsWith("DELAY", StringComparison.Ordinal)) delay++;
@@ -79,6 +82,42 @@ namespace prjApplication.ReportNew
                         });
                     }
                 }
+            }
+            if (!currentDay)
+            {
+                const string cancelSql = @"SELECT FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
+                                                  NULLIF(TRIM(ATD),'') ATDDAY, NULLIF(TRIM(ATA),'') ATADAY,
+                                                  COALESCE(NULLIF(TRIM(EOBTDATE),''),NULLIF(TRIM(EOBT),'')) EOBTDAY
+                                             FROM T_DAY_FLIGHTS_CANCEL
+                                            WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                              AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+                                              AND (:oper IS NULL OR UPPER(TRIM(OPER_ID))=:oper)
+                                              AND (:airport IS NULL OR UPPER(TRIM(FROM_AIRP))=:airport OR UPPER(TRIM(TO_AIRP))=:airport)";
+                using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
+                using (var command = new OracleCommand(cancelSql, connection))
+                {
+                    command.BindByName = true;
+                    command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
+                    command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
+                    command.Parameters.Add("oper", OracleDbType.Varchar2).Value = String.IsNullOrWhiteSpace(oper) || oper == "ALL" ? (object)DBNull.Value : oper.Trim().ToUpperInvariant();
+                    command.Parameters.Add("airport", OracleDbType.Varchar2).Value = String.IsNullOrWhiteSpace(airport) || airport == "ALL" ? (object)DBNull.Value : airport.Trim().ToUpperInvariant();
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cancel++;
+                            flights.Add(new {
+                                callsign = Convert.ToString(reader["FLIGHTNBR"]), oper = Convert.ToString(reader["OPER_ID"]),
+                                registration = Convert.ToString(reader["REGISTRATION"]), permType = Convert.ToString(reader["PERMTYPE"]),
+                                fromAirp = Convert.ToString(reader["FROM_AIRP"]), toAirp = Convert.ToString(reader["TO_AIRP"]),
+                                atdDay = Convert.ToString(reader["ATDDAY"]), ataDay = Convert.ToString(reader["ATADAY"]),
+                                eobtDay = Convert.ToString(reader["EOBTDAY"]), status = "CANCEL"
+                            });
+                        }
+                    }
+                }
+                table += " + T_DAY_FLIGHTS_CANCEL";
             }
 
             return new {
@@ -107,7 +146,12 @@ namespace prjApplication.ReportNew
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION
                                    SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                     FROM T_FINISHED_FLIGHTS
+                                   FROM T_FINISHED_FLIGHTS
+                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                      AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
+                                   UNION
+                                   SELECT UPPER(TRIM(OPER_ID)) OPER_ID
+                                     FROM T_DAY_FLIGHTS_CANCEL
                                     WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION

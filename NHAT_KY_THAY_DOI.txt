@@ -1425,3 +1425,15 @@ Quy ước:
     - Do repository public, giữ commit a7fd909 có credential/artifact máy cá nhân trong nhánh backup/api-with-local-artifacts-20260723 và không đưa commit này lên remote.
     - Tạo lại nhánh api sạch từ origin/api 2eed8f2, áp endpoint notification thành ef120eb và sửa project portable thành d5bf761; bổ sung lib/ShareDLL.dll cần thiết để bản clone mới build được.
     - Build lại QLB.API.sln thành công trên nhánh sạch; chỉ còn các warning legacy về kiến trúc Oracle và mã chưa dùng.
+2026-07-24
+- prjApplication/ReportNew/ReportControls.js: Thêm bộ chọn có thể nhập để tìm kiếm và popup chọn trường/tiêu đề khi xuất Excel dùng chung.
+- prjApplication/ReportNew/ReportInteractive.css: Bổ sung giao diện bộ chọn tìm kiếm và popup xuất Excel.
+- prjApplication/ReportNew/FlightStatusRate.aspx, FlightStatusRate.js, FlightStatusRate.aspx.cs: Thêm select tìm kiếm, popup export và lấy chuyến hủy lịch sử từ T_DAY_FLIGHTS_CANCEL.
+- prjApplication/ReportNew/FlightOperationOverview.aspx, FlightOperationOverview.js: Thêm select tìm kiếm và popup chọn trường xuất Excel.
+- prjApplication/ReportNew/FlightTrendAnalysis.aspx, FlightTrendAnalysis.js: Thêm khả năng nhập để tìm sân bay/hãng bay.
+- prjApplication/ReportNew/MilitaryFlightReport.aspx, MilitaryFlightReport.js: Thêm select tìm kiếm và popup chọn trường xuất Excel.
+- prjApplication/ReportNew/CivilFlightSummary.aspx, FlightSummaryReports.js: Đổi bộ lọc sân bay thành select tìm kiếm và mở rộng bảng lưu lượng sân bay.
+- prjApplication/ReportNew/AirportTakeoffLanding.aspx: Nạp bộ điều khiển select tìm kiếm dùng chung.
+- prjApplication/ReportNew/AdsBPerformanceReport.aspx: Nạp bộ điều khiển select tìm kiếm dùng chung.
+- prjApplication/Common/ChartReportAirport.aspx, ChartReportAirport.js: Cho phép chọn tối đa 5 sân bay, hiển thị số ô tương ứng trên một hàng và vẽ đủ dữ liệu đã chọn.
+- prjApplication/prjApplication.csproj: Đăng ký ReportControls.js là nội dung của ứng dụng web.
