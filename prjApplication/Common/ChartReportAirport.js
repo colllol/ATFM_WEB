@@ -4,7 +4,8 @@
     var page = document.querySelector('.airport-page');
     if (!page) return;
 
-    var endpoint = window.reportApiBase + 'api/ChartReportAirport/GetData';
+    var endpoint = page.getAttribute('data-endpoint') ||
+        (window.reportApiBase + 'api/ChartReportAirport/GetData');
     var flights = [];
     var defaultAirports = ['VVBM', 'VVCA', 'VVCI', 'VVCM', 'VVCR', 'VVCS', 'VVCT', 'VVDB', 'VVDH', 'VVDL', 'VVDN', 'VVNB', 'VVPC', 'VVPQ', 'VVRG', 'VVTH', 'VVTS', 'VVTX', 'VVVD', 'VVVH'];
     var statuses = [
@@ -87,11 +88,15 @@
             if (response.Code && response.Code !== '00') throw new Error(response.Message || 'Không thể tải dữ liệu.');
             var data = Object.prototype.hasOwnProperty.call(response, 'ListValue') ? response.ListValue : response.d;
             data = typeof data === 'string' ? JSON.parse(data) : data;
-            if (data && data.Flights) {
-                data.flights = data.Flights.map(function (item) { return {
-                    flightDate: item.FlightDate, callsign: item.Callsign, oper: item.Oper, registration: item.Registration,
-                    permType: item.PermType, fromAirp: item.FromAirp, toAirp: item.ToAirp, atdDay: item.AtdDay,
-                    ataDay: item.AtaDay, eobtDay: item.EobtDay, status: item.Status
+            var rawFlights = data && (data.Flights || data.flights);
+            if (rawFlights) {
+                data.flights = rawFlights.map(function (item) { return {
+                    flightDate: item.FlightDate || item.flightDate, callsign: item.Callsign || item.callsign,
+                    oper: item.Oper || item.oper, registration: item.Registration || item.registration,
+                    permType: item.PermType || item.permType, fromAirp: item.FromAirp || item.fromAirp,
+                    toAirp: item.ToAirp || item.toAirp, atdDay: item.AtdDay || item.atdDay,
+                    ataDay: item.AtaDay || item.ataDay, eobtDay: item.EobtDay || item.eobtDay,
+                    status: item.Status || item.status
                 }; });
             }
             return data;

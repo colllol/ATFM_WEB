@@ -37,6 +37,7 @@ namespace prjApplication.Common
                 throw new ArgumentException("Từ ngày không được lớn hơn đến ngày.");
 
             var flights = new List<AirportFlight>();
+            DateTime today = DateTime.Today;
             using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
             using (var command = new OracleCommand(ReportNew.FlightStatusRate.BuildHistoricalStatusSql(), connection))
             {
@@ -52,7 +53,7 @@ namespace prjApplication.Common
                 {
                     while (reader.Read())
                     {
-                        flights.Add(new AirportFlight
+                        var flight = new AirportFlight
                         {
                             FlightDate = GetDateValue(reader, "FLIGHTDATE"),
                             Callsign = GetStringValue(reader, "FLIGHTNBR"),
@@ -65,14 +66,64 @@ namespace prjApplication.Common
                             AtaDay = GetStringValue(reader, "ATADAY"),
                             EobtDay = GetStringValue(reader, "EOBTDAY"),
                             Status = GetStringValue(reader, "FLIGHT_STATE")
-                        });
+                        };
+                        DateTime flightDate;
+                        bool isToday = DateTime.TryParseExact(flight.FlightDate, "yyyy-MM-dd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out flightDate) &&
+                            flightDate.Date == today;
+                        if (flight.Status == "CANCEL" && !isToday)
+                            continue;
+                        flights.Add(flight);
+                    }
+                }
+            }
+
+            DateTime historicalTo = to < today ? to : today.AddDays(-1);
+            if (from <= historicalTo)
+            {
+                const string cancelSql = @"SELECT FLIGHTDATE, FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE,
+                                                  FROM_AIRP, TO_AIRP, NULLIF(TRIM(ATD),'') ATDDAY,
+                                                  NULLIF(TRIM(ATA),'') ATADAY,
+                                                  COALESCE(NULLIF(TRIM(EOBTDATE),''),NULLIF(TRIM(EOBT),'')) EOBTDAY
+                                             FROM ATFM.T_DAY_FLIGHTS_CANCEL
+                                            WHERE PERMTYPE='LD'
+                                              AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate";
+                using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
+                using (var command = new OracleCommand(cancelSql, connection))
+                {
+                    command.BindByName = true;
+                    command.CommandTimeout = 120;
+                    command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
+                    command.Parameters.Add("toDate", OracleDbType.Date).Value = historicalTo.AddDays(1);
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            flights.Add(new AirportFlight
+                            {
+                                FlightDate = GetDateValue(reader, "FLIGHTDATE"),
+                                Callsign = GetStringValue(reader, "FLIGHTNBR"),
+                                Oper = GetStringValue(reader, "OPER_ID"),
+                                Registration = GetStringValue(reader, "REGISTRATION"),
+                                PermType = GetStringValue(reader, "PERMTYPE"),
+                                FromAirp = NormalizeAirport(GetStringValue(reader, "FROM_AIRP")),
+                                ToAirp = NormalizeAirport(GetStringValue(reader, "TO_AIRP")),
+                                AtdDay = GetStringValue(reader, "ATDDAY"),
+                                AtaDay = GetStringValue(reader, "ATADAY"),
+                                EobtDay = GetStringValue(reader, "EOBTDAY"),
+                                Status = "CANCEL"
+                            });
+                        }
                     }
                 }
             }
 
             return new
             {
-                source = "T_FINISHED_FLIGHTS",
+                source = from < today
+                    ? "T_FINISHED_FLIGHTS + ATFM.T_DAY_FLIGHTS_CANCEL"
+                    : "T_FINISHED_FLIGHTS",
                 fromDate = from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 toDate = to.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 flights = flights

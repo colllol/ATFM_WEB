@@ -1442,3 +1442,5 @@ Quy ước:
 2026-07-24 | prjApplication/Common/ChartReportAirport.aspx | Tăng phiên bản cache JavaScript để trình duyệt nhận ngay bản sửa giữ lựa chọn sân bay.
 2026-07-24 | prjApplication/Common/ChartReportAirport.js | Sửa lọc thời gian: một sân bay so sánh tại hai ngày; từ hai sân bay trở lên tính toàn bộ chuyến của từng sân bay trong khoảng ngày đã chọn.
 2026-07-24 | prjApplication/Common/ChartReportAirport.aspx | Tăng phiên bản cache JavaScript cho logic lọc khoảng thời gian mới.
+2026-07-24 | prjApplication/Common/ChartReportAirport.aspx.cs | Với các ngày khác ngày hiện tại, loại bản ghi hủy suy luận từ dữ liệu hoàn thành và lấy tổng chuyến hủy từ ATFM.T_DAY_FLIGHTS_CANCEL.
+2026-07-24 | prjApplication/Common/ChartReportAirport.js, ChartReportAirport.aspx | Ưu tiên WebMethod cục bộ đã áp dụng nguồn hủy lịch sử, chuẩn hóa phản hồi WebMethod/API và tăng phiên bản cache JavaScript.
