@@ -147,7 +147,7 @@ namespace prjApplication.ReportNew
             command.BindByName = true;
             command.CommandTimeout = 120;
             command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-            command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
+            command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
             command.Parameters.Add("oper", OracleDbType.Varchar2).Value = DBNull.Value;
             command.Parameters.Add("airport", OracleDbType.Varchar2).Value = airport == null ? (object)DBNull.Value : airport;
             return command;

@@ -168,7 +168,7 @@ namespace prjApplication.ReportNew
             command.BindByName = true;
             command.CommandTimeout = 90;
             command.Parameters.Add("fromDate", OracleDbType.Date).Value = from.Date;
-            command.Parameters.Add("toDate", OracleDbType.Date).Value = to.Date.AddDays(1);
+            command.Parameters.Add("toDate", OracleDbType.Date).Value = to.Date;
             command.Parameters.Add("permType", OracleDbType.Varchar2).Value = permType == null ? (object)DBNull.Value : permType;
             if (command.CommandText.IndexOf(":oper", StringComparison.Ordinal) >= 0)
                 command.Parameters.Add("oper", OracleDbType.Varchar2).Value = oper == null ? (object)DBNull.Value : oper;

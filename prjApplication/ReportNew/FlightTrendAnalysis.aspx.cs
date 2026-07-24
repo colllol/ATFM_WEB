@@ -38,7 +38,8 @@ namespace prjApplication.ReportNew
             var currentValues = new List<int>();
             var previousValues = new List<int>();
             DateTime cursor = mode == "month" ? new DateTime(from.Year, from.Month, 1) : from.Date;
-            DateTime end = mode == "month" ? new DateTime(to.Year, to.Month, 1) : to.Date;
+            DateTime effectiveTo = to.AddDays(-1);
+            DateTime end = mode == "month" ? new DateTime(effectiveTo.Year, effectiveTo.Month, 1) : effectiveTo.Date;
 
             while (cursor <= end)
             {
@@ -102,7 +103,7 @@ namespace prjApplication.ReportNew
             {
                 command.BindByName = true;
                 command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
+                command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
                 connection.Open();
                 using (var reader = command.ExecuteReader())
                     while (reader.Read()) values.Add(Convert.ToString(reader["OPER_ID"]));
@@ -119,7 +120,7 @@ namespace prjApplication.ReportNew
                 command.BindByName = true;
                 command.CommandTimeout = 120;
                 command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
+                command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
                 command.Parameters.Add("oper", OracleDbType.Varchar2).Value = oper == null ? (object)DBNull.Value : oper;
                 command.Parameters.Add("airport", OracleDbType.Varchar2).Value = airport == null ? (object)DBNull.Value : airport;
                 connection.Open();
