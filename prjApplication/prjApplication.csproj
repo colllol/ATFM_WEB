@@ -1378,6 +1378,9 @@
     <Content Include="SLOTS\Notifications.aspx" />
     <Content Include="SLOTS\Notifications.css" />
     <Content Include="SLOTS\Notifications.js" />
+    <Content Include="SLOTS\EmailReports.aspx" />
+    <Content Include="SLOTS\EmailReports.css" />
+    <Content Include="SLOTS\EmailReports.js" />
     <Content Include="SLOTS\SlotComparison.aspx" />
     <Content Include="SLOTS\SlotComparison.css" />
     <Content Include="SLOTS\SlotComparisonPanel.ascx" />

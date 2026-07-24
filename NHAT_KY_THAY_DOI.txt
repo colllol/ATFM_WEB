@@ -1454,3 +1454,5 @@ Quy ước:
 2026-07-24 | prjApplication/ReportNew/FlightTrendAnalysis.aspx.cs | Đồng bộ nhãn biểu đồ xu hướng với biên ngày độc quyền, không hiển thị thêm ngày kết thúc không được truy vấn.
 2026-07-24 | prjApplication/ReportNew/FlightStatusRate.js, FlightStatusRate.aspx | Chuyển từ API dùng chung đang suy luận 24 chuyến hủy từ T_FINISHED_FLIGHTS sang WebMethod cục bộ đọc đúng T_DAY_FLIGHTS_CANCEL; tăng phiên bản cache.
 2026-07-24 | prjApplication/ReportNew/Dashboard.js, Common/ChartReport.aspx | Chuyển dashboard sang ghép ba WebMethod cục bộ của các báo cáo ReportNew, tránh API ChartReport dùng logic cũ; tăng phiên bản cache.
+2026-07-24 | prjApplication/SLOTS/EmailReports.aspx, EmailReports.css, EmailReports.js | Tạo trang báo cáo email với lọc tìm kiếm/trạng thái/ngày, phân trang, KPI trạng thái và cửa sổ xem chi tiết; kết nối API /api/reports/emails.
+2026-07-24 | prjApplication/prjApplication.csproj | Đăng ký các tài nguyên EmailReports là nội dung ứng dụng web.
