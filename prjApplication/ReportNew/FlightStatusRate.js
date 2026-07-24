@@ -14,7 +14,7 @@
         return result;
     }
     function post(method, data) {
-        return fetch(window.reportApiBase + 'api/FlightStatusRate/' + method, {
+        return fetch(window.location.pathname + '/' + method, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
