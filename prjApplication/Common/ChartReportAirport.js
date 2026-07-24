@@ -109,6 +109,19 @@
         });
         return result;
     }
+    function valuesInRange(airport, fromDate, toDate) {
+        var result = { total: 0, finished: 0, cancel: 0, delay: 0, wait: 0 };
+        flights.forEach(function (flight) {
+            var flightDate = dateKey(flight.flightDate);
+            var from = String(flight.fromAirp || '').toUpperCase();
+            var to = String(flight.toAirp || '').toUpperCase();
+            if (flightDate < fromDate || flightDate > toDate || (from !== airport && to !== airport)) return;
+            result.total++;
+            var state = normalizedStatus(flight.status);
+            if (state) result[state]++;
+        });
+        return result;
+    }
     function renderEmpty(message, isError) {
         byId('airportResult').innerHTML = '<div class="airport-empty' + (isError ? ' airport-error' : '') + '">' + escapeHtml(message) + '</div>';
     }
@@ -116,6 +129,8 @@
         var count = Math.min(5, Math.max(1, parseInt(byId('airportCount').value, 10) || 1));
         var date1 = byId('time1').value;
         var date2 = byId('time2').value;
+        var rangeFrom = date1 <= date2 ? date1 : date2;
+        var rangeTo = date1 <= date2 ? date2 : date1;
         var selected = [];
         for (var selectedIndex = 1; selectedIndex <= count; selectedIndex++) selected.push(byId('airport' + selectedIndex).value);
         if (!date1 || !date2 || selected.some(function (airport) { return !airport; })) {
@@ -124,10 +139,22 @@
         }
 
         var colors = ['#337ab7', '#f5a623', '#20b486', '#8a6ee8', '#ef5b5b'];
-        var datasets = selected.map(function (airport, index) {
-            var date = index === 0 ? date1 : date2;
-            return { airport: airport, date: date, value: values(airport, date), color: colors[index] };
-        });
+        var datasets;
+        if (count === 1) {
+            datasets = [
+                { airport: selected[0], date: date1, value: values(selected[0], date1), color: colors[0] },
+                { airport: selected[0], date: date2, value: values(selected[0], date2), color: colors[1] }
+            ];
+        } else {
+            datasets = selected.map(function (airport, index) {
+                return {
+                    airport: airport,
+                    date: rangeFrom + ' → ' + rangeTo,
+                    value: valuesInRange(airport, rangeFrom, rangeTo),
+                    color: colors[index]
+                };
+            });
+        }
         var max = 1;
         statuses.forEach(function (status) {
             datasets.forEach(function (dataset) { max = Math.max(max, dataset.value[status[0]]); });

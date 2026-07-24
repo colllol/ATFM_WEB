@@ -20,5 +20,5 @@
 </section>
 <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260724-1") %>" />
 <script src="<%= ResolveUrl("~/ReportNew/ReportControls.js?v=20260724-1") %>"></script>
-<script src="<%= ResolveUrl("~/Common/ChartReportAirport.js") %>?v=20260724-2"></script>
+<script src="<%= ResolveUrl("~/Common/ChartReportAirport.js") %>?v=20260724-3"></script>
 </asp:Content>

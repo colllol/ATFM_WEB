@@ -1440,3 +1440,5 @@ Quy ước:
 
 2026-07-24 | prjApplication/Common/ChartReportAirport.js | Giữ nguyên từng sân bay người dùng đã chọn khi nhấn tìm kiếm và tải lại danh sách option, tránh các ô tự nhảy sang sân bay khác.
 2026-07-24 | prjApplication/Common/ChartReportAirport.aspx | Tăng phiên bản cache JavaScript để trình duyệt nhận ngay bản sửa giữ lựa chọn sân bay.
+2026-07-24 | prjApplication/Common/ChartReportAirport.js | Sửa lọc thời gian: một sân bay so sánh tại hai ngày; từ hai sân bay trở lên tính toàn bộ chuyến của từng sân bay trong khoảng ngày đã chọn.
+2026-07-24 | prjApplication/Common/ChartReportAirport.aspx | Tăng phiên bản cache JavaScript cho logic lọc khoảng thời gian mới.
