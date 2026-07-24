@@ -55,8 +55,12 @@
             return '<option value="' + escapeHtml(code) + '">' + escapeHtml(code) + '</option>';
         }).join('');
         for (var index = 1; index <= 5; index++) {
-            byId('airport' + index).innerHTML = html;
-            if (codes.length) byId('airport' + index).selectedIndex = Math.min(index - 1, codes.length - 1);
+            var select = byId('airport' + index);
+            var selected = select.value;
+            select.innerHTML = html;
+            if (selected && codes.indexOf(selected) >= 0) select.value = selected;
+            else if (codes.length) select.selectedIndex = Math.min(index - 1, codes.length - 1);
+            select.dispatchEvent(new Event('change', { bubbles: true }));
         }
         if (window.ReportControls) window.ReportControls.enhanceAll(page);
     }

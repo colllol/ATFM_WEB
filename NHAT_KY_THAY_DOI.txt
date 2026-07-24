@@ -1437,3 +1437,6 @@ Quy ước:
 - prjApplication/ReportNew/AdsBPerformanceReport.aspx: Nạp bộ điều khiển select tìm kiếm dùng chung.
 - prjApplication/Common/ChartReportAirport.aspx, ChartReportAirport.js: Cho phép chọn tối đa 5 sân bay, hiển thị số ô tương ứng trên một hàng và vẽ đủ dữ liệu đã chọn.
 - prjApplication/prjApplication.csproj: Đăng ký ReportControls.js là nội dung của ứng dụng web.
+
+2026-07-24 | prjApplication/Common/ChartReportAirport.js | Giữ nguyên từng sân bay người dùng đã chọn khi nhấn tìm kiếm và tải lại danh sách option, tránh các ô tự nhảy sang sân bay khác.
+2026-07-24 | prjApplication/Common/ChartReportAirport.aspx | Tăng phiên bản cache JavaScript để trình duyệt nhận ngay bản sửa giữ lựa chọn sân bay.
