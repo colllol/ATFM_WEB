@@ -31,5 +31,5 @@
         </section>
         <div id="emailDetailBackdrop" class="email-detail-backdrop" hidden><article class="email-detail"><header><h2 id="emailDetailSubject">Chi tiết email</h2><button id="emailDetailClose" type="button">&times;</button></header><div id="emailDetailMeta" class="email-detail-meta"></div><pre id="emailDetailBody" class="email-detail-body"></pre></article></div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260724-2") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260725-1") %>"></script>
 </asp:Content>
