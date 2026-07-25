@@ -19,7 +19,7 @@ namespace prjApplication.ReportNew
                 !DateTime.TryParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out to))
                 throw new ArgumentException("Ngày lọc không hợp lệ.");
 
-            if (from > to)
+            if (from > to || to > DateTime.Today)
                 throw new ArgumentException("Khoảng ngày phải hợp lệ và không vượt quá ngày hiện tại.");
 
             string table = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS";
@@ -43,7 +43,7 @@ namespace prjApplication.ReportNew
                      AND day_fpl.match_order=1";
                 plannedTime = BuildEobtFallbackSql("day_fpl.EOBTDATE", "day_fpl.EOBT", "NULL");
             }
-            string sql = BuildSql(auxiliaryCtes, fromClause, plannedTime, currentDay);
+            string sql = BuildSql(auxiliaryCtes, fromClause, plannedTime, currentDay, currentDay);
             var flights = new List<object>();
             int finished = 0, cancel = 0, delay = 0, wait = 0;
 
@@ -89,7 +89,16 @@ namespace prjApplication.ReportNew
                                                   NULLIF(TRIM(ATD),'') ATDDAY, NULLIF(TRIM(ATA),'') ATADAY,
                                                   NULLIF(TRIM(ETD),'') EOBTDAY
                                              FROM T_DAY_FLIGHTS_CANCEL
-                                            WHERE PERMTYPE='LD'
+                                            WHERE (
+                                                   UPPER(TRIM(PERMTYPE))='LD'
+                                                   OR (
+                                                        UPPER(TRIM(PERMTYPE))='O/F'
+                                                        AND (
+                                                             UPPER(TRIM(FROM_AIRP)) LIKE 'VV%'
+                                                             OR UPPER(TRIM(TO_AIRP)) LIKE 'VV%'
+                                                        )
+                                                   )
+                                              )
                                               AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate";
                 using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
                 using (var command = new OracleCommand(cancelSql, connection))
@@ -134,21 +143,39 @@ namespace prjApplication.ReportNew
             if (!DateTime.TryParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out from) ||
                 !DateTime.TryParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out to))
                 throw new ArgumentException("Ngày lọc không hợp lệ.");
+            if (from > to || to > DateTime.Today)
+                throw new ArgumentException("Khoảng ngày phải hợp lệ và không vượt quá ngày hiện tại.");
+
             var values = new List<string>();
             const string sql = @"SELECT OPER_ID FROM (
                                    SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                     FROM T_DAY_FLIGHTS_GOINGON
-                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                     FROM T_DAY_FLIGHTS_GOINGON f
+                                    WHERE (
+                                           UPPER(TRIM(f.PERMTYPE))='LD'
+                                           OR (
+                                                UPPER(TRIM(f.PERMTYPE))='O/F'
+                                                AND (UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%')
+                                           )
+                                      )
+                                      AND f.OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION
                                    SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                   FROM T_FINISHED_FLIGHTS
-                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                     FROM T_FINISHED_FLIGHTS f
+                                    WHERE UPPER(TRIM(f.PERMTYPE))='LD'
+                                      AND f.OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION
                                    SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                     FROM T_DAY_FLIGHTS_CANCEL
-                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                     FROM T_DAY_FLIGHTS_CANCEL f
+                                    WHERE (
+                                           UPPER(TRIM(f.PERMTYPE))='LD'
+                                           OR (
+                                                UPPER(TRIM(f.PERMTYPE))='O/F'
+                                                AND (UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%')
+                                           )
+                                      )
+                                      AND f.OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION
                                    SELECT CASE WHEN UPPER(TRIM(""OPER""))='VNA' THEN 'HVN'
@@ -235,8 +262,8 @@ namespace prjApplication.ReportNew
                          ON d.FLIGHTDATE>=TRUNC(f_match.FLIGHTDATE)
                         AND d.FLIGHTDATE<TRUNC(f_match.FLIGHTDATE)+1
                         AND UPPER(TRIM(d.REGISTRATION))=UPPER(TRIM(f_match.REGISTRATION))
-                      WHERE f_match.PERMTYPE='LD'
-                        AND f_match.OPER_ID IS NOT NULL
+                        WHERE UPPER(TRIM(f_match.PERMTYPE))='LD'
+                          AND f_match.OPER_ID IS NOT NULL
                         AND f_match.REGISTRATION IS NOT NULL
                         AND f_match.FLIGHTDATE>=:fromDate AND f_match.FLIGHTDATE<:toDate
                         AND (:oper IS NULL OR UPPER(TRIM(f_match.OPER_ID))=:oper)
@@ -270,20 +297,42 @@ namespace prjApplication.ReportNew
                       ON day_fpl.finished_rowid=ROWIDTOCHAR(f.ROWID)
                      AND day_fpl.match_order=1";
             string plannedTime = BuildEobtFallbackSql("day_fpl.EOBTDATE", "day_fpl.EOBT", "NULL");
-            return BuildSql(BuildHistoricalFplCtes(), fromClause, plannedTime, false);
+            return BuildSql(BuildHistoricalFplCtes(), fromClause, plannedTime, false, false);
         }
 
         internal static string BuildCurrentStatusSql()
         {
             string plannedTime = BuildEobtFallbackSql("f.EOBTDATE", "f.EOBT", "NULL");
-            return BuildSql(String.Empty, "T_DAY_FLIGHTS_GOINGON f", plannedTime, true);
+            return BuildSql(String.Empty, "T_DAY_FLIGHTS_GOINGON f", plannedTime, true, false);
         }
 
-        private static string BuildSql(string auxiliaryCtes, string fromClause, string plannedTime, bool currentDay)
+        private static string BuildSql(
+            string auxiliaryCtes,
+            string fromClause,
+            string plannedTime,
+            bool currentDay,
+            bool includeOfCancelledFlights)
         {
             string plannedTimestamp = BuildFlightTimestampSql("planned_raw");
             string actualDepartureTimestamp = BuildFlightTimestampSql("actual_departure_raw");
             string isCurrentDay = currentDay ? "1" : "0";
+            string permittedSourceSql = @"(
+                             UPPER(TRIM(f.PERMTYPE))='LD'" +
+                (includeOfCancelledFlights
+                    ? @"
+                             OR (
+                                  UPPER(TRIM(f.PERMTYPE))='O/F'
+                                  AND (
+                                       UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%'
+                                       OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%'
+                                  )
+                             )"
+                    : String.Empty) + @"
+                        )";
+            string resultFilterSql = includeOfCancelledFlights
+                ? @"WHERE UPPER(TRIM(PERMTYPE))='LD'
+                       OR (UPPER(TRIM(PERMTYPE))='O/F' AND FLIGHT_STATE='CANCEL')"
+                : String.Empty;
 
             return @"WITH " + auxiliaryCtes + @"source_rows AS (
                     SELECT f.*,
@@ -300,7 +349,8 @@ namespace prjApplication.ReportNew
                            CASE WHEN NULLIF(TRIM(f.FROM_AIRP), '') IS NOT NULL AND UPPER(TRIM(f.FROM_AIRP)) NOT LIKE 'VV%' THEN 1 ELSE 0 END foreign_from,
                            CASE WHEN NULLIF(TRIM(f.TO_AIRP), '') IS NOT NULL AND UPPER(TRIM(f.TO_AIRP)) NOT LIKE 'VV%' THEN 1 ELSE 0 END foreign_to
                       FROM " + fromClause + @"
-                     WHERE f.PERMTYPE='LD' AND f.OPER_ID IS NOT NULL
+                      WHERE " + permittedSourceSql + @"
+                        AND f.OPER_ID IS NOT NULL
                        AND f.FLIGHTDATE>=:fromDate AND f.FLIGHTDATE<:toDate
                        AND (:oper IS NULL OR UPPER(TRIM(f.OPER_ID))=:oper)
                        AND (:airport IS NULL OR UPPER(TRIM(f.FROM_AIRP))=:airport OR UPPER(TRIM(f.TO_AIRP))=:airport)
@@ -319,31 +369,36 @@ namespace prjApplication.ReportNew
                              THEN ROUND((actual_departure_timestamp-planned_timestamp)*1440)
                            END delay_minutes
                       FROM parsed_rows p
-                  )
+                   ), classified_rows AS (
+                    SELECT m.*,
+                           CASE
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=60 THEN 'DELAY_60_PLUS'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=30 THEN 'DELAY_30_59'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=15 THEN 'DELAY_15_29'
+                             WHEN (domestic=1 AND has_from=1 AND has_to=1 AND has_atd=1 AND has_ata=1)
+                               OR (domestic=0 AND (
+                                    (foreign_from=1 AND has_to=1 AND has_ata=1)
+                                    OR (foreign_to=1 AND has_from=1 AND has_atd=1)
+                                  )) THEN 'FINISHED'
+                             WHEN domestic=0 AND (
+                                    (foreign_to=1 AND (has_from=0 OR has_atd=0))
+                                    OR (foreign_from=1 AND (has_to=0 OR has_ata=0))
+                                  ) THEN 'CANCEL'
+                             WHEN " + isCurrentDay + @"=1 AND domestic=1 AND departing_vietnam=1
+                                  AND has_to=1 AND planned_timestamp IS NOT NULL AND has_atd=0 THEN 'WAIT'
+                             WHEN domestic=1 AND (has_from=0 OR has_to=0 OR has_atd=0 OR has_ata=0) THEN 'CANCEL'
+                             ELSE 'CANCEL'
+                           END FLIGHT_STATE
+                      FROM metric_rows m
+                   )
                 SELECT FLIGHTDATE, FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
                        NULLIF(TRIM(ATD), '') ATDDAY,
                        NULLIF(TRIM(ATA), '') ATADAY,
                        planned_raw EOBTDAY,
-                       CASE
-                         WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=60 THEN 'DELAY_60_PLUS'
-                         WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=30 THEN 'DELAY_30_59'
-                         WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=15 THEN 'DELAY_15_29'
-                         WHEN (domestic=1 AND has_from=1 AND has_to=1 AND has_atd=1 AND has_ata=1)
-                           OR (domestic=0 AND (
-                                (foreign_from=1 AND has_to=1 AND has_ata=1)
-                                OR (foreign_to=1 AND has_from=1 AND has_atd=1)
-                              )) THEN 'FINISHED'
-                         WHEN domestic=0 AND (
-                                (foreign_to=1 AND (has_from=0 OR has_atd=0))
-                                OR (foreign_from=1 AND (has_to=0 OR has_ata=0))
-                              ) THEN 'CANCEL'
-                         WHEN " + isCurrentDay + @"=1 AND domestic=1 AND departing_vietnam=1
-                              AND has_to=1 AND planned_timestamp IS NOT NULL AND has_atd=0 THEN 'WAIT'
-                         WHEN domestic=1 AND (has_from=0 OR has_to=0 OR has_atd=0 OR has_ata=0) THEN 'CANCEL'
-                         ELSE 'CANCEL'
-                       END FLIGHT_STATE
-                  FROM metric_rows
-                 ORDER BY FLIGHTDATE, FLIGHTNBR";
+                       FLIGHT_STATE
+                  FROM classified_rows
+                  " + resultFilterSql + @"
+                  ORDER BY FLIGHTDATE, FLIGHTNBR";
         }
     }
 }
