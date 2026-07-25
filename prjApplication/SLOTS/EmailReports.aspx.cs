@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Net;
@@ -11,14 +12,24 @@ namespace prjApplication.SLOTS
 {
     public partial class EmailReports : Page
     {
-        private const string DefaultEndpoint = "http://192.168.100.131:8080/api/reports/emails";
+        private const string DefaultEndpoint = "http://192.168.100.135:8080/api/reports/emails";
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static string GetEmails()
+        public static string GetEmails(string query, string processingStatus, string fromDate, string toDate, int page, int size)
         {
             string endpoint = ConfigurationManager.AppSettings["EmailReports.ApiUrl"] ?? DefaultEndpoint;
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(endpoint);
+            var parameters = new List<string>();
+            AddParameter(parameters, "query", query);
+            AddParameter(parameters, "processingStatus", processingStatus);
+            AddParameter(parameters, "from", fromDate);
+            AddParameter(parameters, "to", toDate);
+            parameters.Add("page=" + Math.Max(0, page));
+            parameters.Add("size=" + Math.Max(1, Math.Min(size, 100)));
+
+            string separator = endpoint.Contains("?") ? "&" : "?";
+            string requestUrl = endpoint + separator + String.Join("&", parameters);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(requestUrl);
             request.Method = "GET";
             request.Accept = "application/json";
             request.Timeout = 30000;
@@ -42,6 +53,12 @@ namespace prjApplication.SLOTS
                     (String.IsNullOrWhiteSpace(detail) ? String.Empty : " Chi tiết: " + detail),
                     ex);
             }
+        }
+
+        private static void AddParameter(ICollection<string> parameters, string name, string value)
+        {
+            if (!String.IsNullOrWhiteSpace(value))
+                parameters.Add(name + "=" + Uri.EscapeDataString(value.Trim()));
         }
 
         private static string ReadErrorResponse(WebException exception)
