@@ -43,7 +43,7 @@ namespace prjApplication.ReportNew
                      AND day_fpl.match_order=1";
                 plannedTime = BuildEobtFallbackSql("day_fpl.EOBTDATE", "day_fpl.EOBT", "NULL");
             }
-            string sql = BuildSql(auxiliaryCtes, fromClause, plannedTime, currentDay, currentDay);
+            string sql = BuildSql(auxiliaryCtes, fromClause, plannedTime, currentDay, true);
             var flights = new List<object>();
             int finished = 0, cancel = 0, delay = 0, wait = 0;
 
@@ -162,7 +162,13 @@ namespace prjApplication.ReportNew
                                    UNION
                                    SELECT UPPER(TRIM(OPER_ID)) OPER_ID
                                      FROM T_FINISHED_FLIGHTS f
-                                    WHERE UPPER(TRIM(f.PERMTYPE))='LD'
+                                    WHERE (
+                                           UPPER(TRIM(f.PERMTYPE))='LD'
+                                           OR (
+                                                UPPER(TRIM(f.PERMTYPE))='O/F'
+                                                AND (UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%')
+                                           )
+                                      )
                                       AND f.OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION
@@ -262,7 +268,16 @@ namespace prjApplication.ReportNew
                          ON d.FLIGHTDATE>=TRUNC(f_match.FLIGHTDATE)
                         AND d.FLIGHTDATE<TRUNC(f_match.FLIGHTDATE)+1
                         AND UPPER(TRIM(d.REGISTRATION))=UPPER(TRIM(f_match.REGISTRATION))
-                        WHERE UPPER(TRIM(f_match.PERMTYPE))='LD'
+                        WHERE (
+                               UPPER(TRIM(f_match.PERMTYPE))='LD'
+                               OR (
+                                    UPPER(TRIM(f_match.PERMTYPE))='O/F'
+                                    AND (
+                                         UPPER(TRIM(f_match.FROM_AIRP)) LIKE 'VV%'
+                                         OR UPPER(TRIM(f_match.TO_AIRP)) LIKE 'VV%'
+                                    )
+                               )
+                          )
                           AND f_match.OPER_ID IS NOT NULL
                         AND f_match.REGISTRATION IS NOT NULL
                         AND f_match.FLIGHTDATE>=:fromDate AND f_match.FLIGHTDATE<:toDate
@@ -297,13 +312,13 @@ namespace prjApplication.ReportNew
                       ON day_fpl.finished_rowid=ROWIDTOCHAR(f.ROWID)
                      AND day_fpl.match_order=1";
             string plannedTime = BuildEobtFallbackSql("day_fpl.EOBTDATE", "day_fpl.EOBT", "NULL");
-            return BuildSql(BuildHistoricalFplCtes(), fromClause, plannedTime, false, false);
+            return BuildSql(BuildHistoricalFplCtes(), fromClause, plannedTime, false, true);
         }
 
         internal static string BuildCurrentStatusSql()
         {
             string plannedTime = BuildEobtFallbackSql("f.EOBTDATE", "f.EOBT", "NULL");
-            return BuildSql(String.Empty, "T_DAY_FLIGHTS_GOINGON f", plannedTime, true, false);
+            return BuildSql(String.Empty, "T_DAY_FLIGHTS_GOINGON f", plannedTime, true, true);
         }
 
         private static string BuildSql(
@@ -311,14 +326,14 @@ namespace prjApplication.ReportNew
             string fromClause,
             string plannedTime,
             bool currentDay,
-            bool includeOfCancelledFlights)
+            bool includeVietnamLinkedOfFlights)
         {
             string plannedTimestamp = BuildFlightTimestampSql("planned_raw");
             string actualDepartureTimestamp = BuildFlightTimestampSql("actual_departure_raw");
             string isCurrentDay = currentDay ? "1" : "0";
             string permittedSourceSql = @"(
                              UPPER(TRIM(f.PERMTYPE))='LD'" +
-                (includeOfCancelledFlights
+                (includeVietnamLinkedOfFlights
                     ? @"
                              OR (
                                   UPPER(TRIM(f.PERMTYPE))='O/F'
@@ -329,9 +344,16 @@ namespace prjApplication.ReportNew
                              )"
                     : String.Empty) + @"
                         )";
-            string resultFilterSql = includeOfCancelledFlights
+            string resultFilterSql = includeVietnamLinkedOfFlights
                 ? @"WHERE UPPER(TRIM(PERMTYPE))='LD'
-                       OR (UPPER(TRIM(PERMTYPE))='O/F' AND FLIGHT_STATE='CANCEL')"
+                       OR (
+                            UPPER(TRIM(PERMTYPE))='O/F'
+                            AND (
+                                 FLIGHT_STATE='CANCEL'
+                                 OR FLIGHT_STATE='FINISHED'
+                                 OR FLIGHT_STATE LIKE 'DELAY_%'
+                            )
+                       )"
                 : String.Empty;
 
             return @"WITH " + auxiliaryCtes + @"source_rows AS (
