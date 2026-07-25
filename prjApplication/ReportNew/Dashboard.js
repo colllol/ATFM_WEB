@@ -52,6 +52,17 @@
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option>' + Object.keys(airportNames).map(function (code) {
             return '<option value="' + code + '">' + code + ' - ' + airportNames[code] + '</option>';
         }).join('');
+        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+            window.jQuery(airport).select2({
+                width: '100%',
+                minimumResultsForSearch: 0,
+                dropdownCssClass: 'rn-dashboard-airport-dropdown',
+                language: {
+                    noResults: function () { return 'Không tìm thấy sân bay'; },
+                    searching: function () { return 'Đang tìm kiếm...'; }
+                }
+            });
+        }
         from.value = formatDate(today);
         to.value = formatDate(today);
         var heroSubtitle = app.querySelector('.rn-hero p');
@@ -67,6 +78,9 @@
                 }
             });
             airport.value = selected;
+            if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+                window.jQuery(airport).trigger('change.select2');
+            }
         }
 
         function statusItems(flights) {
