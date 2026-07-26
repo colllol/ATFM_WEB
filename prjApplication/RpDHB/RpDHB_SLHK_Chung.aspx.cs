@@ -13,6 +13,7 @@ using System.Data;
 using System.Configuration;
 using System.Globalization;
 using System.Text;
+using Oracle.ManagedDataAccess.Client;
 
 namespace prjApplication.RpDHB
 {
@@ -365,6 +366,231 @@ namespace prjApplication.RpDHB
                 true);
         }
 
+        private DataTable LoadCurrentDayDelayAlerts(out DateTime reportDay)
+        {
+            const string sql = @"
+                SELECT TRUNC(SYSDATE) REPORT_DAY,
+                       f.FLIGHTDATE,
+                       f.FLIGHTNBR,
+                       f.OPER_ID,
+                       f.REGISTRATION,
+                       f.PERMTYPE,
+                       f.FROM_AIRP,
+                       f.TO_AIRP,
+                       TRIM(f.ETD) ETD,
+                       TRIM(f.ATD) ATD
+                  FROM T_DAY_FLIGHTS_GOINGON f
+                 WHERE f.FLIGHTDATE >= TRUNC(SYSDATE)
+                   AND f.FLIGHTDATE < TRUNC(SYSDATE) + 1
+                   AND f.ETD IS NOT NULL
+                   AND f.ATD IS NOT NULL
+                 ORDER BY f.FLIGHTDATE, f.FLIGHTNBR";
+
+            DataTable alerts = CreateDelayAlertsTable();
+            reportDay = DateTime.Today;
+            using (var connection = new OracleConnection(
+                ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
+            using (var command = new OracleCommand(sql, connection))
+            {
+                command.CommandTimeout = 120;
+                connection.Open();
+                using (OracleDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (reader["REPORT_DAY"] != DBNull.Value)
+                            reportDay = Convert.ToDateTime(reader["REPORT_DAY"]).Date;
+
+                        DateTime flightDate;
+                        DateTime etdTimestamp;
+                        DateTime atdTimestamp;
+                        string etd = NormalizeFlightTime(reader["ETD"], 4);
+                        string atd = NormalizeFlightTime(reader["ATD"], 6);
+                        if (!TryGetFlightDate(reader["FLIGHTDATE"], out flightDate) ||
+                            !TryParseEtd(etd, flightDate, out etdTimestamp) ||
+                            !TryParseAtd(atd, flightDate, out atdTimestamp))
+                            continue;
+
+                        long delayMinutes = Convert.ToInt64(
+                            (atdTimestamp - etdTimestamp).TotalMinutes);
+                        int alertLevel = GetDelayAlertLevel(delayMinutes);
+                        if (alertLevel == 0)
+                            continue;
+
+                        DataRow row = alerts.NewRow();
+                        row["ALERT_LEVEL"] = alertLevel;
+                        row["ALERT_NAME"] = "Mức " + alertLevel;
+                        row["FLIGHTNBR"] = Convert.ToString(reader["FLIGHTNBR"]).Trim();
+                        row["OPER_ID"] = Convert.ToString(reader["OPER_ID"]).Trim();
+                        row["REGISTRATION"] = Convert.ToString(reader["REGISTRATION"]).Trim();
+                        row["PERMTYPE"] = Convert.ToString(reader["PERMTYPE"]).Trim();
+                        row["FROM_AIRP"] = Convert.ToString(reader["FROM_AIRP"]).Trim();
+                        row["TO_AIRP"] = Convert.ToString(reader["TO_AIRP"]).Trim();
+                        row["ETD"] = etd;
+                        row["ATD"] = atd;
+                        row["DELAY_MINUTES"] = delayMinutes;
+                        row["DELAY_DURATION"] = FormatDelayDuration(delayMinutes);
+                        alerts.Rows.Add(row);
+                    }
+                }
+            }
+
+            DataView sortedView = alerts.DefaultView;
+            sortedView.Sort = "ALERT_LEVEL DESC, DELAY_MINUTES DESC, FLIGHTNBR ASC";
+            DataTable sortedAlerts = sortedView.ToTable();
+            for (int index = 0; index < sortedAlerts.Rows.Count; index++)
+                sortedAlerts.Rows[index]["STT"] = index + 1;
+            return sortedAlerts;
+        }
+
+        private static DataTable CreateDelayAlertsTable()
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add("STT", typeof(int));
+            table.Columns.Add("ALERT_LEVEL", typeof(int));
+            table.Columns.Add("ALERT_NAME", typeof(string));
+            table.Columns.Add("FLIGHTNBR", typeof(string));
+            table.Columns.Add("OPER_ID", typeof(string));
+            table.Columns.Add("REGISTRATION", typeof(string));
+            table.Columns.Add("PERMTYPE", typeof(string));
+            table.Columns.Add("FROM_AIRP", typeof(string));
+            table.Columns.Add("TO_AIRP", typeof(string));
+            table.Columns.Add("ETD", typeof(string));
+            table.Columns.Add("ATD", typeof(string));
+            table.Columns.Add("DELAY_MINUTES", typeof(long));
+            table.Columns.Add("DELAY_DURATION", typeof(string));
+            return table;
+        }
+
+        private static string NormalizeFlightTime(object value, int requiredLength)
+        {
+            string text = Convert.ToString(value).Trim();
+            if (text.Length != requiredLength || text.Any(character => !Char.IsDigit(character)))
+                return String.Empty;
+            return text;
+        }
+
+        private static bool TryParseEtd(
+            string value,
+            DateTime flightDate,
+            out DateTime timestamp)
+        {
+            DateTime parsedTime;
+            if (!DateTime.TryParseExact(
+                value,
+                "HHmm",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out parsedTime))
+            {
+                timestamp = DateTime.MinValue;
+                return false;
+            }
+
+            timestamp = flightDate.Date.Add(parsedTime.TimeOfDay);
+            return true;
+        }
+
+        private static bool TryParseAtd(
+            string value,
+            DateTime flightDate,
+            out DateTime timestamp)
+        {
+            int day;
+            int hour;
+            int minute;
+            timestamp = DateTime.MinValue;
+            if (value.Length != 6 ||
+                !Int32.TryParse(value.Substring(0, 2), out day) ||
+                !Int32.TryParse(value.Substring(2, 2), out hour) ||
+                !Int32.TryParse(value.Substring(4, 2), out minute) ||
+                hour < 0 || hour > 23 ||
+                minute < 0 || minute > 59)
+                return false;
+
+            DateTime flightDay = flightDate.Date;
+            DateTime atdDay;
+            if (flightDay.Day == day)
+                atdDay = flightDay;
+            else if (flightDay.AddDays(1).Day == day)
+                atdDay = flightDay.AddDays(1);
+            else if (flightDay.AddDays(-1).Day == day)
+                atdDay = flightDay.AddDays(-1);
+            else
+                return false;
+
+            timestamp = atdDay.AddHours(hour).AddMinutes(minute);
+            return true;
+        }
+
+        private static int GetDelayAlertLevel(long delayMinutes)
+        {
+            if (delayMinutes >= 60)
+                return 3;
+            if (delayMinutes >= 30)
+                return 2;
+            if (delayMinutes >= 15)
+                return 1;
+            return 0;
+        }
+
+        private static string FormatDelayDuration(long delayMinutes)
+        {
+            TimeSpan delay = TimeSpan.FromMinutes(delayMinutes);
+            int totalHours = Convert.ToInt32(Math.Floor(delay.TotalHours));
+            return String.Format(
+                CultureInfo.InvariantCulture,
+                "{0:00}:{1:00}",
+                totalHours,
+                delay.Minutes);
+        }
+
+        private void BindDelayAlerts(DataTable alerts, DateTime reportDay)
+        {
+            int level1 = 0;
+            int level2 = 0;
+            int level3 = 0;
+            foreach (DataRow row in alerts.Rows)
+            {
+                switch (Convert.ToInt32(row["ALERT_LEVEL"]))
+                {
+                    case 1:
+                        level1++;
+                        break;
+                    case 2:
+                        level2++;
+                        break;
+                    case 3:
+                        level3++;
+                        break;
+                }
+            }
+
+            grdDelayAlerts.DataSource = alerts;
+            grdDelayAlerts.DataBind();
+            if (grdDelayAlerts.HeaderRow != null)
+                grdDelayAlerts.HeaderRow.TableSection = TableRowSection.TableHeader;
+
+            ltrDelayAlertsSummary.Text = String.Format(
+                CultureInfo.InvariantCulture,
+                "Ngày dữ liệu <strong>{0:dd-MM-yyyy}</strong> từ <strong>T_DAY_FLIGHTS_GOINGON</strong>. " +
+                "Tính theo ETD 4 số và ATD 6 số. " +
+                "Mức 1: <strong>{1}</strong>, mức 2: <strong>{2}</strong>, mức 3: <strong>{3}</strong>.",
+                reportDay,
+                level1,
+                level2,
+                level3);
+        }
+
+        private void OpenDelayAlertsModal()
+        {
+            ClientScript.RegisterStartupScript(
+                GetType(),
+                "openDelayAlertsModal",
+                "openDelayAlertsModal();",
+                true);
+        }
+
 
 
         public string BuildFooter()
@@ -490,6 +716,31 @@ namespace prjApplication.RpDHB
             {
                 ShowAlert("Không thể đếm ngày hoạt động từ nguồn dữ liệu báo cáo hiện tại. " + ex.Message);
             }
+        }
+
+        protected void btnViewDelayAlerts_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                DateTime reportDay;
+                DataTable alerts = LoadCurrentDayDelayAlerts(out reportDay);
+                BindDelayAlerts(alerts, reportDay);
+                OpenDelayAlertsModal();
+            }
+            catch (Exception ex)
+            {
+                ShowAlert("Không thể tải cảnh báo delay trong ngày hiện tại. " + ex.Message);
+            }
+        }
+
+        protected void grdDelayAlerts_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType != DataControlRowType.DataRow)
+                return;
+
+            int alertLevel = Convert.ToInt32(DataBinder.Eval(e.Row.DataItem, "ALERT_LEVEL"));
+            e.Row.Attributes["data-alert-level"] = alertLevel.ToString(CultureInfo.InvariantCulture);
+            e.Row.CssClass = "delay-alert-level-" + alertLevel;
         }
 
         protected void btnExportActiveDays_Click(object sender, EventArgs e)
