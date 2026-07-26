@@ -5,5 +5,5 @@
     <section class="rn-app" data-report-view="dashboard"></section>
     <script src="<%= ResolveUrl("~/Style/assets/js/select2.min.js") %>"></script>
     <script src="<%= ResolveUrl("~/ReportNew/ReportNew.js") %>"></script>
-    <script src="<%= ResolveUrl("~/ReportNew/Dashboard.js?v=20260725-1") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/Dashboard.js?v=20260725-2") %>"></script>
 </asp:Content>

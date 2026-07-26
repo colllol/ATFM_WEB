@@ -84,13 +84,27 @@ namespace prjApplication.ReportNew
             var values = new List<string>();
             const string sql = @"SELECT OPER_ID FROM (
                                    SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                     FROM T_FINISHED_FLIGHTS
-                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                     FROM T_FINISHED_FLIGHTS f
+                                    WHERE (
+                                           UPPER(TRIM(f.PERMTYPE))='LD'
+                                           OR (
+                                                UPPER(TRIM(f.PERMTYPE))='O/F'
+                                                AND (UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%')
+                                           )
+                                      )
+                                      AND f.OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION
                                    SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                     FROM T_DAY_FLIGHTS_GOINGON
-                                    WHERE PERMTYPE='LD' AND OPER_ID IS NOT NULL
+                                     FROM T_DAY_FLIGHTS_GOINGON f
+                                    WHERE (
+                                           UPPER(TRIM(f.PERMTYPE))='LD'
+                                           OR (
+                                                UPPER(TRIM(f.PERMTYPE))='O/F'
+                                                AND (UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%')
+                                           )
+                                      )
+                                      AND f.OPER_ID IS NOT NULL
                                       AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
                                    UNION
                                    SELECT CASE WHEN UPPER(TRIM(""OPER""))='VNA' THEN 'HVN'
@@ -164,7 +178,8 @@ namespace prjApplication.ReportNew
             if (!DateTime.TryParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out from) ||
                 !DateTime.TryParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out to))
                 throw new ArgumentException("Ngày lọc không hợp lệ.");
-            if (from > to) throw new ArgumentException("Từ ngày không được lớn hơn đến ngày.");
+            if (from > to || to > DateTime.Today)
+                throw new ArgumentException("Khoảng ngày phải hợp lệ và không vượt quá ngày hiện tại.");
         }
     }
 }

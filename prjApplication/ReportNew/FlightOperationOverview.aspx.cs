@@ -132,8 +132,8 @@ namespace prjApplication.ReportNew
             if (!DateTime.TryParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out from) ||
                 !DateTime.TryParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out to))
                 throw new ArgumentException("Ngày lọc không hợp lệ.");
-            if (from > to)
-                throw new ArgumentException("Từ ngày không được lớn hơn đến ngày.");
+            if (from > to || to > DateTime.Today)
+                throw new ArgumentException("Khoảng ngày phải hợp lệ và không vượt quá ngày hiện tại.");
         }
 
         private static string NormalizeAirport(string value, bool allowAll)

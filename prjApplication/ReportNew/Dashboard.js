@@ -63,6 +63,8 @@
                 }
             });
         }
+        from.max = formatDate(today);
+        to.max = formatDate(today);
         from.value = formatDate(today);
         to.value = formatDate(today);
         var heroSubtitle = app.querySelector('.rn-hero p');

@@ -1,5 +1,23 @@
-- trang Common/ChartReportAirport.aspx sửa lỗi không hiển thị được nội dung của select sân bay.
-- trang Common/ChartReport.aspx bộ lọc từ ngày đến ngày mặc định là lấy DAYNOW to DAYNOW
-- trang ReportNew/FlightStatusRate.aspx fix lỗi không hiển thị được nội dung của select hãng bay.
-- trang ReportNew/FlightTrendAnalysis.aspx fix lỗi không hiển thị được nội dung của select hãng bay và bộ lọc từ ngày đến ngày mặc định là lấy DAYNOW to DAYNOW
-- trang ReportNew/AirportTakeoffLanding.aspx bộ lọc từ ngày đến ngày mặc định là lấy DAYNOW to DAYNOW.  
+- trang ReportNew/FlightStatusRate.aspx chỉnh lại:
+    - người dùng có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+    - chỉnh phần lấy thông tin ở các chuyến huỷ không phải ngày hiện tại là lấy ra từ bảng ATFM.T_DAY_FLIGHTS_CANCEL
+    - thêm nút export excel khi nhấn nút export excel mở ra 1 popup chọn các trường giống của trang FinishFlights/ListFinishedFlightAccepts.aspx
+- trang ReportNew/FlightOperationOverview.aspx chỉnh lại:
+    - người dùng có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+    - thêm nút export excel khi nhấn nút export excel mở ra 1 popup chọn các trường giống của trang FinishFlights/ListFinishedFlightAccepts.aspx
+- trang ReportNew/FlightTrendAnalysis.aspx chỉnh lại:
+    - người dùng có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+- trang ReportNew/MilitaryFlightReport.aspx chỉnh lại:
+    - người dùng có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+    - nút export excel khi nhấn nút export excel mở ra 1 popup chọn các trường giống của trang FinishFlights/ListFinishedFlightAccepts.aspx
+- trang ReportNew/CivilFlightSummary.aspx chỉnh lại:
+    - phần lọc sân bay chỉnh thành select có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+    - phần bảng lưu lượng sân bay chỉnh lại bảng để nhìn cho đẹp với ( mở rộng ra để cho đỡ xấu)
+- trang ReportNew/AirportTakeoffLanding.aspx chỉnh lại:
+    - người dùng có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+- trang ReportNew/AdsBPerformanceReport.aspx chỉnh lại:
+    - người dùng có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+- trang Common/ChartReportAirport.aspx chỉnh lại:
+    - người dùng có thể nhập text để phần select gợi ý ra chứ không như hiện tại hiển thị 1 loạt dài làm khó tìm
+    - phần chọn số lượng sân bay chỉnh lại giới hạn tối đa 5 sân bay
+    - mỗi số lượng ô select sân bay tương ứng với số lượng sân bay được chọn ( nếu vượt quá 2 sân bay thì chỉnh độ rộng của ô làm sao chỉ để view trên 1 hàng thôi)

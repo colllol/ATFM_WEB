@@ -185,6 +185,8 @@
         var airportField = airport.closest('.rn-field');
         var filterBox = app.querySelector('.rn-filters');
         filterBox.classList.add('rn-status-filters');
+        from.max = iso;
+        to.max = iso;
         from.value = iso;
         to.value = iso;
         airportField.querySelector('label').textContent = 'Sân bay';
