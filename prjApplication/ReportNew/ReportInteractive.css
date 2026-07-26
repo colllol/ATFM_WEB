@@ -108,3 +108,34 @@
 @media (max-width: 600px) {
     .rn-filters.rn-trend-filters { grid-template-columns: 1fr; }
 }
+
+/* Keep each report's primary filters and actions together on desktop/tablet. */
+.rn-app[data-report-view="status"] .rn-filters {
+    grid-template-columns: minmax(0,1.25fr) minmax(0,1.05fr) minmax(0,1fr) minmax(0,1fr) auto auto;
+    align-items: end;
+}
+.rn-app[data-report-view="overview"] .rn-filters {
+    grid-template-columns: minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) auto auto;
+    align-items: end;
+}
+.rn-app[data-report-view="trend"] .rn-filters {
+    grid-template-columns: minmax(0,1.2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.8fr) auto;
+    align-items: end;
+}
+.rn-app[data-report-view="status"] .rn-field,
+.rn-app[data-report-view="overview"] .rn-field,
+.rn-app[data-report-view="trend"] .rn-field {
+    min-width: 0;
+}
+.rn-app[data-report-view="status"] .rn-filter-button,
+.rn-app[data-report-view="overview"] .rn-filter-button,
+.rn-app[data-report-view="trend"] .rn-filter-button {
+    white-space: nowrap;
+}
+@media (max-width: 600px) {
+    .rn-app[data-report-view="status"] .rn-filters,
+    .rn-app[data-report-view="overview"] .rn-filters,
+    .rn-app[data-report-view="trend"] .rn-filters {
+        grid-template-columns: 1fr;
+    }
+}
