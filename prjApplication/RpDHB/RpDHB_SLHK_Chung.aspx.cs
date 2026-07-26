@@ -11,6 +11,8 @@ using System.IO;
 using TuesPechkin;
 using System.Data;
 using System.Configuration;
+using System.Globalization;
+using System.Text;
 
 namespace prjApplication.RpDHB
 {
@@ -86,7 +88,7 @@ namespace prjApplication.RpDHB
 
             DataTable _dt = null;
             if (!String.IsNullOrEmpty(_dateFrom) && !String.IsNullOrEmpty(_dateTo))
-                _dt = _DAL.BCDHB06_Get_SLB_ByTimes(_dateFrom.Trim(), _dateTo.Trim());            
+                _dt = LoadReportFlights(_dateFrom.Trim(), _dateTo.Trim());
             DataRow _mrow = null;
 
 
@@ -183,6 +185,184 @@ namespace prjApplication.RpDHB
             _htmlContent += "</table>";
             _htmlContent += "</div>";
             return _htmlContent;
+        }
+
+        private DataTable LoadReportFlights(string fromDate, string toDate)
+        {
+            return _DAL.BCDHB06_Get_SLB_ByTimes(fromDate, toDate);
+        }
+
+        private DataTable BuildAirportActiveDays(DataTable flights, DateTime fromDate, DateTime toDate)
+        {
+            DataTable result = CreateAirportActiveDaysTable();
+            if (flights == null || flights.Rows.Count == 0)
+                return result;
+
+            if (!flights.Columns.Contains("FLIGHTDATE") ||
+                !flights.Columns.Contains("FROM_AIRP") ||
+                !flights.Columns.Contains("TO_AIRP"))
+                throw new InvalidOperationException("Nguồn dữ liệu báo cáo thiếu FLIGHTDATE, FROM_AIRP hoặc TO_AIRP.");
+
+            var activityDays = new Dictionary<string, HashSet<DateTime>>(StringComparer.OrdinalIgnoreCase);
+            foreach (DataRow flight in flights.Rows)
+            {
+                DateTime flightDate;
+                if (!TryGetFlightDate(flight["FLIGHTDATE"], out flightDate))
+                    continue;
+
+                flightDate = flightDate.Date;
+                if (flightDate < fromDate.Date || flightDate > toDate.Date)
+                    continue;
+
+                AddAirportActivity(activityDays, flight["FROM_AIRP"], flightDate);
+                AddAirportActivity(activityDays, flight["TO_AIRP"], flightDate);
+            }
+
+            int index = 1;
+            foreach (var airport in activityDays
+                .OrderByDescending(item => item.Value.Count)
+                .ThenBy(item => item.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                DataRow row = result.NewRow();
+                row["STT"] = index++;
+                row["AIRPORT_CODE"] = airport.Key;
+                row["ACTIVE_DAYS"] = airport.Value.Count;
+                result.Rows.Add(row);
+            }
+
+            return result;
+        }
+
+        private static DataTable CreateAirportActiveDaysTable()
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add("STT", typeof(int));
+            table.Columns.Add("AIRPORT_CODE", typeof(string));
+            table.Columns.Add("ACTIVE_DAYS", typeof(int));
+            return table;
+        }
+
+        private static void AddAirportActivity(
+            IDictionary<string, HashSet<DateTime>> activityDays,
+            object airportValue,
+            DateTime flightDate)
+        {
+            string airportCode = Convert.ToString(airportValue).Trim().ToUpperInvariant();
+            if (String.IsNullOrEmpty(airportCode))
+                return;
+
+            HashSet<DateTime> days;
+            if (!activityDays.TryGetValue(airportCode, out days))
+            {
+                days = new HashSet<DateTime>();
+                activityDays.Add(airportCode, days);
+            }
+            days.Add(flightDate.Date);
+        }
+
+        private static bool TryGetFlightDate(object value, out DateTime flightDate)
+        {
+            if (value != null && value != DBNull.Value && value is DateTime)
+            {
+                flightDate = ((DateTime)value).Date;
+                return true;
+            }
+
+            string text = Convert.ToString(value).Trim();
+            return DateTime.TryParse(text, CultureInfo.CurrentCulture, DateTimeStyles.None, out flightDate)
+                || DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out flightDate);
+        }
+
+        private bool TryGetActivityPeriod(out DateTime fromDate, out DateTime toDate, out string error)
+        {
+            string[] formats = { "dd-MM-yyyy", "d-M-yyyy", "dd/MM/yyyy", "d/M/yyyy" };
+            string fromText = txtFromDate.Value.Trim();
+            string toText = txtToDate.Value.Trim();
+            error = null;
+
+            bool validFromDate = DateTime.TryParseExact(
+                fromText, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out fromDate);
+            bool validToDate = DateTime.TryParseExact(
+                toText, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out toDate);
+            if (!validFromDate || !validToDate)
+            {
+                error = "Vui lòng chọn đầy đủ FROM DATE và TO DATE theo định dạng ngày-tháng-năm.";
+                return false;
+            }
+            if (fromDate > toDate)
+            {
+                error = "FROM DATE không được lớn hơn TO DATE.";
+                return false;
+            }
+            if (fromDate.Year != toDate.Year || fromDate.Month != toDate.Month)
+            {
+                error = "Chức năng đếm ngày hoạt động chỉ áp dụng cho khoảng ngày trong cùng một tháng.";
+                return false;
+            }
+            return true;
+        }
+
+        private void BindActiveDays(DataTable activeDays, DateTime fromDate, DateTime toDate)
+        {
+            grdActiveDays.DataSource = activeDays;
+            grdActiveDays.DataBind();
+            if (grdActiveDays.HeaderRow != null)
+                grdActiveDays.HeaderRow.TableSection = TableRowSection.TableHeader;
+
+            ltrActiveDaysSummary.Text = String.Format(
+                CultureInfo.InvariantCulture,
+                "Tháng <strong>{0:MM/yyyy}</strong>, khoảng đếm <strong>{1:dd-MM-yyyy}</strong> đến <strong>{2:dd-MM-yyyy}</strong>. Tổng số sân bay: <strong>{3}</strong>.",
+                fromDate,
+                fromDate,
+                toDate,
+                activeDays.Rows.Count);
+            btnExportActiveDays.Enabled = activeDays.Rows.Count > 0;
+        }
+
+        private string BuildActiveDaysExportHtml(DataTable activeDays, DateTime fromDate, DateTime toDate)
+        {
+            StringBuilder html = new StringBuilder();
+            html.Append("<div style=\"text-align:center;\"><h3>ĐẾM NGÀY HOẠT ĐỘNG SÂN BAY</h3>");
+            html.Append("<p>Tháng ");
+            html.Append(HttpUtility.HtmlEncode(fromDate.ToString("MM/yyyy", CultureInfo.InvariantCulture)));
+            html.Append(", từ ");
+            html.Append(HttpUtility.HtmlEncode(fromDate.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)));
+            html.Append(" đến ");
+            html.Append(HttpUtility.HtmlEncode(toDate.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)));
+            html.Append("</p></div>");
+            html.Append("<table class=\"tg\" style=\"width:100%\"><thead><tr>");
+            html.Append("<th>STT</th><th>Sân bay</th><th>Số ngày hoạt động</th>");
+            html.Append("</tr></thead><tbody>");
+            foreach (DataRow row in activeDays.Rows)
+            {
+                html.Append("<tr><td>");
+                html.Append(HttpUtility.HtmlEncode(Convert.ToString(row["STT"])));
+                html.Append("</td><td>");
+                html.Append(HttpUtility.HtmlEncode(Convert.ToString(row["AIRPORT_CODE"])));
+                html.Append("</td><td>");
+                html.Append(HttpUtility.HtmlEncode(Convert.ToString(row["ACTIVE_DAYS"])));
+                html.Append("</td></tr>");
+            }
+            html.Append("</tbody></table>");
+            return html.ToString();
+        }
+
+        private void ShowAlert(string message)
+        {
+            ClientScript.RegisterStartupScript(
+                GetType(),
+                "activityDaysAlert",
+                "alert('" + HttpUtility.JavaScriptStringEncode(message) + "');",
+                true);
+        }
+
+        private void OpenActivityDaysModal()
+        {
+            ClientScript.RegisterStartupScript(
+                GetType(),
+                "openActivityDaysModal",
+                "openActivityDaysModal();",
+                true);
         }
 
 
@@ -285,6 +465,69 @@ namespace prjApplication.RpDHB
             ltrContent.Text = BuildContent_New();
             ltrFooter.Text = BuildFooter();
 
+        }
+
+        protected void btnCountActiveDays_Click(object sender, EventArgs e)
+        {
+            DateTime fromDate;
+            DateTime toDate;
+            string error;
+            if (!TryGetActivityPeriod(out fromDate, out toDate, out error))
+            {
+                ShowAlert(error);
+                return;
+            }
+
+            try
+            {
+                // Dùng đúng nguồn BCDHB06 của báo cáo hiện tại, sau đó chỉ khử trùng sân bay theo ngày.
+                DataTable flights = LoadReportFlights(txtFromDate.Value.Trim(), txtToDate.Value.Trim());
+                DataTable activeDays = BuildAirportActiveDays(flights, fromDate, toDate);
+                BindActiveDays(activeDays, fromDate, toDate);
+                OpenActivityDaysModal();
+            }
+            catch (Exception ex)
+            {
+                ShowAlert("Không thể đếm ngày hoạt động từ nguồn dữ liệu báo cáo hiện tại. " + ex.Message);
+            }
+        }
+
+        protected void btnExportActiveDays_Click(object sender, EventArgs e)
+        {
+            DateTime fromDate;
+            DateTime toDate;
+            string error;
+            string html;
+            string fileName;
+            if (!TryGetActivityPeriod(out fromDate, out toDate, out error))
+            {
+                ShowAlert(error);
+                return;
+            }
+
+            try
+            {
+                DataTable flights = LoadReportFlights(txtFromDate.Value.Trim(), txtToDate.Value.Trim());
+                DataTable activeDays = BuildAirportActiveDays(flights, fromDate, toDate);
+                if (activeDays.Rows.Count == 0)
+                {
+                    BindActiveDays(activeDays, fromDate, toDate);
+                    OpenActivityDaysModal();
+                    return;
+                }
+
+                html = BuildActiveDaysExportHtml(activeDays, fromDate, toDate);
+                fileName = "DEM_NGAY_HOAT_DONG_SAN_BAY_" +
+                    fromDate.ToString("MMyyyy", CultureInfo.InvariantCulture) + "_" +
+                    DateTime.Now.ToFileTime() + ".xls";
+            }
+            catch (Exception ex)
+            {
+                ShowAlert("Không thể xuất Excel dữ liệu ngày hoạt động. " + ex.Message);
+                return;
+            }
+
+            this.CreateExcel(html, fileName, Server.MapPath("~/Style/StyleRpDHB.css"));
         }
 
         protected void btnExport_Click(object sender, EventArgs e)

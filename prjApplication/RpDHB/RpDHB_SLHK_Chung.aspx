@@ -63,6 +63,127 @@
             padding-bottom: 0px;
             padding-top: 0px;
         }
+
+        #abcxyz.report-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .activity-days-backdrop {
+            position: fixed;
+            z-index: 1050;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        .activity-days-backdrop.is-open {
+            display: flex;
+        }
+
+        .activity-days-dialog {
+            display: flex;
+            flex-direction: column;
+            width: 720px;
+            max-width: calc(100% - 32px);
+            max-height: calc(100vh - 40px);
+            overflow: hidden;
+            border: 1px solid #c9d5df;
+            border-radius: 6px;
+            background: #fff;
+            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
+            text-align: left;
+        }
+
+        .activity-days-header,
+        .activity-days-footer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f5f7f9;
+        }
+
+        .activity-days-header {
+            justify-content: space-between;
+            border-bottom: 1px solid #d8e0e7;
+        }
+
+        .activity-days-header h3 {
+            margin: 0;
+            color: #244763;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .activity-days-close {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #52677a;
+            font-size: 26px;
+            line-height: 34px;
+        }
+
+        .activity-days-body {
+            min-height: 180px;
+            overflow: auto;
+            padding: 14px 16px;
+        }
+
+        .activity-days-summary {
+            margin-bottom: 12px;
+            color: #425b70;
+            font-size: 13px;
+        }
+
+        .activity-days-table {
+            width: 100%;
+            margin: 0;
+            border-collapse: collapse;
+        }
+
+        .activity-days-table th,
+        .activity-days-table td {
+            padding: 8px 10px !important;
+            border: 1px solid #cbd6df;
+            text-align: center;
+        }
+
+        .activity-days-table th {
+            position: sticky;
+            top: 0;
+            background: #337ab7 !important;
+            color: #fff !important;
+        }
+
+        .activity-days-footer {
+            justify-content: flex-end;
+            border-top: 1px solid #d8e0e7;
+        }
+
+        @media (max-width: 760px) {
+            .activity-days-backdrop {
+                padding: 10px;
+            }
+
+            .activity-days-dialog {
+                max-width: 100%;
+                max-height: calc(100vh - 20px);
+            }
+        }
     </style>
     <style>
         .preloader {
@@ -110,7 +231,7 @@
      </head>
 <body>
     <form id="form2" runat="server">
-    <div id="abcxyz" class="well well-sm" style="text-align: center;">
+    <div id="abcxyz" class="well well-sm report-toolbar" style="text-align: center;">
         <b>FROM DATE :</b>
         <input id="txtFromDate" class="datepicker" autocomplete="off" runat="server"
             onkeypress='return check_num(this,14,event)' type="text"
@@ -122,6 +243,7 @@
         <asp:Button ID="btnSearch" runat="server" class="btn btn-sm btn-primary" Style="width: 100px" Text="Search" OnClick="btnSearch_Click" />
         <asp:Button ID="btnExport" class="btn btn-sm btn-primary" runat="server" Style="width: 135px" Text="Export Excel" OnClick="btnExport_Click" />
         <asp:Button ID="btnExportWord" class="btn btn-sm btn-primary" runat="server" Style="width: 135px" Text="Export Word" OnClick="btnExportWord_Click" />
+        <asp:Button ID="btnCountActiveDays" class="btn btn-sm btn-primary" runat="server" Style="width: 175px" Text="Đếm ngày hoạt động" OnClick="btnCountActiveDays_Click" />
         <button id="btnPrint" type="button" class="btn btn-sm btn-primary" style="width:100px;" onclick="btnPrint_OnClick()">PRINT</button>
     </div>
 
@@ -133,6 +255,36 @@
         </div>
         <asp:Literal ID="ltrFooter" runat="server"></asp:Literal>
 
+    </div>
+
+    <div id="activityDaysModal" class="activity-days-backdrop" role="presentation" aria-hidden="true"
+        onclick="closeActivityDaysModalOnBackdrop(event)">
+        <div class="activity-days-dialog" role="dialog" aria-modal="true" aria-labelledby="activityDaysTitle">
+            <div class="activity-days-header">
+                <h3 id="activityDaysTitle">Đếm ngày hoạt động sân bay</h3>
+                <button type="button" class="activity-days-close" title="Đóng" aria-label="Đóng"
+                    onclick="closeActivityDaysModal()">&times;</button>
+            </div>
+            <div class="activity-days-body">
+                <div class="activity-days-summary">
+                    <asp:Literal ID="ltrActiveDaysSummary" runat="server"></asp:Literal>
+                </div>
+                <asp:GridView ID="grdActiveDays" runat="server" AutoGenerateColumns="false"
+                    CssClass="activity-days-table" GridLines="None"
+                    EmptyDataText="Không có dữ liệu hoạt động sân bay trong khoảng ngày đã chọn.">
+                    <Columns>
+                        <asp:BoundField DataField="STT" HeaderText="STT" />
+                        <asp:BoundField DataField="AIRPORT_CODE" HeaderText="Sân bay" />
+                        <asp:BoundField DataField="ACTIVE_DAYS" HeaderText="Số ngày hoạt động" />
+                    </Columns>
+                </asp:GridView>
+            </div>
+            <div class="activity-days-footer">
+                <button type="button" class="btn btn-sm btn-default" onclick="closeActivityDaysModal()">Đóng</button>
+                <asp:Button ID="btnExportActiveDays" runat="server" class="btn btn-sm btn-primary"
+                    Text="Xuất Excel" Enabled="false" OnClick="btnExportActiveDays_Click" />
+            </div>
+        </div>
     </div>
    
     <script language="javascript" type="text/javascript">
@@ -165,6 +317,30 @@
             mywindow.close();
             return true;
         }
+
+        function openActivityDaysModal() {
+            $('#activityDaysModal').addClass('is-open').attr('aria-hidden', 'false');
+            $('body').css('overflow', 'hidden');
+        }
+
+        function closeActivityDaysModal() {
+            $('#activityDaysModal').removeClass('is-open').attr('aria-hidden', 'true');
+            $('body').css('overflow', '');
+        }
+
+        function closeActivityDaysModalOnBackdrop(e) {
+            e = e || window.event;
+            var target = e.target || e.srcElement;
+            if (target && target.id === 'activityDaysModal') {
+                closeActivityDaysModal();
+            }
+        }
+
+        $(document).keydown(function (e) {
+            if (e.keyCode === 27) {
+                closeActivityDaysModal();
+            }
+        });
     </script>
 </form>
 </body>

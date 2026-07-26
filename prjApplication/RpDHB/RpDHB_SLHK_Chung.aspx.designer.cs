@@ -65,6 +65,15 @@ namespace prjApplication.RpDHB {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnExportWord;
+
+        /// <summary>
+        /// btnCountActiveDays control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnCountActiveDays;
         
         /// <summary>
         /// exportid control.
@@ -110,5 +119,32 @@ namespace prjApplication.RpDHB {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Literal ltrFooter;
+
+        /// <summary>
+        /// ltrActiveDaysSummary control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal ltrActiveDaysSummary;
+
+        /// <summary>
+        /// grdActiveDays control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.GridView grdActiveDays;
+
+        /// <summary>
+        /// btnExportActiveDays control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnExportActiveDays;
     }
 }
