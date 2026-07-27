@@ -52,12 +52,14 @@
             background-color: aquamarine;
         }
 
-        #tblSource th.perm-day-warning {
+        #tblSource th.perm-day-warning,
+        #tblSource td.perm-day-warning {
             background-color: #fff3cd !important;
             box-shadow: inset 0 0 0 2px #dc3545;
         }
 
-        #tblSource th.perm-day-warning input[type="checkbox"] {
+        #tblSource th.perm-day-warning input[type="checkbox"],
+        #tblSource td.perm-day-warning input[type="checkbox"] {
             outline: 2px solid #dc3545;
             outline-offset: 2px;
         }
@@ -993,23 +995,22 @@
             return parsedDate;
         }
 
-        function validateSingleDayCheckboxes() {
-            var dayCheckboxes = [chkDAY1, chkDAY2, chkDAY3, chkDAY4, chkDAY5, chkDAY6, chkDAY7];
+        function validateSingleDayCheckboxGroup(dayCheckboxes, beginDateValue, endDateValue) {
             var dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
 
             $.each(dayCheckboxes, function (_, checkbox) {
-                $(checkbox).closest('th')
+                $(checkbox).closest('th, td')
                     .removeClass('perm-day-warning')
                     .removeAttr('title');
             });
 
-            var beginDate = parsePermDetailDate(txtBEGINDATE_SC.value);
-            var endDate = parsePermDetailDate(txtENDDATE_SC.value);
+            var beginDate = parsePermDetailDate(beginDateValue);
+            var endDate = parsePermDetailDate(endDateValue);
             if (beginDate == null || endDate == null || beginDate.getTime() !== endDate.getTime()) return true;
 
             var jsDay = beginDate.getDay();
             var expectedIndex = jsDay === 0 ? 6 : jsDay - 1;
-            var dateText = txtBEGINDATE_SC.value;
+            var dateText = beginDateValue;
             var isValid = true;
 
             $.each(dayCheckboxes, function (index, checkbox) {
@@ -1021,9 +1022,31 @@
                     ? 'Ngày ' + dateText + ' là ' + dayNames[expectedIndex] + '. Vui lòng chọn ô này.'
                     : 'Ngày ' + dateText + ' là ' + dayNames[expectedIndex] + '. Không chọn ô ' + dayNames[index] + '.';
 
-                $(checkbox).closest('th')
+                $(checkbox).closest('th, td')
                     .addClass('perm-day-warning')
                     .attr('title', warning);
+            });
+
+            return isValid;
+        }
+
+        function validateSingleDayCheckboxes() {
+            var isValid = validateSingleDayCheckboxGroup(
+                [chkDAY1, chkDAY2, chkDAY3, chkDAY4, chkDAY5, chkDAY6, chkDAY7],
+                txtBEGINDATE_SC.value,
+                txtENDDATE_SC.value
+            );
+
+            $('#tblSource tbody tr').each(function () {
+                var $row = $(this);
+                var dayCheckboxes = $row.find('input[type="checkbox"]').slice(1, 8).toArray();
+                var beginDateValue = $row.find('input[id^="txtBEGINDATE"]').val();
+                var endDateValue = $row.find('input[id^="txtENDDATE"]').val();
+
+                if (dayCheckboxes.length !== 7) return;
+                if (!validateSingleDayCheckboxGroup(dayCheckboxes, beginDateValue, endDateValue)) {
+                    isValid = false;
+                }
             });
 
             return isValid;
@@ -1457,7 +1480,6 @@
             });
         }
         function LoadDataAjax(){
-            validateSingleDayCheckboxes();
             if ($('#perm_id').html() == '')
             {
                 if(qEdit!='True')
@@ -1539,16 +1561,16 @@
                     + "<td><input type='text' data-control='_updateAll' maxlength='5' data-minlenght='4' class='sInput' id='txtETD"+a+"' data-oldValue='"+returnEmpty(b.ETD)+"'  value='"+returnEmpty(b.ETD)+"' onchange='checkIsUpdate(this)'/></td>"   
                     + "<td><input type='text' data-control='_updateAll' maxlength='5'  class='sInput' id='txtETA"+a+"' data-oldValue='"+returnEmpty(b.ETA)+"' value='"+returnEmpty(b.ETA)+"' onchange='checkIsUpdate(this)'/></td>"  
                     + "<td style='background-color: antiquewhite!important;'><input id=\"chkAll"+ b.RNUM +"\" type=\"checkbox\" onchange='checkAllChange(\""+b.RNUM+"\");' /></td>"
-                    + "<td><input id=\"chk"+ b.RNUM +"1\" type=\"checkbox\" " + (b.DAY1=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY1=='0'?'0':'1')+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input id=\"chk"+ b.RNUM +"2\" type=\"checkbox\" " + (b.DAY2=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY2 =='0'?'0':'1')+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input id=\"chk"+ b.RNUM +"3\" type=\"checkbox\" " + (b.DAY3=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY3=='0'?'0':'1')+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input id=\"chk"+ b.RNUM +"4\" type=\"checkbox\" " + (b.DAY4=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY4=='0'?'0':'1')+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input id=\"chk"+ b.RNUM +"5\" type=\"checkbox\" " + (b.DAY5=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY5=='0'?'0':'1')+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input id=\"chk"+ b.RNUM +"6\" type=\"checkbox\" " + (b.DAY6=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY6=='0'?'0':'1')+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input id=\"chk"+ b.RNUM +"7\" type=\"checkbox\" " + (b.DAY7=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY7=='0'?'0':'1')+"' onchange='checkIsUpdate(this)' /></td>"
+                    + "<td><input id=\"chk"+ b.RNUM +"1\" type=\"checkbox\" " + (b.DAY1=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY1=='0'?'0':'1')+"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
+                    + "<td><input id=\"chk"+ b.RNUM +"2\" type=\"checkbox\" " + (b.DAY2=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY2 =='0'?'0':'1')+"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
+                    + "<td><input id=\"chk"+ b.RNUM +"3\" type=\"checkbox\" " + (b.DAY3=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY3=='0'?'0':'1')+"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
+                    + "<td><input id=\"chk"+ b.RNUM +"4\" type=\"checkbox\" " + (b.DAY4=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY4=='0'?'0':'1')+"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
+                    + "<td><input id=\"chk"+ b.RNUM +"5\" type=\"checkbox\" " + (b.DAY5=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY5=='0'?'0':'1')+"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
+                    + "<td><input id=\"chk"+ b.RNUM +"6\" type=\"checkbox\" " + (b.DAY6=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY6=='0'?'0':'1')+"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
+                    + "<td><input id=\"chk"+ b.RNUM +"7\" type=\"checkbox\" " + (b.DAY7=="0"? "\"\"": "checked")+" data-oldValue='"+(b.DAY7=='0'?'0':'1')+"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtCRAFT_NAME"+a+"' data-craftid='"+b.CRAFT_ID+"' data-oldValue='"+b.CRAFT_NAME+"' onfocusin='binAutocomplete(this,\"CRAFT\")' value='"+b.CRAFT_NAME+"' onchange='checkIsUpdate(this)'/></td>"
-                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' data-CheckDate='true' class='sInput' id='txtBEGINDATE"+a+"' data-oldValue='"+new Date(b.BEGINDATE).format('dd-mm-yyyy')+"' value='"+new Date(b.BEGINDATE).format('dd-mm-yyyy') +"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' data-CheckDate='true' class='sInput' id='txtENDDATE"+a+"' data-oldValue='"+new Date(b.ENDDATE).format('dd-mm-yyyy')+"' value='"+new Date(b.ENDDATE).format('dd-mm-yyyy') +"' onchange='checkIsUpdate(this)'/></td>"
+                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' data-CheckDate='true' class='sInput' id='txtBEGINDATE"+a+"' data-oldValue='"+new Date(b.BEGINDATE).format('dd-mm-yyyy')+"' value='"+new Date(b.BEGINDATE).format('dd-mm-yyyy') +"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();' /></td>"
+                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' data-CheckDate='true' class='sInput' id='txtENDDATE"+a+"' data-oldValue='"+new Date(b.ENDDATE).format('dd-mm-yyyy')+"' value='"+new Date(b.ENDDATE).format('dd-mm-yyyy') +"' onchange='checkIsUpdate(this); validateSingleDayCheckboxes();'/></td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtPURPOSE_ID"+a+"' data-oldValue='"+b.PURPOSE_ID+"' onfocusin='binAutocomplete(this,\"PURPOSE\")' value='"+b.PURPOSE_ID+"' onchange='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' title='"+returnEmpty(b.VIA)+"' class='sInput' id='txtVIA"+a+"' data-oldValue='"+returnEmpty(b.VIA)+"' value='"+returnEmpty(b.VIA)+"' onchange='checkIsUpdate(this)'/></td>" 
                     + "<td><input type='text' data-control='_updateAll' title='"+returnEmpty(b.LASTMODIFY)+"' class='sInput' id='txtREMARK"+a+"' data-oldValue='"+returnEmpty(b.REMARK)+"' value='"+returnEmpty(b.REMARK)+"' onchange='checkIsUpdate(this)'/></td>"
@@ -1569,6 +1591,7 @@
                     +"</tr>";--%>
                 });
                 $('#tblSource tbody').append(strAppend);
+                validateSingleDayCheckboxes();
             });   
             
         }
@@ -1961,6 +1984,7 @@
             $('#chk'+id+'5').prop('checked',isChecked);
             $('#chk'+id+'6').prop('checked',isChecked);
             $('#chk'+id+'7').prop('checked',isChecked);
+            validateSingleDayCheckboxes();
            
         }
     </script>
