@@ -55,7 +55,8 @@
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option>' + Object.keys(airportNames).map(function (code) {
             return '<option value="' + code + '">' + code + ' - ' + airportNames[code] + '</option>';
         }).join('');
-        airport.parentNode.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnTrendOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
+        var airportField = airport.closest('.rn-field');
+        airportField.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnTrendOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
         var oper = app.querySelector('#rnTrendOper');
         if (window.ReportControls) window.ReportControls.enhanceAll(filters);
         from.value = formatDate(today);
