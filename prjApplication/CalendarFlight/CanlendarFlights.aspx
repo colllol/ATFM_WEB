@@ -539,6 +539,9 @@
                 .on('input.calendarGrid', 'tbody input[type="text"]', function () {
                     this.title = this.value;
                 })
+                .on('focusin.calendarGrid mouseenter.calendarGrid', 'tbody input[data-control="_updateAll"]', function () {
+                    setActiveCalendarInput(this);
+                })
                 .on('keypress.calendarGrid', '[data-number="true"]', validateNumber)
                 .on('keyup.calendarGrid', '[data-minlenght]', validateEmty1)
                 .on('blur.calendarGrid', '[data-CheckDate="true"]', function () {
@@ -1073,11 +1076,19 @@
             }
         }
 
+        function setActiveCalendarInput(input) {
+            var $input = $(input);
+            inputId = $input.attr('id') || '';
+            rowId = $input.closest('tr').attr('id') || 0;
+        }
         function onmouseoverInput(id) {
-            inputId = id;
+            var input = document.getElementById(id);
+            if (input)
+                setActiveCalendarInput(input);
         }
         function onmouseoutInput(id) {
-            inputId = '';
+            if (!document.activeElement || document.activeElement.id !== id)
+                inputId = '';
         }
         function checkIsUpdate(id) {
             if ($(id).attr('data-isInsert') != undefined) return;
@@ -1861,8 +1872,13 @@
                     alert('Please select!');
                     return;
                 }
-                var $ele = $('#' + inputId),
-                    $rowIndex = $ele.closest('tr').index(),
+                var $ele = $('#' + inputId);
+                if ($ele.length == 0) {
+                    alert('Please select!');
+                    return;
+                }
+                rowId = $ele.closest('tr').attr('id') || 0;
+                var $rowIndex = $ele.closest('tr').index(),
                     $columIndex = $ele.closest('td').index(),
                     $type = $ele.prop('type');
                 
@@ -1886,13 +1902,6 @@
 
             }
 
-        }
-        function onmouseoverInput(id) {
-            inputId = id;
-            //alert(inputId)
-        }
-        function onmouseoutInput(id) {
-            inputId = '';
         }
 
 
