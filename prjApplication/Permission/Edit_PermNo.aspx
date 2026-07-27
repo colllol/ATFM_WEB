@@ -68,7 +68,7 @@
             overflow-wrap: anywhere;
             word-break: break-word;
             white-space: normal;
-            font-size: 11px;
+            font-size: 12.5px;
         }
 
         #tblSource input[type="text"],
@@ -82,7 +82,7 @@
             min-height: 30px !important;
             padding: 2px !important;
             box-sizing: border-box;
-            font-size: 11px;
+            font-size: 12.5px;
         }
 
         #tblSource .xdsoft_autocomplete {
