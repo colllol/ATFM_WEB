@@ -220,6 +220,7 @@
             border: 1px solid #c4d5e1 !important;
             border-radius: 0 !important;
             background-clip: padding-box !important;
+            text-align: center !important;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -243,6 +244,8 @@
             background: #337ab7 !important;
             color: #fff !important;
             background-clip: padding-box !important;
+            text-align: center !important;
+            text-transform: uppercase;
         }
         #tblSource input[type="text"] {
             display: block;
@@ -255,6 +258,7 @@
             box-shadow: none !important;
             color: #163b58;
             font-size: 12px !important;
+            text-align: center !important;
             text-overflow: ellipsis;
         }
         #tblSource tbody input[type="text"]:focus {
