@@ -48,6 +48,75 @@
             .cssHetHan input {
                 color: red !important;
             }
+
+        #divPermDetail {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        #tblSource {
+            width: 100% !important;
+            max-width: 100%;
+            margin: 5px 0;
+            table-layout: fixed;
+        }
+
+        #tblSource th,
+        #tblSource td {
+            min-width: 0;
+            padding: 2px 1px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+            font-size: 11px;
+        }
+
+        #tblSource input[type="text"],
+        #tblSource select,
+        #tblSource .sInput,
+        #tblSource .xdsoft_input {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100%;
+            height: 30px;
+            min-height: 30px !important;
+            padding: 2px !important;
+            box-sizing: border-box;
+            font-size: 11px;
+        }
+
+        #tblSource .xdsoft_autocomplete {
+            display: block !important;
+            width: 100%;
+            min-width: 0;
+        }
+
+        #tblSource .action-buttons {
+            display: flex;
+            width: 100% !important;
+            min-width: 0;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        #tblSource .action-buttons > a {
+            margin: 0;
+        }
+
+        #tblSource col.col-flight { width: 7.5%; }
+        #tblSource col.col-registration { width: 8.5%; }
+        #tblSource col.col-airport { width: 5.5%; }
+        #tblSource col.col-time { width: 4.5%; }
+        #tblSource col.col-days { width: 13%; }
+        #tblSource col.col-craft { width: 6.5%; }
+        #tblSource col.col-purpose { width: 6.5%; }
+        #tblSource col.col-via { width: 9%; }
+        #tblSource col.col-remark { width: 9%; }
+        #tblSource col.col-mtow { width: 5%; }
+        #tblSource col.col-user { width: 9%; }
+        #tblSource col.col-actions { width: 6%; }
     </style>
 
 
@@ -254,7 +323,7 @@
     </div>
     <hr />
 
-    <%--<div class="table-responsive">--%>
+    <div id="divPermDetail">
     <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">
         Update all</button> 
     <button type="button" id="btnGenMess" class="btn btn-sm btn-primary"  onclick="btnGenMessage()">Export Mess Cancel</button>  
@@ -264,6 +333,22 @@
             Exit
         </a>
     <table id="tblSource">
+        <colgroup>
+            <col class="col-flight" />
+            <col class="col-registration" />
+            <col class="col-airport" />
+            <col class="col-airport" />
+            <col class="col-time" />
+            <col class="col-time" />
+            <col class="col-days" />
+            <col class="col-craft" />
+            <col class="col-purpose" />
+            <col class="col-via" />
+            <col class="col-remark" />
+            <col class="col-mtow" />
+            <col class="col-user" />
+            <col class="col-actions" />
+        </colgroup>
         <thead>
             <tr>
                 <th data-sort="1" onclick="sortOnclick(this);">Call sign</th>
@@ -371,6 +456,7 @@
                         <td><%# Eval("VIA") %></td>
                         <td><%# Eval("REMARK") %></td>
                         <%--<td><%# Eval("REMARK_SEND") %></td>--%>
+                        <td><%# Eval("TAITRONG") %></td>
                         <td><%# Eval("LASTUSER") %></td>
                         
                         <td>
@@ -390,7 +476,7 @@
                         </td>
                     </tr>
                     <tr class="detail-row">
-                        <td colspan="22" class="text-left">
+                        <td colspan="14" class="text-left">
                             <%# rListHistoryFlightDetails(new PermDetailNoDAL().GetHistoryById(Eval("ID").ToString()), Eval("ID").ToString()) %>
                         </td>
                     </tr>
@@ -399,7 +485,7 @@
         </tbody>
     </table>
 
-    <%--</div>--%>
+    </div>
 
     <script src="../Style/assets/js/jquery-2.1.4.min.js"></script>
 
