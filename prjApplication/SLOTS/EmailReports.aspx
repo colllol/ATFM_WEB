@@ -1,6 +1,6 @@
 <%@ Page Title="Báo cáo Email" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeFile="EmailReports.aspx.cs" Inherits="prjApplication.SLOTS.EmailReports" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/EmailReports.css?v=20260724-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/EmailReports.css?v=20260727-1") %>" />
     <section id="emailReportsPage" class="email-reports-page">
         <header class="email-hero">
             <div><span class="email-eyebrow"><i class="fa fa-envelope"></i> VATM · EMAIL REPORTS</span><h1>Báo cáo Email</h1><p>Tra cứu, lọc và xem chi tiết email từ hệ thống báo cáo.</p></div>
@@ -29,7 +29,19 @@
             <div class="email-table-wrap"><table class="email-table"><thead><tr><th>STT</th><th>Thời gian</th><th>Tiêu đề</th><th>Người gửi</th><th>Tệp đính kèm</th><th>Trạng thái</th><th></th></tr></thead><tbody id="emailRows"></tbody></table></div>
             <div class="email-pagination"><button id="emailPrev" type="button">‹ Trước</button><span id="emailPageInfo">Trang 1/1</span><button id="emailNext" type="button">Sau ›</button></div>
         </section>
-        <div id="emailDetailBackdrop" class="email-detail-backdrop" hidden><article class="email-detail"><header><h2 id="emailDetailSubject">Chi tiết email</h2><button id="emailDetailClose" type="button">&times;</button></header><div id="emailDetailMeta" class="email-detail-meta"></div><pre id="emailDetailBody" class="email-detail-body"></pre></article></div>
+        <div id="emailDetailBackdrop" class="email-detail-backdrop" hidden>
+            <article class="email-detail">
+                <header><h2 id="emailDetailSubject">Chi tiết email</h2><button id="emailDetailClose" type="button">&times;</button></header>
+                <div id="emailDetailMeta" class="email-detail-meta"></div>
+                <pre id="emailDetailBody" class="email-detail-body"></pre>
+                <footer class="email-detail-actions">
+                    <span id="emailPermissionMessage" class="email-permission-message"></span>
+                    <a id="emailPermissionLink" class="email-permission-link is-disabled" target="_blank" rel="noopener noreferrer" aria-disabled="true">
+                        <i class="fa fa-external-link"></i> Xem số phép bay
+                    </a>
+                </footer>
+            </article>
+        </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260725-2") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260727-1") %>"></script>
 </asp:Content>

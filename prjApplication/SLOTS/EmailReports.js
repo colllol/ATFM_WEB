@@ -3,7 +3,9 @@
     var page = document.getElementById('emailReportsPage');
     if (!page) return;
     var endpoint = 'EmailReports.aspx/GetEmails';
+    var jobEndpoint = 'EmailReports.aspx/GetTargetPermId';
     var allItems = [], filteredItems = [], currentPage = 1, pageSize = 50, totalItems = 0, totalPages = 1;
+    var detailRequestId = 0;
     var $ = function (id) { return document.getElementById(id); };
     function esc(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
     function text(item, keys) { for (var i = 0; i < keys.length; i++) if (item && item[keys[i]] != null) return String(item[keys[i]]); return ''; }
@@ -41,10 +43,55 @@
     function showDetail(item) {
         if (!item) return;
         var subject = text(item,['subject','title']) || '(Không có tiêu đề)';
+        var syncJobId = text(item, ['syncJobId']);
+        var permissionLink = $('emailPermissionLink');
+        var permissionMessage = $('emailPermissionMessage');
+        var requestId = ++detailRequestId;
         $('emailDetailSubject').textContent = subject;
-        $('emailDetailMeta').innerHTML = '<b>Người gửi:</b> ' + esc(text(item,['sender','from','senderEmail'])) + '<br><b>Tệp đính kèm:</b> ' + esc(text(item,['attachmentName'])) + '<br><b>Thời gian:</b> ' + esc(date(item)) + '<br><b>Trạng thái xử lý:</b> ' + esc(status(item)) + '<br><b>Trạng thái xác nhận:</b> ' + esc(text(item,['acknowledgementStatus']));
+        $('emailDetailMeta').innerHTML = '<b>Người gửi:</b> ' + esc(text(item,['sender','from','senderEmail'])) + '<br><b>Tệp đính kèm:</b> ' + esc(text(item,['attachmentName'])) + '<br><b>Thời gian:</b> ' + esc(date(item)) + '<br><b>Trạng thái xử lý:</b> ' + esc(status(item)) + '<br><b>Trạng thái xác nhận:</b> ' + esc(text(item,['acknowledgementStatus'])) + '<br><b>Sync Job ID:</b> ' + esc(syncJobId);
         $('emailDetailBody').textContent = text(item,['body','content','message','text','html']) || JSON.stringify(item, null, 2);
+        permissionLink.removeAttribute('href');
+        permissionLink.classList.add('is-disabled');
+        permissionLink.setAttribute('aria-disabled', 'true');
+        permissionMessage.className = 'email-permission-message';
         $('emailDetailBackdrop').hidden = false;
+
+        if (!syncJobId) {
+            permissionMessage.textContent = 'Email này không có syncJobId.';
+            permissionMessage.classList.add('is-error');
+            return;
+        }
+
+        permissionMessage.textContent = 'Đang lấy số phép bay...';
+        fetch(jobEndpoint, {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
+            body: JSON.stringify({ syncJobId: syncJobId })
+        }).then(function (response) {
+            return response.json().catch(function () { return null; }).then(function (payload) {
+                if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
+                return payload;
+            });
+        }).then(function (payload) {
+            if (requestId !== detailRequestId) return;
+            var result = payload && payload.d != null ? payload.d : payload;
+            if (typeof result === 'string') result = JSON.parse(result);
+            var targetPermId = result && result.targetPermId;
+            if (!targetPermId) throw new Error('API job không trả về targetPermId.');
+
+            permissionLink.href = '../Permission/Edit_PermSC.aspx?Menu_ID=51&ID=' + encodeURIComponent(targetPermId);
+            permissionLink.classList.remove('is-disabled');
+            permissionLink.removeAttribute('aria-disabled');
+            permissionMessage.textContent = 'Số phép bay: ' + targetPermId;
+        }).catch(function (error) {
+            if (requestId !== detailRequestId) return;
+            permissionMessage.textContent = 'Không thể lấy số phép bay: ' + error.message;
+            permissionMessage.classList.add('is-error');
+        });
+    }
+    function closeDetail() {
+        detailRequestId++;
+        $('emailDetailBackdrop').hidden = true;
     }
     function load() {
         var apply = $('emailApply');
@@ -78,6 +125,6 @@
     }
     $('emailApply').onclick = applyFilters; $('emailSearch').onkeydown = function (event) { if (event.key === 'Enter') applyFilters(); }; $('emailRefresh').onclick = function () { $('emailError').hidden = true; load(); }; $('emailPageSize').onchange = function () { pageSize = parseInt(this.value, 10); currentPage = 1; load(); };
     $('emailPrev').onclick = function () { if (currentPage > 1) { currentPage--; load(); } }; $('emailNext').onclick = function () { if (currentPage < totalPages) { currentPage++; load(); } };
-    $('emailDetailClose').onclick = function () { $('emailDetailBackdrop').hidden = true; }; $('emailDetailBackdrop').onclick = function (event) { if (event.target === this) this.hidden = true; };
+    $('emailDetailClose').onclick = closeDetail; $('emailDetailBackdrop').onclick = function (event) { if (event.target === this) closeDetail(); };
     load();
 }());
