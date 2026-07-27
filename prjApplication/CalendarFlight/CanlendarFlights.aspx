@@ -173,14 +173,18 @@
         #abcxyz button.btn { text-transform: uppercase; }
         #abcxyz button.btn > .fa { margin-right: 6px; font-size: 12px; }
         .calendar-bottom-buttons {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(96px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             flex: 1 1 680px;
             gap: 8px;
         }
         .calendar-bottom-buttons .btn {
-            width: 100% !important;
-            min-width: 0;
+            flex: 1 0 auto;
+            width: auto !important;
+            min-width: 96px;
+            padding-right: 10px;
+            padding-left: 10px;
+            white-space: nowrap;
         }
         .calendar-inline-actions { display: flex; align-items: flex-end; gap: 8px; flex: 0 0 auto; }
         .calendar-inline-actions .btn { min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
@@ -276,9 +280,9 @@
             .calendar-filter-field { flex: 1 1 145px; }
             .calendar-filter-actions .btn { flex: 1 1 140px; }
             .calendar-bottom-buttons {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                 flex-basis: 100%;
             }
+            .calendar-bottom-buttons .btn { flex: 1 1 140px; }
         }
     </style>
     <div id="abcxyz" class="calendar-filter-card">
