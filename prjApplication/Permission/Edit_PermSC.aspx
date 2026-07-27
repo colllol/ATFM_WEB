@@ -63,6 +63,85 @@
         textarea {
             text-transform: uppercase;
         }
+
+        #divPermDetail {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        #tblSource {
+            width: 100% !important;
+            max-width: 100%;
+            margin: 5px 0;
+            table-layout: fixed;
+        }
+
+        #tblSource th,
+        #tblSource td {
+            min-width: 0;
+            padding: 2px 1px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+            font-size: 10px;
+        }
+
+        #tblSource input[type="text"],
+        #tblSource .sInput,
+        #tblSource .xdsoft_input {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100%;
+            height: 30px;
+            min-height: 30px !important;
+            padding: 2px !important;
+            box-sizing: border-box;
+            font-size: 10px;
+        }
+
+        #tblSource .xdsoft_autocomplete {
+            display: block !important;
+            width: 100%;
+            min-width: 0;
+        }
+
+        #tblSource input[type="checkbox"] {
+            margin: 0;
+            transform: scale(1.1);
+        }
+
+        #tblSource .action-buttons {
+            display: flex;
+            width: 100% !important;
+            min-width: 0;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        #tblSource .action-buttons > a {
+            margin: 0;
+        }
+
+        #tblSource col.col-index { width: 2%; }
+        #tblSource col.col-flight { width: 6%; }
+        #tblSource col.col-registration { width: 7%; }
+        #tblSource col.col-airport { width: 5%; }
+        #tblSource col.col-time { width: 4%; }
+        #tblSource col.col-day { width: 2.3%; }
+        #tblSource col.col-craft { width: 5%; }
+        #tblSource col.col-date { width: 6%; }
+        #tblSource col.col-purpose { width: 5%; }
+        #tblSource col.col-via { width: 7%; }
+        #tblSource col.col-remark { width: 7%; }
+        #tblSource col.col-mtow { width: 4%; }
+        #tblSource col.col-user { width: 5%; }
+        #tblSource col.col-actions { width: 3.6%; }
+
+        #tblSource th:nth-child(n+8):nth-child(-n+15) {
+            width: auto !important;
+        }
     </style>
      <style>
          .preloader {
@@ -249,6 +328,32 @@
                 Exit
             </a>
         <table id="tblSource" class="">
+            <colgroup>
+                <col class="col-index" />
+                <col class="col-flight" />
+                <col class="col-registration" />
+                <col class="col-airport" />
+                <col class="col-airport" />
+                <col class="col-time" />
+                <col class="col-time" />
+                <col class="col-day" />
+                <col class="col-day" />
+                <col class="col-day" />
+                <col class="col-day" />
+                <col class="col-day" />
+                <col class="col-day" />
+                <col class="col-day" />
+                <col class="col-day" />
+                <col class="col-craft" />
+                <col class="col-date" />
+                <col class="col-date" />
+                <col class="col-purpose" />
+                <col class="col-via" />
+                <col class="col-remark" />
+                <col class="col-mtow" />
+                <col class="col-user" />
+                <col class="col-actions" />
+            </colgroup>
             <thead>
                 <tr>
                     <th>TT</th>
@@ -383,7 +488,7 @@
                             </td>
                         </tr>
                         <tr class="detail-row">
-                            <td colspan="22" class="text-left">
+                            <td colspan="24" class="text-left">
                                 <%# rListHistoryFlightDetails(new PermDetailScDAL().GetHistoryById(Eval("ID").ToString()), Eval("ID").ToString()) %>
                             </td>
                         </tr>  
