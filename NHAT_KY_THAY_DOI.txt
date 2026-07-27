@@ -1485,3 +1485,4 @@ Quy ước:
 2026-07-27 | prjApplication/Scripts/ResponsiveTable.js | Tăng chiều cao tối thiểu do JavaScript gán cho biến CSS --atfm-table-max-height từ 320px lên 500px; giữ chiều cao tối đa 620px và cơ chế co giãn theo viewport.
 2026-07-27 | prjApplication/CalendarFlight/CanlendarFlights.aspx | Căn giữa toàn bộ ô, dữ liệu input của bảng tblSource và chuyển hàng tiêu đề cột màu xanh sang chữ hoa; giới hạn CSS trong bảng Calendar Flight để không ảnh hưởng màn hình khác.
 2026-07-27 | prjApplication/CalendarFlight/CanlendarFlights.aspx | Chuyển chữ trên toàn bộ button trong khối bộ lọc và thao tác #abcxyz sang uppercase bằng CSS, không ảnh hưởng nút ở màn hình khác.
+2026-07-27 | prjApplication/CalendarFlight/CanlendarFlights.aspx | Thêm icon Font Awesome nhỏ cho các nút Accept, Export, Search, Delete, Del Remark, Clear search, Export Excel, Export Bravo và Update all; bổ sung khoảng cách 6px giữa icon và nhãn, không thêm thư viện ngoài.

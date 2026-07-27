@@ -171,6 +171,7 @@
         }
         .calendar-filter-actions .btn { width: auto !important; min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
         #abcxyz button.btn { text-transform: uppercase; }
+        #abcxyz button.btn > .fa { margin-right: 6px; font-size: 12px; }
         .calendar-bottom-buttons {
             display: grid;
             grid-template-columns: repeat(7, minmax(96px, 1fr));
@@ -319,8 +320,8 @@
                 </select>
             </div>
             <div class="calendar-inline-actions">
-                <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnAccess_OnClick()">Accept</button>
-                <button id="btnRenderKhb" class="btn btn-sm btn-primary btn-bold" type="button" onclick="btnRenderKhb_OnClick()">Export</button>
+                <button type="button" class="btn btn-sm btn-primary btn-bold" id="btnAccess" onclick="btnAccess_OnClick()"><i class="fa fa-check" aria-hidden="true"></i>Accept</button>
+                <button id="btnRenderKhb" class="btn btn-sm btn-primary btn-bold" type="button" onclick="btnRenderKhb_OnClick()"><i class="fa fa-download" aria-hidden="true"></i>Export</button>
             </div>
         </div>
         <div class="calendar-filter-actions">
@@ -341,13 +342,13 @@
             </div>
 
             <div class="calendar-bottom-buttons">
-                <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">Search</button>
-                <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()">Delete</button>
-                <button type="button" id="btnDeleteByCheckedRemark" class="btn btn-sm btn-primary" onclick="btnDeleteRemarkByChecked_Onclick()">Del Remark</button>
-                <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()">Clear search</button>
-                <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="LoadDataGrid_Export()">Export Excel</button>
-                <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()">Export Bravo</button>
-                <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">Update all</button>
+                <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()"><i class="fa fa-search" aria-hidden="true"></i>Search</button>
+                <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</button>
+                <button type="button" id="btnDeleteByCheckedRemark" class="btn btn-sm btn-primary" onclick="btnDeleteRemarkByChecked_Onclick()"><i class="fa fa-eraser" aria-hidden="true"></i>Del Remark</button>
+                <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()"><i class="fa fa-times-circle" aria-hidden="true"></i>Clear search</button>
+                <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="LoadDataGrid_Export()"><i class="fa fa-file-excel-o" aria-hidden="true"></i>Export Excel</button>
+                <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-file-text-o" aria-hidden="true"></i>Export Bravo</button>
+                <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-save" aria-hidden="true"></i>Update all</button>
             </div>
         </div>
         <div class="calendar-legacy-radios" aria-hidden="true">
