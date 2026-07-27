@@ -25,10 +25,19 @@
             padding: unset;
         }
 
-        #tblSource tr > td, tr > th {
+        #tblSource tr > td, #tblSource tr > th {
             padding: unset;
-            vertical-align: middle;
-            text-align: center;
+            vertical-align: middle !important;
+            text-align: center !important;
+        }
+
+        #tblSource input[type="text"],
+        #tblSource select {
+            text-align: center !important;
+        }
+
+        #tblSource thead th {
+            text-transform: uppercase !important;
         }
 
         .sInput {
@@ -88,7 +97,12 @@
             background: #fff;
             color: #173b59;
         }
-        #abcxyz .btn { height: 36px; border-radius: 7px; font-weight: 600; }
+        #abcxyz .btn {
+            height: 36px;
+            border-radius: 7px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
         #abcxyz .schedule-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
         #tblSource {
             width: 1634px !important;

@@ -1500,3 +1500,4 @@ Quy ước:
 2026-07-27 | prjApplication/Day_Flights/DaylyFlightHcm.aspx | Loại bỏ đường dọc thừa do hộp thiết lập màu ở trạng thái đóng vẫn giữ chiều cao và viền; chỉ hiển thị viền, bóng và thanh cuộn khi hộp được mở.
 2026-07-27 | NHAT_KY_THAY_DOI.txt | Giải quyết conflict khi hợp nhất nhánh agent/initial-atfm-import: giữ đầy đủ lịch sử thay đổi cục bộ và bốn mục nhật ký DaylyFlightHcm từ remote trước khi push.
 2026-07-27 | prjApplication/Day_Flights/DaylyFlight.aspx | Sửa danh sách autocomplete của ô FROM/TO và các ô gợi ý trong hàng lọc bị tiêu đề sticky che: nâng z-index riêng cho ô đang focus, cho phép dropdown tràn khỏi ô và giới hạn chiều cao danh sách có cuộn.
+2026-07-27 | prjApplication/ScheduleFlights/Schedule_Flight.aspx | Căn giữa toàn bộ tiêu đề, ô dữ liệu và giá trị input/select của bảng lịch bay; chuyển tiêu đề cột và chữ trên các nút thao tác sang uppercase, đồng thời giới hạn selector trong tblSource để không ảnh hưởng bảng khác.
