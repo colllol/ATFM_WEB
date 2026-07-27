@@ -407,9 +407,9 @@
                     <th style="color: black!important;">
                         <input runat="server" id="ddlCRAFT_ID" type="text" style="color: black;" class="wid_70px" data-autocomplete="CRAFT" />
                     </th>
-                    <th><input id="txtBEGINDATE_SC" onblur="checkInputDate(this)" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
+                    <th><input id="txtBEGINDATE_SC" oninput="normalizePermDetailDateInput(this)" onblur="checkInputDate(this)" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
                             data-date-format="dd/mm/yyyy" class="wid_100px"/></th>
-                    <th><input id="txtENDDATE_SC" onblur="checkInputDate(this)" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
+                    <th><input id="txtENDDATE_SC" oninput="normalizePermDetailDateInput(this)" onblur="checkInputDate(this)" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
                             data-date-format="dd/mm/yyyy" class="wid_100px"/></th>
                     <th style="color: black!important;">
                         
@@ -945,6 +945,25 @@
             }
             return _bool;
         }
+
+        function normalizePermDetailDateInput(ele) {
+            var value = (ele.value || '').trim();
+            if (!/^\d{8}$/.test(value)) return;
+
+            var day = parseInt(value.substring(0, 2), 10);
+            var month = parseInt(value.substring(2, 4), 10);
+            var year = parseInt(value.substring(4, 8), 10);
+            var parsedDate = new Date(year, month - 1, day);
+
+            if (parsedDate.getFullYear() !== year
+                || parsedDate.getMonth() !== month - 1
+                || parsedDate.getDate() !== day) return;
+
+            ele.value = value.substring(0, 2)
+                + '-' + value.substring(2, 4)
+                + '-' + value.substring(4, 8);
+        }
+
         function btnCreate_Details_Onclick() {
             
            var txtBEGINDATE_SC = document.getElementById('<%= txtBEGINDATE_SC.ClientID%>');
