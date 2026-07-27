@@ -1692,6 +1692,7 @@
     <script>
         window.onkeydown = function (e) {
             var charCode = (e.which) ? e.which : e.keyCode;
+            var keyName = e.key || (charCode === 119 ? 'F8' : '');
             var c = $('#tblSource tr').length;
             if (rowId == 0 && charCode == 46) {
                 return;
@@ -1866,7 +1867,7 @@
                 })
             }
 
-            if (charCode == 119) {
+            if (keyName === 'F8') {
 
                 if (inputId == '') {
                     alert('Please select!');
