@@ -174,7 +174,7 @@
         #abcxyz button.btn > .fa { margin-right: 6px; font-size: 12px; }
         .calendar-bottom-buttons {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             flex: 1 1 680px;
             gap: 8px;
         }
@@ -188,8 +188,9 @@
         }
         .calendar-inline-actions { display: flex; align-items: flex-end; gap: 8px; flex: 0 0 auto; }
         .calendar-inline-actions .btn { min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
-        .calendar-bottom-status { display: flex; flex-direction: column; gap: 5px; flex: 0 1 190px; min-width: 155px; }
+        .calendar-bottom-status { display: flex; flex-direction: column; gap: 5px; flex: 0 0 145px; min-width: 135px; }
         .calendar-bottom-status select { width: 100% !important; height: 36px; padding: 6px 9px; border: 1px solid #8eb9d6 !important; border-radius: 7px; background: #fff; color: #173b59; }
+        .calendar-filter-actions .calendar-filter-field.calendar-date { flex: 0 0 135px; }
         .calendar-legacy-radios { display: none !important; }
         #tblSource .calendar-hidden-filter-date { display: none !important; }
 
@@ -280,6 +281,7 @@
             .calendar-filter-field { flex: 1 1 145px; }
             .calendar-filter-actions .btn { flex: 1 1 140px; }
             .calendar-bottom-buttons {
+                flex-wrap: wrap;
                 flex-basis: 100%;
             }
             .calendar-bottom-buttons .btn { flex: 1 1 140px; }
