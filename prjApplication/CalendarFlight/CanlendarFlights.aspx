@@ -170,6 +170,7 @@
             background: #f8fbfd;
         }
         .calendar-filter-actions .btn { width: auto !important; min-width: 96px; height: 36px; border-radius: 7px; font-weight: 600; }
+        #abcxyz button.btn { text-transform: uppercase; }
         .calendar-bottom-buttons {
             display: grid;
             grid-template-columns: repeat(7, minmax(96px, 1fr));
