@@ -160,6 +160,31 @@
         }
         .calendar-filter-field input:focus,
         .calendar-filter-field select:focus { border-color: #2388c6 !important; box-shadow: 0 0 0 3px rgba(35,136,198,.14); }
+        .calendar-date-control { position: relative; width: 100%; }
+        .calendar-date-control > #txtFromDate { padding-right: 38px !important; }
+        .calendar-processing-date-icon {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            z-index: 2;
+            color: #337ab7;
+            font-size: 14px;
+            line-height: 1;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        #abcxyz .calendar-native-date-picker {
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 3;
+            width: 38px !important;
+            height: 36px;
+            padding: 0 !important;
+            border: 0 !important;
+            opacity: 0;
+            cursor: pointer;
+        }
         .calendar-filter-actions {
             display: flex;
             align-items: flex-end;
@@ -292,7 +317,14 @@
         <div class="calendar-filter-body">
             <div class="calendar-filter-field calendar-date">
                 <label class="calendar-filter-label" for="txtFromDate">NGÀY XỬ LÝ</label>
-                <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text" placeholder="CHỌN NGÀY" />
+                <div class="calendar-date-control">
+                    <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text" placeholder="CHỌN NGÀY" />
+                    <span class="calendar-processing-date-icon" aria-hidden="true"><i class="fa fa-calendar"></i></span>
+                    <input id="txtFromDateNative" class="calendar-native-date-picker" type="date"
+                        aria-label="Chọn ngày xử lý" title="Chọn ngày xử lý"
+                        onfocus="calendarProcessingDatePicker_Sync()"
+                        onchange="calendarProcessingDatePicker_OnChange(this.value)" />
+                </div>
             </div>
 
             <div class="calendar-filter-field calendar-export-type">
@@ -609,6 +641,18 @@
         function calendarFilterDate_OnChange() {
             var parts = ($('#txtFilterDatePicker').val() || '').split('-');
             $('#txtFLIGHTDATE').val(parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '');
+        }
+
+        function calendarProcessingDatePicker_Sync() {
+            var parts = ($('#txtFromDate').val() || '').split('-');
+            if (parts.length === 3)
+                $('#txtFromDateNative').val(parts[2] + '-' + parts[1] + '-' + parts[0]);
+        }
+
+        function calendarProcessingDatePicker_OnChange(value) {
+            var parts = (value || '').split('-');
+            if (parts.length !== 3) return;
+            $('#txtFromDate').val(parts[2] + '-' + parts[1] + '-' + parts[0]).trigger('change');
         }
         function Render2Table(data) {
             var kq = '';
@@ -2036,6 +2080,7 @@
         $('#txtDATE_OLD').multiDate();
         $('#txtFLIGHTDATE').val(defaultCalendarDate);
         var defaultCalendarParts = defaultCalendarDate.split('-');
+        $('#txtFromDateNative').val(defaultCalendarParts[2] + '-' + defaultCalendarParts[1] + '-' + defaultCalendarParts[0]);
         $('#txtFilterDatePicker').val(defaultCalendarParts[2] + '-' + defaultCalendarParts[1] + '-' + defaultCalendarParts[0]);
         $('#txtFLIGHTDATE').multiDate();
         LoadDataGrid();
