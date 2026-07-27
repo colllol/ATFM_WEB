@@ -9,16 +9,33 @@
     };
 
     function post(url, data) {
-        return fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify(data)
-        }).then(function (response) {
-            return response.json().then(function (result) {
-                if (!response.ok || (result.Code && result.Code !== '00')) throw new Error(result.Message || 'Không thể tải dữ liệu dashboard.');
-                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);
-            });
+        var deferred = window.jQuery.Deferred();
+        window.jQuery.ajax({
+            type: 'POST',
+            url: url,
+            data: JSON.stringify(data),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json'
+        }).done(function (result) {
+            var payload = result && Object.prototype.hasOwnProperty.call(result, 'd') ? result.d : result;
+            if (payload && payload.Code && payload.Code !== '00') {
+                deferred.reject(new Error(payload.Message || 'Không thể tải dữ liệu dashboard.'));
+                return;
+            }
+            deferred.resolve(camelize(payload && Object.prototype.hasOwnProperty.call(payload, 'ListValue') ? payload.ListValue : payload));
+        }).fail(function (xhr) {
+            var message = 'Không thể tải dữ liệu dashboard.';
+            var result = xhr && xhr.responseJSON;
+            if (!result && xhr && xhr.responseText) {
+                try { result = JSON.parse(xhr.responseText); } catch (ignore) { result = null; }
+            }
+            if (result) {
+                var payload = Object.prototype.hasOwnProperty.call(result, 'd') ? result.d : result;
+                message = payload.Message || payload.message || message;
+            }
+            deferred.reject(new Error(message));
         });
+        return deferred.promise();
     }
 
     function esc(value) {
@@ -28,8 +45,9 @@
     }
 
     function number(value) { return Number(value || 0).toLocaleString('vi-VN'); }
+    function pad2(value) { return value < 10 ? '0' + value : String(value); }
     function formatDate(value) {
-        return value.getFullYear() + '-' + String(value.getMonth() + 1).padStart(2, '0') + '-' + String(value.getDate()).padStart(2, '0');
+        return value.getFullYear() + '-' + pad2(value.getMonth() + 1) + '-' + pad2(value.getDate());
     }
     function statusKey(value) {
         value = String(value || '');
@@ -49,19 +67,42 @@
         var selectedStatus = '';
         var dashboardData = null;
 
+        function showState(title, message, iconClass) {
+            var kpis = app.querySelector('.rn-kpis');
+            var grid = app.querySelector('.rn-grid');
+            if (kpis) {
+                kpis.innerHTML = '<div class="rn-kpi"><span>Dữ liệu</span><strong>--</strong><small>Đang chờ đồng bộ</small></div>' +
+                    '<div class="rn-kpi"><span>Hoàn thành</span><strong>--</strong><small>Đang chờ đồng bộ</small></div>' +
+                    '<div class="rn-kpi"><span>Delay</span><strong>--</strong><small>Đang chờ đồng bộ</small></div>' +
+                    '<div class="rn-kpi"><span>Cần chú ý</span><strong>--</strong><small>Đang chờ đồng bộ</small></div>';
+            }
+            if (grid) {
+                grid.innerHTML = '<article class="rn-card wide rn-empty"><div class="rn-empty-icon"><i class="fa ' + esc(iconClass || 'fa-refresh') + '"></i></div><h2>' + esc(title) + '</h2><p>' + esc(message || '') + '</p></article>';
+            }
+        }
+
+        if (!airport || !from || !to || !apply) {
+            showState('Không thể khởi tạo dashboard', 'Không tìm thấy đầy đủ bộ lọc dữ liệu.', 'fa-exclamation-triangle');
+            return;
+        }
+
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option>' + Object.keys(airportNames).map(function (code) {
             return '<option value="' + code + '">' + code + ' - ' + airportNames[code] + '</option>';
         }).join('');
         if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-            window.jQuery(airport).select2({
-                width: '100%',
-                minimumResultsForSearch: 0,
-                dropdownCssClass: 'rn-dashboard-airport-dropdown',
-                language: {
-                    noResults: function () { return 'Không tìm thấy sân bay'; },
-                    searching: function () { return 'Đang tìm kiếm...'; }
-                }
-            });
+            try {
+                window.jQuery(airport).select2({
+                    width: '100%',
+                    minimumResultsForSearch: 0,
+                    dropdownCssClass: 'rn-dashboard-airport-dropdown',
+                    language: {
+                        noResults: function () { return 'Không tìm thấy sân bay'; },
+                        searching: function () { return 'Đang tìm kiếm...'; }
+                    }
+                });
+            } catch (ignore) {
+                airport.style.display = '';
+            }
         }
         from.max = formatDate(today);
         to.max = formatDate(today);
@@ -81,7 +122,7 @@
             });
             airport.value = selected;
             if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-                window.jQuery(airport).trigger('change.select2');
+                try { window.jQuery(airport).trigger('change.select2'); } catch (ignore) { airport.style.display = ''; }
             }
         }
 
@@ -267,7 +308,7 @@
             }
 
             function animate(timestamp) {
-                if (!canvas.isConnected) return;
+                if (typeof canvas.isConnected !== 'undefined' && !canvas.isConnected) return;
                 if (startedAt === null) startedAt = timestamp;
                 progress = Math.min(1, (timestamp - startedAt) / 650);
                 var eased = 1 - Math.pow(1 - progress, 3);
@@ -305,6 +346,13 @@
         function load() {
             apply.disabled = true;
             apply.textContent = 'Đang đồng bộ...';
+            showState('Đang tải dữ liệu', 'Hệ thống đang tổng hợp dữ liệu theo khoảng ngày đã chọn.', 'fa-refresh fa-spin');
+            if (!window.jQuery || !window.jQuery.ajax || !window.jQuery.Deferred) {
+                showState('Không thể tải dữ liệu', 'Thư viện xử lý yêu cầu chưa được nạp.', 'fa-exclamation-triangle');
+                apply.disabled = false;
+                apply.innerHTML = '<i class="fa fa-filter"></i> Áp dụng';
+                return;
+            }
             var currentDay = from.value === formatDate(today) && to.value === formatDate(today);
             var fromValue = new Date(from.value + 'T00:00:00');
             var toValue = new Date(to.value + 'T00:00:00');
@@ -313,7 +361,7 @@
             var statusUrl = '../ReportNew/FlightStatusRate.aspx/GetData';
             var overviewUrl = '../ReportNew/FlightOperationOverview.aspx/GetData';
             var trendUrl = '../ReportNew/FlightTrendAnalysis.aspx/GetTrend';
-            Promise.all([
+            window.jQuery.when(
                 post(statusUrl, {
                     fromDate: from.value, toDate: to.value, airport: airport.value,
                     oper: 'ALL', currentDay: currentDay
@@ -325,11 +373,11 @@
                     fromDate: from.value, toDate: to.value, airport: airport.value,
                     oper: 'ALL', period: trendPeriod
                 })
-            ]).then(function (data) {
-                render(data);
-            }).catch(function (error) {
-                alert(error.message);
-            }).then(function () {
+            ).done(function (status, overview, trend) {
+                render([status, overview, trend]);
+            }).fail(function (error) {
+                showState('Không thể tải dữ liệu', error && error.message ? error.message : 'Máy chủ không trả về dữ liệu dashboard.', 'fa-exclamation-triangle');
+            }).always(function () {
                 apply.disabled = false;
                 apply.innerHTML = '<i class="fa fa-filter"></i> Áp dụng';
             });
