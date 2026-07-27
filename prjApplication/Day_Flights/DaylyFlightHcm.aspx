@@ -703,6 +703,152 @@
             .dayly-top-actions { flex-wrap: wrap; }
         }
     </style>
+    <style id="dayly-hcm-modern-ui">
+        /* Giao diện trang Daily Flight HCM: ưu tiên khoảng thở, thứ bậc thị giác
+           và khả năng thao tác nhanh trên màn hình nhỏ. */
+        .dayly-page,
+        .main-content,
+        #main-content {
+            background: #f4f8fb;
+        }
+
+        .divHeader {
+            min-height: 0 !important;
+            padding: 14px 16px 16px !important;
+            gap: 12px !important;
+            border-color: #c9dceb !important;
+            border-radius: 14px !important;
+            background: linear-gradient(135deg, #ffffff 0%, #eef7fd 100%) !important;
+            box-shadow: 0 8px 24px rgba(29, 83, 121, .12) !important;
+        }
+
+        #topBar1 {
+            justify-content: flex-start !important;
+            gap: 6px !important;
+            overflow-x: auto;
+            padding: 2px 0 4px;
+            scrollbar-width: thin;
+        }
+
+        #topBar1 .sControl {
+            flex: 0 0 60px;
+            height: 36px;
+            border: 1px solid #79afd0 !important;
+            border-radius: 8px !important;
+            background: #fff !important;
+            color: #1c5e8d !important;
+        }
+
+        #topBar1 .btn {
+            flex: 0 0 38px;
+            height: 36px;
+            padding: 8px 4px !important;
+            border: 1px solid #c0d0dc !important;
+            border-radius: 8px !important;
+            background: #b3c4d0 !important;
+            color: #fff !important;
+            font-weight: 700;
+            transition: .18s ease;
+        }
+
+        #topBar1 .btn:hover,
+        #topBar1 .btn.active {
+            border-color: #1f82bd !important;
+            background: #2585bd !important;
+            box-shadow: 0 4px 10px rgba(32, 117, 171, .25);
+        }
+
+        #topBar2 {
+            justify-content: center !important;
+            gap: 10px !important;
+        }
+
+        #topBar2 span {
+            min-width: 108px !important;
+            padding: 7px 14px !important;
+            border-color: #76b1d7 !important;
+            border-radius: 8px !important;
+            color: #145d8f !important;
+            font-weight: 600;
+        }
+
+        #topBar3 {
+            justify-content: flex-start !important;
+            gap: 10px !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            padding-top: 2px;
+        }
+
+        #topBar3 select,
+        #divSelectDate select {
+            height: 36px !important;
+            min-width: 92px !important;
+            padding: 5px 10px;
+            border-color: #78afd0 !important;
+            border-radius: 8px !important;
+            color: #185b86 !important;
+            box-shadow: 0 2px 5px rgba(26, 89, 127, .06);
+        }
+
+        #topBar3 .checkbox {
+            min-width: 122px !important;
+            color: #375d74;
+        }
+
+        .dayly-top-actions {
+            margin-left: auto;
+            flex: 0 0 auto;
+        }
+
+        #table-container {
+            margin-top: 14px !important;
+            border-color: #b9d3e5 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 28px rgba(26, 67, 105, .14) !important;
+        }
+
+        #grdSource thead tr.Spec > td {
+            padding: 10px 8px !important;
+            background: #e2f2fc !important;
+        }
+
+        #grdSource thead tr.Spec input,
+        #grdSource thead tr.Spec select {
+            height: 36px !important;
+            padding: 5px 9px !important;
+            border-color: #72acd0 !important;
+            border-radius: 7px !important;
+        }
+
+        #grdSource thead tr:last-child > th {
+            height: 48px;
+            padding: 9px 10px !important;
+            background: linear-gradient(#226b9e, #185b8d) !important;
+            border-color: #76a9c9 !important;
+            letter-spacing: .15px;
+        }
+
+        #grdSource tbody > tr:nth-child(even) > td {
+            background: #f7fbfe;
+        }
+
+        #grdSource tbody > tr:hover > td {
+            background: #e8f4fc !important;
+        }
+
+        #grdSource tbody > tr > td {
+            height: 42px !important;
+            padding: 7px 9px !important;
+            border-color: #d5e1e9 !important;
+        }
+
+        @media (max-width: 767px) {
+            #topBar3 { flex-wrap: nowrap !important; }
+            .dayly-top-actions { margin-left: 0; }
+            #table-container { margin-top: 10px !important; }
+        }
+    </style>
     <style id="styCSS">
         
     </style>
