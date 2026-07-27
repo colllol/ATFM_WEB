@@ -792,29 +792,14 @@
         }
 
         function isValidPermNoDayFlight(value) {
-            var monthNames = {
-                JAN: '01', FEB: '02', MAR: '03', APR: '04',
-                MAY: '05', JUN: '06', JUL: '07', AUG: '08',
-                SEP: '09', OCT: '10', NOV: '11', DEC: '12'
-            };
             var dayFlights = (value || '').split(',');
             if (dayFlights.length === 0) return false;
 
             for (var index = 0; index < dayFlights.length; index++) {
-                var dayFlight = dayFlights[index].trim().toUpperCase();
+                var dayFlight = dayFlights[index].trim();
                 if (dayFlight === '') return false;
 
-                $.each(monthNames, function (monthName, monthNumber) {
-                    dayFlight = dayFlight.replace(monthName, monthNumber);
-                });
-
-                if (/^\d{8}$/.test(dayFlight)) {
-                    dayFlight = dayFlight.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1-$2-$3');
-                } else if (/^\d{6}$/.test(dayFlight)) {
-                    dayFlight = dayFlight.replace(/^(\d{2})(\d{2})(\d{2})$/, '$1-$2-20$3');
-                }
-
-                var match = dayFlight.match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/);
+                var match = dayFlight.match(/^(\d{2})-(\d{2})-(\d{4})$/);
                 if (match == null) return false;
 
                 var day = parseInt(match[1], 10);
@@ -838,7 +823,7 @@
             }
 
             $(mDAYSFLIGHT).css('border', '1px solid red');
-            alert('Ngày bay không đúng định dạng. Vui lòng nhập dd-MM-yyyy hoặc ddMMyyyy.');
+            alert('Ngày bay không đúng định dạng. Chỉ chấp nhận dd-MM-yyyy (ví dụ: 28-07-2026).');
             mDAYSFLIGHT.focus();
             return false;
         }
