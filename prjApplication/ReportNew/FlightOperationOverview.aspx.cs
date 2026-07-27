@@ -38,13 +38,14 @@ namespace prjApplication.ReportNew
             DateTime to;
             ParseDateRange(fromDate, toDate, out from, out to);
             string selectedAirport = NormalizeAirport(airport, true);
+            bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
             var flights = new List<FlightRow>();
             var metrics = new Dictionary<string, AirportMetric>(StringComparer.OrdinalIgnoreCase);
             int finished = 0;
             int delay = 0;
 
             using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = CreateCommand(connection, from, to, selectedAirport))
+            using (var command = CreateCommand(connection, from, to.AddDays(1), selectedAirport, currentDay))
             {
                 connection.Open();
                 using (var reader = command.ExecuteReader())
@@ -92,7 +93,7 @@ namespace prjApplication.ReportNew
                 .ToList();
 
             return new {
-                source = "T_FINISHED_FLIGHTS",
+                source = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS",
                 total = finished + delay,
                 finished = finished,
                 delay = delay,
@@ -115,9 +116,18 @@ namespace prjApplication.ReportNew
             };
         }
 
-        private static OracleCommand CreateCommand(OracleConnection connection, DateTime from, DateTime to, string airport)
+        private static OracleCommand CreateCommand(
+            OracleConnection connection,
+            DateTime from,
+            DateTime to,
+            string airport,
+            bool currentDay)
         {
-            var command = new OracleCommand(FlightStatusRate.BuildHistoricalStatusSql(), connection);
+            var command = new OracleCommand(
+                currentDay
+                    ? FlightStatusRate.BuildCurrentStatusSql()
+                    : FlightStatusRate.BuildHistoricalStatusSql(),
+                connection);
             command.BindByName = true;
             command.CommandTimeout = 120;
             command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;

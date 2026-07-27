@@ -30,16 +30,18 @@ namespace prjApplication.ReportNew
 
             string selectedAirport = NormalizeFilter(airport);
             string selectedOper = NormalizeFilter(oper);
+            bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
+            DateTime toExclusive = to.AddDays(1);
             DateTime compareFrom = from.AddYears(-1);
             DateTime compareTo = to.AddYears(-1);
-            PeriodCounts current = LoadCounts(from, to, selectedAirport, selectedOper, mode);
-            PeriodCounts previous = LoadCounts(compareFrom, compareTo, selectedAirport, selectedOper, mode);
+            DateTime compareToExclusive = compareTo.AddDays(1);
+            PeriodCounts current = LoadCounts(from, toExclusive, selectedAirport, selectedOper, mode);
+            PeriodCounts previous = LoadCounts(compareFrom, compareToExclusive, selectedAirport, selectedOper, mode);
             var labels = new List<string>();
             var currentValues = new List<int>();
             var previousValues = new List<int>();
             DateTime cursor = mode == "month" ? new DateTime(from.Year, from.Month, 1) : from.Date;
-            DateTime effectiveTo = to.AddDays(-1);
-            DateTime end = mode == "month" ? new DateTime(effectiveTo.Year, effectiveTo.Month, 1) : effectiveTo.Date;
+            DateTime end = mode == "month" ? new DateTime(to.Year, to.Month, 1) : to.Date;
 
             while (cursor <= end)
             {
@@ -57,7 +59,7 @@ namespace prjApplication.ReportNew
                 : Math.Round(difference * 100.0 / previous.Total, 1);
 
             return new {
-                source = "T_FINISHED_FLIGHTS",
+                source = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS",
                 period = mode,
                 currentFrom = from.ToString("dd/MM/yyyy"),
                 currentTo = to.ToString("dd/MM/yyyy"),
@@ -117,7 +119,7 @@ namespace prjApplication.ReportNew
             {
                 command.BindByName = true;
                 command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
+                command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
                 connection.Open();
                 using (var reader = command.ExecuteReader())
                     while (reader.Read()) values.Add(Convert.ToString(reader["OPER_ID"]));
@@ -128,8 +130,13 @@ namespace prjApplication.ReportNew
         private static PeriodCounts LoadCounts(DateTime from, DateTime to, string airport, string oper, string mode)
         {
             var result = new PeriodCounts();
+            bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today.AddDays(1);
             using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = new OracleCommand(FlightStatusRate.BuildHistoricalStatusSql(), connection))
+            using (var command = new OracleCommand(
+                currentDay
+                    ? FlightStatusRate.BuildCurrentStatusSql()
+                    : FlightStatusRate.BuildHistoricalStatusSql(),
+                connection))
             {
                 command.BindByName = true;
                 command.CommandTimeout = 120;

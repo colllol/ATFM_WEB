@@ -22,6 +22,7 @@ namespace prjApplication.ReportNew
             if (from > to || to > DateTime.Today)
                 throw new ArgumentException("Khoảng ngày phải hợp lệ và không vượt quá ngày hiện tại.");
 
+            currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
             string table = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS";
             string fromClause;
             string plannedTime;
@@ -52,7 +53,7 @@ namespace prjApplication.ReportNew
             {
                 command.BindByName = true;
                 command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = currentDay ? to.AddDays(1) : to;
+                command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
                 command.Parameters.Add("oper", OracleDbType.Varchar2).Value = String.IsNullOrWhiteSpace(oper) || oper == "ALL" ? (object)DBNull.Value : oper.Trim().ToUpperInvariant();
                 command.Parameters.Add("airport", OracleDbType.Varchar2).Value = String.IsNullOrWhiteSpace(airport) || airport == "ALL" ? (object)DBNull.Value : airport.Trim().ToUpperInvariant();
                 connection.Open();
@@ -105,7 +106,7 @@ namespace prjApplication.ReportNew
                 {
                     command.BindByName = true;
                     command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                    command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
+                    command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
                     connection.Open();
                     using (var reader = command.ExecuteReader())
                     {
@@ -194,7 +195,7 @@ namespace prjApplication.ReportNew
             {
                 command.BindByName = true;
                 command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = currentDay ? to.AddDays(1) : to;
+                command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
                 connection.Open();
                 using (var reader = command.ExecuteReader()) while (reader.Read()) values.Add(reader.GetString(0));
             }
