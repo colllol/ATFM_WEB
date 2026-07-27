@@ -174,83 +174,6 @@
             border-top: 1px solid #d8e0e7;
         }
 
-        .delay-alerts-dialog {
-            width: 1180px;
-        }
-
-        .delay-alert-levels {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .delay-alert-filter {
-            min-width: 135px;
-            padding: 6px 10px;
-            border: 1px solid #b8c5cf;
-            border-radius: 4px;
-            background: #fff;
-            color: #34495a;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: none;
-        }
-
-        .delay-alert-filter:hover,
-        .delay-alert-filter:focus {
-            border-color: #337ab7;
-            color: #245b86;
-        }
-
-        .delay-alert-filter.is-active {
-            border-color: #2f668f;
-            background: #2f668f;
-            color: #fff;
-        }
-
-        .delay-alert-visible {
-            margin-left: auto;
-            color: #52677a;
-            font-size: 13px;
-        }
-
-        .delay-alert-level-1 td {
-            background: #fff8d8;
-        }
-
-        .delay-alert-level-2 td {
-            background: #ffead5;
-        }
-
-        .delay-alert-level-3 td {
-            background: #ffe0e0;
-            color: #7b1f1f;
-            font-weight: 600;
-        }
-
-        .delay-alert-level-name {
-            display: inline-block;
-            min-width: 52px;
-            padding: 3px 7px;
-            border-radius: 3px;
-            color: #fff;
-            font-weight: 700;
-        }
-
-        .delay-alert-level-name.level-1 {
-            background: #9a7810;
-        }
-
-        .delay-alert-level-name.level-2 {
-            background: #c65d0a;
-        }
-
-        .delay-alert-level-name.level-3 {
-            background: #b52b2b;
-        }
-
         @media (max-width: 760px) {
             .activity-days-backdrop {
                 padding: 10px;
@@ -259,11 +182,6 @@
             .activity-days-dialog {
                 max-width: 100%;
                 max-height: calc(100vh - 20px);
-            }
-
-            .delay-alert-visible {
-                width: 100%;
-                margin-left: 0;
             }
         }
     </style>
@@ -326,8 +244,6 @@
         <asp:Button ID="btnExport" class="btn btn-sm btn-primary" runat="server" Style="width: 135px" Text="Export Excel" OnClick="btnExport_Click" />
         <asp:Button ID="btnExportWord" class="btn btn-sm btn-primary" runat="server" Style="width: 135px" Text="Export Word" OnClick="btnExportWord_Click" />
         <asp:Button ID="btnCountActiveDays" class="btn btn-sm btn-primary" runat="server" Style="width: 175px" Text="Đếm ngày hoạt động" OnClick="btnCountActiveDays_Click" />
-        <asp:Button ID="btnViewDelayAlerts" class="btn btn-sm btn-warning" runat="server" Style="width: 175px"
-            Text="Xem cảnh báo delay" OnClick="btnViewDelayAlerts_Click" />
         <button id="btnPrint" type="button" class="btn btn-sm btn-primary" style="width:100px;" onclick="btnPrint_OnClick()">PRINT</button>
     </div>
 
@@ -371,69 +287,6 @@
         </div>
     </div>
 
-    <div id="delayAlertsModal" class="activity-days-backdrop" role="presentation" aria-hidden="true"
-        onclick="closeDelayAlertsModalOnBackdrop(event)">
-        <div class="activity-days-dialog delay-alerts-dialog" role="dialog" aria-modal="true"
-            aria-labelledby="delayAlertsTitle">
-            <div class="activity-days-header">
-                <h3 id="delayAlertsTitle">Cảnh báo chuyến bay chậm trong ngày hiện tại</h3>
-                <button type="button" class="activity-days-close" title="Đóng" aria-label="Đóng"
-                    onclick="closeDelayAlertsModal()">&times;</button>
-            </div>
-            <div class="activity-days-body">
-                <div class="activity-days-summary">
-                    <asp:Literal ID="ltrDelayAlertsSummary" runat="server"></asp:Literal>
-                </div>
-                <div class="delay-alert-levels" role="group" aria-label="Lọc cảnh báo theo mức độ">
-                    <button id="delayAlertFilterAll" type="button" class="delay-alert-filter is-active"
-                        aria-pressed="true" onclick="filterDelayAlerts('', this)">
-                        Tất cả (<span id="delayAlertCountAll">0</span>)
-                    </button>
-                    <button type="button" class="delay-alert-filter" aria-pressed="false"
-                        onclick="filterDelayAlerts('1', this)">
-                        Mức 1: 15-29 phút (<span id="delayAlertCount1">0</span>)
-                    </button>
-                    <button type="button" class="delay-alert-filter" aria-pressed="false"
-                        onclick="filterDelayAlerts('2', this)">
-                        Mức 2: 30-59 phút (<span id="delayAlertCount2">0</span>)
-                    </button>
-                    <button type="button" class="delay-alert-filter" aria-pressed="false"
-                        onclick="filterDelayAlerts('3', this)">
-                        Mức 3: từ 60 phút (<span id="delayAlertCount3">0</span>)
-                    </button>
-                    <span class="delay-alert-visible">Đang hiển thị: <strong id="delayAlertVisibleCount">0</strong> chuyến</span>
-                </div>
-                <asp:GridView ID="grdDelayAlerts" runat="server" AutoGenerateColumns="false"
-                    CssClass="activity-days-table" GridLines="None"
-                    OnRowDataBound="grdDelayAlerts_RowDataBound"
-                    EmptyDataText="Không có chuyến bay chậm từ 15 phút trở lên trong ngày hiện tại.">
-                    <Columns>
-                        <asp:BoundField DataField="STT" HeaderText="STT" />
-                        <asp:TemplateField HeaderText="Mức">
-                            <ItemTemplate>
-                                <span class='<%# "delay-alert-level-name level-" + Eval("ALERT_LEVEL") %>'>
-                                    <%# Eval("ALERT_NAME") %>
-                                </span>
-                            </ItemTemplate>
-                        </asp:TemplateField>
-                        <asp:BoundField DataField="FLIGHTNBR" HeaderText="Callsign" />
-                        <asp:BoundField DataField="OPER_ID" HeaderText="Hãng" />
-                        <asp:BoundField DataField="REGISTRATION" HeaderText="Đăng ký" />
-                        <asp:BoundField DataField="PERMTYPE" HeaderText="PERMTYPE" />
-                        <asp:BoundField DataField="FROM_AIRP" HeaderText="FROM" />
-                        <asp:BoundField DataField="TO_AIRP" HeaderText="TO" />
-                        <asp:BoundField DataField="ETD" HeaderText="ETD (4 số)" />
-                        <asp:BoundField DataField="ATD" HeaderText="ATD (6 số)" />
-                        <asp:BoundField DataField="DELAY_DURATION" HeaderText="Thời gian chậm" />
-                    </Columns>
-                </asp:GridView>
-            </div>
-            <div class="activity-days-footer">
-                <button type="button" class="btn btn-sm btn-default" onclick="closeDelayAlertsModal()">Đóng</button>
-            </div>
-        </div>
-    </div>
-   
     <script language="javascript" type="text/javascript">
 
         $('#<%= txtFromDate.ClientID %>').datetimepicker({
@@ -483,59 +336,9 @@
             }
         }
 
-        function getDelayAlertRows() {
-            return $('#<%= grdDelayAlerts.ClientID %> tr[data-alert-level]');
-        }
-
-        function refreshDelayAlertCounts() {
-            var rows = getDelayAlertRows();
-            $('#delayAlertCountAll').text(rows.length);
-            $('#delayAlertCount1').text(rows.filter('[data-alert-level="1"]').length);
-            $('#delayAlertCount2').text(rows.filter('[data-alert-level="2"]').length);
-            $('#delayAlertCount3').text(rows.filter('[data-alert-level="3"]').length);
-        }
-
-        function filterDelayAlerts(level, button) {
-            var visibleCount = 0;
-            getDelayAlertRows().each(function () {
-                var isVisible = !level || $(this).attr('data-alert-level') === level;
-                $(this).toggle(isVisible);
-                if (isVisible) {
-                    visibleCount++;
-                }
-            });
-
-            $('.delay-alert-filter').removeClass('is-active').attr('aria-pressed', 'false');
-            if (button) {
-                $(button).addClass('is-active').attr('aria-pressed', 'true');
-            }
-            $('#delayAlertVisibleCount').text(visibleCount);
-        }
-
-        function openDelayAlertsModal() {
-            $('#delayAlertsModal').addClass('is-open').attr('aria-hidden', 'false');
-            $('body').css('overflow', 'hidden');
-            refreshDelayAlertCounts();
-            filterDelayAlerts('', document.getElementById('delayAlertFilterAll'));
-        }
-
-        function closeDelayAlertsModal() {
-            $('#delayAlertsModal').removeClass('is-open').attr('aria-hidden', 'true');
-            $('body').css('overflow', '');
-        }
-
-        function closeDelayAlertsModalOnBackdrop(e) {
-            e = e || window.event;
-            var target = e.target || e.srcElement;
-            if (target && target.id === 'delayAlertsModal') {
-                closeDelayAlertsModal();
-            }
-        }
-
         $(document).keydown(function (e) {
             if (e.keyCode === 27) {
                 closeActivityDaysModal();
-                closeDelayAlertsModal();
             }
         });
     </script>

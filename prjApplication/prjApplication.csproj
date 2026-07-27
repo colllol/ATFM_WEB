@@ -655,6 +655,8 @@
     <Content Include="ReportNew\AdsBPerformanceReport.css" />
     <Content Include="ReportNew\AdsBPerformanceReport.js" />
     <Content Include="ReportNew\AnomalyWarning.aspx" />
+    <Content Include="ReportNew\AnomalyWarning.css" />
+    <Content Include="ReportNew\AnomalyWarning.js" />
     <Content Include="ReportNew\AirportActivitySummary.aspx" />
     <Content Include="ReportNew\AirportTakeoffLanding.aspx" />
     <Content Include="ReportNew\AirportTakeoffLanding.js" />
@@ -1993,6 +1995,10 @@
     </Compile>
     <Compile Include="ReportNew\AdsBPerformanceReport.aspx.cs">
       <DependentUpon>AdsBPerformanceReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ReportNew\AnomalyWarning.aspx.cs">
+      <DependentUpon>AnomalyWarning.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ReportNew\AirportTakeoffLanding.aspx.cs">
