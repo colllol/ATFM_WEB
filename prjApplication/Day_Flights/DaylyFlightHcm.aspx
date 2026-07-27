@@ -252,12 +252,19 @@
             top: 42px !important;
             right: 0 !important;
             left: auto !important;
+            max-height: 0;
+            overflow: hidden;
+            border: 0;
+            border-radius: 10px;
+            box-shadow: none;
+            z-index: 1500 !important;
+        }
+
+        .dayly-top-actions #ace-settings-box.open {
             max-height: min(520px, calc(100vh - 180px));
             overflow-y: auto;
             border: 1px solid #b9d2e5;
-            border-radius: 10px;
             box-shadow: 0 12px 28px rgba(20, 66, 101, .22);
-            z-index: 1500 !important;
         }
 
         #grdSource {

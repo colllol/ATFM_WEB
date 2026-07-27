@@ -1481,3 +1481,4 @@ Quy ước:
 2026-07-27 | prjApplication/Day_Flights/DaylyFlightHcm.aspx | Bổ sung lớp giao diện hiện đại cho trang Daily Flight HCM: nền và thẻ bộ lọc rõ cấp bậc, thanh giờ cuộn ngang, nút trạng thái tương tác, bộ lọc đồng nhất, bảng có zebra/hover, chiều cao dòng và đầu bảng dễ đọc hơn.
 2026-07-27 | prjApplication/Day_Flights/DaylyFlightHcm.aspx | Hoàn tác bố cục hiện đại bổ sung; giữ các hiệu ứng giao diện hiện có và chỉnh riêng bộ chọn ngày cùng lớp gợi ý autocomplete để nổi trên bảng nhưng nằm dưới menu điều hướng.
 2026-07-27 | prjApplication/Day_Flights/DaylyFlightHcm.aspx | Mở rộng bộ chọn ngày thành lịch đầy đủ 731 ngày quanh ngày hiện tại, đồng bộ ngày chọn vào bộ lọc hiện hữu; nâng ô autocomplete đang mở lên trên tiêu đề sticky để không bị che.
+2026-07-27 | prjApplication/Day_Flights/DaylyFlightHcm.aspx | Loại bỏ đường dọc thừa do hộp thiết lập màu ở trạng thái đóng vẫn giữ chiều cao và viền; chỉ hiển thị viền, bóng và thanh cuộn khi hộp được mở.
