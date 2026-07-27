@@ -791,6 +791,58 @@
                 + '-' + value.substring(4, 8);
         }
 
+        function isValidPermNoDayFlight(value) {
+            var monthNames = {
+                JAN: '01', FEB: '02', MAR: '03', APR: '04',
+                MAY: '05', JUN: '06', JUL: '07', AUG: '08',
+                SEP: '09', OCT: '10', NOV: '11', DEC: '12'
+            };
+            var dayFlights = (value || '').split(',');
+            if (dayFlights.length === 0) return false;
+
+            for (var index = 0; index < dayFlights.length; index++) {
+                var dayFlight = dayFlights[index].trim().toUpperCase();
+                if (dayFlight === '') return false;
+
+                $.each(monthNames, function (monthName, monthNumber) {
+                    dayFlight = dayFlight.replace(monthName, monthNumber);
+                });
+
+                if (/^\d{8}$/.test(dayFlight)) {
+                    dayFlight = dayFlight.replace(/^(\d{2})(\d{2})(\d{4})$/, '$1-$2-$3');
+                } else if (/^\d{6}$/.test(dayFlight)) {
+                    dayFlight = dayFlight.replace(/^(\d{2})(\d{2})(\d{2})$/, '$1-$2-20$3');
+                }
+
+                var match = dayFlight.match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/);
+                if (match == null) return false;
+
+                var day = parseInt(match[1], 10);
+                var month = parseInt(match[2], 10);
+                var year = parseInt(match[3], 10);
+                var parsedDate = new Date(year, month - 1, day);
+
+                if (parsedDate.getFullYear() !== year
+                    || parsedDate.getMonth() !== month - 1
+                    || parsedDate.getDate() !== day) return false;
+            }
+
+            return true;
+        }
+
+        function validatePermNoDayFlightBeforeSave() {
+            normalizePermNoDayFlightInput(mDAYSFLIGHT);
+            if (isValidPermNoDayFlight(mDAYSFLIGHT.value)) {
+                $(mDAYSFLIGHT).css('border', '');
+                return true;
+            }
+
+            $(mDAYSFLIGHT).css('border', '1px solid red');
+            alert('Ngày bay không đúng định dạng. Vui lòng nhập dd-MM-yyyy hoặc ddMMyyyy.');
+            mDAYSFLIGHT.focus();
+            return false;
+        }
+
         function mGetObjectInfo() {
             var _obj = _objRender;
             _obj['ID'] = IdSelectDT;
@@ -817,6 +869,8 @@
         }
 
         function mbtnAddNewFlightDetailOnclick() {
+            if (!validatePermNoDayFlightBeforeSave()) return;
+
             if ($('#perm_id').html().trim() != '')
                 GetArgWithPostBack(JSON.stringify(mGetObjectInfo()) + '_____mbtnAddNewFlightDetailOnclick', 'mbtnAddNewFlightDetailOnclick');
             else {
