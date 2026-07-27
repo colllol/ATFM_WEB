@@ -13,8 +13,8 @@ namespace prjApplication.SLOTS
 {
     public partial class EmailReports : Page
     {
-        private const string DefaultEndpoint = "http://192.168.100.135:8080/api/reports/emails";
-        private const string DefaultJobsEndpoint = "http://192.168.100.135:8080/api/jobs/";
+        private const string DefaultEndpoint = "http://192.168.100.134:8081/api/reports/emails";
+        private const string DefaultJobsEndpoint = "http://192.168.100.134:8081/api/jobs/";
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
