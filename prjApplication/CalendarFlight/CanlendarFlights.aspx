@@ -384,8 +384,8 @@
                 <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash-o" aria-hidden="true"></i>Delete</button>
                 <button type="button" id="btnDeleteByCheckedRemark" class="btn btn-sm btn-primary" onclick="btnDeleteRemarkByChecked_Onclick()"><i class="fa fa-eraser" aria-hidden="true"></i>Del Remark</button>
                 <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="btnClearSearch_OnClick()"><i class="fa fa-times-circle" aria-hidden="true"></i>Clear search</button>
-                <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="LoadDataGrid_Export()"><i class="fa fa-file-excel-o" aria-hidden="true"></i>Export Excel</button>
-                <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-file-text-o" aria-hidden="true"></i>Export Bravo</button>
+                <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="LoadDataGrid_Export()"><i class="fa fa-file-excel-o" aria-hidden="true"></i>Exp Excel</button>
+                <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-file-text-o" aria-hidden="true"></i>Exp Bravo</button>
                 <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-save" aria-hidden="true"></i>Update all</button>
             </div>
         </div>

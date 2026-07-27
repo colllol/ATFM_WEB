@@ -246,7 +246,7 @@ namespace prjApplication.Permission
             obj.ID = 0;
             var kq = new PermMasterScDAL().InsertReturnId(obj);
             string ax = kq.ToString() != "-1" ? "Insert sussess" : "Insert error";
-            WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermMasterScDAL]", 0, $"[InsertObject] [{ax}]", 0.0);
+            WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermMasterScDAL]", 0, $"[InsertObject] [{kq}{ax}]", 0.0);
             if (kq == "-1")
                 return $"<script>Alert('Insert error');</script>";
             return $"{kq.ToString()}";
@@ -264,7 +264,7 @@ namespace prjApplication.Permission
                     return "-1";
                 var kq = new PermDetailScDAL().InsertReturnId(obj);
                 string ax = kq.ToString() == "-1" ? "Insert error" : "Insert success";
-                WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermDetailScDAL]", 0, $"[CreateObject] [{ax}]", 0.0);
+                WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermDetailScDAL]", 0, $"[CreateObject] [{kq}{ax}]", 0.0);
                 if (kq == "-1")
                     return "";
                 return kq.ToString();

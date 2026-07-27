@@ -637,6 +637,7 @@
             document.getElementById('txtMTOW').value = parseInt(ddlCRAFT_ID.options[ddlCRAFT_ID.selectedIndex].getAttribute('data-taitrong'));
         }         
         function btnCreate_Details_Onclick() {
+            alert('sss');
             if($('#perm_id').html()!='')
                 GetArgWithPostBack(JSON.stringify(GetObjectInfo()) + '_____btnCreate_Details_Onclick',
         'btnCreate_Details_Onclick');
@@ -1071,6 +1072,7 @@
                 }
             
             }
+            console.log(urlApi + "api/PermDetailSc/GetBySearch_New");
             var kq ='';
             $.ajax({
                 //async: false,
@@ -1570,8 +1572,8 @@
         }
     </script>
     <script>
-        LoadDataAjax();
-        btnUpdate_GenBack_NoConfirm();
+        //LoadDataAjax();
+        //btnUpdate_GenBack_NoConfirm();
     </script>
     <script>
         function getMessageFullByRefence(){

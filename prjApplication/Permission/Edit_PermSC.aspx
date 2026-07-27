@@ -605,6 +605,7 @@
                     //alert('Insert sussess!');
                     txtPERMNBR_ID.value =createPermNBRID(ddlAUTHOR_ID.value, ddlPERMTYPE.value, txtPERMNBR.value, txtPERMDATE.value, ddlSEASON.value);
                     document.getElementById('perm_id').innerHTML=resulf;    
+                    
                     if(isCreatePermMaster){                        
                         btnUpdateList_Onclick();
                         isCreatePermMaster=false;
@@ -1062,6 +1063,7 @@
             var _bool =  checkInputDay(txtBEGINDATE_SC);
             //alert(_bool);
 
+            console.log(JSON.stringify(GetObjectInfo()));
 
             if($('#perm_id').html()!='')
                 GetArgWithPostBack(JSON.stringify(GetObjectInfo()) + '_____btnCreate_Details_Onclick',
@@ -1624,6 +1626,7 @@
             }
             var $lis = $('tr[data-isUpdate="true"]');
             var $lisIns = $('tr[data-isinsert="true"]');
+           
             if($lis.length == 0 && $lisIns.length==0) {alert('No update.'); return;};
             var c=0;
             $.each($lis, function(a,b){
