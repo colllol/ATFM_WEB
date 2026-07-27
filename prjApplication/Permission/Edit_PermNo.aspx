@@ -388,7 +388,8 @@
                         <input id="txtETA" class="wid_50px" runat="server" type="text" data-control="btnUpdate"
                             data-minlenght="1" maxlength="4" /></th>
                     <th>
-                        <input id="txtDAYSFLIGHT" class="wid_200px" data-minlenght="1" onblur="checkInputDate(this)"
+                        <input id="txtDAYSFLIGHT" class="wid_200px" data-minlenght="1"
+                            oninput="normalizePermNoDayFlightInput(this)" onblur="checkInputDate(this)"
                             runat="server" data-control="btnUpdate" type="text" maxlength="200" />
                     </th>
 
@@ -771,6 +772,25 @@
         <%--var mREMARK_SEND = document.getElementById('<%= txtREMARK_SEND.ClientID%>');--%>
         <%--var mLastUser = document.getElementById('<%= txtLASTUSER.ClientID%>');--%>
         //var mMAX_DATE = document.getElementById('txtMAX_DATE');
+
+        function normalizePermNoDayFlightInput(ele) {
+            var value = (ele.value || '').trim();
+            if (!/^\d{8}$/.test(value)) return;
+
+            var day = parseInt(value.substring(0, 2), 10);
+            var month = parseInt(value.substring(2, 4), 10);
+            var year = parseInt(value.substring(4, 8), 10);
+            var parsedDate = new Date(year, month - 1, day);
+
+            if (parsedDate.getFullYear() !== year
+                || parsedDate.getMonth() !== month - 1
+                || parsedDate.getDate() !== day) return;
+
+            ele.value = value.substring(0, 2)
+                + '-' + value.substring(2, 4)
+                + '-' + value.substring(4, 8);
+        }
+
         function mGetObjectInfo() {
             var _obj = _objRender;
             _obj['ID'] = IdSelectDT;
@@ -1271,7 +1291,7 @@
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='4' maxlength='6' class='sInput' id='txtETD" + a + "' data-oldValue='" + returnEmpty(b.ETD) + "' value='" + returnEmpty(b.ETD) + "' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' maxlength='6' class='sInput' id='txtETA" + a + "' data-oldValue='" + returnEmpty(b.ETA) + "' value='" + returnEmpty(b.ETA) + "' onblur='checkIsUpdate(this)'/></td>"
                     //+ "<td><input type='text' data-control='_updateAll' data-minlenght='1' data-CheckDate='true' class='sInput' id='txtDAYSFLIGHT" + a + "' data-oldValue='" + new Date(b.DAYSFLIGHT).format('dd-mm-yyyy') + "' value='" + new Date(b.DAYSFLIGHT).format('dd-mm-yyyy') + "' onblur='checkIsUpdate(this)' /></td>"
-                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtDAYSFLIGHT" + a + "' data-oldValue='" + b.DAYSFLIGHT + "' value='" + b.DAYSFLIGHT + "' onblur='checkIsUpdate(this)' /></td>"
+                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtDAYSFLIGHT" + a + "' data-oldValue='" + b.DAYSFLIGHT + "' value='" + b.DAYSFLIGHT + "' oninput='normalizePermNoDayFlightInput(this)' onblur='checkIsUpdate(this)' /></td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtCRAFT_NAME" + a + "' data-craftid='" + b.CRAFT_ID + "' data-oldValue='" + b.CRAFT_NAME + "' onfocusin='binAutocomplete(this,\"CRAFT\")' value='" + b.CRAFT_NAME + "' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtPURPOSE_ID" + a + "' data-oldValue='" + b.PURPOSE_ID + "' onfocusin='binAutocomplete(this,\"PURPOSE\")' value='" + b.PURPOSE_ID + "' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtVIA" + a + "' data-oldValue='" + returnEmpty(b.VIA) + "' value='" + returnEmpty(b.VIA) + "' onblur='checkIsUpdate(this)'/></td>"
@@ -1492,7 +1512,7 @@
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='4' maxlength='6' class='sInput' id='txtETD" + c + "' data-number='true' value='' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' maxlength='6' class='sInput' id='txtETA" + c + "' data-number='true' value='' onblur='checkIsUpdate(this)'/></td>"
                     //+ "<td><input type='text' data-control='_updateAll' data-minlenght='1' data-CheckDate='true' class='sInput' id='txtDAYSFLIGHT" + a + "' data-oldValue='" + new Date(b.DAYSFLIGHT).format('dd-mm-yyyy') + "' value='" + new Date(b.DAYSFLIGHT).format('dd-mm-yyyy') + "' onblur='checkIsUpdate(this)' /></td>"
-                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtDAYSFLIGHT" + c + "'  value='' onblur='checkIsUpdate(this)' /></td>"
+                    + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtDAYSFLIGHT" + c + "' value='' oninput='normalizePermNoDayFlightInput(this)' onblur='checkIsUpdate(this)' /></td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtCRAFT_NAME" + c + "' data-craftid='0'  onfocusin='binAutocomplete(this,\"CRAFT\")' value='' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='1' class='sInput' id='txtPURPOSE_ID" + c + "' onfocusin='binAutocomplete(this,\"PURPOSE\")' value='' onblur='checkIsUpdate(this)'/></td>"
                     + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtVIA" + c + "' value='' onblur='checkIsUpdate(this)'/></td>"
