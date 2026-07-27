@@ -92,7 +92,7 @@ namespace prjApplication.Permission
             {
                 
                 LoadData();
-                ddl_Load();
+                //ddl_Load();
                 btnAddNew.Enabled = _Role.R_Add;
             }
         }

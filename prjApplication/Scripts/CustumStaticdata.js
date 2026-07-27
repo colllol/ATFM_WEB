@@ -1300,6 +1300,7 @@ function CheckPurpose(ele) {
         $(ele).val($(ele).val().toUpperCase());
     }
 }
+
 $(function () {
     $('[data-AutoComplete="OPER"]').each(function () {
         var $ele = $(this);

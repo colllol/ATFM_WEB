@@ -23,8 +23,6 @@ namespace prjApplication.Masters
     public partial class ATFM : System.Web.UI.MasterPage
     {
         private const string CurrentUserSessionKey = "ATFM_CURRENT_USER";
-        private const string MenuUserSessionKey = "ATFM_MENU_USER_ID";
-        private const string MenuRowsSessionKey = "ATFM_MENU_ROWS";
         
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -56,13 +54,6 @@ namespace prjApplication.Masters
                 T_Users user = Session[CurrentUserSessionKey] as T_Users;
                 bool userFromSession = user != null
                     && string.Equals(user.UserName, _name, StringComparison.OrdinalIgnoreCase);
-                if (user != null && !userFromSession)
-                {
-                    Session.Remove(CurrentUserSessionKey);
-                    Session.Remove(MenuUserSessionKey);
-                    Session.Remove(MenuRowsSessionKey);
-                    user = null;
-                }
                 if (!userFromSession)
                 {
                     user = _userDAL.GetUserByUserName(_name);
@@ -72,18 +63,10 @@ namespace prjApplication.Masters
                 TracePerformance(userFromSession ? "UserFromSession" : "UserFromApi", userTimer.ElapsedMilliseconds);
                 if (user != null)
                 {
-                    if (!HasMenuSession(user.UserID))
-                    {
-                        FormsAuthentication.SignOut();
-                        Session.Clear();
-                        Session.Abandon();
-                        Response.Redirect(Global.ApplicationPath + "/Login.aspx", false);
-                        Context.ApplicationInstance.CompleteRequest();
-                        return;
-                    }
-
                     Stopwatch menuTimer = Stopwatch.StartNew();
+                    
                     litMenu.Text = BindNavigation(user.UserID);
+
                     menuTimer.Stop();
                     TracePerformance("BindNavigation", menuTimer.ElapsedMilliseconds);
                     literFullName.Text = user.UserFullName;
@@ -108,8 +91,6 @@ namespace prjApplication.Masters
 
 
         #region Menu Bind Data
-#if false
-        // LEGACY MENU LOADER: giu lai de co the khoi phuc luong nhieu API cu.
         protected string GetMenu4User(int UserID)
         {
             prjBusinessLogic.UltilFunc _untilDAL = new prjBusinessLogic.UltilFunc();
@@ -139,7 +120,6 @@ namespace prjApplication.Masters
             }
             return _tmp;
         }
-#endif
         private string isParent()
         {
             int Menu_ID = CommonLib.CheckNullInt(Request["Menu_ID"]);
@@ -164,9 +144,6 @@ namespace prjApplication.Masters
             public List<NavigationMenuItem> Children { get; set; }
         }
 
-#if false
-        // LEGACY MENU LOADER: luong cu goi GetMenu4User, BindNavigationByUserID
-        // va BindNavigationMaster, sau do cache cay menu trong Session.
         private string GetNavigationCacheKey(int userID)
         {
             return "ATFM_NAVIGATION_TREE_" + userID;
@@ -265,59 +242,6 @@ namespace prjApplication.Masters
             }
 
             return menuTree;
-        }
-#endif
-
-        private bool HasMenuSession(int userID)
-        {
-            DataTable rows = Session[MenuRowsSessionKey] as DataTable;
-            return CommonLib.CheckNullInt(Session[MenuUserSessionKey]) == userID
-                && rows != null
-                && rows.Columns.Contains("ID")
-                && rows.Columns.Contains("PARRENTID");
-        }
-
-        private List<NavigationMenuItem> GetNavigationTree(int userID)
-        {
-            DataTable rows = Session[MenuRowsSessionKey] as DataTable;
-            List<NavigationMenuItem> roots = new List<NavigationMenuItem>();
-            Dictionary<int, NavigationMenuItem> items = new Dictionary<int, NavigationMenuItem>();
-
-            if (!HasMenuSession(userID))
-                return roots;
-
-            foreach (DataRow row in rows.Rows)
-            {
-                NavigationMenuItem item = new NavigationMenuItem
-                {
-                    ID = CommonLib.CheckNullInt(row["ID"]),
-                    Name = CommonLib.CheckNullStr(row["MENUNAME"]),
-                    Icon = CommonLib.CheckNullStr(row["MENUICON"]),
-                    Url = CommonLib.CheckNullStr(row["MENUURL"]),
-                    Children = new List<NavigationMenuItem>()
-                };
-                items[item.ID] = item;
-            }
-
-            foreach (DataRow row in rows.Rows)
-            {
-                int id = CommonLib.CheckNullInt(row["ID"]);
-                int parentID = CommonLib.CheckNullInt(row["PARRENTID"]);
-                NavigationMenuItem item;
-                if (!items.TryGetValue(id, out item))
-                    continue;
-
-                NavigationMenuItem parent;
-                if (parentID > 0 && items.TryGetValue(parentID, out parent))
-                    parent.Children.Add(item);
-                else if (parentID == 0)
-                    roots.Add(item);
-            }
-
-            foreach (NavigationMenuItem root in roots)
-                root.NodeCount = root.Children.Count;
-
-            return roots;
         }
 
         public string BindNavigation(int UserID)

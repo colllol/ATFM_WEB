@@ -259,7 +259,7 @@
         <cc1:PhanTrang ID="PhanTrang1" runat="server" PageSize="100" OnPaging_IndexChange="PhanTrang1_Paging_IndexChange" />
     </div>
 
-    <div id="searchExtension" class="modal fade" role="dialog" tabindex="-1" data-backdrop="false"
+<%--    <div id="searchExtension" class="modal fade" role="dialog" tabindex="-1" data-backdrop="false"
         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -337,7 +337,7 @@
             </div>
         </div>
 
-    </div>
+    </div>--%>
 
     <div id="popupEditFlight" class="modal fade" role="dialog" tabindex="-1" data-backdrop="false"
         aria-hidden="true">
@@ -600,7 +600,7 @@
     <div id="dhtmltooltip"></div>
     <script src="../Scripts/CustomDynamic.js"></script>
     <script src="../Scripts/CustomPaging.js"></script>
-    <script src="../Scripts/CustumStaticdata.js"></script>
+    <%--<script src="../Scripts/CustumStaticdata.js"></script>--%>
 
     <script>
         function copyToClipboard(valu) {
@@ -1017,7 +1017,7 @@
         });
     </script>
 
-    <script>
+   <%-- <script>
         var listOper = '<%= _ListOper%>'.split(',');
         var listCraft = JSON.parse('<%= _ListCraft%>');
         var listPurpose = '<%= _ListPurpose%>'.split(',');
@@ -1143,7 +1143,7 @@
                 CheckCraft($('#' + $ele.prop('id')));
             });
         });
-    </script>
+    </script>--%>
 
     <script>
         function getObjectSearchExten() {

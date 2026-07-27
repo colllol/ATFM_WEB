@@ -163,7 +163,7 @@
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
 
-    <div id="searchExtension" class="modal fade" role="dialog" tabindex="-1" data-backdrop="false"
+    <%--<div id="searchExtension" class="modal fade" role="dialog" tabindex="-1" data-backdrop="false"
         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -241,7 +241,7 @@
             </div>
         </div>
 
-    </div>
+    </div>--%>
 
 
     <div>
@@ -607,7 +607,7 @@
 
     <script src="../Scripts/CustomDynamic.js"></script>
     <script src="../Scripts/CustomPaging.js"></script>
-    <script src="../Scripts/CustumStaticdata.js"></script>
+    <%--<script src="../Scripts/CustumStaticdata.js"></script>--%>
     <script>
         //GetArgWithPostBack
         var phanCach = '<%= _phanCach %>';
@@ -1021,7 +1021,7 @@ $('.show-details-btn').on('click', function (e) {
 
     </script>
 
-    <script>
+    <%--<script>
         var listOper = '<%= _ListOper%>'.split(',');
         var listCraft = JSON.parse('<%= _ListCraft%>');
         var listPurpose = '<%= _ListPurpose%>'.split(',');
@@ -1147,5 +1147,5 @@ $('.show-details-btn').on('click', function (e) {
                 CheckCraft($('#' + $ele.prop('id')));
             });
         });
-    </script>
+    </script>--%>
 </asp:Content>
