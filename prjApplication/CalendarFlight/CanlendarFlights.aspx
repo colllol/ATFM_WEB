@@ -1692,7 +1692,7 @@
     <script>
         window.onkeydown = function (e) {
             var charCode = (e.which) ? e.which : e.keyCode;
-            var keyName = e.key || (charCode === 119 ? 'F8' : '');
+            var isF8 = e.key === 'F8' || e.code === 'F8' || charCode === 119;
             var c = $('#tblSource tr').length;
             if (rowId == 0 && charCode == 46) {
                 return;
@@ -1867,7 +1867,17 @@
                 })
             }
 
-            if (keyName === 'F8') {
+            if (isF8) {
+                if (e.preventDefault)
+                    e.preventDefault();
+                e.returnValue = false;
+
+                var activeInput = document.activeElement;
+                if (activeInput
+                    && activeInput.tagName === 'INPUT'
+                    && $(activeInput).closest('#tblSource').length > 0) {
+                    setActiveCalendarInput(activeInput);
+                }
 
                 if (inputId == '') {
                     alert('Please select!');
@@ -1901,6 +1911,7 @@
                         break;
                 }
 
+                return false;
             }
 
         }
