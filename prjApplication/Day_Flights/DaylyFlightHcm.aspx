@@ -704,7 +704,7 @@
         }
     </style>
     <style id="dayly-hcm-date-autocomplete">
-        /* Bộ chọn ngày luôn nằm gọn trong thanh bộ lọc, không bị đẩy ra ngoài màn hình. */
+        /* Bộ chọn ngày hiển thị lịch đầy đủ, nằm dưới menu điều hướng. */
         #topBar3 #divSelectDate {
             position: relative !important;
             left: auto !important;
@@ -717,7 +717,7 @@
             z-index: 80;
         }
 
-        #topBar3 #ddlDateFlight {
+        #topBar3 #txtDateFlightPicker {
             width: 112px !important;
             min-width: 112px !important;
             height: 36px !important;
@@ -728,6 +728,13 @@
             color: #165b89 !important;
             font-size: 13px;
             font-weight: 600;
+        }
+
+        body .datepicker {
+            z-index: 1060 !important;
+            border: 1px solid #6faed0;
+            border-radius: 8px;
+            box-shadow: 0 9px 22px rgba(26, 69, 104, .25);
         }
 
         /* Gợi ý sân bay/tàu bay phải nổi trên bảng, nhưng thấp hơn menu điều hướng. */
@@ -756,6 +763,11 @@
             color: #145b89 !important;
         }
 
+        #grdSource thead tr.Spec > td.dayly-autocomplete-open {
+            position: sticky !important;
+            z-index: 220 !important;
+        }
+
         /* Menu/header của master vẫn được ưu tiên khi popup chạm vùng điều hướng. */
         .navbar,
         .sidebar,
@@ -766,7 +778,7 @@
         }
 
         @media (max-width: 767px) {
-            #topBar3 #ddlDateFlight {
+            #topBar3 #txtDateFlightPicker {
                 width: 108px !important;
                 min-width: 108px !important;
             }
@@ -1619,25 +1631,51 @@
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script>
         var d = new Date();
-        $('#divSelectDate').html("<select id='ddlDateFlight' onchange='btnSearch_Onclick();'>"
+        var todayAtMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        var dateOptions = '';
+        for (var dayOffset = -365; dayOffset <= 365; dayOffset++) {
+            var optionDate = new Date(todayAtMidnight.getTime());
+            optionDate.setDate(optionDate.getDate() + dayOffset);
+            dateOptions += '<option value="' + dayOffset + '"' + (dayOffset === 0 ? ' selected' : '') + '>'
+                + dateFormat(optionDate, 'dd/mm/yyyy') + '</option>';
+        }
 
-            +"<option value='-4'>"
-                    + dateFormat(new Date().setDate(new Date().getDate() - 4), 'dd/mm/yyyy')
-        + "</option>"
-        +"<option value='-3'>"
-                    + dateFormat(new Date().setDate(new Date().getDate() - 3), 'dd/mm/yyyy')
-        + "</option>"
-        +"<option value='-2'>"
-                    + dateFormat(new Date().setDate(new Date().getDate() - 2), 'dd/mm/yyyy')
-        + "</option>"
+        $('#divSelectDate').html(
+            '<input id="txtDateFlightPicker" type="text" autocomplete="off" readonly="readonly" />'
+            + '<select id="ddlDateFlight" aria-hidden="true" tabindex="-1" style="display:none;">'
+            + dateOptions + '</select>'
+        );
 
+        $('#txtDateFlightPicker')
+            .val(dateFormat(todayAtMidnight, 'dd/mm/yyyy'))
+            .datepicker({
+                format: 'dd/mm/yyyy',
+                autoclose: true,
+                todayHighlight: true,
+                orientation: 'bottom auto'
+            })
+            .on('changeDate', function (event) {
+                var picked = event.date;
+                var pickedAtMidnight = new Date(picked.getFullYear(), picked.getMonth(), picked.getDate());
+                var offset = Math.round((pickedAtMidnight - todayAtMidnight) / 86400000);
+                var value = String(offset);
+                if (!$('#ddlDateFlight option[value="' + value + '"]').length) {
+                    $('#ddlDateFlight').append('<option value="' + value + '">' + dateFormat(pickedAtMidnight, 'dd/mm/yyyy') + '</option>');
+                }
+                $('#ddlDateFlight').val(value);
+                btnSearch_Onclick();
+            });
 
-        +"<option value='-1'>"
-                    + dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd/mm/yyyy')
-        + "</option>"
-                    + "<option selected value='0'>" + dateFormat(new Date(), 'dd/mm/yyyy')
-    + "</option><option value='1'>" + dateFormat(new Date().setDate(new Date().getDate()
-    + 1), 'dd/mm/yyyy') + "</option></select>");
+        /* Nâng đúng ô đang mở để popup autocomplete không bị sticky header che. */
+        $(document).on('focusin', '#grdSource thead tr.Spec input[data-autocomplete]', function () {
+            $(this).closest('td').addClass('dayly-autocomplete-open');
+        });
+        $(document).on('focusout', '#grdSource thead tr.Spec input[data-autocomplete]', function () {
+            var cell = $(this).closest('td');
+            window.setTimeout(function () {
+                if (!cell.find(':focus').length) cell.removeClass('dayly-autocomplete-open');
+            }, 180);
+        });
         //$('#txt_popPERMDATE').multiDate();
         function SelectedDateFlight_Change() {
             btnSearch_Onclick();
