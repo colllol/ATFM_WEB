@@ -703,150 +703,73 @@
             .dayly-top-actions { flex-wrap: wrap; }
         }
     </style>
-    <style id="dayly-hcm-modern-ui">
-        /* Giao diện trang Daily Flight HCM: ưu tiên khoảng thở, thứ bậc thị giác
-           và khả năng thao tác nhanh trên màn hình nhỏ. */
-        .dayly-page,
-        .main-content,
-        #main-content {
-            background: #f4f8fb;
+    <style id="dayly-hcm-date-autocomplete">
+        /* Bộ chọn ngày luôn nằm gọn trong thanh bộ lọc, không bị đẩy ra ngoài màn hình. */
+        #topBar3 #divSelectDate {
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            z-index: 80;
         }
 
-        .divHeader {
-            min-height: 0 !important;
-            padding: 14px 16px 16px !important;
-            gap: 12px !important;
-            border-color: #c9dceb !important;
-            border-radius: 14px !important;
-            background: linear-gradient(135deg, #ffffff 0%, #eef7fd 100%) !important;
-            box-shadow: 0 8px 24px rgba(29, 83, 121, .12) !important;
-        }
-
-        #topBar1 {
-            justify-content: flex-start !important;
-            gap: 6px !important;
-            overflow-x: auto;
-            padding: 2px 0 4px;
-            scrollbar-width: thin;
-        }
-
-        #topBar1 .sControl {
-            flex: 0 0 60px;
-            height: 36px;
-            border: 1px solid #79afd0 !important;
-            border-radius: 8px !important;
+        #topBar3 #ddlDateFlight {
+            width: 112px !important;
+            min-width: 112px !important;
+            height: 36px !important;
+            padding: 6px 26px 6px 10px !important;
+            border: 1px solid #5ea1cf !important;
+            border-radius: 7px !important;
             background: #fff !important;
-            color: #1c5e8d !important;
-        }
-
-        #topBar1 .btn {
-            flex: 0 0 38px;
-            height: 36px;
-            padding: 8px 4px !important;
-            border: 1px solid #c0d0dc !important;
-            border-radius: 8px !important;
-            background: #b3c4d0 !important;
-            color: #fff !important;
-            font-weight: 700;
-            transition: .18s ease;
-        }
-
-        #topBar1 .btn:hover,
-        #topBar1 .btn.active {
-            border-color: #1f82bd !important;
-            background: #2585bd !important;
-            box-shadow: 0 4px 10px rgba(32, 117, 171, .25);
-        }
-
-        #topBar2 {
-            justify-content: center !important;
-            gap: 10px !important;
-        }
-
-        #topBar2 span {
-            min-width: 108px !important;
-            padding: 7px 14px !important;
-            border-color: #76b1d7 !important;
-            border-radius: 8px !important;
-            color: #145d8f !important;
+            color: #165b89 !important;
+            font-size: 13px;
             font-weight: 600;
         }
 
-        #topBar3 {
-            justify-content: flex-start !important;
-            gap: 10px !important;
-            flex-wrap: nowrap !important;
-            overflow-x: auto;
-            padding-top: 2px;
+        /* Gợi ý sân bay/tàu bay phải nổi trên bảng, nhưng thấp hơn menu điều hướng. */
+        body .ui-autocomplete,
+        body .xdsoft_autocomplete_dropdown {
+            z-index: 1040 !important;
+            max-height: 230px;
+            overflow-y: auto;
+            border: 1px solid #76afd0 !important;
+            border-radius: 0 0 6px 6px;
+            background: #fff !important;
+            box-shadow: 0 8px 18px rgba(26, 69, 104, .22);
         }
 
-        #topBar3 select,
-        #divSelectDate select {
-            height: 36px !important;
-            min-width: 92px !important;
-            padding: 5px 10px;
-            border-color: #78afd0 !important;
-            border-radius: 8px !important;
-            color: #185b86 !important;
-            box-shadow: 0 2px 5px rgba(26, 89, 127, .06);
+        body .ui-autocomplete .ui-menu-item,
+        body .xdsoft_autocomplete_dropdown > div {
+            padding: 7px 10px;
+            color: #234f6b;
+            background: #fff;
         }
 
-        #topBar3 .checkbox {
-            min-width: 122px !important;
-            color: #375d74;
+        body .ui-autocomplete .ui-state-focus,
+        body .xdsoft_autocomplete_dropdown > div.active {
+            margin: 0;
+            background: #e4f2fb !important;
+            color: #145b89 !important;
         }
 
-        .dayly-top-actions {
-            margin-left: auto;
-            flex: 0 0 auto;
-        }
-
-        #table-container {
-            margin-top: 14px !important;
-            border-color: #b9d3e5 !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 28px rgba(26, 67, 105, .14) !important;
-        }
-
-        #grdSource thead tr.Spec > td {
-            padding: 10px 8px !important;
-            background: #e2f2fc !important;
-        }
-
-        #grdSource thead tr.Spec input,
-        #grdSource thead tr.Spec select {
-            height: 36px !important;
-            padding: 5px 9px !important;
-            border-color: #72acd0 !important;
-            border-radius: 7px !important;
-        }
-
-        #grdSource thead tr:last-child > th {
-            height: 48px;
-            padding: 9px 10px !important;
-            background: linear-gradient(#226b9e, #185b8d) !important;
-            border-color: #76a9c9 !important;
-            letter-spacing: .15px;
-        }
-
-        #grdSource tbody > tr:nth-child(even) > td {
-            background: #f7fbfe;
-        }
-
-        #grdSource tbody > tr:hover > td {
-            background: #e8f4fc !important;
-        }
-
-        #grdSource tbody > tr > td {
-            height: 42px !important;
-            padding: 7px 9px !important;
-            border-color: #d5e1e9 !important;
+        /* Menu/header của master vẫn được ưu tiên khi popup chạm vùng điều hướng. */
+        .navbar,
+        .sidebar,
+        .main-menu,
+        .ace-nav {
+            position: relative;
+            z-index: 1100;
         }
 
         @media (max-width: 767px) {
-            #topBar3 { flex-wrap: nowrap !important; }
-            .dayly-top-actions { margin-left: 0; }
-            #table-container { margin-top: 10px !important; }
+            #topBar3 #ddlDateFlight {
+                width: 108px !important;
+                min-width: 108px !important;
+            }
         }
     </style>
     <style id="styCSS">
