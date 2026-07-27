@@ -42,16 +42,16 @@ namespace prjComponents
         }
         public static bool IsAccept(int MenuID)
         {
-            prjBusinessLogic.UltilFunc _untilDAL = new prjBusinessLogic.UltilFunc();
-            UserDAL _objDAL = new UserDAL();
-            //DataSet _ds = _untilDAL.GetStoreDataSet("[CMS_GetRole4UserMenu]", new string[] { "@UserName", "@Menu_ID" }, new object[] { HPCSecurity.CurrentUser.Identity.Name, MenuID.ToString() });
-            DataTable _dt = _objDAL.GetRole4UserMenu(HPCSecurity.CurrentUser.Identity.Name, MenuID);
-            if (_dt.Rows.Count > 0)
-            {
-                return true;
-            }
-            else
+            if (MenuID <= 0)
                 return false;
+
+            UserDAL userDAL = new UserDAL();
+            var user = MenuCache.ResolveCurrentUser(userDAL);
+            if (user == null)
+                return false;
+
+            DataTable menuRows = MenuCache.GetOrLoad(user.UserID, userDAL);
+            return MenuCache.ContainsMenu(menuRows, MenuID);
         }
     }
 }

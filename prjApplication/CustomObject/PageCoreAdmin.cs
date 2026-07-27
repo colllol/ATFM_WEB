@@ -9,17 +9,22 @@ using prjComponents;
 namespace prjApplication
 {
     public class PageCoreAdmin:System.Web.UI.Page
-    {  
+    {
         protected override void OnLoad(EventArgs e)
         {
             if (Request["Menu_ID"] != null && Request["Menu_ID"].ToString() != "" && Request["Menu_ID"].ToString() != String.Empty)
             {
                 if (CommonLib.IsNumeric(Request["Menu_ID"]) == true)
                 {
-                    if (!HPCSecurity.IsAccept(Convert.ToInt32(Request["Menu_ID"])))
+                    int menuID = Convert.ToInt32(Request["Menu_ID"]);
+                    _user = MenuCache.ResolveCurrentUser(_userDAL);
+                    if (_user == null)
+                        throw new HttpException(401, "Phiên đăng nhập không hợp lệ.");
+
+                    System.Data.DataTable menuRows = MenuCache.GetOrLoad(_user.UserID, _userDAL);
+                    if (!MenuCache.ContainsMenu(menuRows, menuID))
                         Response.Redirect("~/Errors/AccessDenied.aspx");
-                    _user = _userDAL.GetUserByUserName(HPCSecurity.CurrentUser.Identity.Name);
-                    _Role = _userDAL.GetRole4UserMenu(_user.UserID, Convert.ToInt32(Request["Menu_ID"]));                    
+                    _Role = MenuCache.GetRoleOrLoad(_user.UserID, menuID, _userDAL);
                 }
             }
             base.OnLoad(e);            

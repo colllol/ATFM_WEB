@@ -35,7 +35,8 @@ namespace prjApplication.Groups
                     if (!HPCSecurity.IsAccept(Convert.ToInt32(Request["Menu_ID"])))
                         Response.Redirect("~/Errors/AccessDenied.aspx");
                     _user = _userDAL.GetUserByUserName(HPCSecurity.CurrentUser.Identity.Name);
-                    _Role = _userDAL.GetRole4UserMenu(_user.UserID, Convert.ToInt32(Request["Menu_ID"]));
+                    _Role = MenuCache.GetRoleOrLoad(
+                        _user.UserID, Convert.ToInt32(Request["Menu_ID"]), _userDAL);
                     ActivePermission();
                     if (!IsPostBack)
                         BindData();

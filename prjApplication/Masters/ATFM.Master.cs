@@ -29,31 +29,17 @@ namespace prjApplication.Masters
             if (!IsPostBack)
             {
                 Stopwatch masterTimer = Stopwatch.StartNew();
-                //BEGIN MENUNAME
-                if (Request["Menu_ID"] != null && Request["Menu_ID"].ToString() != "" && Request["Menu_ID"].ToString() != String.Empty)
-                {
-                    if (CommonLib.IsNumeric(Request["Menu_ID"]) == true)
-                    {
-                        if (!HPCSecurity.IsAccept(Convert.ToInt32(Request["Menu_ID"])))
-                            Response.Redirect("~/Errors/AccessDenied.aspx");
-                        //this.litImageIcon.Text = "<img src=\" ../Images/Settings.png \">";
-                        this.litTitleMenuName.Text = GetMenuName(Convert.ToInt32(Page.Request["Menu_ID"].ToString()));
-                    }
-                    
-                }
-                else
-                {
-                    //this.litImageIcon.Text = "<img src=\" ../Images/Settings.png \">";
-                    this.litTitleMenuName.Text = "";
-                }
-                //END
-                //T_RolePermission _role;
                 string _name = HPCSecurity.CurrentUser.Identity.Name;
                 UserDAL _userDAL = new UserDAL();
                 Stopwatch userTimer = Stopwatch.StartNew();
                 T_Users user = Session[CurrentUserSessionKey] as T_Users;
                 bool userFromSession = user != null
                     && string.Equals(user.UserName, _name, StringComparison.OrdinalIgnoreCase);
+                if (user != null && !userFromSession)
+                {
+                    Session.Remove(CurrentUserSessionKey);
+                    user = null;
+                }
                 if (!userFromSession)
                 {
                     user = _userDAL.GetUserByUserName(_name);
@@ -63,6 +49,29 @@ namespace prjApplication.Masters
                 TracePerformance(userFromSession ? "UserFromSession" : "UserFromApi", userTimer.ElapsedMilliseconds);
                 if (user != null)
                 {
+                    DataTable menuRows;
+                    try
+                    {
+                        menuRows = MenuCache.GetOrLoad(user.UserID, _userDAL);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Trace.TraceError("[ATFM.MenuCache] " + ex.Message);
+                        throw new HttpException(503, "Không thể tải quyền menu.", ex);
+                    }
+
+                    int menuID = CommonLib.CheckNullInt(Request["Menu_ID"]);
+                    if (menuID > 0 && !MenuCache.ContainsMenu(menuRows, menuID))
+                    {
+                        Response.Redirect("~/Errors/AccessDenied.aspx", false);
+                        Context.ApplicationInstance.CompleteRequest();
+                        return;
+                    }
+
+                    this.litTitleMenuName.Text = menuID > 0
+                        ? GetMenuName(menuID, menuRows)
+                        : string.Empty;
+
                     Stopwatch menuTimer = Stopwatch.StartNew();
                     
                     litMenu.Text = BindNavigation(user.UserID);
@@ -91,6 +100,8 @@ namespace prjApplication.Masters
 
 
         #region Menu Bind Data
+#if false
+        // LEGACY MENU LOADER: giu lai de co the khoi phuc luong nhieu API cu.
         protected string GetMenu4User(int UserID)
         {
             prjBusinessLogic.UltilFunc _untilDAL = new prjBusinessLogic.UltilFunc();
@@ -120,6 +131,7 @@ namespace prjApplication.Masters
             }
             return _tmp;
         }
+#endif
         private string isParent()
         {
             int Menu_ID = CommonLib.CheckNullInt(Request["Menu_ID"]);
@@ -144,6 +156,9 @@ namespace prjApplication.Masters
             public List<NavigationMenuItem> Children { get; set; }
         }
 
+#if false
+        // LEGACY MENU LOADER: luong cu goi GetMenu4User, BindNavigationByUserID
+        // va BindNavigationMaster, sau do cache cay menu trong Session.
         private string GetNavigationCacheKey(int userID)
         {
             return "ATFM_NAVIGATION_TREE_" + userID;
@@ -243,6 +258,50 @@ namespace prjApplication.Masters
 
             return menuTree;
         }
+#endif
+
+        private List<NavigationMenuItem> GetNavigationTree(int userID)
+        {
+            DataTable rows = MenuCache.Get(userID);
+            List<NavigationMenuItem> roots = new List<NavigationMenuItem>();
+            Dictionary<int, NavigationMenuItem> items = new Dictionary<int, NavigationMenuItem>();
+
+            if (rows == null)
+                return roots;
+
+            foreach (DataRow row in rows.Rows)
+            {
+                NavigationMenuItem item = new NavigationMenuItem
+                {
+                    ID = CommonLib.CheckNullInt(row["ID"]),
+                    Name = CommonLib.CheckNullStr(row["MENUNAME"]),
+                    Icon = CommonLib.CheckNullStr(row["MENUICON"]),
+                    Url = CommonLib.CheckNullStr(row["MENUURL"]),
+                    Children = new List<NavigationMenuItem>()
+                };
+                items[item.ID] = item;
+            }
+
+            foreach (DataRow row in rows.Rows)
+            {
+                int id = CommonLib.CheckNullInt(row["ID"]);
+                int parentID = CommonLib.CheckNullInt(row["PARRENTID"]);
+                NavigationMenuItem item;
+                if (!items.TryGetValue(id, out item))
+                    continue;
+
+                NavigationMenuItem parent;
+                if (parentID > 0 && items.TryGetValue(parentID, out parent))
+                    parent.Children.Add(item);
+                else if (parentID == 0)
+                    roots.Add(item);
+            }
+
+            foreach (NavigationMenuItem root in roots)
+                root.NodeCount = root.Children.Count;
+
+            return roots;
+        }
 
         public string BindNavigation(int UserID)
         {
@@ -307,45 +366,18 @@ namespace prjApplication.Masters
             return html.ToString();
         }
 
-        private string GetMenuName(int Menu_ID)
+        private string GetMenuName(int menuID, DataTable menuRows)
         {
-            UserDAL _userDAL = new UserDAL();
-            try
-            {
-                DataTable _dt =  _userDAL.GetMenuNameMaster(Menu_ID);
-                string strParrent = "";
-                string str = "";
-                if (_dt.Rows.Count>0)
-                {
-                    str = _dt.Rows[0]["MenuName"].ToString();
-                    strParrent = _dt.Rows[0]["MenuParrent"].ToString();
-                }
-                //_service.AddParameter("@Menu_ID", SqlDbType.Int, Menu_ID);
-                //SqlDataReader _drMenu = null;
-                //_drMenu = _service.ExecuteSPReader("[CMS_GetMenuNameMaster]");
-                //if (_drMenu.HasRows)
-                //{
-                //    while (_drMenu.Read())
-                //    {
-                //        str = _drMenu["MenuName"].ToString();
-                //        strParrent = _drMenu["MenuParrent"].ToString();
-                //    }
-                //}
-                //_drMenu.Close();
-                //_service.CloseConnect();
-                //_service.Disconnect();
+            string menuName;
+            string parentName;
+            if (!MenuCache.TryGetMenuNames(menuRows, menuID, out menuName, out parentName))
+                return string.Empty;
 
-                return "&nbsp;<h1 style=\"font-family: 'Tahoma';\">" + strParrent + "<small><i class=\"ace-icon fa fa-angle-double-right\"></i>" + str + "</small><h1>";
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            //finally
-            //{
-            //    _service.CloseConnect();
-            //    _service.Disconnect();
-            //}
+            return "&nbsp;<h1 style=\"font-family: 'Tahoma';\">"
+                + HttpUtility.HtmlEncode(parentName)
+                + "<small><i class=\"ace-icon fa fa-angle-double-right\"></i>"
+                + HttpUtility.HtmlEncode(menuName)
+                + "</small><h1>";
         }
         #endregion
 
@@ -355,9 +387,14 @@ namespace prjApplication.Masters
         protected void lb_Exit_Click(object sender, EventArgs e)
         {
             UserDAL _userDAL = new UserDAL();
-            T_Users user = null;
-            user = _userDAL.GetUserByUserName(HPCSecurity.CurrentUser.Identity.Name);
-            WriteLogHistory2Database.WriteHistory2Database(user.UserID, user.UserFullName, "[Thoát]", 0, "[Thoát] [Thoát khỏi hệ thống]", 0.0);
+            T_Users user = Session[CurrentUserSessionKey] as T_Users;
+            if (user == null)
+                user = _userDAL.GetUserByUserName(HPCSecurity.CurrentUser.Identity.Name);
+            if (user != null)
+            {
+                MenuCache.Remove(user.UserID);
+                WriteLogHistory2Database.WriteHistory2Database(user.UserID, user.UserFullName, "[Thoát]", 0, "[Thoát] [Thoát khỏi hệ thống]", 0.0);
+            }
             Session.RemoveAll();
             Session.Clear();
             Session.Abandon();

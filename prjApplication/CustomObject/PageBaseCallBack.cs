@@ -2,6 +2,7 @@
 using prjComponents;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -43,10 +44,15 @@ namespace prjApplication
 
                 if (CommonLib.IsNumeric(Request["Menu_ID"]) == true)
                 {
-                    if (!HPCSecurity.IsAccept(Convert.ToInt32(Request["Menu_ID"])))
+                    int menuID = Convert.ToInt32(Request["Menu_ID"]);
+                    _user = MenuCache.ResolveCurrentUser(_userDAL);
+                    if (_user == null)
+                        throw new HttpException(401, "Phiên đăng nhập không hợp lệ.");
+
+                    DataTable menuRows = MenuCache.GetOrLoad(_user.UserID, _userDAL);
+                    if (!MenuCache.ContainsMenu(menuRows, menuID))
                         Response.Redirect("~/Errors/AccessDenied.aspx");
-                    _user = _userDAL.GetUserByUserName(HPCSecurity.CurrentUser.Identity.Name);
-                    _Role = _userDAL.GetRole4UserMenu(_user.UserID, Convert.ToInt32(Request["Menu_ID"]));
+                    _Role = MenuCache.GetRoleOrLoad(_user.UserID, menuID, _userDAL);
                 }
             }
             RegisScriptCallBack();

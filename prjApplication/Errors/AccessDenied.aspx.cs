@@ -15,15 +15,10 @@ namespace prjApplication.Errors
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            Session.RemoveAll();
-            Session.Clear();
-            Session.Abandon();
-            Page.Response.Cookies.Clear();
+            Response.StatusCode = 403;
+            Response.TrySkipIisCustomErrors = true;
             Page.Response.Cache.SetCacheability(HttpCacheability.NoCache);
             Response.Cache.SetCacheability(HttpCacheability.ServerAndNoCache);
-            FormsAuthentication.SignOut();
-            Page.Response.Cookies.Remove("prjInfomation");
-            Page.Response.Cookies["prjInfomation"].Expires = DateTime.Now.AddMilliseconds(-1);
         }
     }
 }

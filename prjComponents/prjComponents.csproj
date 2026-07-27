@@ -84,6 +84,7 @@
     <Compile Include="Security\HPCPrincipal .cs" />
     <Compile Include="Security\HPCSecurity.cs" />
     <Compile Include="Security\IdentityUser.cs" />
+    <Compile Include="Security\MenuCache.cs" />
     <Compile Include="UI\CurrentPage.cs" />
     <Compile Include="UI\NetDatePicker.cs" />
     <Compile Include="UI\Pager.cs" />

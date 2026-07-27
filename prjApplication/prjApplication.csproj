@@ -2108,6 +2108,7 @@
     <Compile Include="CustomObject\PageBaseCallBack.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="CustomObject\MenuNavigationRenderer.cs" />
     <Compile Include="CustomObject\PageCoreAdmin.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>

@@ -25,33 +25,24 @@ namespace prjApplication.Masters
         {
             if (!IsPostBack)
             {
-                //BEGIN MENUNAME
-                if (Request["Menu_ID"] != null && Request["Menu_ID"].ToString() != "" && Request["Menu_ID"].ToString() != String.Empty)
-                {
-                    if (CommonLib.IsNumeric(Request["Menu_ID"]) == true)
-                    {
-                        if (!HPCSecurity.IsAccept(Convert.ToInt32(Request["Menu_ID"])))
-                            Response.Redirect("~/Errors/AccessDenied.aspx");
-                        //this.litImageIcon.Text = "<img src=\" ../Images/Settings.png \">";
-                        this.litTitleMenuName.Text = GetMenuName(Convert.ToInt32(Page.Request["Menu_ID"].ToString()));
-                    }
-                    
-                }
-                else
-                {
-                    //this.litImageIcon.Text = "<img src=\" ../Images/Settings.png \">";
-                    this.litTitleMenuName.Text = "";
-                }
-                //END
-                //T_RolePermission _role;
-                string _name = HPCSecurity.CurrentUser.Identity.Name;
                 UserDAL _userDAL = new UserDAL();
-                T_Users user = null;
-                user = _userDAL.GetUserByUserName(_name);
+                T_Users user = MenuCache.ResolveCurrentUser(_userDAL);
                 if (user != null)
                 {
-                    
-                    litMenu.Text = BindNavigation(user.UserID);
+                    DataTable menuRows = MenuCache.GetOrLoad(user.UserID, _userDAL);
+                    int menuID = CommonLib.CheckNullInt(Request["Menu_ID"]);
+                    if (menuID > 0 && !MenuCache.ContainsMenu(menuRows, menuID))
+                    {
+                        Response.Redirect("~/Errors/AccessDenied.aspx", false);
+                        Context.ApplicationInstance.CompleteRequest();
+                        return;
+                    }
+
+                    litTitleMenuName.Text = menuID > 0
+                        ? MenuNavigationRenderer.RenderTitle(menuRows, menuID)
+                        : string.Empty;
+                    litMenu.Text = MenuNavigationRenderer.Render(
+                        menuRows, Global.ApplicationPath, menuID);
                     literFullName.Text = user.UserFullName;
                     literChangPass.Text = "<a href=\"" + Global.ApplicationPath + "/User/ChangePass.aspx?url=" + Request.Url.AbsoluteUri + "\"><i class=\"ace-icon fa fa-cog\"></i>" + Global.RM.GetString("CHANGE_PASS") + "</a>";
                     literEditProfile.Text = "<a href=\"" + Global.ApplicationPath + "/User/UpdateUsers.aspx?ID=" + user.UserID + "\"><i class=\"ace-icon fa fa-user\"></i>Profile</a>";                    
@@ -279,9 +270,14 @@ namespace prjApplication.Masters
         protected void lb_Exit_Click(object sender, EventArgs e)
         {
             UserDAL _userDAL = new UserDAL();
-            T_Users user = null;
-            user = _userDAL.GetUserByUserName(HPCSecurity.CurrentUser.Identity.Name);
-            WriteLogHistory2Database.WriteHistory2Database(user.UserID, user.UserFullName, "[Thoát]", 0, "[Thoát] [Thoát khỏi hệ thống]", 0.0);
+            T_Users user = Session[Login.CurrentUserSessionKey] as T_Users;
+            if (user == null)
+                user = _userDAL.GetUserByUserName(HPCSecurity.CurrentUser.Identity.Name);
+            if (user != null)
+            {
+                MenuCache.Remove(user.UserID);
+                WriteLogHistory2Database.WriteHistory2Database(user.UserID, user.UserFullName, "[Thoát]", 0, "[Thoát] [Thoát khỏi hệ thống]", 0.0);
+            }
             Session.RemoveAll();
             Session.Clear();
             Session.Abandon();
