@@ -258,7 +258,7 @@ namespace prjApplication.Permission
         {
             try
             {
-                var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
+                var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd-MM-yyyy" };
                 var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermDetailSc>(ThamSo, dateTimeConverter);
                 if (obj.PERM_ID == 0)
                     return "-1";
@@ -273,7 +273,7 @@ namespace prjApplication.Permission
         }
         private string btnUpdateDetailsOnclick(string ThamSo)
         {
-            var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
+            var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd-MM-yyyy" };
             var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermDetailSc>(ThamSo, dateTimeConverter);
             bool kq = new PermDetailScDAL().UpdateObject(obj);
             string ax = kq.ToString() == true.ToString() ? "Update sussess" : "Update error";
@@ -300,7 +300,7 @@ namespace prjApplication.Permission
         }
         private string btnSearch_Click(string thamso)
         {
-            var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
+            var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd-MM-yyyy" };
             var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermDetailSc_Search>(thamso, dateTimeConverter);
             //obj.PageSize = 500;
             obj.PageSize = 100;
