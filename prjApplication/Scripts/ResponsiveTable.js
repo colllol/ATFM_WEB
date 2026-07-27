@@ -147,7 +147,7 @@
 
         var containerTop = item.container.getBoundingClientRect().top;
         var availableHeight = window.innerHeight - Math.max(0, containerTop) - 86;
-        var maxTableHeight = Math.max(320, Math.min(620, availableHeight));
+        var maxTableHeight = Math.max(500, Math.min(620, availableHeight));
         item.container.style.setProperty('--atfm-table-max-height', Math.round(maxTableHeight) + 'px');
 
         var rowCount = table.rows ? table.rows.length : table.querySelectorAll('tr').length;
