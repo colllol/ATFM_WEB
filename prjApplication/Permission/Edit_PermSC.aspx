@@ -52,6 +52,16 @@
             background-color: aquamarine;
         }
 
+        #tblSource th.perm-day-warning {
+            background-color: #fff3cd !important;
+            box-shadow: inset 0 0 0 2px #dc3545;
+        }
+
+        #tblSource th.perm-day-warning input[type="checkbox"] {
+            outline: 2px solid #dc3545;
+            outline-offset: 2px;
+        }
+
         .rowCreate {
             background-color: mediumvioletred;
         }
@@ -397,19 +407,19 @@
                     <th><input id="txtETD" class="wid_50px" data-number="true" runat="server" type="text" data-control="btnUpdate" data-minlenght="1" maxlength="4"/></th>
                     <th><input id="txtETA" class="wid_50px" data-number="true" runat="server" type="text" data-control="btnUpdate" data-minlenght="1" maxlength="4"/></th>
                     <th style="width:30px"></th>
-                    <th style="width:30px"><asp:CheckBox ID="chkDay1" runat="server" /></th>
-                    <th style="width:30px"><asp:CheckBox ID="chkDay2" runat="server" /></th>
-                    <th style="width:30px"><asp:CheckBox ID="chkDay3" runat="server" /></th>
-                    <th style="width:30px"><asp:CheckBox ID="chkDay4" runat="server" /></th>
-                    <th style="width:30px"><asp:CheckBox ID="chkDay5" runat="server" /></th>
-                    <th style="width:30px"><asp:CheckBox ID="chkDay6" runat="server" /></th>
-                    <th style="width:30px"><asp:CheckBox ID="chkDay7" runat="server" /></th>
+                    <th style="width:30px"><asp:CheckBox ID="chkDay1" runat="server" onchange="validateSingleDayCheckboxes();" /></th>
+                    <th style="width:30px"><asp:CheckBox ID="chkDay2" runat="server" onchange="validateSingleDayCheckboxes();" /></th>
+                    <th style="width:30px"><asp:CheckBox ID="chkDay3" runat="server" onchange="validateSingleDayCheckboxes();" /></th>
+                    <th style="width:30px"><asp:CheckBox ID="chkDay4" runat="server" onchange="validateSingleDayCheckboxes();" /></th>
+                    <th style="width:30px"><asp:CheckBox ID="chkDay5" runat="server" onchange="validateSingleDayCheckboxes();" /></th>
+                    <th style="width:30px"><asp:CheckBox ID="chkDay6" runat="server" onchange="validateSingleDayCheckboxes();" /></th>
+                    <th style="width:30px"><asp:CheckBox ID="chkDay7" runat="server" onchange="validateSingleDayCheckboxes();" /></th>
                     <th style="color: black!important;">
                         <input runat="server" id="ddlCRAFT_ID" type="text" style="color: black;" class="wid_70px" data-autocomplete="CRAFT" />
                     </th>
-                    <th><input id="txtBEGINDATE_SC" oninput="normalizePermDetailDateInput(this)" onblur="checkInputDate(this)" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
+                    <th><input id="txtBEGINDATE_SC" oninput="normalizePermDetailDateInput(this); validateSingleDayCheckboxes();" onblur="checkInputDate(this); validateSingleDayCheckboxes();" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
                             data-date-format="dd/mm/yyyy" class="wid_100px"/></th>
-                    <th><input id="txtENDDATE_SC" oninput="normalizePermDetailDateInput(this)" onblur="checkInputDate(this)" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
+                    <th><input id="txtENDDATE_SC" oninput="normalizePermDetailDateInput(this); validateSingleDayCheckboxes();" onblur="checkInputDate(this); validateSingleDayCheckboxes();" runat="server" type="text" data-minlenght="1" data-control="btnUpdate"
                             data-date-format="dd/mm/yyyy" class="wid_100px"/></th>
                     <th style="color: black!important;">
                         
@@ -837,6 +847,7 @@
             txtSTATUS.value = obj['STATUS'];
             txtLASTUSER.value = obj['LASTUSER'];
             checkCustomValidate();
+            validateSingleDayCheckboxes();
         }
         function GetObjectInfo() {
             var _obj = _objRender;
@@ -915,6 +926,7 @@
             chkDAY6.checked = false;
             chkDAY7.checked = false;
             IdSelectDT = '0';
+            validateSingleDayCheckboxes();
         }
         function CRAFT_ID_Onchange() {
             document.getElementById('txtMTOW').value = parseInt(ddlCRAFT_ID.options[ddlCRAFT_ID.selectedIndex].getAttribute('data-taitrong'));
@@ -964,6 +976,59 @@
                 + '-' + value.substring(4, 8);
         }
 
+        function parsePermDetailDate(value) {
+            var match = (value || '').trim().match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/);
+            if (match == null) return null;
+
+            var day = parseInt(match[1], 10);
+            var month = parseInt(match[2], 10);
+            var year = parseInt(match[3], 10);
+            var parsedDate = new Date(year, month - 1, day);
+
+            if (parsedDate.getFullYear() !== year
+                || parsedDate.getMonth() !== month - 1
+                || parsedDate.getDate() !== day) return null;
+
+            parsedDate.setHours(0, 0, 0, 0);
+            return parsedDate;
+        }
+
+        function validateSingleDayCheckboxes() {
+            var dayCheckboxes = [chkDAY1, chkDAY2, chkDAY3, chkDAY4, chkDAY5, chkDAY6, chkDAY7];
+            var dayNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+
+            $.each(dayCheckboxes, function (_, checkbox) {
+                $(checkbox).closest('th')
+                    .removeClass('perm-day-warning')
+                    .removeAttr('title');
+            });
+
+            var beginDate = parsePermDetailDate(txtBEGINDATE_SC.value);
+            var endDate = parsePermDetailDate(txtENDDATE_SC.value);
+            if (beginDate == null || endDate == null || beginDate.getTime() !== endDate.getTime()) return true;
+
+            var jsDay = beginDate.getDay();
+            var expectedIndex = jsDay === 0 ? 6 : jsDay - 1;
+            var dateText = txtBEGINDATE_SC.value;
+            var isValid = true;
+
+            $.each(dayCheckboxes, function (index, checkbox) {
+                var shouldBeChecked = index === expectedIndex;
+                if (checkbox.checked === shouldBeChecked) return;
+
+                isValid = false;
+                var warning = shouldBeChecked
+                    ? 'Ngày ' + dateText + ' là ' + dayNames[expectedIndex] + '. Vui lòng chọn ô này.'
+                    : 'Ngày ' + dateText + ' là ' + dayNames[expectedIndex] + '. Không chọn ô ' + dayNames[index] + '.';
+
+                $(checkbox).closest('th')
+                    .addClass('perm-day-warning')
+                    .attr('title', warning);
+            });
+
+            return isValid;
+        }
+
         function btnCreate_Details_Onclick() {
             
            var txtBEGINDATE_SC = document.getElementById('<%= txtBEGINDATE_SC.ClientID%>');
@@ -1007,6 +1072,7 @@
             txtETA.value = obj['ETA'];
             txtVIA.value = obj['VIA'];
             txtLASTUSER.value=obj['LASTUSER'];
+            validateSingleDayCheckboxes();
         }   
         function RestoreHistory(id, ver, UserID) {
             GetArgWithPostBack(id + phanCach + ver + phanCach + UserID + '_____RestoreHistory', 'RestoreHistory');
@@ -1391,6 +1457,7 @@
             });
         }
         function LoadDataAjax(){
+            validateSingleDayCheckboxes();
             if ($('#perm_id').html() == '')
             {
                 if(qEdit!='True')
