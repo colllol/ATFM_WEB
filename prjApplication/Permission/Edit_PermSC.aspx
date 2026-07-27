@@ -843,7 +843,7 @@
             _obj['PERM_ID'] = $('#perm_id').html();
             _obj['ETA'] = txtETA.value;
             _obj['ETD'] = txtETD.value;            
-            _obj['CRAFT_ID'] = ddlCRAFT_ID.value;
+            _obj['CRAFT_ID'] = ddlCRAFT_ID.getAttribute('data-craftid');
             _obj['FLIGHTNBR'] = txtFLIGHTNBR.value;
             _obj['PURPOSE_ID'] = ddlPURPOSE_ID.value;
             _obj['DAY1'] = chkDAY1.checked == true ? '1' : '0';
