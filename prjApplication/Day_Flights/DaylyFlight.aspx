@@ -393,6 +393,21 @@
             z-index: 90 !important;
         }
 
+        body .xdsoft_autocomplete_dropdown {
+            z-index: 1040 !important;
+            max-height: 230px;
+            overflow-y: auto;
+            border: 1px solid #76afd0 !important;
+            background: #fff !important;
+            box-shadow: 0 8px 18px rgba(26, 69, 104, .22);
+        }
+
+        #grdSource thead tr.Spec > td.dayly-autocomplete-open {
+            position: sticky !important;
+            z-index: 220 !important;
+            overflow: visible !important;
+        }
+
         #grdSource tbody tr > td:not(.dayly-frozen-column) {
             position: relative;
             z-index: 1;
@@ -3548,6 +3563,22 @@
             btnSearch_Onclick();
             initializeDaylyHorizontalControls();
             scheduleDaylyStickyFreeze();
+
+            $(document)
+                .off('focusin.daylyAutocomplete', '#grdSource thead tr.Spec input[data-autocomplete]')
+                .on('focusin.daylyAutocomplete', '#grdSource thead tr.Spec input[data-autocomplete]', function () {
+                    $(this).closest('td').addClass('dayly-autocomplete-open');
+                })
+                .off('focusout.daylyAutocomplete', '#grdSource thead tr.Spec input[data-autocomplete]')
+                .on('focusout.daylyAutocomplete', '#grdSource thead tr.Spec input[data-autocomplete]', function () {
+                    var $cell = $(this).closest('td');
+                    window.setTimeout(function () {
+                        if (!$cell.find(':focus').length) {
+                            $cell.removeClass('dayly-autocomplete-open');
+                        }
+                    }, 180);
+                });
+
             var resizeTimer;
             $(window).on('resize.daylySticky', function () {
                 clearTimeout(resizeTimer);
