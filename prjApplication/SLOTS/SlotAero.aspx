@@ -6,5 +6,5 @@
     <slots:SlotsTable ID="SlotAeroTable" runat="server"
         TableName="T_SLOT_AERO"
         DisplayTitle="SLOT sân bay"
-        Description="Khai thác và tra cứu dữ liệu slot sân bay từ bảng T_SLOT_AERO." />
+        Description="Khai thác và tra cứu dữ liệu slot sân bay." />
 </asp:Content>

@@ -53,6 +53,21 @@
             width: 100%;
         }
 
+        #tblSource th:last-child,
+        #tblSource td:last-child {
+            width: 100px !important;
+            min-width: 100px;
+        }
+
+        #tblSource input[id$="txtSearchUser"] {
+            display: block;
+            width: calc(100% - 12px) !important;
+            height: 34px;
+            margin: 0 6px;
+            padding: 6px 8px;
+            box-sizing: border-box;
+        }
+
         input, textarea {
             text-transform: uppercase;
         }
@@ -151,14 +166,14 @@
             OnClick="linkSearch_Click" Text="Search"></asp:Button>
         <asp:LinkButton runat="server" ID="btnAddNew" CssClass="btn btn-sm btn-primary"
             OnClick="btnAddNew_Click">
-                                                    <span class="glyphicon glyphicon-plus"></span>
-                                                    Create
+            <span class="glyphicon glyphicon-plus"></span>
+            CREATE
         </asp:LinkButton>
 
         <asp:LinkButton runat="server" ID="btnExportExel" CssClass="btn btn-sm btn-primary btn-bold"
             OnClick="btnExcel_Click">
-                                                    <span class="glyphicon glyphicon-download-alt"></span>
-                                                    Export data into Excel
+            <span class="glyphicon glyphicon-download-alt"></span>
+                EXPORT DATA INTO EXCEL
         </asp:LinkButton>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
@@ -286,7 +301,9 @@
                     <!--<input id="txtSearchSEASON" runat="server" class="sInput" />-->
 
                 </th>
-                <th></th>
+                <th>
+                    <input id="txtSearchUser" runat="server" class="sInput" />
+                </th>
             </tr>
             <tr>
                 <th></th>

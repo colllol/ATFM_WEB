@@ -6,5 +6,5 @@
     <slots:SlotsTable ID="KhhTable" runat="server"
         TableName="T_KHH"
         DisplayTitle="Kế hoạch chuyến bay"
-        Description="Khai thác và tra cứu dữ liệu kế hoạch chuyến bay từ bảng T_KHH." />
+        Description="Khai thác và tra cứu dữ liệu kế hoạch chuyến bay." />
 </asp:Content>

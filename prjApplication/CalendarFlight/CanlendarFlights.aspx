@@ -161,7 +161,8 @@
         .calendar-filter-field input:focus,
         .calendar-filter-field select:focus { border-color: #2388c6 !important; box-shadow: 0 0 0 3px rgba(35,136,198,.14); }
         .calendar-date-control { position: relative; width: 100%; }
-        .calendar-date-control > #txtFromDate { padding-right: 38px !important; }
+        .calendar-date-control > #txtFromDate,
+        .calendar-date-control > #txtFilterDateDisplay { padding-right: 38px !important; }
         .calendar-processing-date-icon {
             position: absolute;
             top: 50%;
@@ -377,7 +378,13 @@
             </div>
             <div class="calendar-filter-field calendar-date">
                 <label class="calendar-filter-label" for="txtFilterDatePicker">NGÀY BAY CẦN LỌC</label>
-                <input id="txtFilterDatePicker" type="date" onchange="calendarFilterDate_OnChange()" />
+                <div class="calendar-date-control">
+                    <input id="txtFilterDateDisplay" type="text" placeholder="CHỌN NGÀY" readonly="readonly" />
+                    <span class="calendar-processing-date-icon" aria-hidden="true"><i class="fa fa-calendar"></i></span>
+                    <input id="txtFilterDatePicker" class="calendar-native-date-picker" type="date"
+                        aria-label="Chọn ngày bay cần lọc" title="Chọn ngày bay cần lọc"
+                        onchange="calendarFilterDate_OnChange()" />
+                </div>
             </div>
 
             <div class="calendar-bottom-buttons">
@@ -641,7 +648,9 @@
 
         function calendarFilterDate_OnChange() {
             var parts = ($('#txtFilterDatePicker').val() || '').split('-');
-            $('#txtFLIGHTDATE').val(parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '');
+            var displayValue = parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '';
+            $('#txtFilterDateDisplay').val(displayValue);
+            $('#txtFLIGHTDATE').val(displayValue);
         }
 
         function calendarProcessingDatePicker_Sync() {
@@ -2137,6 +2146,7 @@
         var defaultCalendarParts = defaultCalendarDate.split('-');
         $('#txtFromDateNative').val(defaultCalendarParts[2] + '-' + defaultCalendarParts[1] + '-' + defaultCalendarParts[0]);
         $('#txtFilterDatePicker').val(defaultCalendarParts[2] + '-' + defaultCalendarParts[1] + '-' + defaultCalendarParts[0]);
+        $('#txtFilterDateDisplay').val(defaultCalendarDate);
         $('#txtFLIGHTDATE').multiDate();
         LoadDataGrid();
     </script>

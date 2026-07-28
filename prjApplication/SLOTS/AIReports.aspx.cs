@@ -11,7 +11,7 @@ namespace prjApplication.SLOTS
 {
     public partial class AIReports : Page
     {
-        private const string DefaultEndpoint = "http://172.29.79.49:8000/api/reports/ai";
+        // private const string DefaultEndpoint = "http://172.29.79.49:8000/api/reports/ai";
         private const string DefaultApiKey = "atfm";
 
         [WebMethod]
@@ -20,7 +20,7 @@ namespace prjApplication.SLOTS
         {
             limit = Math.Max(1, Math.Min(limit, 500));
             offset = Math.Max(0, offset);
-            string endpoint = ConfigurationManager.AppSettings["AIReports.ApiUrl"] ?? DefaultEndpoint;
+            string endpoint = ConfigurationManager.AppSettings["APIAI"];
             string apiKey = ConfigurationManager.AppSettings["AIReports.ApiKey"] ?? DefaultApiKey;
             string separator = endpoint.Contains("?") ? "&" : "?";
             string requestUrl = endpoint + separator + "limit=" + limit + "&offset=" + offset;

@@ -214,8 +214,9 @@ namespace prjApplication.Permission
                     //if (!String.IsNullOrEmpty(txtSearchAUTHOR.Value.Trim()))
                     //    where += " AND " + string.Format(" UPPER(AUTHOR_NAME) like '%{0}%'", UltilFunc.SqlFormatText(txtSearchAUTHOR.Value.Trim()));
                     if (!String.IsNullOrEmpty(txtSearchTYPE.Value.Trim()))
-                        where += " AND " + string.Format(" UPPER(PERMTYPE) like '%{0}%'", UltilFunc.SqlFormatText(txtSearchTYPE.Value.Trim()));
-
+                        where += " AND " + string.Format(" UPPER(PERMTYPE) like '%{0}%'", UltilFunc.SqlFormatText(txtSearchTYPE.Value.Trim().ToUpper()));
+                    if (!String.IsNullOrEmpty(txtSearchUser.Value.Trim()))
+                        where += " AND " + string.Format(" UPPER(LASTUSER) like '%{0}%'", UltilFunc.SqlFormatText(txtSearchUser.Value.Trim().ToUpper()));
                     //if (!String.IsNullOrEmpty(txtSearchFTYPE.Value.Trim()))
                        // where += " AND " + string.Format(" UPPER(FLIGHTTYPE) like '%{0}%'", UltilFunc.SqlFormatText(txtSearchFTYPE.Value.Trim()));
 

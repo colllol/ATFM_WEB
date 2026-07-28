@@ -31,8 +31,8 @@
 
         var hero = app.querySelector('.rn-hero');
         if (hero) {
-            hero.querySelector('h1').textContent = 'Cảnh báo chuyến bay delay';
-            hero.querySelector('p').textContent = 'Theo dõi độ lệch giữa giờ dự kiến và giờ cất cánh thực tế trong ngày hiện tại';
+            hero.querySelector('h1').textContent = 'Phát hiện và cảnh báo dữ liệu bất thường';
+            hero.querySelector('p').textContent = 'Theo dõi Phát hiện và cảnh báo dữ liệu bất thường trong ngày hiện tại';
             var liveNote = hero.querySelector('.rn-live small');
             if (liveNote) liveNote.textContent = '';
         }
@@ -40,7 +40,7 @@
         var heroHtml = hero ? hero.outerHTML : '';
         app.innerHTML = heroHtml +
             '<section class="anomaly-actions">' +
-                '<div><span>Nguồn dữ liệu hiện tại</span><strong id="anomalyDataDay">Đang tải...</strong><small>T_DAY_FLIGHTS_GOINGON</small></div>' +
+                '<div><span>Nguồn dữ liệu hiện tại</span><strong id="anomalyDataDay">Đang tải...</strong></div>' +
                 '<button type="button" id="anomalyViewButton"><i class="fa fa-exclamation-triangle"></i> Xem cảnh báo delay</button>' +
             '</section>' +
             '<div class="rn-kpis anomaly-kpis">' +
@@ -92,8 +92,8 @@
             setText('#anomalyLevel2', number(result.level2));
             setText('#anomalyLevel3', number(result.level3));
             setText('#anomalyStatusTitle', result.total ? number(result.total) + ' chuyến cần cảnh báo' : 'Không có chuyến cần cảnh báo');
-            setText('#anomalyStatusText', 'Nguồn ' + result.source + ' • ETD 4 số, ATD 6 số');
-            setText('#anomalyDialogSummary', 'Ngày dữ liệu ' + result.reportDay + ' • Nguồn ' + result.source);
+            setText('#anomalyStatusText',  ' • ETD 4 số, ATD 6 số');
+            setText('#anomalyDialogSummary', 'Ngày dữ liệu ' + result.reportDay );
         }
 
         function renderFilters() {

@@ -438,13 +438,13 @@
         </div>
         </div>
         <div id="abcxyzd" class="finished-filter-actions">
-        <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-refresh"></i>Update</button>
-        <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-danger" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash"></i>Delete</button>
-        <button type="button" id="btnClearSearch" class="btn btn-sm btn-default" onclick="btnClearValue_OnClick()"><i class="fa fa-eraser"></i>Clear Search</button>
-        <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>Export Excel</button>
-        <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>Export Excel Cancel</button>
-        <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>Export Bravo</button>
-        <button type="button" id="btnSearch" class="btn btn-sm btn-primary finished-search-button" onclick="btnSearch_OnClick()"><i class="fa fa-search"></i>Search</button>
+        <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-refresh"></i>UPDATE</button>
+        <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-danger" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash"></i>DELETE</button>
+        <button type="button" id="btnClearSearch" class="btn btn-sm btn-default" onclick="btnClearValue_OnClick()"><i class="fa fa-eraser"></i>CLEAR SREACH</button>
+        <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
+        <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
+        <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>EXPORT BRAVO</button>
+        <button type="button" id="btnSearch" class="btn btn-sm btn-primary finished-search-button" onclick="btnSearch_OnClick()"><i class="fa fa-search"></i>SREACH</button>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
         </div>
     </div>
@@ -452,19 +452,19 @@
     <div id="exportPopupBackdrop" class="export-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="exportPopupTitle">
         <div class="export-popup">
             <div class="export-popup-header">
-                <h4 id="exportPopupTitle"><i class="fa fa-file-excel-o"></i> Chọn trường xuất Excel</h4>
+                <h4 id="exportPopupTitle"><i class="fa fa-file-excel-o"></i> CHỌN TRƯỜNG XUẤT EXCEL</h4>
                 <button type="button" class="export-popup-close" onclick="closeExportPopup()" aria-label="Đóng">&times;</button>
             </div>
             <div class="export-popup-body">
-                <label class="export-report-title" for="txtExportReportTitle">Tiêu đề báo cáo
+                <label class="export-report-title" for="txtExportReportTitle">TIÊU ĐỀ BÁO CÁO
                     <input type="text" id="txtExportReportTitle" maxlength="200" placeholder="Nhập tiêu đề hiển thị trong file Excel" />
                 </label>
-                <label class="export-select-all"><input type="checkbox" id="chkExportAll" checked onchange="toggleAllExportFields(this.checked)" /> Chọn tất cả</label>
+                <label class="export-select-all"><input type="checkbox" id="chkExportAll" checked onchange="toggleAllExportFields(this.checked)" /> CHỌN TẤT CẢ</label>
                 <div id="exportFieldGrid" class="export-field-grid"></div>
             </div>
             <div class="export-popup-footer">
-                <button type="button" class="btn btn-default" onclick="closeExportPopup()">Hủy</button>
-                <button type="button" class="btn btn-primary" data-no-loading="true" onclick="executeSelectedExport()"><i class="fa fa-download"></i> Export Excel</button>
+                <button type="button" class="btn btn-default" onclick="closeExportPopup()">HUỶ</button>
+                <button type="button" class="btn btn-primary" data-no-loading="true" onclick="executeSelectedExport()"><i class="fa fa-download"></i> EXPORT EXCEL</button>
             </div>
         </div>
     </div>
@@ -481,7 +481,7 @@
                 <input id="chkKhbDelete" onchange="chkKhbDelete_CheckedChanged();" type="radio" name="optradio" />CANCEL
             </label>
             <label class="radio-inline">
-                <span id="totalsfinished">Tổng số : <b>0</b></span></label>
+                <span id="totalsfinished">TỔNG SỐ : <b>0</b></span></label>
      <div id="exportid" runat="server">
 
     <table id="tblSource" class="table table-bordered">

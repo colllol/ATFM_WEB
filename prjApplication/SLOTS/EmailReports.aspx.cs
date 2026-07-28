@@ -8,19 +8,20 @@ using System.Web.Script.Serialization;
 using System.Web.Script.Services;
 using System.Web.Services;
 using System.Web.UI;
+using System.Configuration;
 
 namespace prjApplication.SLOTS
 {
     public partial class EmailReports : Page
     {
-        private const string DefaultEndpoint = "http://192.168.100.134:8081/api/reports/emails";
-        private const string DefaultJobsEndpoint = "http://192.168.100.134:8081/api/jobs/";
+        // string DefaultEndpoint = ConfigurationManager.AppSettings["APIEmail"];
+        // string DefaultJobsEndpoint = ConfigurationManager.AppSettings["APIEmailJobs"];
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static string GetEmails(string query, string processingStatus, string fromDate, string toDate, int page, int size)
         {
-            string endpoint = ConfigurationManager.AppSettings["EmailReports.ApiUrl"] ?? DefaultEndpoint;
+            string endpoint = ConfigurationManager.AppSettings["APIEmail"];
             var parameters = new List<string>();
             AddParameter(parameters, "query", query);
             AddParameter(parameters, "processingStatus", processingStatus);
@@ -68,7 +69,7 @@ namespace prjApplication.SLOTS
             if (syncJobId.Length > 200)
                 throw new ArgumentException("syncJobId không hợp lệ.");
 
-            string endpoint = ConfigurationManager.AppSettings["EmailReports.JobsApiUrl"] ?? DefaultJobsEndpoint;
+            string endpoint = ConfigurationManager.AppSettings["APIEmailJobs"];
             if (!endpoint.EndsWith("/", StringComparison.Ordinal))
                 endpoint += "/";
 
