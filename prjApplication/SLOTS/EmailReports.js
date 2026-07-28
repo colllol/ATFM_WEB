@@ -48,7 +48,9 @@
         var pages = Math.max(1, totalPages), start = (currentPage - 1) * pageSize, rows = filteredItems;
         $('emailRows').innerHTML = rows.length ? rows.map(function (item, index) {
             var state = status(item), subject = text(item,['subject','title']) || '(Không có tiêu đề)';
-            return '<tr><td>' + (start + index + 1) + '</td><td>' + esc(date(item)) + '</td><td class="email-subject" title="' + esc(subject) + '">' + esc(subject) + '</td><td>' + esc(text(item,['sender','from','senderEmail'])) + '</td><td>' + esc(text(item,['attachmentName'])) + '</td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + index + '"><i class="fa fa-eye"></i></button></td></tr>';
+            var sender = text(item,['sender','from','senderEmail']);
+            var fileName = text(item,['attachmentName']);
+            return '<tr><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(fileName) + '">' + esc(fileName) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + index + '"><i class="fa fa-eye"></i></button></td></tr>';
         }).join('') : '<tr><td colspan="7" class="email-empty-cell">Không có email phù hợp.</td></tr>';
         Array.prototype.forEach.call(document.querySelectorAll('.email-detail-button'), function (button) { button.onclick = function () { showDetail(filteredItems[parseInt(this.getAttribute('data-index'), 10)]); }; });
         $('emailTotal').textContent = totalItems.toLocaleString('vi-VN'); $('emailPageLabel').textContent = currentPage;
