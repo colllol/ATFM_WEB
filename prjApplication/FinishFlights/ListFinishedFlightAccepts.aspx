@@ -197,18 +197,145 @@
             background-color: darkseagreen;
         }
     </style>
-    <div id="abcxyz" class="well well-sm" style="text-align: center;">
-        <b>FROM :</b>
+    <style>
+        /* Đồng bộ bố cục bộ lọc với ListFinishedFlights.aspx. */
+        #abcxyz {
+            display: block !important;
+            margin-bottom: 14px;
+            padding: 0 !important;
+            overflow: hidden;
+            border: 1px solid #c8ddeb;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 7px 20px rgba(24, 78, 117, .10);
+            text-align: left !important;
+        }
+        #abcxyz::before {
+            content: "BỘ LỌC VÀ THAO TÁC CHUYẾN BAY";
+            display: block;
+            padding: 11px 15px;
+            border-bottom: 1px solid #d7e5ef;
+            background: linear-gradient(100deg, #e7f4fd 0%, #f8fcff 58%, #eef7fc 100%);
+            color: #155f94;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        #abcxyz > b {
+            display: inline-block;
+            margin: 14px 4px 6px 15px;
+            color: #315a77;
+            font-size: 11px;
+            letter-spacing: .25px;
+        }
+        #abcxyz > input,
+        #abcxyz > select {
+            height: 36px;
+            margin: 0 3px 6px 0;
+            padding: 6px 9px;
+            border: 1px solid #9dc3dc;
+            border-radius: 7px;
+            background: #fff;
+            color: #173b59;
+            outline: none;
+        }
+        #abcxyz > input:focus,
+        #abcxyz > select:focus {
+            border-color: #2388c6;
+            box-shadow: 0 0 0 3px rgba(35, 136, 198, .14);
+        }
+        #abcxyz > .finished-date-picker { width: 145px !important; }
+        #abcxyz > .finished-date-value { display: none !important; }
+        #abcxyz > .finished-time-input { width: 58px !important; }
+        #abcxyz > select { min-width: 82px; }
+        #abcxyz > br { display: none; }
+        #abcxyz > #lit { display: none; }
+        #abcxyzd {
+            display: flex !important;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+            padding: 11px 15px 13px !important;
+            border: 1px solid #c8ddeb;
+            border-radius: 10px;
+            background: #f8fbfd;
+            text-align: left !important;
+        }
+        #abcxyzd .btn {
+            width: auto !important;
+            min-width: 100px;
+            height: 36px;
+            border-radius: 7px;
+            font-weight: 600;
+        }
+        #abcxyzd .btn i { margin-right: 5px; }
+        #tblSource {
+            width: 100% !important;
+            table-layout: fixed;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            font-size: 12px !important;
+        }
+        #tblSource th, #tblSource td {
+            min-width: 0 !important;
+            padding: 0 !important;
+            border: 1px solid #c4d5e1 !important;
+            border-radius: 0 !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #tblSource > thead {
+            position: sticky !important;
+            top: 0;
+            z-index: 40;
+            background: #fff;
+            box-shadow: 0 2px 0 rgba(31, 105, 154, .18);
+        }
+        #tblSource > thead > tr:first-child > th {
+            position: static !important;
+            height: 38px;
+            background: #f7fbff !important;
+            border-radius: 0 !important;
+        }
+        #tblSource > thead > tr:nth-child(2) > th {
+            position: static !important;
+            height: 35px;
+            background: #337ab7 !important;
+            border-radius: 0 !important;
+        }
+        #tblSource input[type="text"] {
+            display: block;
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 34px;
+            margin: 0 !important;
+            padding: 4px 3px;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            font-size: inherit;
+        }
+        #tblSource tbody td { height: 34px; }
+        @media (max-width: 767px) {
+            #abcxyz > input, #abcxyz > select { max-width: 100%; }
+            #abcxyzd .btn { flex: 1 1 145px; }
+        }
+    </style>
+    <div id="abcxyz" class="well well-sm">
+        <b>TỪ NGÀY :</b>
+        <input id="txtFromDatePicker" type="date" class="finished-date-picker" aria-label="Ngày bắt đầu" />
         <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select date" class="wid_100px" />
+            placeholder="select date" class="finished-date-value" />
         <input id="txtFromTime" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select time" class="wid_50px" maxlength='4' data-number='true' value="0000" />
-        <b>TO :</b>
+            placeholder="select time" class="finished-time-input wid_50px" maxlength='4' data-number='true' value="0000" />
+        <b>ĐẾN NGÀY :</b>
+        <input id="txtToDatePicker" type="date" class="finished-date-picker" aria-label="Ngày kết thúc" />
         <input id="txtToDate" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select date" class="wid_100px" />
+            placeholder="select date" class="finished-date-value" />
         <input id="txtToTime" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select time" class="wid_50px" maxlength='4' data-number='true' value="2359" />
-        <b>HOUR :</b>
+            placeholder="select time" class="finished-time-input wid_50px" maxlength='4' data-number='true' value="2359" />
+        <b>GIỜ :</b>
         <select id="ddlTime" class="disabled" style="width: 70px;" onchange="ddlTime_Change();">
             <option value="0">-All-</option>
             <option value="1">ETD</option>
@@ -216,7 +343,7 @@
             <option value="3">ATD</option>
             <option value="4">ATA</option>
         </select>
-        <b>OPER :</b>
+        <b>HÃNG :</b>
         <select id="ddlSelect" class="disabled" style="width: 90px;">
             <option value="0">-All-</option>
             <option value="1">QN</option>
@@ -226,7 +353,7 @@
         <br />
         <br />
 
-        <b>FLIGHT :</b>
+        <b>LOẠI CHUYẾN :</b>
         <select id="ddlType" class="disabled" style="width: 90px;">
             <option value="0">-All-</option>
             <option value="1">QN</option>
@@ -238,11 +365,11 @@
             <option value="1">HN</option>
             <option value="2">HCM</option>
         </select>
-        <b>AIR PORT :</b>
+        <b>SÂN BAY :</b>
         <input id="txtFromAir" data-control="checkAccess" type="text"
             placeholder="AIR PORT" class="wid_100px" />
         
-        <b>P_SIZE :</b>
+        <b>SỐ DÒNG :</b>
         <select id="ddlPageSize" class="disabled" style="width: 65px;">
             <option value="100">100</option>
             <option value="500">500</option>
@@ -252,20 +379,19 @@
             <option value="6000">6000</option>
             <option value="8000">8000</option>
         </select>
-        <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnSearch_OnClick()">
-            SEARCH</button>
-        
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
     <div id="abcxyzd" class="well well-sm" style="text-align: left;">       
+        <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">
+            <i class="fa fa-search"></i> SEARCH</button>
         <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" style="width: 90px" onclick="btnUpdateList_Onclick()">
-            UPDATE</button>         
+            <i class="fa fa-refresh"></i> UPDATE</button>
         <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" style="width: 90px" onclick="btnDeleteByChecked_Onclick()">
-            DELETE</button>
+            <i class="fa fa-trash"></i> DELETE</button>
         <!--<button type="button" id="btnMove55" class="btn btn-sm btn-primary" style="width: 90px" onclick="myFunction()">
             Sort</button>-->
         <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" style="width: 120px" onclick="btnClearValue_OnClick()">
-            CLEAR SEARCH</button>
+            <i class="fa fa-eraser"></i> CLEAR SEARCH</button>
 
         <button type="button" id="btnExport" class="btn btn-sm btn-primary"  style="width: 135px" onclick="openExportPopup('finished')">
             EXPORT EXCEL</button>
@@ -1736,6 +1862,20 @@
         $('#txtFromDate').multiDate();
         $('#txtToDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
         $('#txtToDate').multiDate();
+        (function () {
+            function toIso(value) {
+                var parts = (value || '').split('-');
+                return parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '';
+            }
+            function toDisplay(value) {
+                var parts = (value || '').split('-');
+                return parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '';
+            }
+            $('#txtFromDatePicker').val(toIso($('#txtFromDate').val()));
+            $('#txtToDatePicker').val(toIso($('#txtToDate').val()));
+            $('#txtFromDatePicker').on('change', function () { $('#txtFromDate').val(toDisplay(this.value)); });
+            $('#txtToDatePicker').on('change', function () { $('#txtToDate').val(toDisplay(this.value)); });
+        }());
         $('#txtDATE_OLD').multiDate();
         $('#txtFLIGHTDATE').multiDate();
         $('#btnMove').attr('disabled', 'disabled');
