@@ -1,5 +1,15 @@
 -- Chỉ chạy rollback khi chắc chắn không cần giữ trạng thái Accepted.
 -- Việc DROP COLUMN sẽ xóa toàn bộ trạng thái đã ghi nhận.
+--
+-- BẮT BUỘC trước khi chạy file này:
+--   1. Gỡ p_ISACCEPTED và điều kiện ISACCEPTED khỏi
+--      GET_FINISHED_FLIGHTS_MINITARY.
+--   2. Gỡ ACCEPT_FIN_FLIGHTS_MILITARY và
+--      EXPORT_QS_PLAN_MESSAGE khỏi package A_TEST_SEARCH.
+--   3. Biên dịch package specification/body thành VALID.
+--
+-- Các T_PLAN_MESSAGE có MESS_TYPE='QS MESSAGE' không bị xóa tự động
+-- để tránh mất điện văn đã gửi. Chỉ xóa thủ công khi nghiệp vụ cho phép.
 
 DECLARE
     v_count NUMBER;
@@ -31,6 +41,3 @@ BEGIN
     END IF;
 END;
 /
-
--- Sau đó gỡ p_ISACCEPTED, điều kiện ISACCEPTED và
--- ACCEPT_FIN_FLIGHTS_MILITARY khỏi package A_TEST_SEARCH.

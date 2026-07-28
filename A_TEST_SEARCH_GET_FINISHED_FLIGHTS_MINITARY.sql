@@ -50,6 +50,14 @@ PROCEDURE ACCEPT_FIN_FLIGHTS_MILITARY
     p_ReturnCode OUT NUMBER
 );
 
+PROCEDURE EXPORT_QS_PLAN_MESSAGE
+(
+    p_StartDate  IN VARCHAR2,
+    p_FinishDate IN VARCHAR2,
+    p_User       IN VARCHAR2 DEFAULT NULL,
+    p_ReturnCode OUT NUMBER
+);
+
 /* ================================================================
    2. Implementation đặt trong PACKAGE BODY A_TEST_SEARCH
    ================================================================ */
@@ -353,3 +361,278 @@ EXCEPTION
 
         p_ReturnCode := -1;
 END ACCEPT_FIN_FLIGHTS_MILITARY;
+
+/* ================================================================
+   4. Xuất các chuyến đã Accepted thành QS MESSAGE
+   ================================================================ */
+PROCEDURE EXPORT_QS_PLAN_MESSAGE
+(
+    p_StartDate  IN VARCHAR2,
+    p_FinishDate IN VARCHAR2,
+    p_User       IN VARCHAR2 DEFAULT NULL,
+    p_ReturnCode OUT NUMBER
+)
+IS
+    TYPE t_text_parts IS TABLE OF VARCHAR2(32767)
+        INDEX BY PLS_INTEGER;
+
+    v_parts         t_text_parts;
+    v_part_ids      t_text_parts;
+    v_start_date    DATE;
+    v_finish_date   DATE;
+    v_line          VARCHAR2(32767);
+    v_content       VARCHAR2(32767);
+    v_part_count    PLS_INTEGER;
+    v_row_number    PLS_INTEGER;
+    v_total_flights PLS_INTEGER := 0;
+    v_total_parts   PLS_INTEGER := 0;
+
+    FUNCTION clean_text
+    (
+        p_value      IN VARCHAR2,
+        p_max_length IN PLS_INTEGER
+    )
+    RETURN VARCHAR2
+    IS
+    BEGIN
+        RETURN SUBSTR(
+            REPLACE(
+                REPLACE(
+                    NVL(TRIM(p_value), '-'),
+                    CHR(13),
+                    ' '
+                ),
+                CHR(10),
+                ' '
+            ),
+            1,
+            p_max_length
+        );
+    END clean_text;
+BEGIN
+    v_start_date := TO_DATE(TRIM(p_StartDate), 'FXDD-MM-YYYY');
+    v_finish_date := TO_DATE(TRIM(p_FinishDate), 'FXDD-MM-YYYY');
+
+    IF v_finish_date < v_start_date THEN
+        RAISE_APPLICATION_ERROR(
+            -20001,
+            'P_FINISHDATE must be greater than or equal to P_STARTDATE'
+        );
+    END IF;
+
+    /*
+      Chỉ thay các QS MESSAGE chưa gửi. Các loại điện văn khác và các
+      QS MESSAGE đã gửi (STATUS <> 0) được giữ nguyên.
+    */
+    DELETE FROM T_PLAN_MESSAGE
+     WHERE STATUS = 0
+       AND MESS_TYPE = 'QS MESSAGE'
+       AND FLIGHTDATE >= v_start_date
+       AND FLIGHTDATE <  v_finish_date + 1;
+
+    FOR d IN
+    (
+        SELECT TRUNC(FLIGHTDATE) AS FLIGHT_DATE
+          FROM T_FINISHFLIGHTS_MILITARY
+         WHERE ISACCEPTED = 1
+           AND FLIGHTDATE >= v_start_date
+           AND FLIGHTDATE <  v_finish_date + 1
+         GROUP BY TRUNC(FLIGHTDATE)
+         ORDER BY TRUNC(FLIGHTDATE)
+    )
+    LOOP
+        v_parts.DELETE;
+        v_part_ids.DELETE;
+        v_part_count := 1;
+        v_row_number := 0;
+        v_parts(1) := NULL;
+        v_part_ids(1) := NULL;
+
+        FOR f IN
+        (
+            SELECT
+                FLIGHT_ID,
+                CALLSIGN,
+                REGIS,
+                NVL(FCRAFT, RCRAFT) AS CRAFT,
+                PURPOSE,
+                FROM_AIRP,
+                TO_AIRP,
+                ETD,
+                ETA,
+                ATD,
+                ATA,
+                VIA,
+                FPLVIA,
+                REMARK
+              FROM T_FINISHFLIGHTS_MILITARY
+             WHERE ISACCEPTED = 1
+               AND FLIGHTDATE >= d.FLIGHT_DATE
+               AND FLIGHTDATE <  d.FLIGHT_DATE + 1
+             ORDER BY
+                CALLSIGN,
+                FROM_AIRP,
+                TO_AIRP,
+                ETD,
+                FLIGHT_ID
+        )
+        LOOP
+            v_row_number := v_row_number + 1;
+
+            v_line :=
+                   LPAD(TO_CHAR(v_row_number), 4)
+                || ' '
+                || RPAD(clean_text(f.CRAFT, 8), 8)
+                || ' '
+                || RPAD(clean_text(f.REGIS, 10), 10)
+                || ' '
+                || RPAD(clean_text(f.CALLSIGN, 12), 12)
+                || ' '
+                || RPAD(clean_text(f.FROM_AIRP, 4), 4)
+                || ' '
+                || RPAD(clean_text(f.TO_AIRP, 4), 4)
+                || ' '
+                || RPAD(clean_text(f.ETD, 6), 6)
+                || ' '
+                || RPAD(clean_text(f.ETA, 6), 6)
+                || ' '
+                || RPAD(clean_text(f.ATD, 6), 6)
+                || ' '
+                || RPAD(clean_text(f.ATA, 6), 6)
+                || ' '
+                || clean_text(f.PURPOSE, 10)
+                || ' '
+                || clean_text(f.VIA, 120)
+                || ' '
+                || clean_text(f.FPLVIA, 120)
+                || ' '
+                || clean_text(f.REMARK, 900);
+
+            v_line := RTRIM(SUBSTR(v_line, 1, 1400)) || CHR(10);
+
+            /*
+              Chừa khoảng cho header/footer để CONTENT luôn dưới 2000 byte.
+            */
+            IF v_parts(v_part_count) IS NOT NULL
+               AND LENGTHB(v_parts(v_part_count))
+                   + LENGTHB(v_line) > 1650
+            THEN
+                v_part_count := v_part_count + 1;
+                v_parts(v_part_count) := NULL;
+                v_part_ids(v_part_count) := NULL;
+            END IF;
+
+            v_parts(v_part_count) :=
+                v_parts(v_part_count) || v_line;
+
+            v_part_ids(v_part_count) :=
+                CASE
+                    WHEN v_part_ids(v_part_count) IS NULL
+                    THEN TO_CHAR(f.FLIGHT_ID)
+                    ELSE v_part_ids(v_part_count)
+                         || ',' || TO_CHAR(f.FLIGHT_ID)
+                END;
+        END LOOP;
+
+        IF v_row_number > 0 THEN
+            FOR i IN 1 .. v_part_count
+            LOOP
+                v_content :=
+                       'PART ' || TO_CHAR(i)
+                    || ' OF ' || TO_CHAR(v_part_count)
+                    || CHR(10)
+                    || 'FPL ON:'
+                    || TO_CHAR(
+                           d.FLIGHT_DATE,
+                           'DD-MON-YYYY',
+                           'NLS_DATE_LANGUAGE=ENGLISH'
+                       )
+                    || ': QS MESSAGE'
+                    || CHR(10)
+                    || v_parts(i)
+                    || CHR(10)
+                    || 'NNNN';
+
+                IF LENGTHB(v_content) > 2000 THEN
+                    RAISE_APPLICATION_ERROR(
+                        -20002,
+                        'QS MESSAGE content exceeds 2000 bytes'
+                    );
+                END IF;
+
+                INSERT INTO T_PLAN_MESSAGE
+                (
+                    FLIGHTDATE,
+                    PART_NO,
+                    CONTENT,
+                    MESS_TYPE,
+                    STATUS,
+                    LISTFLIGHTID
+                )
+                VALUES
+                (
+                    d.FLIGHT_DATE,
+                    i,
+                    v_content,
+                    'QS MESSAGE',
+                    0,
+                    v_part_ids(i)
+                );
+
+                v_total_parts := v_total_parts + 1;
+            END LOOP;
+
+            v_total_flights := v_total_flights + v_row_number;
+        END IF;
+    END LOOP;
+
+    INSERT INTO T_ACTIONHISTORY
+    (
+        USERID,
+        FULLNAME,
+        HOSTIP,
+        DATEMODIFY,
+        ACTIONSCODE,
+        NEWS_ID,
+        NOTES,
+        MENU_ID
+    )
+    VALUES
+    (
+        0,
+        NVL(p_User, ' '),
+        ' ',
+        SYSDATE,
+        'EXPORT QS MESSAGE',
+        0,
+        p_StartDate || ' - ' || p_FinishDate
+            || '; FLIGHTS=' || TO_CHAR(v_total_flights)
+            || '; PARTS=' || TO_CHAR(v_total_parts),
+        843
+    );
+
+    p_ReturnCode := v_total_flights;
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+
+        BEGIN
+            PROCESS_PKG.ADD_ERROR_LOG(
+                'EXPORT_QS_PLAN_MESSAGE',
+                SQLCODE,
+                SUBSTR(
+                    SQLERRM
+                    || CHR(10)
+                    || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE,
+                    1,
+                    200
+                )
+            );
+        EXCEPTION
+            WHEN OTHERS THEN
+                NULL;
+        END;
+
+        p_ReturnCode := -1;
+END EXPORT_QS_PLAN_MESSAGE;

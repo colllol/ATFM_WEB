@@ -224,7 +224,7 @@
         </select>
 
         <select id="ddlAcceptedStatus" class="military-accepted-filter" aria-label="Trạng thái Accepted"
-            onchange="btnSearch_OnClick();">
+            onchange="acceptedStatus_OnChange();">
             <option value="0">CHƯA ACCEPTED</option>
             <option value="1">ĐÃ ACCEPTED</option>
             <option value="-1">TẤT CẢ</option>
@@ -235,6 +235,9 @@
         <button type="button" id="btnAccepted" class="btn btn-sm btn-success" style="width: 100px"
             onclick="btnAccepted_OnClick()">
             Accepted</button>
+        <button type="button" id="btnExportQsMessage" class="btn btn-sm btn-primary" disabled="disabled"
+            onclick="btnExportQsMessage_OnClick()">
+            Export Message</button>
         <button type="button" id="btnNews" class="btn btn-sm btn-primary" style="width: 100px" onclick="AddNews()">
             Add New</button>
         <button type="button" id="btnUpdateAll" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnInsertList_Onclick()">
@@ -985,7 +988,7 @@
 
                 alert('Accepted thành công ' + updatedRows + ' chuyến bay.');
                 $('#ddlAcceptedStatus').val('0');
-                btnSearch_OnClick();
+                acceptedStatus_OnChange();
             }).fail(function (xhr, textStatus, errorThrown) {
                 console.error(
                     '[ACCEPT_FIN_FLIGHTS_MILITARY] Request failed:',
@@ -999,6 +1002,93 @@
                 alert('Không thể thực hiện Accepted. Vui lòng xem Console để biết chi tiết.');
             }).always(function () {
                 $('#btnAccepted').prop('disabled', false);
+            });
+        }
+
+        function updateQsExportButtonState() {
+            var canExport = $('#ddlAcceptedStatus').val() === '1';
+            $('#btnExportQsMessage').prop('disabled', !canExport);
+        }
+
+        function acceptedStatus_OnChange() {
+            updateQsExportButtonState();
+            btnSearch_OnClick();
+        }
+
+        function btnExportQsMessage_OnClick() {
+            if ($('#ddlAcceptedStatus').val() !== '1') {
+                alert('Chỉ được Export Message khi đang chọn ĐÃ ACCEPTED.');
+                updateQsExportButtonState();
+                return;
+            }
+
+            var startDateIso = $('#txtFromDatePicker').val();
+            var finishDateIso = $('#txtToDatePicker').val();
+
+            if (!startDateIso || !finishDateIso) {
+                alert('Vui lòng chọn đầy đủ ngày FROM và TO.');
+                return;
+            }
+
+            if (startDateIso > finishDateIso) {
+                alert('Ngày FROM không được lớn hơn ngày TO.');
+                return;
+            }
+
+            var startDate = militaryDateToDisplay(startDateIso);
+            var finishDate = militaryDateToDisplay(finishDateIso);
+
+            if (!confirm(
+                'Export các chuyến ĐÃ ACCEPTED từ '
+                + startDate + ' đến ' + finishDate
+                + ' thành QS MESSAGE?'
+            )) {
+                return;
+            }
+
+            $('#btnExportQsMessage').prop('disabled', true);
+
+            $.ajax({
+                method: 'PUT',
+                url: urlApi
+                    + 'api/ApiExtension/ExcuteReturnInt'
+                    + '?packageName=A_TEST_SEARCH'
+                    + '&storeName=EXPORT_QS_PLAN_MESSAGE',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({
+                    P_STARTDATE: startDate,
+                    P_FINISHDATE: finishDate,
+                    P_USER: '<%= _user.UserName.ToString()%>'
+                })
+            }).done(function (data) {
+                var exportedFlights = data && data.Code === '00'
+                    ? parseInt(data.ListValue, 10)
+                    : -1;
+
+                if (isNaN(exportedFlights) || exportedFlights < 0) {
+                    console.error('[EXPORT_QS_PLAN_MESSAGE] Response:', data);
+                    alert('Export QS MESSAGE không thành công. Vui lòng xem Console.');
+                    return;
+                }
+
+                alert(
+                    'Đã Export ' + exportedFlights
+                    + ' chuyến bay thành QS MESSAGE.'
+                );
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error(
+                    '[EXPORT_QS_PLAN_MESSAGE] Request failed:',
+                    {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        error: errorThrown,
+                        responseText: xhr.responseText
+                    }
+                );
+                alert('Không thể Export QS MESSAGE. Vui lòng xem Console.');
+            }).always(function () {
+                updateQsExportButtonState();
             });
         }
 
@@ -1589,6 +1679,7 @@
                 $('#txtFPLVia').val('');
                 ddlTime_ID.selectedIndex = 0;
                 $('#ddlAcceptedStatus').val('0');
+                updateQsExportButtonState();
                 if (ddlOPer_ID) ddlOPer_ID.selectedIndex = 0;
                 if (ddlTypeFlight) ddlTypeFlight.selectedIndex = 0;
                 ddlPageSize.selectedIndex = 0;
