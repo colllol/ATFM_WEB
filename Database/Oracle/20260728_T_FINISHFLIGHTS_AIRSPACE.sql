@@ -184,6 +184,14 @@ CREATE OR REPLACE PACKAGE AIRSPACE_PKG AS
         p_User       IN VARCHAR2 DEFAULT NULL,
         p_ReturnCode OUT NUMBER
     );
+
+    PROCEDURE APPROVE_FINISHED_AIRSPACE
+    (
+        p_StartDate  IN VARCHAR2,
+        p_FinishDate IN VARCHAR2,
+        p_User       IN VARCHAR2 DEFAULT NULL,
+        p_ReturnCode OUT NUMBER
+    );
 END AIRSPACE_PKG;
 /
 
@@ -530,6 +538,54 @@ CREATE OR REPLACE PACKAGE BODY AIRSPACE_PKG AS
             WRITE_ERROR('SUBMIT_FINISHED_AIRSPACE');
             p_ReturnCode := -1;
     END SUBMIT_FINISHED_AIRSPACE;
+
+    PROCEDURE APPROVE_FINISHED_AIRSPACE
+    (
+        p_StartDate  IN VARCHAR2,
+        p_FinishDate IN VARCHAR2,
+        p_User       IN VARCHAR2 DEFAULT NULL,
+        p_ReturnCode OUT NUMBER
+    )
+    IS
+        v_start_date  DATE;
+        v_finish_date DATE;
+    BEGIN
+        v_start_date := PARSE_DATE(p_StartDate);
+        v_finish_date := PARSE_DATE(p_FinishDate);
+
+        IF v_finish_date < v_start_date THEN
+            RAISE_APPLICATION_ERROR(-20001, 'P_FINISHDATE must be >= P_STARTDATE');
+        END IF;
+
+        UPDATE T_FINISHFLIGHTS_AIRSPACE
+           SET ISACCEPTED = 1
+         WHERE FLIGHTDATE >= v_start_date
+           AND FLIGHTDATE < v_finish_date + 1
+           AND ISACCEPTED = 2;
+
+        p_ReturnCode := SQL%ROWCOUNT;
+
+        INSERT INTO T_ACTIONHISTORY
+        (
+            USERID, FULLNAME, HOSTIP, DATEMODIFY,
+            ACTIONSCODE, NEWS_ID, NOTES, MENU_ID
+        )
+        VALUES
+        (
+            0, NVL(p_User, ' '), ' ', SYSDATE,
+            'APPROVE FINISHFLIGHTS AIRSPACE', 0,
+            p_StartDate || ' - ' || p_FinishDate
+                || '; ROWS=' || TO_CHAR(p_ReturnCode),
+            0
+        );
+
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            WRITE_ERROR('APPROVE_FINISHED_AIRSPACE');
+            p_ReturnCode := -1;
+    END APPROVE_FINISHED_AIRSPACE;
 END AIRSPACE_PKG;
 /
 
