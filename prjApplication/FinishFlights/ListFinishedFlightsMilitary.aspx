@@ -108,9 +108,8 @@
         #abcxyz {
             display: flex;
             align-items: center;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             gap: 5px;
-            overflow-x: auto;
             text-align: left !important;
             white-space: nowrap;
         }
@@ -132,6 +131,23 @@
         #abcxyz > .btn {
             width: auto !important;
             min-width: 88px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        #abcxyz > .military-toolbar-actions {
+            display: flex;
+            flex: 0 0 100%;
+            align-items: center;
+            gap: 5px;
+            padding-top: 5px;
+        }
+
+        #abcxyz > .military-toolbar-actions > button {
+            flex: 0 0 auto;
+            width: auto !important;
+            min-width: 88px;
+            margin: 0;
             padding-left: 10px;
             padding-right: 10px;
         }
@@ -230,18 +246,31 @@
             <option value="-1">TẤT CẢ</option>
         </select>
 
-        <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnSearch_OnClick()">
-            Search</button>
-        <button type="button" id="btnAccepted" class="btn btn-sm btn-success" style="width: 100px"
-            onclick="btnAccepted_OnClick()">
-            Accepted</button>
-        <button type="button" id="btnExportQsMessage" class="btn btn-sm btn-primary" disabled="disabled"
-            onclick="btnExportQsMessage_OnClick()">
-            Export Message</button>
-        <button type="button" id="btnNews" class="btn btn-sm btn-primary" style="width: 100px" onclick="AddNews()">
-            Add New</button>
-        <button type="button" id="btnUpdateAll" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnInsertList_Onclick()">
-            Update All</button>
+        <select id="ddlPageSize" class="disabled" style="width: 65px;">
+            <option value="100">100</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+            <option value="2000">2000</option>
+            <option value="4000">4000</option>
+            <option value="6000">6000</option>
+            <option value="8000">8000</option>
+        </select>
+
+        <div class="military-toolbar-actions">
+            <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnSearch_OnClick()">
+                Search</button>
+            <button type="button" id="btnAccepted" class="btn btn-sm btn-success" style="width: 100px"
+                onclick="btnAccepted_OnClick()">
+                Accepted</button>
+            <button type="button" id="btnExportQsMessage" class="btn btn-sm btn-primary" disabled="disabled"
+                onclick="btnExportQsMessage_OnClick()">
+                Export Message</button>
+            <button type="button" id="btnNews" class="btn btn-sm btn-primary" style="width: 100px" onclick="AddNews()">
+                Add New</button>
+            <button type="button" id="btnUpdateAll" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnInsertList_Onclick()">
+                Update All</button>
+        </div>
+
         <label class="radio-inline" style="display: none;">
             <span id="totalsfinished">Tổng số : <b>0</b></span></label>
         <!--
@@ -273,17 +302,6 @@
             placeholder="AIR PORT" class="wid_100px" />
         
         <b>P_SIZE :</b>-->
-        <select id="ddlPageSize" class="disabled" style="width: 65px;">
-            <option value="100">100</option>
-            <option value="500">500</option>
-            <option value="1000">1000</option>
-            <option value="2000">2000</option>
-            <option value="4000">4000</option>
-            <option value="6000">6000</option>
-            <option value="8000">8000</option>
-        </select>
-
-
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
     <div id="abcxyzd" class="well well-sm" style="text-align: left; display: none">
