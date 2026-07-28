@@ -56,6 +56,7 @@ namespace prjApplication.Permission {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlInputText txtSearchPERMNBR;
+        protected global::System.Web.UI.HtmlControls.HtmlInputText txtSearchUser;
         
         /// <summary>
         /// txtSearchAUTHOR control.

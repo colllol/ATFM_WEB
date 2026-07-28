@@ -301,7 +301,9 @@
                     <!--<input id="txtSearchSEASON" runat="server" class="sInput" />-->
 
                 </th>
-                <th></th>
+                <th>
+                    <input id="txtSearchUser" runat="server" class="sInput" />
+                </th>
             </tr>
             <tr>
                 <th></th>
