@@ -94,24 +94,14 @@
 
         .military-date-value { display: none !important; }
 
-        .military-accepted-filter {
-            flex: 0 0 135px;
-            width: 135px;
-            height: 34px;
-            margin: 0;
-            border: 1px solid #8eb9d6;
-            border-radius: 6px;
-            background: #fff;
-            color: #173b59;
-        }
-
         #abcxyz {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 5px;
             text-align: left !important;
             white-space: nowrap;
+            overflow-x: auto;
         }
 
         #abcxyz > input,
@@ -129,10 +119,10 @@
 
         #abcxyz > .military-toolbar-actions {
             display: flex;
-            flex: 0 0 100%;
+            flex: 0 0 auto;
             align-items: center;
             gap: 5px;
-            padding-top: 5px;
+            padding: 0;
         }
 
         #abcxyz > .military-toolbar-actions > button {
@@ -228,11 +218,6 @@
             <option value="2">ETA</option>
             <option value="3">ATD</option>
             <option value="4">ATA</option>
-        </select>
-
-        <select id="ddlAcceptedStatus" class="military-accepted-filter" aria-label="Trạng thái Accepted"
-            disabled="disabled" title="Báo cáo chỉ hiển thị các chuyến bay đã Accepted">
-            <option value="1" selected="selected">ĐÃ ACCEPTED</option>
         </select>
 
         <select id="ddlPageSize" class="disabled" style="width: 65px;" onchange="btnSearch_OnClick();">
@@ -1468,7 +1453,6 @@
             $('#txtFPLVia').val('');
             ddlTime_ID.selectedIndex = 0;
             ddlPageSize.selectedIndex = 0;
-            $('#ddlAcceptedStatus').val('1');
             document.getElementById("txtFromTime").disabled = 'true';
             document.getElementById("txtToTime").disabled = 'true';
             document.getElementById("txtFromTime").value = '0000';
