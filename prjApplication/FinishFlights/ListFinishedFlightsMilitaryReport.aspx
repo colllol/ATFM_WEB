@@ -61,8 +61,9 @@
         .military-date-filter {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            margin: 0 6px;
+            flex: 0 0 auto;
+            gap: 4px;
+            margin: 0;
             vertical-align: middle;
         }
 
@@ -74,7 +75,7 @@
         }
 
         .military-date-picker {
-            width: 150px !important;
+            width: 130px !important;
             height: 36px;
             padding: 6px 9px;
             border: 1px solid #8eb9d6 !important;
@@ -92,6 +93,68 @@
         }
 
         .military-date-value { display: none !important; }
+
+        .military-accepted-filter {
+            flex: 0 0 135px;
+            width: 135px;
+            height: 34px;
+            margin: 0;
+            border: 1px solid #8eb9d6;
+            border-radius: 6px;
+            background: #fff;
+            color: #173b59;
+        }
+
+        #abcxyz {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            text-align: left !important;
+            white-space: nowrap;
+        }
+
+        #abcxyz > input,
+        #abcxyz > select,
+        #abcxyz > button,
+        #abcxyz > .btn,
+        #abcxyz > label {
+            flex: 0 0 auto;
+            margin: 0;
+        }
+
+        #abcxyz > input.wid_50px {
+            width: 46px !important;
+        }
+
+        #abcxyz > .military-toolbar-actions {
+            display: flex;
+            flex: 0 0 100%;
+            align-items: center;
+            gap: 5px;
+            padding-top: 5px;
+        }
+
+        #abcxyz > .military-toolbar-actions > button {
+            flex: 0 0 auto;
+            width: auto !important;
+            min-width: 100px;
+            margin: 0;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        #abcxyz > .radio-inline {
+            padding-left: 5px;
+        }
+
+        #abcxyz #totalsfinished {
+            white-space: nowrap;
+        }
+
+        #abcxyz #ddlPageSize {
+            width: 58px !important;
+        }
 
         caption {
             text-align: left;
@@ -157,13 +220,7 @@
         </span>
         <input id="txtToTime" data-minlenght="1" data-control="checkAccess" type="text"
             placeholder="select time" class="wid_50px" maxlength='4' data-number='true' value="2359" />
-        <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnSearch_OnClick()">
-            Search</button>
-        <button type="button" id="btnExportExcel" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnExportexcel_OnClick()">
-            Export Excel</button>
-        <label class="radio-inline">
-            <span id="totalsfinished">Tổng số : <b>0</b></span></label>
-        <!--
+
         <b>HOUR :</b>
         <select id="ddlTime" class="disabled" style="width: 70px;" onchange="ddlTime_Change();">
             <option value="0">-All-</option>
@@ -172,6 +229,36 @@
             <option value="3">ATD</option>
             <option value="4">ATA</option>
         </select>
+
+        <select id="ddlAcceptedStatus" class="military-accepted-filter" aria-label="Trạng thái Accepted"
+            onchange="reportAcceptedStatus_OnChange();">
+            <option value="0">CHƯA ACCEPTED</option>
+            <option value="1">ĐÃ ACCEPTED</option>
+            <option value="-1">TẤT CẢ</option>
+        </select>
+
+        <select id="ddlPageSize" class="disabled" style="width: 65px;" onchange="btnSearch_OnClick();">
+            <option value="100">100</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+            <option value="2000">2000</option>
+            <option value="4000">4000</option>
+            <option value="6000">6000</option>
+            <option value="8000">8000</option>
+        </select>
+
+        <label class="radio-inline">
+            <span id="totalsfinished">Tổng số : <b>0</b></span>
+        </label>
+
+        <div class="military-toolbar-actions">
+            <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">
+                Search</button>
+            <button type="button" id="btnExportExcel" class="btn btn-sm btn-primary" onclick="btnExportexcel_OnClick()">
+                Export Excel</button>
+        </div>
+
+        <!--
         <b>OPER :</b>
         <select id="ddlSelect" class="disabled" style="width: 90px;">
             <option value="0">-All-</option>
@@ -197,19 +284,7 @@
         <b>AIR PORT :</b>
         <input id="txtFromAir" data-control="checkAccess" type="text"
             placeholder="AIR PORT" class="wid_100px" />
-        
-        <b>P_SIZE :</b>-->
-        <select id="ddlPageSize" class="disabled" style="width: 65px;display:none">
-            <option value="100">100</option>
-            <option value="500">500</option>
-            <option value="1000">1000</option>
-            <option value="2000">2000</option>            
-            <option value="4000">4000</option>
-            <option value="6000">6000</option>
-            <option value="8000">8000</option>
-        </select>
-
-        
+        -->
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
     <div id="abcxyzd" class="well well-sm" style="text-align: left;display:none">       
@@ -534,37 +609,15 @@
             return val == null ? "" : val;
         }
         function LoadDataGrid() {
-
-            var _urlPath = "";
-           // _urlPath: urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=A_TEST_SEARCH&storeName=sp_ListFinishedFlight";
-            //if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 0))
-            //    _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_KHUNGTIME";
-            //else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 0))
-            //    _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_HANG_QNOI";
-            //else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 0))
-            //    _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_HANG_QTE";
-            //else if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 1)) {
-            //    _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_BAY_QNOI";
-            //}
-            //else if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 2))
-            //    _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_BAY_QTE";
-            //else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 1))
-            //    _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQN_BAY_QNOI";
-            //else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 2))
-            //    _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQN_BAY_QTE";
-            //else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 1))
-            //    _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQT_BAY_QNOI";
-            //else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 2))
-            //    _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQT_BAY_QTE";
-
-            var FROMDATE = $('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
-            var TODATE = $('#txtToDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
+            var requestData = GetObjectSearch();
+            console.log('[REPORT GET_FINISHED_FLIGHTS_MINITARY] Request:', requestData);
 
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=A_TEST_SEARCH&storeName=sp_ListFinishedFlight",
-                //data: GetObjectSearch(),
-                data: JSON.stringify({ P_FROMDATE: FROMDATE, P_TODATE: TODATE }),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=A_TEST_SEARCH&storeName=GET_FINISHED_FLIGHTS_MINITARY",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(requestData),
                 beforeSend: function () {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);
@@ -578,21 +631,14 @@
                         onClickButton: 'LoadDataGrid',
                         pageSize: pageSize,
                     });
-                    /*
-                    $('#tblSource input[data-control="_updateAll"]').each(function (a, b) {
-                        if ($(b).prop('id').indexOf('txtPERMDATE') == -1 && $(b).prop('id').indexOf('txtFLIGHTDATE') == -1)
-                            $(b).ValidateTip();
-                        else $(b).multiDate();
-                    });
-                    $("#tblSource td").click(function () {
-                        $('#tblSource tbody tr').removeClass('select');
-                        $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
-                    });*/
-
                 },
-            }).always(function (data) {
-                if (data.ListValue == null || data.ListValue.length==0) {
-                    unLoadingData('loaddingData');
+            }).done(function (data) {
+                console.log('[REPORT GET_FINISHED_FLIGHTS_MINITARY] Response:', data);
+
+                if (!data || data.ListValue == null || data.ListValue.length == 0) {
+                    $('#tblSource tbody tr').remove();
+                    $('#tblSource').attr('data-total', 0);
+                    $("#totalsfinished").html("Tổng số : <b>0</b>");
                     return;
                 }
              
@@ -601,6 +647,21 @@
                 var strAppend = Render2Table(data);
                 $('#tblSource tbody').append(strAppend);
                 $("#totalsfinished").html("Tổng số : <b>" + data.ListValue[0]['SUMRECORD'] + "</b>");
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error(
+                    '[REPORT GET_FINISHED_FLIGHTS_MINITARY] Request failed:',
+                    {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        error: errorThrown,
+                        response: xhr.responseJSON || xhr.responseText
+                    }
+                );
+
+                $('#tblSource tbody tr').remove();
+                $('#tblSource').attr('data-total', 0);
+                $("#totalsfinished").html("Tổng số : <b>0</b>");
+                alert('Không tải được báo cáo chuyến bay quân sự. Vui lòng xem Console để biết chi tiết.');
             });
             $request.onreadystatechange = null;
             $request.abort = null;
@@ -788,44 +849,43 @@
 
         function GetObjectSearch() {
             var _obj = {};
+            var currentPageIndex;
+
             if (isSearch) {
                 $('#tblSource').attr('data-pageIndex', 1);
             }
-            _obj['PAGESIZE'] = parseInt(ddlPageSize.value);//$('#tblSource').attr('data-pageSize');
-            _obj['PAGEINDEX'] = parseInt($('#tblSource').attr('data-pageIndex') - 1);
-            _obj['FLIGHTDATE'] = "";
-            _obj['PERMNBR'] = '';
-            _obj['REGISTRATION'] = $('#txtREGISTRATION').val();
-            _obj['FROM_AIRP'] = $('#txtFROM_AIRP').val();
-            _obj['TO_AIRP'] = $('#txtTO_AIRP').val();
-            _obj['PURPOSE'] = $('#txtPURPOSE').val();
-            _obj['VALIDHOURS'] ='';
-            _obj['OPER_ID'] = $('#txtOPER_ID').val();
-            _obj['PERMTYPE'] = $('#txtPERMTYPE').val();
-            _obj['FLIGHT_TYPE'] = '';
-            _obj['CRAFT_TYPE'] = $('#txtCRAFT_TYPE').attr('data-craftid');
-            _obj['CRAFT_ID'] = $('#txtCRAFT_ID').attr('data-craftid');
-            _obj['REAL_CRAFT_TYPE'] = $('#txtREALCRAFT').val();
-            _obj['FLIGHTNBR'] = $('#txtFLIGHTNBR').val();
-            _obj['PERMTYPE'] = $('#txtPERMTYPE').val();
-            _obj['VIA'] = $('#txtVIA').val();
-            _obj['FPL_VIA'] = $('#txtFPLVIA').val();
-            _obj['REMARK'] = $('#txtREMARK').val();
-            _obj['ETA'] = $('#txtETA').val();
-            _obj['ETD'] = $('#txtETD').val();
-            _obj['ATA'] = $('#txtATA').val();
-            _obj['ATD'] = $('#txtATD').val();
-            _obj['StartDate'] = $('#txtFromDate').val();
-            _obj['FinishDate'] = $('#txtToDate').val();
-            _obj['KHUNGGIO1'] = $('#txtFromTime').val();
-            _obj['KHUNGGIO2'] = $('#txtToTime').val();
-            _obj['WHECONDITION'] = $('#txtFLIGHTDATE').val();
-            _obj['CAT_HA'] = parseInt(ddlTime_ID.value);
-            _obj['TypeOper'] = parseInt(ddlOPer_ID.value);
-            _obj['TypeFlight'] = parseInt(ddlTypeFlight.value);            
-            _obj['FIR'] = ddlFr.value;
-            _obj['SANBAYDI'] = $('#txtFromAir').val();
-            _obj['SANBAYDEN'] = $('#txtFromAir').val();
+
+            currentPageIndex = parseInt($('#tblSource').attr('data-pageIndex'), 10);
+            if (isNaN(currentPageIndex) || currentPageIndex < 1) {
+                currentPageIndex = 1;
+                $('#tblSource').attr('data-pageIndex', currentPageIndex);
+            }
+
+            _obj['P_PAGESIZE'] = parseInt(ddlPageSize.value, 10);
+            _obj['P_PAGEINDEX'] = currentPageIndex - 1;
+            _obj['P_CALLSIGN'] = $.trim($('#txtCALLSIGN').val());
+            _obj['P_REGIS'] = $.trim($('#txtRegis').val());
+            _obj['P_FROM_AIRP'] = $.trim($('#txtFROM_AIRP').val());
+            _obj['P_TO_AIRP'] = $.trim($('#txtTO_AIRP').val());
+            _obj['P_PURPOSE'] = $.trim($('#txtPurpose').val());
+            _obj['P_OPER'] = $.trim($('#txtOper').val());
+            _obj['P_FCRAFT'] = $.trim($('#txtFCraf').val());
+            _obj['P_RCRAFT'] = $.trim($('#txtRCraf').val());
+            _obj['P_P_TYPE'] = $.trim($('#txtP_TYPE').val());
+            _obj['P_VIA'] = $.trim($('#txtVia').val());
+            _obj['P_FPLVIA'] = $.trim($('#txtFPLVia').val());
+            _obj['P_REMARK'] = $.trim($('#txtREMARK').val());
+            _obj['P_ETA'] = $.trim($('#txtETA').val());
+            _obj['P_ETD'] = $.trim($('#txtETD').val());
+            _obj['P_ATA'] = $.trim($('#txtATA').val());
+            _obj['P_ATD'] = $.trim($('#txtATD').val());
+            _obj['P_ISACCEPTED'] = parseInt($('#ddlAcceptedStatus').val(), 10);
+            _obj['P_STARTDATE'] = $('#txtFromDate').val();
+            _obj['P_FINISHDATE'] = $('#txtToDate').val();
+            _obj['P_KHUNGGIO1'] = $('#txtFromTime').val();
+            _obj['P_KHUNGGIO2'] = $('#txtToTime').val();
+            _obj['P_CAT_HA'] = parseInt(ddlTime_ID.value, 10) || 0;
+
             isSearch = false;
             return _obj;
         }
@@ -1257,24 +1317,58 @@
             btnSearch_Full();
         }
         function btnSearch_OnClick() {
+            if (!validateReportDateRange()) {
+                return;
+            }
             btnSearch_Full();
         }
+
+        function validateReportDateRange() {
+            var fromDate = $('#txtFromDatePicker').val();
+            var toDate = $('#txtToDatePicker').val();
+
+            if (!fromDate || !toDate) {
+                alert('Vui lòng chọn đầy đủ ngày FROM và TO.');
+                return false;
+            }
+
+            if (fromDate > toDate) {
+                alert('Ngày FROM không được lớn hơn ngày TO.');
+                return false;
+            }
+
+            return true;
+        }
+
+        function reportAcceptedStatus_OnChange() {
+            btnSearch_OnClick();
+        }
+
         function btnExportexcel_OnClick() {
-            var FROMDATE = $('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
-            var TODATE = $('#txtToDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
+            if (!validateReportDateRange()) {
+                return;
+            }
+
+            var requestData = GetObjectSearch();
+            requestData.P_PAGESIZE = 1000000;
+            requestData.P_PAGEINDEX = 0;
 
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=A_TEST_SEARCH&storeName=sp_ListFinishedFlight",
-                data: JSON.stringify({ P_FROMDATE: FROMDATE, P_TODATE: TODATE }),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=A_TEST_SEARCH&storeName=GET_FINISHED_FLIGHTS_MINITARY",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(requestData),
                 beforeSend: function () {
+                    $('#btnExportExcel').prop('disabled', true);
                 },
                 complete: function () {
                     unLoadingData('loaddingData');
+                    $('#btnExportExcel').prop('disabled', false);
                 },
-            }).always(function (data) {
-                if (data.ListValue == null) {
-                    unLoadingData('loaddingData');
+            }).done(function (data) {
+                if (!data || data.ListValue == null || data.ListValue.length === 0) {
+                    alert('Không có dữ liệu phù hợp để Export Excel.');
                     return;
                 }
 
@@ -1312,8 +1406,17 @@
 
 
                 generate_excel(strHtml);
-
-
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error(
+                    '[REPORT EXPORT GET_FINISHED_FLIGHTS_MINITARY] Request failed:',
+                    {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        error: errorThrown,
+                        response: xhr.responseJSON || xhr.responseText
+                    }
+                );
+                alert('Không thể Export Excel. Vui lòng xem Console để biết chi tiết.');
             });
             $request.onreadystatechange = null;
             $request.abort = null;
@@ -1350,8 +1453,8 @@
         }
 
         function btnClearValue_OnClick() {
-            $('#txtFLIGHTNBR').val('');
-            $('#txtREGISTRATION').val('');
+            $('#txtCALLSIGN').val('');
+            $('#txtRegis').val('');
             $('#txtFROM_AIRP').val('');
             $('#txtTO_AIRP').val('');
             $('#txtETD').val('');
@@ -1360,24 +1463,21 @@
             $('#txtFLIGHTDATE').val('');
             $('#txtATD').val('');
             $('#txtATA').val('');
-            $('#txtPERMTYPE').val('');
-            $('#txtOPER_ID').val('');
-            $('#txtCRAFT_ID').val('');
-            $('#txtCRAFT_TYPE').val('');
-            $('#txtPURPOSE').val('');
-            $('#txtLASTUSER').val('');
-            $('#txtVIA').val('');
+            $('#txtP_TYPE').val('');
+            $('#txtOper').val('');
+            $('#txtFCraf').val('');
+            $('#txtRCraf').val('');
+            $('#txtPurpose').val('');
+            $('#txtVia').val('');
             $('#txtREMARK').val('');
-            $('#txtFPL_VIA').val('');
+            $('#txtFPLVia').val('');
             ddlTime_ID.selectedIndex = 0;
-            ddlOPer_ID.selectedIndex = 0;
-            ddlTypeFlight.selectedIndex = 0;
             ddlPageSize.selectedIndex = 0;
+            $('#ddlAcceptedStatus').val('0');
             document.getElementById("txtFromTime").disabled = 'true';
             document.getElementById("txtToTime").disabled = 'true';
             document.getElementById("txtFromTime").value = '0000';
             document.getElementById("txtToTime").value = '2359';
-            document.getElementById("txtFromAir").value = '';
         }
         function ddlTime_Change() {
             if (document.getElementById("ddlTime").value != "0") {
@@ -1723,7 +1823,6 @@
 
     </script>
     <script>
-        LoadDataGrid();
         $('#txtFromDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
         $('#txtFromDate').multiDate();
         $('#txtToDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
@@ -1744,6 +1843,7 @@
         $('#txtToDatePicker').on('change', function () {
             $('#txtToDate').val(militaryDateToDisplay(this.value));
         });
+        LoadDataGrid();
         $('#txtDATE_OLD').multiDate();
         $('#txtFLIGHTDATE').multiDate();
         $('#btnMove').attr('disabled', 'disabled');
