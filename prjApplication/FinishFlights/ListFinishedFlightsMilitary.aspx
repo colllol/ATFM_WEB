@@ -61,8 +61,9 @@
         .military-date-filter {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            margin: 0 6px;
+            flex: 0 0 auto;
+            gap: 4px;
+            margin: 0;
             vertical-align: middle;
         }
 
@@ -74,7 +75,7 @@
         }
 
         .military-date-picker {
-            width: 150px !important;
+            width: 130px !important;
             height: 36px;
             padding: 6px 9px;
             border: 1px solid #8eb9d6 !important;
@@ -92,9 +93,10 @@
         }
 
         .military-accepted-filter {
-            width: 145px;
+            flex: 0 0 135px;
+            width: 135px;
             height: 34px;
-            margin-left: 6px;
+            margin: 0;
             border: 1px solid #8eb9d6;
             border-radius: 6px;
             background: #fff;
@@ -102,6 +104,49 @@
         }
 
         .military-date-value { display: none !important; }
+
+        #abcxyz {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 5px;
+            overflow-x: auto;
+            text-align: left !important;
+            white-space: nowrap;
+        }
+
+        #abcxyz > input,
+        #abcxyz > select,
+        #abcxyz > button,
+        #abcxyz > .btn,
+        #abcxyz > label {
+            flex: 0 0 auto;
+            margin: 0;
+        }
+
+        #abcxyz > input.wid_50px {
+            width: 46px !important;
+        }
+
+        #abcxyz > button,
+        #abcxyz > .btn {
+            width: auto !important;
+            min-width: 88px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        #abcxyz > .radio-inline {
+            padding-left: 5px;
+        }
+
+        #abcxyz #totalsfinished {
+            white-space: nowrap;
+        }
+
+        #abcxyz #ddlPageSize {
+            width: 58px !important;
+        }
 
         caption {
             text-align: left;
@@ -192,8 +237,8 @@
             Accepted</button>
         <button type="button" id="btnNews" class="btn btn-sm btn-primary" style="width: 100px" onclick="AddNews()">
             Add New</button>
-        <buton type="button" id="btnUpdateAll" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnInsertList_Onclick()">
-            Update All</buton>
+        <button type="button" id="btnUpdateAll" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnInsertList_Onclick()">
+            Update All</button>
         <label class="radio-inline">
             <span id="totalsfinished">Tổng số : <b>0</b></span></label>
         <!--
