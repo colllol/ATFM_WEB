@@ -454,14 +454,11 @@ BEGIN
                 FLIGHT_ID,
                 CALLSIGN,
                 REGIS,
-                NVL(FCRAFT, RCRAFT) AS CRAFT,
                 PURPOSE,
                 FROM_AIRP,
                 TO_AIRP,
                 ETD,
                 ETA,
-                ATD,
-                ATA,
                 VIA,
                 FPLVIA,
                 REMARK
@@ -480,25 +477,19 @@ BEGIN
             v_row_number := v_row_number + 1;
 
             v_line :=
-                   LPAD(TO_CHAR(v_row_number), 4)
+                   TO_CHAR(v_row_number)
                 || ' '
-                || RPAD(clean_text(f.CRAFT, 8), 8)
+                || clean_text(f.REGIS, 10)
                 || ' '
-                || RPAD(clean_text(f.REGIS, 10), 10)
+                || clean_text(f.CALLSIGN, 12)
                 || ' '
-                || RPAD(clean_text(f.CALLSIGN, 12), 12)
+                || clean_text(f.FROM_AIRP, 4)
                 || ' '
-                || RPAD(clean_text(f.FROM_AIRP, 4), 4)
+                || clean_text(f.TO_AIRP, 4)
                 || ' '
-                || RPAD(clean_text(f.TO_AIRP, 4), 4)
+                || clean_text(f.ETD, 6)
                 || ' '
-                || RPAD(clean_text(f.ETD, 6), 6)
-                || ' '
-                || RPAD(clean_text(f.ETA, 6), 6)
-                || ' '
-                || RPAD(clean_text(f.ATD, 6), 6)
-                || ' '
-                || RPAD(clean_text(f.ATA, 6), 6)
+                || clean_text(f.ETA, 6)
                 || ' '
                 || clean_text(f.PURPOSE, 10)
                 || ' '
