@@ -194,6 +194,7 @@
     <Content Include="CancelFlight\ListCancel.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightsAirspace.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightsAirspaceAccepted.aspx" />
+    <Content Include="FinishFlights\ListFinishedFlightsAirspaceReport.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightsMilitary.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightsMilitaryReport.aspx" />
     <Content Include="Properties\001 hungtn\WebForm1.aspx" />
@@ -1668,6 +1669,13 @@
     </Compile>
     <Compile Include="FinishFlights\ListFinishedFlightsAirspaceAccepted.aspx.designer.cs">
       <DependentUpon>ListFinishedFlightsAirspaceAccepted.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="FinishFlights\ListFinishedFlightsAirspaceReport.aspx.cs">
+      <DependentUpon>ListFinishedFlightsAirspaceReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FinishFlights\ListFinishedFlightsAirspaceReport.aspx.designer.cs">
+      <DependentUpon>ListFinishedFlightsAirspaceReport.aspx</DependentUpon>
     </Compile>
     <!-- Bản lưu để tái sử dụng, không tham gia biên dịch vì dùng cùng class với ATFM.Master. -->
     <None Include="Masters\ATFM - Copy.Master.cs">
