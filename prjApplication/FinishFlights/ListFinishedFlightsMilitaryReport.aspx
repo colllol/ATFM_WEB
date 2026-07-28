@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlightsMilitary.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlights" %>
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlightsMilitaryReport.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlightsMilitaryReport" %>
 
 <%@ Import Namespace="prjBusinessLogic" %>
 <%@ Import Namespace="prjInfo" %>

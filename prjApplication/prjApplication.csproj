@@ -1647,6 +1647,13 @@
     <Compile Include="FinishFlights\ListFinishedFlightsMilitary.aspx.designer.cs">
       <DependentUpon>ListFinishedFlightsMilitary.aspx</DependentUpon>
     </Compile>
+    <Compile Include="FinishFlights\ListFinishedFlightsMilitaryReport.aspx.cs">
+      <DependentUpon>ListFinishedFlightsMilitaryReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FinishFlights\ListFinishedFlightsMilitaryReport.aspx.designer.cs">
+      <DependentUpon>ListFinishedFlightsMilitaryReport.aspx</DependentUpon>
+    </Compile>
     <Compile Include="FinishFlights\ListFinishedFlightsAirspace.aspx.cs">
       <DependentUpon>ListFinishedFlightsAirspace.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
