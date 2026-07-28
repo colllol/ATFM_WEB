@@ -330,11 +330,12 @@
             <div class="calendar-filter-field calendar-export-type">
                 <label class="calendar-filter-label" for="ddlSelect">LOẠI XUẤT</label>
                 <select id="ddlSelect">
-                    <option value="1" selected="selected">ALL</option>
-                    <option value="2">AIRPORT</option>
-                    <option value="3">EXT</option>
+                    <option value="1">All</option>
+                    <option value="2">Ariport</option>
+                    <option value="3">Ext</option>
                     <option value="4">O/F</option>
                     <option value="5">LD</option>
+                    <option value="6">All NOT CANCEL</option>
                 </select>
             </div>
             <div class="calendar-filter-field calendar-airport">
@@ -1360,7 +1361,23 @@
                 });
             }
         }
+        function AccessDateOK() {
 
+            var $request = $.ajax({
+                async: true,
+                method: "PUT",
+                url: urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=FLIGHT_DAYFLIGHT&storeName=AccessCalendar",
+                data: JSON.stringify({ P_USER: '<%= _user.UserName%>', P_DATE: new Date($('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')).format('yyyy-mm-dd') }),
+                            complete: function () {
+                                unLoadingData('loadingAccess');
+                            },
+                            beforeSend: function () {
+                                preloadImgAfterButton('btnAccess', 'loadingAccess');
+                            }
+            }).always(function (data) {
+                alert(data.Value == -1 ? 'Error!' : 'Sussess!');
+            });
+        }
 
 
 
@@ -1474,7 +1491,45 @@
                             alert(data.Code < 0 ? 'Error!' : 'Sussess!');
                         })
                     break;
+                case "5":
+                    var url = "<%=System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"]%>api/ApiExtension/ExcuteReturnInt?packageName=PERMISSION2TEXT&storeName=RenderKhb_LD"
+                    var _date = $('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
 
+                    $.ajax({
+                        async: true,
+                        method: "PUT",
+                        url: url,
+                        data: JSON.stringify({ DATE_FLY: _date }),
+                        complete: function () {
+                            unLoadingData('loadingImgA');
+                        },
+                        beforeSend: function () {
+                            preloadImgAfterButton('btnRenderKhb', 'loadingImgA');
+                        }
+                    }).always(function (data) {
+                        alert(data.Code < 0 ? 'Error!' : 'Sussess!');
+                    })
+                    break;
+                case "6":
+                    var url = "<%=System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"]%>api/ApiExtension/ExcuteReturnInt?packageName=PERMISSION2TEXT&storeName=RenderKhb25"
+                        var _date = $('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
+
+                        $.ajax({
+                            async: true,
+                            method: "PUT",
+                            url: url,
+                            data: JSON.stringify({ DATE_FLY: _date }),
+                            complete: function () {
+                                unLoadingData('loadingImgA');
+                                /*AccessDateOK();*/
+                            },
+                            beforeSend: function () {
+                                preloadImgAfterButton('btnRenderKhb', 'loadingImgA');
+                            }
+                        }).always(function (data) {
+                            alert(data.Code < 0 ? 'Error!' : 'Sussess!');
+                        })
+                        break;     
             }
         }
         function RestoreDelete(id, vs) {

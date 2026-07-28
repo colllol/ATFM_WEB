@@ -89,7 +89,7 @@
                                     <ItemTemplate>
                                         <tr>
                                             <td style="width: 20%; text-align: center"><%# Eval("PART_NO") %></td>
-                                            <td style="width: 80%; text-align: center;">
+                                            <td style="width:80%;text-align:center" id="<%# Eval("ID") %>">
                                                 <a style="cursor: pointer; color: <%# Eval("STATUS") %>" onclick="ViewContent(<%# Eval("ID") %>, '<%# Eval("MESS_TYPE") %>')">
                                                     <%# Eval("MESS_TYPE") %></a></td>
                                         </tr>
@@ -268,6 +268,8 @@
             }
         }
         function ViewContent(cl, u) {
+            document.getElementById(cl).style.backgroundColor = '#FF0000';
+            
             partNo = cl;
             messType = u;
             GetArgWithPostBack(cl + phanCach + u + phanCachArg + 'ViewContent', 'ViewContent');
