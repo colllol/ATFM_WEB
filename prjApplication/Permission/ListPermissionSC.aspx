@@ -166,14 +166,14 @@
             OnClick="linkSearch_Click" Text="Search"></asp:Button>
         <asp:LinkButton runat="server" ID="btnAddNew" CssClass="btn btn-sm btn-primary"
             OnClick="btnAddNew_Click">
-                                                    <span class="glyphicon glyphicon-plus"></span>
-                                                    Create
+            <span class="glyphicon glyphicon-plus"></span>
+            CREATE
         </asp:LinkButton>
 
         <asp:LinkButton runat="server" ID="btnExportExel" CssClass="btn btn-sm btn-primary btn-bold"
             OnClick="btnExcel_Click">
-                                                    <span class="glyphicon glyphicon-download-alt"></span>
-                                                    Export data into Excel
+            <span class="glyphicon glyphicon-download-alt"></span>
+                EXPORT DATA INTO EXCEL
         </asp:LinkButton>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>

@@ -36,7 +36,7 @@
         .success {
             background-color: blue;
         }
-
+        
         .rowCreate {
             background-color: mediumvioletred;
         }
@@ -63,7 +63,7 @@
             -webkit-animation: preloader 0.8s linear infinite;
             animation: preloader 0.8s linear infinite;
         }
-
+        
         @keyframes preloader {
             from {
                 transform: rotate(0deg);
@@ -94,8 +94,8 @@
         </asp:LinkButton>--%>
 
 
-        <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text" class="wid_100px"
-            placeholder="select date" />
+        <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="date" class="wid_120px"
+            placeholder="select date" width="auto"/>
         <select id="ddlSelect" class="disabled" style="width: 100px;">
             <option value="1">All</option>
             <option value="2">Ariport</option>
