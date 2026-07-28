@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlightsMilitary.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlights" %>
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlightsMilitary.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlightsMilitary" %>
 
 <%@ Import Namespace="prjBusinessLogic" %>
 <%@ Import Namespace="prjInfo" %>
@@ -37,7 +37,7 @@
         }
 	.sInputCompare {
             border-width: 0px !important;
-           
+
             width: 100%;    
 		background-color: red!important;
     		color: #fff!important;
@@ -155,8 +155,19 @@
             <input id="txtToDatePicker" type="date" class="military-date-picker" aria-label="Ngày kết thúc" />
             <input id="txtToDate" data-minlenght="1" data-control="checkAccess" type="text" class="military-date-value" />
         </span>
+
         <input id="txtToTime" data-minlenght="1" data-control="checkAccess" type="text"
             placeholder="select time" class="wid_50px" maxlength='4' data-number='true' value="2359" />
+
+        <b>HOUR :</b>
+        <select id="ddlTime" class="disabled" style="width: 70px;" onchange="ddlTime_Change();">
+            <option value="0">-All-</option>
+            <option value="1">ETD</option>
+            <option value="2">ETA</option>
+            <option value="3">ATD</option>
+            <option value="4">ATA</option>
+        </select>
+
         <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnSearch_OnClick()">
             Search</button>
         <button type="button" id="btnNews" class="btn btn-sm btn-primary" style="width: 100px" onclick="AddNews()">
@@ -166,14 +177,7 @@
         <label class="radio-inline">
             <span id="totalsfinished">Tổng số : <b>0</b></span></label>
         <!--
-        <b>HOUR :</b>
-        <select id="ddlTime" class="disabled" style="width: 70px;" onchange="ddlTime_Change();">
-            <option value="0">-All-</option>
-            <option value="1">ETD</option>
-            <option value="2">ETA</option>
-            <option value="3">ATD</option>
-            <option value="4">ATA</option>
-        </select>
+
         <b>OPER :</b>
         <select id="ddlSelect" class="disabled" style="width: 90px;">
             <option value="0">-All-</option>
@@ -201,7 +205,7 @@
             placeholder="AIR PORT" class="wid_100px" />
         
         <b>P_SIZE :</b>-->
-        <select id="ddlPageSize" class="disabled" style="width: 65px; display: none">
+        <select id="ddlPageSize" class="disabled" style="width: 65px;">
             <option value="100">100</option>
             <option value="500">500</option>
             <option value="1000">1000</option>
@@ -563,12 +567,17 @@
             var TODATE = $('#txtToDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
             var FROM_AIRP = $('#txtFROM_AIRP').val();
             var TO_AIRP = $('#txtTO_AIRP').val();
-          
+
+            var requestData = GetObjectSearch();
+            console.log('[GET_FINISHED_FLIGHTS_MINITARY] Request:', requestData);
+
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=A_TEST_SEARCH&storeName=sp_ListFinishedFlightAdv",
-                //data: GetObjectSearch(),
-                data: JSON.stringify({ P_FROMDATE: FROMDATE, P_TODATE: TODATE, P_FROM_AIRP: FROM_AIRP, P_TO_AIRP: TO_AIRP }),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=A_TEST_SEARCH&storeName=GET_FINISHED_FLIGHTS_MINITARY",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(requestData),
+                //data: JSON.stringify({ P_FROMDATE: FROMDATE, P_TODATE: TODATE, P_FROM_AIRP: FROM_AIRP, P_TO_AIRP: TO_AIRP }),
                 beforeSend: function () {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);
@@ -594,9 +603,13 @@
                     });*/
 
                 },
-            }).always(function (data) {
-                if (data.ListValue == null || data.ListValue.length==0) {
-                    unLoadingData('loaddingData');
+            }).done(function (data) {
+                console.log('[GET_FINISHED_FLIGHTS_MINITARY] Response:', data);
+
+                if (!data || data.ListValue == null || data.ListValue.length == 0) {
+                    $('#tblSource tbody tr').remove();
+                    $('#tblSource').attr('data-total', 0);
+                    $("#totalsfinished").html("Tổng số : <b>0</b>");
                     return;
                 }
              
@@ -605,6 +618,21 @@
                 var strAppend = Render2Table(data);
                 $('#tblSource tbody').append(strAppend);
                 $("#totalsfinished").html("Tổng số : <b>" + data.ListValue[0]['SUMRECORD'] + "</b>");
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error(
+                    '[GET_FINISHED_FLIGHTS_MINITARY] Request failed:',
+                    {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        error: errorThrown,
+                        response: xhr.responseJSON || xhr.responseText
+                    }
+                );
+
+                $('#tblSource tbody tr').remove();
+                $('#tblSource').attr('data-total', 0);
+                $("#totalsfinished").html("Tổng số : <b>0</b>");
+                alert('Không tải được dữ liệu chuyến bay quân sự. Vui lòng xem Console để biết chi tiết.');
             });
             $request.onreadystatechange = null;
             $request.abort = null;
@@ -792,44 +820,50 @@
 
         function GetObjectSearch() {
             var _obj = {};
+            var currentPageIndex;
+
             if (isSearch) {
                 $('#tblSource').attr('data-pageIndex', 1);
             }
-            _obj['PAGESIZE'] = parseInt(ddlPageSize.value);//$('#tblSource').attr('data-pageSize');
-            _obj['PAGEINDEX'] = parseInt($('#tblSource').attr('data-pageIndex') - 1);
-            _obj['FLIGHTDATE'] = "";
-            _obj['PERMNBR'] = '';
-            _obj['REGISTRATION'] = $('#txtREGISTRATION').val();
-            _obj['FROM_AIRP'] = $('#txtFROM_AIRP').val();
-            _obj['TO_AIRP'] = $('#txtTO_AIRP').val();
-            _obj['PURPOSE'] = $('#txtPURPOSE').val();
-            _obj['VALIDHOURS'] ='';
-            _obj['OPER_ID'] = $('#txtOPER_ID').val();
-            _obj['PERMTYPE'] = $('#txtPERMTYPE').val();
-            _obj['FLIGHT_TYPE'] = '';
-            _obj['CRAFT_TYPE'] = $('#txtCRAFT_TYPE').attr('data-craftid');
-            _obj['CRAFT_ID'] = $('#txtCRAFT_ID').attr('data-craftid');
-            _obj['REAL_CRAFT_TYPE'] = $('#txtREALCRAFT').val();
-            _obj['FLIGHTNBR'] = $('#txtFLIGHTNBR').val();
-            _obj['PERMTYPE'] = $('#txtPERMTYPE').val();
-            _obj['VIA'] = $('#txtVIA').val();
-            _obj['FPL_VIA'] = $('#txtFPLVIA').val();
-            _obj['REMARK'] = $('#txtREMARK').val();
-            _obj['ETA'] = $('#txtETA').val();
-            _obj['ETD'] = $('#txtETD').val();
-            _obj['ATA'] = $('#txtATA').val();
-            _obj['ATD'] = $('#txtATD').val();
-            _obj['StartDate'] = $('#txtFromDate').val();
-            _obj['FinishDate'] = $('#txtToDate').val();
-            _obj['KHUNGGIO1'] = $('#txtFromTime').val();
-            _obj['KHUNGGIO2'] = $('#txtToTime').val();
-            _obj['WHECONDITION'] = $('#txtFLIGHTDATE').val();
-            _obj['CAT_HA'] = parseInt(ddlTime_ID.value);
-            _obj['TypeOper'] = parseInt(ddlOPer_ID.value);
-            _obj['TypeFlight'] = parseInt(ddlTypeFlight.value);            
-            _obj['FIR'] = ddlFr.value;
-            _obj['SANBAYDI'] = $('#txtFromAir').val();
-            _obj['SANBAYDEN'] = $('#txtFromAir').val();
+
+            currentPageIndex = parseInt($('#tblSource').attr('data-pageIndex'), 10);
+            if (isNaN(currentPageIndex) || currentPageIndex < 1) {
+                currentPageIndex = 1;
+                $('#tblSource').attr('data-pageIndex', currentPageIndex);
+            }
+
+            _obj['P_PAGESIZE'] = parseInt(ddlPageSize.value, 10);
+            _obj['P_PAGEINDEX'] = currentPageIndex - 1;
+            _obj['P_CALLSIGN'] = $('#txtFLIGHTNBR').val();
+            _obj['P_REGIS'] = $('#txtREGISTRATION').val();
+            _obj['P_FROM_AIRP'] = $('#txtFROM_AIRP').val();
+            _obj['P_TO_AIRP'] = $('#txtTO_AIRP').val();
+            _obj['P_PURPOSE'] = $('#txtPURPOSE').val();
+
+            _obj['P_OPER'] = $('#txtOPER_ID').val();
+
+
+            _obj['P_FCRAFT'] = $('#txtFCraf').val();
+            _obj['P_RCRAFT'] = $('#txtRCraf').val();
+
+            _obj['P_P_TYPE'] = $('#txtP_TYPE').val();
+
+            _obj['P_VIA'] = $('#txtVIA').val();
+            _obj['P_FPLVIA'] = $('#txtFPLVIA').val();
+            _obj['P_REMARK'] = $('#txtREMARK').val();
+            _obj['P_ETA'] = $('#txtETA').val();
+            _obj['P_ETD'] = $('#txtETD').val();
+            _obj['P_ATA'] = $('#txtATA').val();
+            _obj['P_ATD'] = $('#txtATD').val();
+
+            _obj['P_STARTDATE'] = $('#txtFromDate').val();
+            _obj['P_FINISHDATE'] = $('#txtToDate').val();
+            _obj['P_KHUNGGIO1'] = $('#txtFromTime').val();
+            _obj['P_KHUNGGIO2'] = $('#txtToTime').val();
+
+            _obj['P_CAT_HA'] = parseInt(ddlTime_ID.value, 10) || 0;
+
+
             isSearch = false;
             return _obj;
         }
@@ -1773,11 +1807,14 @@
 
     </script>
     <script>
-        LoadDataGrid();
+
         $('#txtFromDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
         $('#txtFromDate').multiDate();
         $('#txtToDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
         $('#txtToDate').multiDate();
+
+        LoadDataGrid();
+
         function militaryDateToIso(value) {
             var parts = String(value || '').split('-');
             return parts.length === 3 ? parts[2] + '-' + parts[1] + '-' + parts[0] : '';
