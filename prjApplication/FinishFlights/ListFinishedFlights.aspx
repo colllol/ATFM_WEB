@@ -202,15 +202,20 @@
 
         #tblSource > thead > tr:first-child > th {
             position: static !important;
-            height: 38px;
+            height: 30px;
             background: #f7fbff !important;
             background-clip: padding-box !important;
             border-radius: 0 !important;
         }
 
+        /* Ô input lọc trên hàng header đầu phải thấp hơn hàng thân để 2 hàng tiêu đề sát nhau. */
+        #tblSource > thead > tr:first-child > th input[type="text"] {
+            height: 28px;
+        }
+
         #tblSource > thead > tr:nth-child(2) > th {
             position: static !important;
-            height: 35px;
+            height: 28px;
             background: #337ab7 !important;
             background-clip: padding-box !important;
             border-radius: 0 !important;
