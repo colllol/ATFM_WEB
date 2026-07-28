@@ -91,6 +91,16 @@
             box-shadow: 0 0 0 3px rgba(35, 136, 198, .14);
         }
 
+        .military-accepted-filter {
+            width: 145px;
+            height: 34px;
+            margin-left: 6px;
+            border: 1px solid #8eb9d6;
+            border-radius: 6px;
+            background: #fff;
+            color: #173b59;
+        }
+
         .military-date-value { display: none !important; }
 
         caption {
@@ -168,8 +178,18 @@
             <option value="4">ATA</option>
         </select>
 
+        <select id="ddlAcceptedStatus" class="military-accepted-filter" aria-label="Trạng thái Accepted"
+            onchange="btnSearch_OnClick();">
+            <option value="0">CHƯA ACCEPTED</option>
+            <option value="1">ĐÃ ACCEPTED</option>
+            <option value="-1">TẤT CẢ</option>
+        </select>
+
         <button type="button" id="btnSearch" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnSearch_OnClick()">
             Search</button>
+        <button type="button" id="btnAccepted" class="btn btn-sm btn-success" style="width: 100px"
+            onclick="btnAccepted_OnClick()">
+            Accepted</button>
         <button type="button" id="btnNews" class="btn btn-sm btn-primary" style="width: 100px" onclick="AddNews()">
             Add New</button>
         <buton type="button" id="btnUpdateAll" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnInsertList_Onclick()">
@@ -855,6 +875,7 @@
             _obj['P_ETD'] = $('#txtETD').val();
             _obj['P_ATA'] = $('#txtATA').val();
             _obj['P_ATD'] = $('#txtATD').val();
+            _obj['P_ISACCEPTED'] = parseInt($('#ddlAcceptedStatus').val(), 10);
 
             _obj['P_STARTDATE'] = $('#txtFromDate').val();
             _obj['P_FINISHDATE'] = $('#txtToDate').val();
@@ -867,6 +888,75 @@
             isSearch = false;
             return _obj;
         }
+
+        function btnAccepted_OnClick() {
+            var startDateIso = $('#txtFromDatePicker').val();
+            var finishDateIso = $('#txtToDatePicker').val();
+
+            if (!startDateIso || !finishDateIso) {
+                alert('Vui lòng chọn đầy đủ ngày FROM và TO.');
+                return;
+            }
+
+            if (startDateIso > finishDateIso) {
+                alert('Ngày FROM không được lớn hơn ngày TO.');
+                return;
+            }
+
+            var startDate = militaryDateToDisplay(startDateIso);
+            var finishDate = militaryDateToDisplay(finishDateIso);
+            var message = 'Accepted toàn bộ chuyến bay quân sự từ '
+                + startDate + ' đến ' + finishDate + '?';
+
+            if (!confirm(message)) {
+                return;
+            }
+
+            $('#btnAccepted').prop('disabled', true);
+
+            $.ajax({
+                method: 'PUT',
+                url: urlApi
+                    + 'api/ApiExtension/ExcuteReturnInt'
+                    + '?packageName=A_TEST_SEARCH'
+                    + '&storeName=ACCEPT_FIN_FLIGHTS_MILITARY',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({
+                    P_STARTDATE: startDate,
+                    P_FINISHDATE: finishDate,
+                    P_USER: '<%= _user.UserName.ToString()%>'
+                })
+            }).done(function (data) {
+                var updatedRows = data && data.Code === '00'
+                    ? parseInt(data.ListValue, 10)
+                    : -1;
+
+                if (isNaN(updatedRows) || updatedRows < 0) {
+                    console.error('[ACCEPT_FIN_FLIGHTS_MILITARY] Response:', data);
+                    alert('Accepted không thành công. Vui lòng xem Console để biết chi tiết.');
+                    return;
+                }
+
+                alert('Accepted thành công ' + updatedRows + ' chuyến bay.');
+                $('#ddlAcceptedStatus').val('0');
+                btnSearch_OnClick();
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error(
+                    '[ACCEPT_FIN_FLIGHTS_MILITARY] Request failed:',
+                    {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        error: errorThrown,
+                        responseText: xhr.responseText
+                    }
+                );
+                alert('Không thể thực hiện Accepted. Vui lòng xem Console để biết chi tiết.');
+            }).always(function () {
+                $('#btnAccepted').prop('disabled', false);
+            });
+        }
+
         function reloadCheckValid() {
             $(document).ready(function () {
                 $('[data-number="true"]').keypress(validateNumber);
@@ -1453,14 +1543,16 @@
                 $('#txtREMARK').val('');
                 $('#txtFPLVia').val('');
                 ddlTime_ID.selectedIndex = 0;
-                ddlOPer_ID.selectedIndex = 0;
-                ddlTypeFlight.selectedIndex = 0;
+                $('#ddlAcceptedStatus').val('0');
+                if (ddlOPer_ID) ddlOPer_ID.selectedIndex = 0;
+                if (ddlTypeFlight) ddlTypeFlight.selectedIndex = 0;
                 ddlPageSize.selectedIndex = 0;
                 document.getElementById("txtFromTime").disabled = 'true';
                 document.getElementById("txtToTime").disabled = 'true';
                 document.getElementById("txtFromTime").value = '0000';
                 document.getElementById("txtToTime").value = '2359';
-                document.getElementById("txtFromAir").value = '';
+                var txtFromAir = document.getElementById("txtFromAir");
+                if (txtFromAir) txtFromAir.value = '';
             }
             function ddlTime_Change() {
                 if (document.getElementById("ddlTime").value != "0") {

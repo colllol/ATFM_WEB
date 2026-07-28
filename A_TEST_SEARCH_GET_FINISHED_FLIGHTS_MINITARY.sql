@@ -31,6 +31,7 @@ PROCEDURE GET_FINISHED_FLIGHTS_MINITARY
     p_RCRAFT     IN T_FINISHFLIGHTS_MILITARY.RCRAFT%TYPE     DEFAULT NULL,
     p_FCRAFT     IN T_FINISHFLIGHTS_MILITARY.FCRAFT%TYPE     DEFAULT NULL,
     p_FPLVIA     IN T_FINISHFLIGHTS_MILITARY.FPLVIA%TYPE     DEFAULT NULL,
+    p_ISACCEPTED IN NUMBER                                      DEFAULT 0,
     p_CAT_HA     IN NUMBER,
     p_KHUNGGIO1  IN VARCHAR2,
     p_KHUNGGIO2  IN VARCHAR2,
@@ -39,6 +40,14 @@ PROCEDURE GET_FINISHED_FLIGHTS_MINITARY
     p_StartDate  IN VARCHAR2,
     p_FinishDate IN VARCHAR2,
     P_OUT_CURSOR OUT T_CURSOR
+);
+
+PROCEDURE ACCEPT_FIN_FLIGHTS_MILITARY
+(
+    p_StartDate  IN VARCHAR2,
+    p_FinishDate IN VARCHAR2,
+    p_User       IN VARCHAR2 DEFAULT NULL,
+    p_ReturnCode OUT NUMBER
 );
 
 /* ================================================================
@@ -62,6 +71,7 @@ PROCEDURE GET_FINISHED_FLIGHTS_MINITARY
     p_RCRAFT     IN T_FINISHFLIGHTS_MILITARY.RCRAFT%TYPE     DEFAULT NULL,
     p_FCRAFT     IN T_FINISHFLIGHTS_MILITARY.FCRAFT%TYPE     DEFAULT NULL,
     p_FPLVIA     IN T_FINISHFLIGHTS_MILITARY.FPLVIA%TYPE     DEFAULT NULL,
+    p_ISACCEPTED IN NUMBER                                      DEFAULT 0,
     p_CAT_HA     IN NUMBER,
     p_KHUNGGIO1  IN VARCHAR2,
     p_KHUNGGIO2  IN VARCHAR2,
@@ -112,6 +122,11 @@ BEGIN
             FROM T_FINISHFLIGHTS_MILITARY t
             WHERE t.FLIGHTDATE >= v_start_date
               AND t.FLIGHTDATE <  v_finish_date + 1
+              AND
+              (
+                  NVL(p_ISACCEPTED, 0) = -1
+                  OR t.ISACCEPTED = NVL(p_ISACCEPTED, 0)
+              )
               AND
               (
                   p_CALLSIGN IS NULL
@@ -257,3 +272,84 @@ EXCEPTION
 
         RAISE;
 END GET_FINISHED_FLIGHTS_MINITARY;
+
+/* ================================================================
+   3. Accepted các chuyến quân sự theo khoảng ngày
+   ================================================================ */
+PROCEDURE ACCEPT_FIN_FLIGHTS_MILITARY
+(
+    p_StartDate  IN VARCHAR2,
+    p_FinishDate IN VARCHAR2,
+    p_User       IN VARCHAR2 DEFAULT NULL,
+    p_ReturnCode OUT NUMBER
+)
+IS
+    v_start_date  DATE;
+    v_finish_date DATE;
+BEGIN
+    v_start_date := TO_DATE(TRIM(p_StartDate), 'FXDD-MM-YYYY');
+    v_finish_date := TO_DATE(TRIM(p_FinishDate), 'FXDD-MM-YYYY');
+
+    IF v_finish_date < v_start_date THEN
+        RAISE_APPLICATION_ERROR(
+            -20001,
+            'P_FINISHDATE must be greater than or equal to P_STARTDATE'
+        );
+    END IF;
+
+    UPDATE T_FINISHFLIGHTS_MILITARY
+       SET ISACCEPTED = 1
+     WHERE FLIGHTDATE >= v_start_date
+       AND FLIGHTDATE <  v_finish_date + 1
+       AND ISACCEPTED = 0;
+
+    p_ReturnCode := SQL%ROWCOUNT;
+
+    INSERT INTO T_ACTIONHISTORY
+    (
+        USERID,
+        FULLNAME,
+        HOSTIP,
+        DATEMODIFY,
+        ACTIONSCODE,
+        NEWS_ID,
+        NOTES,
+        MENU_ID
+    )
+    VALUES
+    (
+        0,
+        NVL(p_User, ' '),
+        ' ',
+        SYSDATE,
+        'ACCEPT FINISHFLIGHTS_MILITARY',
+        0,
+        p_StartDate || ' - ' || p_FinishDate
+            || '; ROWS=' || TO_CHAR(p_ReturnCode),
+        843
+    );
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+
+        BEGIN
+            PROCESS_PKG.ADD_ERROR_LOG(
+                'ACCEPT_FIN_FLIGHTS_MILITARY',
+                SQLCODE,
+                SUBSTR(
+                    SQLERRM
+                    || CHR(10)
+                    || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE,
+                    1,
+                    200
+                )
+            );
+        EXCEPTION
+            WHEN OTHERS THEN
+                NULL;
+        END;
+
+        p_ReturnCode := -1;
+END ACCEPT_FIN_FLIGHTS_MILITARY;
