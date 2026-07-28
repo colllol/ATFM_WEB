@@ -192,6 +192,14 @@ CREATE OR REPLACE PACKAGE AIRSPACE_PKG AS
         p_User       IN VARCHAR2 DEFAULT NULL,
         p_ReturnCode OUT NUMBER
     );
+
+    PROCEDURE EXPORT_AIRSPACE_MESSAGE
+    (
+        p_StartDate  IN VARCHAR2,
+        p_FinishDate IN VARCHAR2,
+        p_User       IN VARCHAR2 DEFAULT NULL,
+        p_ReturnCode OUT NUMBER
+    );
 END AIRSPACE_PKG;
 /
 
@@ -586,6 +594,231 @@ CREATE OR REPLACE PACKAGE BODY AIRSPACE_PKG AS
             WRITE_ERROR('APPROVE_FINISHED_AIRSPACE');
             p_ReturnCode := -1;
     END APPROVE_FINISHED_AIRSPACE;
+
+    PROCEDURE EXPORT_AIRSPACE_MESSAGE
+    (
+        p_StartDate  IN VARCHAR2,
+        p_FinishDate IN VARCHAR2,
+        p_User       IN VARCHAR2 DEFAULT NULL,
+        p_ReturnCode OUT NUMBER
+    )
+    IS
+        TYPE t_text_parts IS TABLE OF VARCHAR2(32767)
+            INDEX BY PLS_INTEGER;
+
+        v_parts         t_text_parts;
+        v_part_ids      t_text_parts;
+        v_start_date    DATE;
+        v_finish_date   DATE;
+        v_line          VARCHAR2(32767);
+        v_content       VARCHAR2(32767);
+        v_part_count    PLS_INTEGER;
+        v_row_number    PLS_INTEGER;
+        v_total_flights PLS_INTEGER := 0;
+        v_total_parts   PLS_INTEGER := 0;
+
+        FUNCTION CLEAN_TEXT
+        (
+            p_value      IN VARCHAR2,
+            p_max_length IN PLS_INTEGER
+        )
+        RETURN VARCHAR2
+        IS
+        BEGIN
+            RETURN SUBSTR(
+                REPLACE(
+                    REPLACE(
+                        NVL(TRIM(p_value), '-'),
+                        CHR(13),
+                        ' '
+                    ),
+                    CHR(10),
+                    ' '
+                ),
+                1,
+                p_max_length
+            );
+        END CLEAN_TEXT;
+    BEGIN
+        v_start_date := PARSE_DATE(p_StartDate);
+        v_finish_date := PARSE_DATE(p_FinishDate);
+
+        IF v_finish_date < v_start_date THEN
+            RAISE_APPLICATION_ERROR(-20001, 'P_FINISHDATE must be >= P_STARTDATE');
+        END IF;
+
+        -- Chỉ thay điện văn Airspace chưa gửi trong đúng khoảng ngày export.
+        DELETE FROM T_PLAN_MESSAGE
+         WHERE STATUS = 0
+           AND MESS_TYPE = 'AIRSPACE MESSAGE'
+           AND FLIGHTDATE >= v_start_date
+           AND FLIGHTDATE < v_finish_date + 1;
+
+        FOR d IN
+        (
+            SELECT TRUNC(FLIGHTDATE) AS FLIGHT_DATE
+              FROM T_FINISHFLIGHTS_AIRSPACE
+             WHERE ISACCEPTED = 1
+               AND FLIGHTDATE >= v_start_date
+               AND FLIGHTDATE < v_finish_date + 1
+             GROUP BY TRUNC(FLIGHTDATE)
+             ORDER BY TRUNC(FLIGHTDATE)
+        )
+        LOOP
+            v_parts.DELETE;
+            v_part_ids.DELETE;
+            v_part_count := 1;
+            v_row_number := 0;
+            v_parts(1) := NULL;
+            v_part_ids(1) := NULL;
+
+            FOR f IN
+            (
+                SELECT FLIGHT_ID,
+                       CALLSIGN,
+                       REGIS,
+                       PURPOSE,
+                       FROM_AIRP,
+                       TO_AIRP,
+                       ETD,
+                       ETA,
+                       VIA,
+                       FPLVIA,
+                       REMARK
+                  FROM T_FINISHFLIGHTS_AIRSPACE
+                 WHERE ISACCEPTED = 1
+                   AND FLIGHTDATE >= d.FLIGHT_DATE
+                   AND FLIGHTDATE < d.FLIGHT_DATE + 1
+                 ORDER BY CALLSIGN,
+                          FROM_AIRP,
+                          TO_AIRP,
+                          ETD,
+                          FLIGHT_ID
+            )
+            LOOP
+                v_row_number := v_row_number + 1;
+
+                v_line :=
+                       TO_CHAR(v_row_number)
+                    || ' '
+                    || CLEAN_TEXT(f.REGIS, 10)
+                    || ' '
+                    || CLEAN_TEXT(f.CALLSIGN, 12)
+                    || ' '
+                    || CLEAN_TEXT(f.FROM_AIRP, 4)
+                    || ' '
+                    || CLEAN_TEXT(f.TO_AIRP, 4)
+                    || ' '
+                    || CLEAN_TEXT(f.ETD, 6)
+                    || ' '
+                    || CLEAN_TEXT(f.ETA, 6)
+                    || ' '
+                    || CLEAN_TEXT(f.PURPOSE, 10)
+                    || ' '
+                    || CLEAN_TEXT(f.VIA, 120)
+                    || ' '
+                    || CLEAN_TEXT(f.FPLVIA, 120)
+                    || ' '
+                    || CLEAN_TEXT(f.REMARK, 900);
+
+                v_line := RTRIM(SUBSTR(v_line, 1, 1400)) || CHR(10);
+
+                IF v_parts(v_part_count) IS NOT NULL
+                   AND LENGTHB(v_parts(v_part_count))
+                       + LENGTHB(v_line) > 1650
+                THEN
+                    v_part_count := v_part_count + 1;
+                    v_parts(v_part_count) := NULL;
+                    v_part_ids(v_part_count) := NULL;
+                END IF;
+
+                v_parts(v_part_count) :=
+                    v_parts(v_part_count) || v_line;
+
+                v_part_ids(v_part_count) :=
+                    CASE
+                        WHEN v_part_ids(v_part_count) IS NULL
+                        THEN TO_CHAR(f.FLIGHT_ID)
+                        ELSE v_part_ids(v_part_count)
+                             || ',' || TO_CHAR(f.FLIGHT_ID)
+                    END;
+            END LOOP;
+
+            IF v_row_number > 0 THEN
+                FOR i IN 1 .. v_part_count
+                LOOP
+                    v_content :=
+                           'PART ' || TO_CHAR(i)
+                        || ' OF ' || TO_CHAR(v_part_count)
+                        || CHR(10)
+                        || 'FPL ON:'
+                        || TO_CHAR(
+                               d.FLIGHT_DATE,
+                               'DD-MON-YYYY',
+                               'NLS_DATE_LANGUAGE=ENGLISH'
+                           )
+                        || ': AIRSPACE MESSAGE'
+                        || CHR(10)
+                        || v_parts(i)
+                        || CHR(10)
+                        || 'NNNN';
+
+                    IF LENGTHB(v_content) > 2000 THEN
+                        RAISE_APPLICATION_ERROR(
+                            -20002,
+                            'AIRSPACE MESSAGE content exceeds 2000 bytes'
+                        );
+                    END IF;
+
+                    INSERT INTO T_PLAN_MESSAGE
+                    (
+                        FLIGHTDATE,
+                        PART_NO,
+                        CONTENT,
+                        MESS_TYPE,
+                        STATUS,
+                        LISTFLIGHTID
+                    )
+                    VALUES
+                    (
+                        d.FLIGHT_DATE,
+                        i,
+                        v_content,
+                        'AIRSPACE MESSAGE',
+                        0,
+                        v_part_ids(i)
+                    );
+
+                    v_total_parts := v_total_parts + 1;
+                END LOOP;
+
+                v_total_flights := v_total_flights + v_row_number;
+            END IF;
+        END LOOP;
+
+        INSERT INTO T_ACTIONHISTORY
+        (
+            USERID, FULLNAME, HOSTIP, DATEMODIFY,
+            ACTIONSCODE, NEWS_ID, NOTES, MENU_ID
+        )
+        VALUES
+        (
+            0, NVL(p_User, ' '), ' ', SYSDATE,
+            'EXPORT AIRSPACE MESSAGE', 0,
+            p_StartDate || ' - ' || p_FinishDate
+                || '; FLIGHTS=' || TO_CHAR(v_total_flights)
+                || '; PARTS=' || TO_CHAR(v_total_parts),
+            0
+        );
+
+        p_ReturnCode := v_total_flights;
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            WRITE_ERROR('EXPORT_AIRSPACE_MESSAGE');
+            p_ReturnCode := -1;
+    END EXPORT_AIRSPACE_MESSAGE;
 END AIRSPACE_PKG;
 /
 

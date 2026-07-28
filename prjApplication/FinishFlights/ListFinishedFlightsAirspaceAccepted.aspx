@@ -128,6 +128,8 @@
             onclick="searchAirspaceApproval();">Search</button>
         <button type="button" id="btnApproveFlights" class="btn btn-sm btn-success"
             onclick="approveAirspaceFlights();">Duyệt</button>
+        <button type="button" id="btnExportAirspaceMessage" class="btn btn-sm btn-primary"
+            disabled="disabled" onclick="exportAirspaceMessage();">Export Message</button>
     </div>
 
     <div class="airspace-approve-wrap">
@@ -187,6 +189,8 @@
             urlApi + 'api/ApiExtension/ExcuteTable?packageName=AIRSPACE_PKG&storeName=GET_FINISHED_AIRSPACE';
         var airspaceApproveUrl =
             urlApi + 'api/ApiExtension/ExcuteReturnInt?packageName=AIRSPACE_PKG&storeName=APPROVE_FINISHED_AIRSPACE';
+        var airspaceExportMessageUrl =
+            urlApi + 'api/ApiExtension/ExcuteReturnInt?packageName=AIRSPACE_PKG&storeName=EXPORT_AIRSPACE_MESSAGE';
         var airspaceApprover = '<%= _user.UserName.ToString() %>';
 
         function approvalEncode(value) {
@@ -342,11 +346,14 @@
         }
 
         function approveStatusChanged() {
-            $('#btnApproveFlights').prop(
-                'disabled',
-                $('#ddlApproveStatus').val() !== '2'
-            );
+            updateApprovalActionState();
             searchAirspaceApproval();
+        }
+
+        function updateApprovalActionState() {
+            var status = $('#ddlApproveStatus').val();
+            $('#btnApproveFlights').prop('disabled', status !== '2');
+            $('#btnExportAirspaceMessage').prop('disabled', status !== '1');
         }
 
         function approveTimeChanged() {
@@ -393,10 +400,63 @@
                 );
                 alert('Không thể duyệt dữ liệu Airspace.');
             }).always(function () {
-                $('#btnApproveFlights').prop(
-                    'disabled',
-                    $('#ddlApproveStatus').val() !== '2'
+                updateApprovalActionState();
+            });
+        }
+
+        function exportAirspaceMessage() {
+            if ($('#ddlApproveStatus').val() !== '1' || !validateApprovalDates()) {
+                updateApprovalActionState();
+                return;
+            }
+
+            var startDate = $('#txtApproveFrom').val();
+            var finishDate = $('#txtApproveTo').val();
+
+            if (!confirm(
+                'Export các chuyến ĐÃ DUYỆT từ '
+                + startDate + ' đến ' + finishDate
+                + ' thành AIRSPACE MESSAGE?'
+            )) {
+                return;
+            }
+
+            $('#btnExportAirspaceMessage').prop('disabled', true);
+            $.ajax({
+                method: 'PUT',
+                url: airspaceExportMessageUrl,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({
+                    P_STARTDATE: startDate,
+                    P_FINISHDATE: finishDate,
+                    P_USER: airspaceApprover
+                })
+            }).done(function (data) {
+                var exportedFlights = data && data.Code === '00'
+                    ? parseInt(data.ListValue, 10)
+                    : -1;
+
+                if (isNaN(exportedFlights) || exportedFlights < 0) {
+                    console.error('[EXPORT_AIRSPACE_MESSAGE] Response:', data);
+                    alert('Export AIRSPACE MESSAGE không thành công.');
+                    return;
+                }
+
+                alert(
+                    'Đã Export ' + exportedFlights
+                    + ' chuyến bay thành AIRSPACE MESSAGE.'
                 );
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error('[EXPORT_AIRSPACE_MESSAGE] Request failed:', {
+                    status: xhr.status,
+                    textStatus: textStatus,
+                    error: errorThrown,
+                    response: xhr.responseJSON || xhr.responseText
+                });
+                alert('Không thể Export AIRSPACE MESSAGE.');
+            }).always(function () {
+                updateApprovalActionState();
             });
         }
 
@@ -419,4 +479,3 @@
         });
     </script>
 </asp:Content>
-
