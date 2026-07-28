@@ -760,6 +760,17 @@ CREATE OR REPLACE PACKAGE BODY AIRSPACE_PKG AS
                         || ': AIRSPACE MESSAGE'
                         || CHR(10)
                         || v_parts(i)
+                        /*
+                          v_parts đã kết thúc bằng CHR(10). Bổ sung thêm
+                          7 ký tự xuống dòng để NNNN cách dòng dữ liệu
+                          cuối cùng đúng 7 dòng trống.
+                        */
+                        || CHR(10)
+                        || CHR(10)
+                        || CHR(10)
+                        || CHR(10)
+                        || CHR(10)
+                        || CHR(10)
                         || CHR(10)
                         || 'NNNN';
 
