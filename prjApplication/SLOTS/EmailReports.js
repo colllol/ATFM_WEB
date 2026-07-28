@@ -122,7 +122,8 @@
         detailRequestId++;
         $('emailDetailBackdrop').hidden = true;
     }
-    function load() {
+    function load(retriesRemaining) {
+        retriesRemaining = Math.max(0, parseInt(retriesRemaining, 10) || 0);
         var apply = $('emailApply');
         apply.disabled = true;
         apply.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm...';
@@ -147,7 +148,14 @@
             totalPages = Number(payload && payload.totalPages != null ? payload.totalPages : 1);
             var sent = 0, failed = 0; allItems.forEach(function (item) { var cls = statusClass(status(item)); if (cls === 'success') sent++; if (cls === 'failed') failed++; });
             $('emailSent').textContent = sent.toLocaleString('vi-VN'); $('emailFailed').textContent = failed.toLocaleString('vi-VN'); $('emailLastUpdated').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN'); setConnection(true, 'Đã kết nối'); draw();
-        }).catch(function (error) { allItems = []; filteredItems = []; totalItems = 0; totalPages = 1; draw(); setConnection(false, 'Không kết nối'); $('emailError').textContent = 'Không thể tải dữ liệu email: ' + error.message; $('emailError').hidden = false; }).then(function () {
+        }).catch(function (error) {
+            if (retriesRemaining > 0) {
+                setConnection(false, 'Đang thử lại...');
+                window.setTimeout(function () { load(retriesRemaining - 1); }, 600);
+                return;
+            }
+            allItems = []; filteredItems = []; totalItems = 0; totalPages = 1; draw(); setConnection(false, 'Không kết nối'); $('emailError').textContent = 'Không thể tải dữ liệu email: ' + error.message; $('emailError').hidden = false;
+        }).then(function () {
             apply.disabled = false;
             apply.innerHTML = '<i class="fa fa-search"></i> Tìm kiếm';
         });
@@ -155,5 +163,5 @@
     $('emailApply').onclick = applyFilters; $('emailSearch').onkeydown = function (event) { if (event.key === 'Enter') applyFilters(); }; $('emailRefresh').onclick = function () { $('emailError').hidden = true; load(); }; $('emailPageSize').onchange = function () { pageSize = parseInt(this.value, 10); currentPage = 1; load(); };
     $('emailPrev').onclick = function () { if (currentPage > 1) { currentPage--; load(); } }; $('emailNext').onclick = function () { if (currentPage < totalPages) { currentPage++; load(); } };
     $('emailDetailClose').onclick = closeDetail; $('emailDetailBackdrop').onclick = function (event) { if (event.target === this) closeDetail(); };
-    load();
+    load(1);
 }());
