@@ -1,7 +1,9 @@
 <%@ Page Title="Báo cáo Email" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeFile="EmailReports.aspx.cs" Inherits="prjApplication.SLOTS.EmailReports" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/EmailReports.css?v=20260727-1") %>" />
-    <section id="emailReportsPage" class="email-reports-page">
+    <section id="emailReportsPage" class="email-reports-page"
+        data-email-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmails") %>"
+        data-job-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetTargetPermId") %>">
         <header class="email-hero">
             <div><span class="email-eyebrow"><i class="fa fa-envelope"></i> VATM · EMAIL REPORTS</span><h1>Báo cáo Email</h1><p>Tra cứu, lọc và xem chi tiết email từ hệ thống báo cáo.</p></div>
             <div class="email-live"><i class="email-live-dot"></i><div><small>Trạng thái kết nối</small><strong id="emailConnectionState">Chưa tải</strong></div></div>
@@ -46,5 +48,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260728-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260728-2") %>"></script>
 </asp:Content>

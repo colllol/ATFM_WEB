@@ -2,8 +2,8 @@
     'use strict';
     var page = document.getElementById('emailReportsPage');
     if (!page) return;
-    var endpoint = 'EmailReports.aspx/GetEmails';
-    var jobEndpoint = 'EmailReports.aspx/GetTargetPermId';
+    var endpoint = page.getAttribute('data-email-endpoint');
+    var jobEndpoint = page.getAttribute('data-job-endpoint');
     var allItems = [], filteredItems = [], currentPage = 1, pageSize = 50, totalItems = 0, totalPages = 1;
     var detailRequestId = 0;
     var $ = function (id) { return document.getElementById(id); };
