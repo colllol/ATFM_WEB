@@ -8,12 +8,12 @@ namespace QLB.API.Data
 {
     public class NotificationsRepository
     {
-        public ReponseReportEntity GetState()
+        public ReponseReportEntity GetState(long userId)
         {
             ReponseReportEntity response = new ReponseReportEntity();
             try
             {
-                DataSet data = new NotificationsDAL().GetState();
+                DataSet data = new NotificationsDAL().GetState(userId);
                 if (data.Tables.Count == 0)
                     throw new InvalidOperationException("NOTIFICATION_PKG.GET_STATE returned no result table.");
 
@@ -41,12 +41,12 @@ namespace QLB.API.Data
             return response;
         }
 
-        public ReponseReportEntity GetPage(int status, int pageIndex)
+        public ReponseReportEntity GetPage(long userId, int status, int pageIndex)
         {
             ReponseReportEntity response = new ReponseReportEntity();
             try
             {
-                DataSet data = new NotificationsDAL().GetPage(status, pageIndex);
+                DataSet data = new NotificationsDAL().GetPage(userId, status, pageIndex);
                 if (data.Tables.Count < 2 || data.Tables[1].Rows.Count == 0)
                     throw new InvalidOperationException("NOTIFICATION_PKG.GET_PAGE returned an invalid result.");
 
@@ -72,12 +72,12 @@ namespace QLB.API.Data
             return response;
         }
 
-        public ReponseReportEntity MarkRead(long id)
+        public ReponseReportEntity MarkRead(long userId, long id)
         {
             ReponseReportEntity response = new ReponseReportEntity();
             try
             {
-                long updated = new NotificationsDAL().MarkRead(id);
+                long updated = new NotificationsDAL().MarkRead(userId, id);
                 if (updated < 0)
                     throw new InvalidOperationException("NOTIFICATION_PKG.MARK_READ did not return an update count.");
 
@@ -94,12 +94,12 @@ namespace QLB.API.Data
             return response;
         }
 
-        public ReponseReportEntity MarkAllRead()
+        public ReponseReportEntity MarkAllRead(long userId)
         {
             ReponseReportEntity response = new ReponseReportEntity();
             try
             {
-                long updated = new NotificationsDAL().MarkAllRead();
+                long updated = new NotificationsDAL().MarkAllRead(userId);
                 if (updated < 0)
                     throw new InvalidOperationException("NOTIFICATION_PKG.MARK_ALL_READ did not return an update count.");
 
@@ -110,6 +110,28 @@ namespace QLB.API.Data
             catch (Exception ex)
             {
                 LogAPI.LogToFile(LogFileType.EXCEPTION, "NotificationsRepository.MarkAllRead: " + ex);
+                response.Code = oMessage.ExceptionCode;
+                response.Message = oMessage.ExceptionMessage;
+            }
+            return response;
+        }
+
+        public ReponseReportEntity Create(string title, string content, string userIds)
+        {
+            ReponseReportEntity response = new ReponseReportEntity();
+            try
+            {
+                long id = new NotificationsDAL().Create(title, content, userIds);
+                if (id <= 0)
+                    throw new InvalidOperationException("NOTIFICATION_PKG.CREATE_NOTIFICATION did not return an ID.");
+
+                response.Code = oMessage.CodeSussess;
+                response.Message = oMessage.GetDataSussess;
+                response.Value = id;
+            }
+            catch (Exception ex)
+            {
+                LogAPI.LogToFile(LogFileType.EXCEPTION, "NotificationsRepository.Create: " + ex);
                 response.Code = oMessage.ExceptionCode;
                 response.Message = oMessage.ExceptionMessage;
             }
