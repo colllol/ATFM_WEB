@@ -834,13 +834,13 @@
 
             _obj['P_PAGESIZE'] = parseInt(ddlPageSize.value, 10);
             _obj['P_PAGEINDEX'] = currentPageIndex - 1;
-            _obj['P_CALLSIGN'] = $('#txtFLIGHTNBR').val();
-            _obj['P_REGIS'] = $('#txtREGISTRATION').val();
+            _obj['P_CALLSIGN'] = $.trim($('#txtCALLSIGN').val());
+            _obj['P_REGIS'] = $.trim($('#txtRegis').val());
             _obj['P_FROM_AIRP'] = $('#txtFROM_AIRP').val();
             _obj['P_TO_AIRP'] = $('#txtTO_AIRP').val();
-            _obj['P_PURPOSE'] = $('#txtPURPOSE').val();
+            _obj['P_PURPOSE'] = $.trim($('#txtPurpose').val());
 
-            _obj['P_OPER'] = $('#txtOPER_ID').val();
+            _obj['P_OPER'] = $.trim($('#txtOper').val());
 
 
             _obj['P_FCRAFT'] = $('#txtFCraf').val();
@@ -848,8 +848,8 @@
 
             _obj['P_P_TYPE'] = $('#txtP_TYPE').val();
 
-            _obj['P_VIA'] = $('#txtVIA').val();
-            _obj['P_FPLVIA'] = $('#txtFPLVIA').val();
+            _obj['P_VIA'] = $.trim($('#txtVia').val());
+            _obj['P_FPLVIA'] = $.trim($('#txtFPLVia').val());
             _obj['P_REMARK'] = $('#txtREMARK').val();
             _obj['P_ETA'] = $('#txtETA').val();
             _obj['P_ETD'] = $('#txtETD').val();
@@ -1432,8 +1432,8 @@
             }
 
             function btnClearValue_OnClick() {
-                $('#txtFLIGHTNBR').val('');
-                $('#txtREGISTRATION').val('');
+                $('#txtCALLSIGN').val('');
+                $('#txtRegis').val('');
                 $('#txtFROM_AIRP').val('');
                 $('#txtTO_AIRP').val('');
                 $('#txtETD').val('');
@@ -1443,14 +1443,15 @@
                 $('#txtATD').val('');
                 $('#txtATA').val('');
                 $('#txtPERMTYPE').val('');
-                $('#txtOPER_ID').val('');
-                $('#txtCRAFT_ID').val('');
-                $('#txtCRAFT_TYPE').val('');
-                $('#txtPURPOSE').val('');
+                $('#txtOper').val('');
+                $('#txtRCraf').val('');
+                $('#txtFCraf').val('');
+                $('#txtPurpose').val('');
+                $('#txtP_TYPE').val('');
                 $('#txtLASTUSER').val('');
-                $('#txtVIA').val('');
+                $('#txtVia').val('');
                 $('#txtREMARK').val('');
-                $('#txtFPL_VIA').val('');
+                $('#txtFPLVia').val('');
                 ddlTime_ID.selectedIndex = 0;
                 ddlOPer_ID.selectedIndex = 0;
                 ddlTypeFlight.selectedIndex = 0;
