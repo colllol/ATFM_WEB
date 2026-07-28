@@ -36,6 +36,9 @@
                 <pre id="emailDetailBody" class="email-detail-body"></pre>
                 <footer class="email-detail-actions">
                     <span id="emailPermissionMessage" class="email-permission-message"></span>
+                    <a id="emailDownloadLink" class="email-permission-link is-disabled" target="_blank" rel="noopener noreferrer" aria-disabled="true">
+                        <i class="fa fa-download"></i> Download File
+                    </a>
                     <a id="emailPermissionLink" class="email-permission-link is-disabled" target="_blank" rel="noopener noreferrer" aria-disabled="true">
                         <i class="fa fa-external-link"></i> Xem số phép bay
                     </a>
@@ -43,5 +46,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260727-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260728-1") %>"></script>
 </asp:Content>

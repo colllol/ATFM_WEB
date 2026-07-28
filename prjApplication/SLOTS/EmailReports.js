@@ -17,6 +17,21 @@
     function status(item) { return text(item, ['processingStatus','status','state','mailStatus','result']) || 'Không xác định'; }
     function date(item) { return text(item, ['receivedAt','sentAt','createdAt','date','emailDate','created_at','timestamp']); }
     function dateKey(value) { var match = String(value || '').match(/(20\d\d)[-\/]?(\d\d)[-\/]?(\d\d)/); return match ? match[1] + '-' + match[2] + '-' + match[3] : ''; }
+    function attachmentName(item) {
+        var name = text(item, ['attachmentName','fileName','filename','attachmentFileName','storedFileName']);
+        var attachments = item && item.attachments;
+        if (!name && Array.isArray(attachments) && attachments.length)
+            name = typeof attachments[0] === 'string' ? attachments[0] : text(attachments[0], ['fileName','filename','name','attachmentName','storedFileName']);
+        return name;
+    }
+    function downloadUrl(item) {
+        var fileName = attachmentName(item);
+        var itemDate = dateKey(date(item));
+        if (!fileName || !itemDate) return '';
+        var folder = status(item).trim().toLowerCase() === 'saved' ? 'processed' : 'error';
+        var datePath = itemDate.replace(/-/g, '/');
+        return 'http://172.29.79.49/vatm-storage/' + folder + '/' + datePath + '/' + encodeURIComponent(fileName);
+    }
     function statusClass(value) { var normalized = String(value).toLowerCase(); return /fail|error|reject/.test(normalized) ? 'failed' : /pending|wait|queue/.test(normalized) ? 'pending' : /sent|success|deliver|complete|ok/.test(normalized) ? 'success' : ''; }
     function setConnection(ok, message) { $('emailConnectionState').textContent = message; page.querySelector('.email-live').className = 'email-live ' + (ok ? 'is-online' : 'is-error'); }
     function applyFilters() {
@@ -44,12 +59,26 @@
         if (!item) return;
         var subject = text(item,['subject','title']) || '(Không có tiêu đề)';
         var syncJobId = text(item, ['syncJobId']);
+        var fileName = attachmentName(item);
+        var fileUrl = downloadUrl(item);
+        var downloadLink = $('emailDownloadLink');
         var permissionLink = $('emailPermissionLink');
         var permissionMessage = $('emailPermissionMessage');
         var requestId = ++detailRequestId;
         $('emailDetailSubject').textContent = subject;
-        $('emailDetailMeta').innerHTML = '<b>Người gửi:</b> ' + esc(text(item,['sender','from','senderEmail'])) + '<br><b>Tệp đính kèm:</b> ' + esc(text(item,['attachmentName'])) + '<br><b>Thời gian:</b> ' + esc(date(item)) + '<br><b>Trạng thái xử lý:</b> ' + esc(status(item)) + '<br><b>Trạng thái xác nhận:</b> ' + esc(text(item,['acknowledgementStatus'])) + '<br><b>Sync Job ID:</b> ' + esc(syncJobId);
+        $('emailDetailMeta').innerHTML = '<b>Người gửi:</b> ' + esc(text(item,['sender','from','senderEmail'])) + '<br><b>Tệp đính kèm:</b> ' + esc(fileName) + '<br><b>Thời gian:</b> ' + esc(date(item)) + '<br><b>Trạng thái xử lý:</b> ' + esc(status(item)) + '<br><b>Trạng thái xác nhận:</b> ' + esc(text(item,['acknowledgementStatus'])) + '<br><b>Sync Job ID:</b> ' + esc(syncJobId);
         $('emailDetailBody').textContent = text(item,['body','content','message','text','html']) || JSON.stringify(item, null, 2);
+        downloadLink.removeAttribute('href');
+        downloadLink.classList.add('is-disabled');
+        downloadLink.setAttribute('aria-disabled', 'true');
+        if (fileUrl) {
+            downloadLink.href = fileUrl;
+            downloadLink.classList.remove('is-disabled');
+            downloadLink.removeAttribute('aria-disabled');
+            downloadLink.title = fileUrl;
+        } else {
+            downloadLink.title = 'JSON email thiếu ngày hoặc tên file.';
+        }
         permissionLink.removeAttribute('href');
         permissionLink.classList.add('is-disabled');
         permissionLink.setAttribute('aria-disabled', 'true');
