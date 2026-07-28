@@ -17,10 +17,25 @@
         .tblSource {
             overflow: auto;
         }
-        thead th {
-            position: sticky;
-            z-index: 0;
+        /* Freeze nguyen khoi thead: nen duc + z-index cao de du lieu than khong lot len hang tieu de khi cuon. */
+        #tblSource > thead {
+            position: sticky !important;
             top: 0;
+            z-index: 40;
+            background: #fff;
+            box-shadow: 0 2px 0 rgba(31, 105, 154, .18);
+        }
+
+        #tblSource > thead > tr:first-child > th {
+            position: static !important;
+            background: #f7fbff !important;
+            background-clip: padding-box !important;
+        }
+
+        #tblSource > thead > tr:nth-child(2) > th {
+            position: static !important;
+            background: #337ab7 !important;
+            background-clip: padding-box !important;
         }
         .cssTrung {
             color: seagreen !important;
