@@ -231,10 +231,8 @@
         </select>
 
         <select id="ddlAcceptedStatus" class="military-accepted-filter" aria-label="Trạng thái Accepted"
-            onchange="reportAcceptedStatus_OnChange();">
-            <option value="0">CHƯA ACCEPTED</option>
-            <option value="1">ĐÃ ACCEPTED</option>
-            <option value="-1">TẤT CẢ</option>
+            disabled="disabled" title="Báo cáo chỉ hiển thị các chuyến bay đã Accepted">
+            <option value="1" selected="selected">ĐÃ ACCEPTED</option>
         </select>
 
         <select id="ddlPageSize" class="disabled" style="width: 65px;" onchange="btnSearch_OnClick();">
@@ -879,7 +877,8 @@
             _obj['P_ETD'] = $.trim($('#txtETD').val());
             _obj['P_ATA'] = $.trim($('#txtATA').val());
             _obj['P_ATD'] = $.trim($('#txtATD').val());
-            _obj['P_ISACCEPTED'] = parseInt($('#ddlAcceptedStatus').val(), 10);
+            // Trang báo cáo chỉ hiển thị các chuyến bay đã Accepted.
+            _obj['P_ISACCEPTED'] = 1;
             _obj['P_STARTDATE'] = $('#txtFromDate').val();
             _obj['P_FINISHDATE'] = $('#txtToDate').val();
             _obj['P_KHUNGGIO1'] = $('#txtFromTime').val();
@@ -1340,10 +1339,6 @@
             return true;
         }
 
-        function reportAcceptedStatus_OnChange() {
-            btnSearch_OnClick();
-        }
-
         function btnExportexcel_OnClick() {
             if (!validateReportDateRange()) {
                 return;
@@ -1473,7 +1468,7 @@
             $('#txtFPLVia').val('');
             ddlTime_ID.selectedIndex = 0;
             ddlPageSize.selectedIndex = 0;
-            $('#ddlAcceptedStatus').val('0');
+            $('#ddlAcceptedStatus').val('1');
             document.getElementById("txtFromTime").disabled = 'true';
             document.getElementById("txtToTime").disabled = 'true';
             document.getElementById("txtFromTime").value = '0000';
