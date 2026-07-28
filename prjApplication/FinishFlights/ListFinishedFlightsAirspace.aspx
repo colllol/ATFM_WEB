@@ -114,6 +114,7 @@
         }
 
         #airspaceTotal {
+            display: none;
             min-width: 85px;
             font-weight: 700;
         }
