@@ -53,6 +53,21 @@
             width: 100%;
         }
 
+        #tblSource th:last-child,
+        #tblSource td:last-child {
+            width: 100px !important;
+            min-width: 100px;
+        }
+
+        #tblSource input[id$="txtSearchUser"] {
+            display: block;
+            width: calc(100% - 12px) !important;
+            height: 34px;
+            margin: 0 6px;
+            padding: 6px 8px;
+            box-sizing: border-box;
+        }
+
         input, textarea {
             text-transform: uppercase;
         }
