@@ -683,7 +683,6 @@
     <script src="../Scripts/spectrum.js"></script>
     <script src="../Style/assets/js/ace-elements.min.js"></script>
     <script src="../Style/assets/js/ace.min.js"></script>
-    <script src="../Scripts/tableHeadFixer.js"></script>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script>
         var d = new Date();
