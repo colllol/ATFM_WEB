@@ -242,7 +242,7 @@
             Add New</button>
         <button type="button" id="btnUpdateAll" class="btn btn-sm btn-primary" style="width: 100px" onclick="btnInsertList_Onclick()">
             Update All</button>
-        <label class="radio-inline">
+        <label class="radio-inline" style="display: none;">
             <span id="totalsfinished">Tổng số : <b>0</b></span></label>
         <!--
 
