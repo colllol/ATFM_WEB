@@ -18,10 +18,10 @@
     function date(item) { return text(item, ['receivedAt','sentAt','createdAt','date','emailDate','created_at','timestamp']); }
     function dateKey(value) { var match = String(value || '').match(/(20\d\d)[-\/]?(\d\d)[-\/]?(\d\d)/); return match ? match[1] + '-' + match[2] + '-' + match[3] : ''; }
     function attachmentName(item) {
-        var name = text(item, ['attachmentName','fileName','filename','attachmentFileName','storedFileName']);
+        var name = text(item, ['storedFileName']);
         var attachments = item && item.attachments;
         if (!name && Array.isArray(attachments) && attachments.length)
-            name = typeof attachments[0] === 'string' ? attachments[0] : text(attachments[0], ['fileName','filename','name','attachmentName','storedFileName']);
+            name = typeof attachments[0] === 'string' ? attachments[0] : text(attachments[0], ['storedFileName']);
         return name;
     }
     function downloadUrl(item) {
