@@ -238,7 +238,7 @@
             border-color: #2388c6;
             box-shadow: 0 0 0 3px rgba(35, 136, 198, .14);
         }
-        #abcxyz > .finished-date-picker { width: 145px !important; }
+        #abcxyz > .finished-date-picker { width: 125px !important; }
         #abcxyz > .finished-date-value { display: none !important; }
         #abcxyz > .finished-time-input { width: 58px !important; }
         #abcxyz > select { min-width: 82px; }
@@ -284,22 +284,58 @@
             position: sticky !important;
             top: 0;
             z-index: 40;
-            background: #fff;
+            background: #fffffff1;
             box-shadow: 0 2px 0 rgba(31, 105, 154, .18);
         }
-        #tblSource > thead > tr:first-child > th {
+        /* #tblSource > thead > tr:first-child > th {
             position: static !important;
             height: 38px;
-            background: #f7fbff !important;
+            z-index: 30;
+            background: #f5f5f5 !important;
             background-clip: padding-box !important;
             border-radius: 0 !important;
         }
         #tblSource > thead > tr:nth-child(2) > th {
             position: static !important;
             height: 35px;
-            background: #337ab7 !important;
+            background: #337fb5 !important;
+            z-index: 29;
+            color: white;
             background-clip: padding-box !important;
             border-radius: 0 !important;
+        } */
+         /* Hàng tiêu đề thứ nhất */
+        #tblSource > thead > tr:first-child > th {
+            position: sticky !important;
+            top: 0;
+            height: 38px;
+
+            z-index: 40;
+
+            background: #f5f5f5 !important;
+            background-clip: padding-box !important;
+            border-radius: 0 !important;
+        }
+
+        /* Hàng tiêu đề thứ hai */
+        #tblSource > thead > tr:nth-child(2) > th {
+            position: sticky !important;
+
+            /* Bằng chiều cao của hàng tiêu đề thứ nhất */
+            top: 38px;
+
+            height: 35px;
+            z-index: 39;
+
+            background: #337fb5 !important;
+            background-clip: padding-box !important;
+            color: white;
+            border-radius: 0 !important;
+        }
+
+        /* Tạo đường bóng dưới toàn bộ phần tiêu đề */
+        #tblSource > thead > tr:nth-child(2) > th {
+            box-shadow: 0 2px 0 rgba(31, 105, 154, 0.18);
         }
         #tblSource input[type="text"] {
             display: block;

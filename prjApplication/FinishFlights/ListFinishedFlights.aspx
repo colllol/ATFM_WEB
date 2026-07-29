@@ -200,7 +200,7 @@
             box-shadow: 0 2px 0 rgba(31, 105, 154, .18);
         }
 
-        #tblSource > thead > tr:first-child > th {
+        /* #tblSource > thead > tr:first-child > th {
             position: static !important;
             height: 30px;
             background: #f7fbff !important;
@@ -209,7 +209,7 @@
         }
 
         /* Ô input lọc trên hàng header đầu phải thấp hơn hàng thân để 2 hàng tiêu đề sát nhau. */
-        #tblSource > thead > tr:first-child > th input[type="text"] {
+        /* #tblSource > thead > tr:first-child > th input[type="text"] {
             height: 28px;
         }
 
@@ -219,6 +219,40 @@
             background: #337ab7 !important;
             background-clip: padding-box !important;
             border-radius: 0 !important;
+        } */ 
+
+                /* Hàng tiêu đề thứ nhất */
+        #tblSource > thead > tr:first-child > th {
+            position: sticky !important;
+            top: 0;
+            height: 38px;
+
+            z-index: 40;
+
+            background: #f5f5f5 !important;
+            background-clip: padding-box !important;
+            border-radius: 0 !important;
+        }
+
+        /* Hàng tiêu đề thứ hai */
+        #tblSource > thead > tr:nth-child(2) > th {
+            position: sticky !important;
+
+            /* Bằng chiều cao của hàng tiêu đề thứ nhất */
+            top: 38px;
+
+            height: 35px;
+            z-index: 39;
+
+            background: #337fb5 !important;
+            background-clip: padding-box !important;
+            color: white;
+            border-radius: 0 !important;
+        }
+
+        /* Tạo đường bóng dưới toàn bộ phần tiêu đề */
+        #tblSource > thead > tr:nth-child(2) > th {
+            box-shadow: 0 2px 0 rgba(31, 105, 154, 0.18);
         }
 
         #tblSource input[type="text"] {

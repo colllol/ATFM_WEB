@@ -9,7 +9,33 @@
         #tblSource input, select {
             color: black;
         }
-
+        .table-container
+        {
+            max-height: 500px;
+            overflow: auto;
+            position: relative;
+        }
+        #tblSource {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        /* Hàng 1 */
+        #tblSource thead tr:first-child th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            height: 38px;
+            background: #f5f5f5;
+        }
+        /* Hàng 2 */
+        #tblSource thead tr:nth-child(2) th {
+            position: sticky;
+            top: 38px; /* bằng chiều cao hàng 1 */
+            z-index: 19;
+            height: 35px;
+            background: #337fb5;
+            color: white;
+        }
         .table > thead > tr {
             background-color: rgb(65, 142, 214);
             background-image: none;
