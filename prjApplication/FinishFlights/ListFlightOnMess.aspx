@@ -318,7 +318,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td colspan="17" class="message-flight-empty">Nhấn Search để tải dữ liệu.</td></tr>
+                    <tr><td colspan="14" class="message-flight-empty">Nhấn Search để tải dữ liệu.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -441,7 +441,7 @@
             $('#btnSearchMessageFlights, #btnExportMessageFlights').prop('disabled', loading);
             if (loading) {
                 $('#tblMessageFlights tbody').html(
-                    '<tr><td colspan="17" class="message-flight-loading">Đang tải dữ liệu...</td></tr>'
+                    '<tr><td colspan="14" class="message-flight-loading">Đang tải dữ liệu...</td></tr>'
                 );
             }
         }
@@ -449,7 +449,7 @@
         function renderMessageFlightRows(rows) {
             if (!rows || rows.length === 0) {
                 $('#tblMessageFlights tbody').html(
-                    '<tr><td colspan="17" class="message-flight-empty">Không có chuyến bay phù hợp.</td></tr>'
+                    '<tr><td colspan="14" class="message-flight-empty">Không có chuyến bay phù hợp.</td></tr>'
                 );
                 return;
             }
@@ -525,7 +525,7 @@
                     console.error('[GET_FLIGHTS_ON_MESSAGE] API error:', data);
                     messageFlightTotalRecords = 0;
                     $('#tblMessageFlights tbody').html(
-                        '<tr><td colspan="17" class="message-flight-empty">'
+                        '<tr><td colspan="14" class="message-flight-empty">'
                         + escapeMessageFlightHtml(apiMessage)
                         + '</td></tr>'
                     );
