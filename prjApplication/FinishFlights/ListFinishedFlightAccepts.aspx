@@ -103,12 +103,27 @@
             text-overflow: ellipsis;
         }
 
-        #tblSource th:nth-child(1), #tblSource td:nth-child(1) { width: 3%; }
+        /* No + checkbox + cột thao tác: rất hẹp. */
+        #tblSource th:nth-child(1), #tblSource td:nth-child(1) { width: 2.5%; }
         #tblSource th:nth-child(2), #tblSource td:nth-child(2) { width: 2.5%; }
+        #tblSource th:nth-child(21), #tblSource td:nth-child(21) { width: 3%; }
+        /* Cột ít ký tự (mã, giờ): thu hẹp. */
+        #tblSource th:nth-child(3), #tblSource td:nth-child(3),
+        #tblSource th:nth-child(6), #tblSource td:nth-child(6),
+        #tblSource th:nth-child(7), #tblSource td:nth-child(7),
+        #tblSource th:nth-child(9), #tblSource td:nth-child(9),
+        #tblSource th:nth-child(10), #tblSource td:nth-child(10),
+        #tblSource th:nth-child(11), #tblSource td:nth-child(11),
+        #tblSource th:nth-child(13), #tblSource td:nth-child(13),
+        #tblSource th:nth-child(14), #tblSource td:nth-child(14),
+        #tblSource th:nth-child(19), #tblSource td:nth-child(19),
+        #tblSource th:nth-child(20), #tblSource td:nth-child(20) { width: 4%; }
+        /* Cột ngày: vừa đủ hiện dd-mm-yyyy. */
+        #tblSource th:nth-child(12), #tblSource td:nth-child(12) { width: 6%; }
+        /* Cột nội dung dài. */
         #tblSource th:nth-child(15), #tblSource td:nth-child(15),
         #tblSource th:nth-child(16), #tblSource td:nth-child(16),
         #tblSource th:nth-child(17), #tblSource td:nth-child(17) { width: 6.5%; }
-        #tblSource th:nth-child(21), #tblSource td:nth-child(21) { width: 3%; }
 
         .export-popup-backdrop {
             position: fixed;
@@ -194,8 +209,7 @@
     </style>
     <style>
         /* Đồng bộ bố cục bộ lọc với ListFinishedFlights.aspx. */
-        #abcxyz {
-            display: block !important;
+        .finished-filter-card {
             margin-bottom: 14px;
             padding: 0 !important;
             overflow: hidden;
@@ -203,67 +217,106 @@
             border-radius: 12px;
             background: #fff;
             box-shadow: 0 7px 20px rgba(24, 78, 117, .10);
-            text-align: left !important;
         }
-        #abcxyz::before {
-            content: "BỘ LỌC VÀ THAO TÁC CHUYẾN BAY";
-            display: block;
+
+        .finished-filter-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
             padding: 11px 15px;
             border-bottom: 1px solid #d7e5ef;
             background: linear-gradient(100deg, #e7f4fd 0%, #f8fcff 58%, #eef7fc 100%);
             color: #155f94;
             font-size: 15px;
             font-weight: 700;
+            text-align: left;
         }
-        #abcxyz > b {
-            display: inline-block;
-            margin: 14px 4px 6px 15px;
+
+        .finished-filter-title i { font-size: 17px; }
+        .finished-filter-body {
+            display: grid;
+            grid-template-columns: repeat(18, minmax(0, 1fr));
+            gap: 11px 12px;
+            width: 100%;
+            padding: 14px 15px 12px;
+        }
+
+        .finished-filter-field { grid-column: span 2; min-width: 0; text-align: left; }
+        .finished-filter-field.finished-date { grid-column: span 3; }
+        .finished-filter-field.finished-airport { grid-column: span 2; }
+        .finished-filter-field.finished-page-size { grid-column: span 1; }
+        .finished-time-field select {
+            border-color: #7db9d8;
+            background: linear-gradient(180deg, #f5fcff 0%, #e1f3fc 100%);
+            color: #145b86;
+            font-weight: 700;
+        }
+        .finished-time-field select:hover { background: #d9effb; }
+        .finished-filter-label {
+            display: block;
+            margin: 0 0 5px;
             color: #315a77;
             font-size: 11px;
+            font-weight: 700;
             letter-spacing: .25px;
         }
-        #abcxyz > input,
-        #abcxyz > select {
+
+        .finished-date-group { display: grid; grid-template-columns: minmax(105px, 1fr) 62px; gap: 6px; }
+        .finished-date-picker { min-width: 0; }
+        .finished-date-value { display: none !important; }
+        .finished-filter-card input[type="text"],
+        .finished-filter-card input[type="date"],
+        .finished-filter-card select {
+            width: 100% !important;
             height: 36px;
-            margin: 0 3px 6px 0;
             padding: 6px 9px;
             border: 1px solid #9dc3dc;
             border-radius: 7px;
             background: #fff;
             color: #173b59;
             outline: none;
+            transition: border-color .18s ease, box-shadow .18s ease;
         }
-        #abcxyz > input:focus,
-        #abcxyz > select:focus {
+
+        .finished-filter-card input[type="text"]:focus,
+        .finished-filter-card input[type="date"]:focus,
+        .finished-filter-card select:focus {
             border-color: #2388c6;
             box-shadow: 0 0 0 3px rgba(35, 136, 198, .14);
         }
-        #abcxyz > .finished-date-picker { width: 125px !important; }
-        #abcxyz > .finished-date-value { display: none !important; }
-        #abcxyz > .finished-time-input { width: 58px !important; }
-        #abcxyz > select { min-width: 82px; }
-        #abcxyz > br { display: none; }
-        #abcxyz > #lit { display: none; }
-        #abcxyzd {
-            display: flex !important;
+
+        .finished-filter-actions {
+            display: flex;
             align-items: center;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 14px;
-            padding: 11px 15px 13px !important;
-            border: 1px solid #c8ddeb;
-            border-radius: 10px;
+            width: 100%;
+            padding: 11px 15px 13px;
+            border-top: 1px solid #e0ebf2;
             background: #f8fbfd;
-            text-align: left !important;
+            text-align: left;
         }
-        #abcxyzd .btn {
-            width: auto !important;
-            min-width: 100px;
-            height: 36px;
-            border-radius: 7px;
-            font-weight: 600;
+
+        .finished-filter-actions .btn { width: auto !important; min-width: 100px; height: 36px; border-radius: 7px; font-weight: 600; }
+        .finished-filter-actions .btn i { margin-right: 5px; }
+        .finished-search-button { margin-left: auto; min-width: 108px !important; }
+
+        @media (max-width: 767px) {
+            .finished-filter-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .finished-filter-field, .finished-filter-field.finished-date,
+            .finished-filter-field.finished-airport, .finished-filter-field.finished-page-size { grid-column: span 1; }
+            .finished-filter-actions .btn { flex: 1 1 145px; }
+            .finished-search-button { margin-left: 0; }
         }
-        #abcxyzd .btn i { margin-right: 5px; }
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .finished-filter-body { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+            .finished-filter-field { grid-column: span 3; }
+            .finished-filter-field.finished-date { grid-column: span 4; }
+            .finished-filter-field.finished-airport { grid-column: span 3; }
+            .finished-filter-field.finished-page-size { grid-column: span 2; }
+        }
         #tblSource {
             width: 100% !important;
             table-layout: fixed;
@@ -347,7 +400,9 @@
             border: 0 !important;
             border-radius: 0 !important;
             box-shadow: none !important;
+            box-sizing: border-box;
             font-size: inherit;
+            text-align: center;
         }
         #tblSource tbody td { height: 34px; }
         @media (max-width: 767px) {
@@ -355,84 +410,91 @@
             #abcxyzd .btn { flex: 1 1 145px; }
         }
     </style>
-    <div id="abcxyz" class="well well-sm">
-        <b>TỪ NGÀY :</b>
-        <input id="txtFromDatePicker" type="date" class="finished-date-picker" aria-label="Ngày bắt đầu" />
-        <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select date" class="finished-date-value" />
-        <input id="txtFromTime" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select time" class="finished-time-input wid_50px" maxlength='4' data-number='true' value="0000" />
-        <b>ĐẾN NGÀY :</b>
-        <input id="txtToDatePicker" type="date" class="finished-date-picker" aria-label="Ngày kết thúc" />
-        <input id="txtToDate" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select date" class="finished-date-value" />
-        <input id="txtToTime" data-minlenght="1" data-control="checkAccess" type="text"
-            placeholder="select time" class="finished-time-input wid_50px" maxlength='4' data-number='true' value="2359" />
-        <b>GIỜ :</b>
-        <select id="ddlTime" class="disabled" style="width: 70px;" onchange="ddlTime_Change();">
+    <div id="abcxyz" class="finished-filter-card">
+        <div class="finished-filter-title"><i class="fa fa-filter"></i> BỘ LỌC VÀ THAO TÁC CHUYẾN BAY</div>
+        <div class="finished-filter-body">
+        <div class="finished-filter-field finished-date">
+            <label class="finished-filter-label" for="txtFromDate">TỪ NGÀY / GIỜ</label>
+            <div class="finished-date-group">
+                <input id="txtFromDatePicker" type="date" class="finished-date-picker" aria-label="Ngày bắt đầu" />
+                <input id="txtFromDate" data-minlenght="1" data-control="checkAccess" type="text"
+                    class="finished-date-value" />
+                <input id="txtFromTime" data-minlenght="1" data-control="checkAccess" type="text"
+                    placeholder="HHMM" class="wid_50px" maxlength='4' data-number='true' value="0000" />
+            </div>
+        </div>
+        <div class="finished-filter-field finished-date">
+            <label class="finished-filter-label" for="txtToDate">ĐẾN NGÀY / GIỜ</label>
+            <div class="finished-date-group">
+                <input id="txtToDatePicker" type="date" class="finished-date-picker" aria-label="Ngày kết thúc" />
+                <input id="txtToDate" data-minlenght="1" data-control="checkAccess" type="text"
+                    class="finished-date-value" />
+                <input id="txtToTime" data-minlenght="1" data-control="checkAccess" type="text"
+                    placeholder="HHMM" class="wid_50px" maxlength='4' data-number='true' value="2359" />
+            </div>
+        </div>
+        <div class="finished-filter-field finished-time-field">
+        <label class="finished-filter-label" for="ddlTime">LOẠI GIỜ</label>
+        <select id="ddlTime" class="disabled" onchange="ddlTime_Change();">
             <option value="0">-All-</option>
             <option value="1">ETD</option>
             <option value="2">ETA</option>
             <option value="3">ATD</option>
             <option value="4">ATA</option>
         </select>
-        <b>HÃNG :</b>
-        <select id="ddlSelect" class="disabled" style="width: 90px;">
+        </div>
+        <div class="finished-filter-field">
+        <label class="finished-filter-label" for="ddlSelect">HÃNG KHAI THÁC</label>
+        <select id="ddlSelect" class="disabled">
             <option value="0">-All-</option>
             <option value="1">QN</option>
             <option value="2">QT</option>
         </select>
-
-        <br />
-        <br />
-
-        <b>LOẠI CHUYẾN :</b>
-        <select id="ddlType" class="disabled" style="width: 90px;">
+        </div>
+        <div class="finished-filter-field">
+        <label class="finished-filter-label" for="ddlType">LOẠI CHUYẾN BAY</label>
+        <select id="ddlType" class="disabled">
             <option value="0">-All-</option>
             <option value="1">QN</option>
             <option value="2">QT</option>
         </select>
-        <b>FIR :</b>
-        <select id="ddlFir" class="disabled" style="width: 65px;">
+        </div>
+        <div class="finished-filter-field">
+        <label class="finished-filter-label" for="ddlFir">FIR</label>
+        <select id="ddlFir" class="disabled">
             <option value="0">-ALL-</option>
             <option value="1">HN</option>
             <option value="2">HCM</option>
         </select>
-        <b>SÂN BAY :</b>
+        </div>
+        <div class="finished-filter-field finished-airport">
+        <label class="finished-filter-label" for="txtFromAir">SÂN BAY</label>
         <input id="txtFromAir" data-control="checkAccess" type="text"
-            placeholder="AIR PORT" class="wid_100px" />
-        
-        <b>SỐ DÒNG :</b>
-        <select id="ddlPageSize" class="disabled" style="width: 65px;">
+            placeholder="MÃ SÂN BAY" class="wid_100px" />
+        </div>
+        <div class="finished-filter-field finished-page-size">
+        <label class="finished-filter-label" for="ddlPageSize">SỐ DÒNG</label>
+        <select id="ddlPageSize" class="disabled">
             <option value="100">100</option>
             <option value="500">500</option>
             <option value="1000">1000</option>
-            <option value="2000">2000</option>            
+            <option value="2000">2000</option>
             <option value="4000">4000</option>
             <option value="6000">6000</option>
             <option value="8000">8000</option>
         </select>
+        </div>
+        </div>
+        <div id="abcxyzd" class="finished-filter-actions">
+        <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-refresh"></i>UPDATE</button>
+        <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-danger" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash"></i>DELETE</button>
+        <button type="button" id="btnClearSearch" class="btn btn-sm btn-default" onclick="btnClearValue_OnClick()"><i class="fa fa-eraser"></i>CLEAR SREACH</button>
+        <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
+        <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
+        <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>EXPORT BRAVO</button>
+        <button type="button" id="btnSearch" class="btn btn-sm btn-primary finished-search-button" onclick="btnSearch_OnClick()"><i class="fa fa-search"></i>SREACH</button>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
-    </div>
-    <div id="abcxyzd" class="well well-sm" style="text-align: left;">       
-        <button type="button" id="btnSearch" class="btn btn-sm btn-primary" onclick="btnSearch_OnClick()">
-            <i class="fa fa-search"></i> SEARCH</button>
-        <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" style="width: 90px" onclick="btnUpdateList_Onclick()">
-            <i class="fa fa-refresh"></i> UPDATE</button>
-        <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-primary" style="width: 90px" onclick="btnDeleteByChecked_Onclick()">
-            <i class="fa fa-trash"></i> DELETE</button>
-        <!--<button type="button" id="btnMove55" class="btn btn-sm btn-primary" style="width: 90px" onclick="myFunction()">
-            Sort</button>-->
-        <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" style="width: 120px" onclick="btnClearValue_OnClick()">
-            <i class="fa fa-eraser"></i> CLEAR SEARCH</button>
-
-        <button type="button" id="btnExport" class="btn btn-sm btn-primary"  style="width: 135px" onclick="openExportPopup('finished')">
-            EXPORT EXCEL</button>
-        
-          <button type="button" id="btnExport80" class="btn btn-sm btn-primary" style="width: 175px" onclick="openExportPopup('cancel')">
-            EXPORT EXCEL CANCEL</button>
-				<button type="button" id="btnExport801" class="btn btn-sm btn-primary" style="width: 135px" onclick="ExportBravo()">
-            EXPORT BRAVO</button>
+        </div>
     </div>
 
     <div id="exportPopupBackdrop" class="export-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="exportPopupTitle">

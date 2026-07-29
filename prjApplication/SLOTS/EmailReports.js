@@ -68,7 +68,7 @@
         var permissionMessage = $('emailPermissionMessage');
         var requestId = ++detailRequestId;
         $('emailDetailSubject').textContent = subject;
-        $('emailDetailMeta').innerHTML = '<b>Người gửi:</b> ' + esc(text(item,['sender','from','senderEmail'])) + '<br><b>Tệp đính kèm:</b> ' + esc(fileName) + '<br><b>Thời gian:</b> ' + esc(date(item)) + '<br><b>Trạng thái xử lý:</b> ' + esc(status(item)) + '<br><b>Trạng thái xác nhận:</b> ' + esc(text(item,['acknowledgementStatus'])) + '<br><b>Sync Job ID:</b> ' + esc(syncJobId);
+        $('emailDetailMeta').innerHTML = '<b>Người gửi:</b> ' + esc(text(item,['sender','from','senderEmail'])) + '<br><b>Tệp đính kèm:</b> ' + esc(fileName) + '<br><b>Thời gian:</b> ' + esc(date(item)) + '<br><b>Trạng thái xử lý:</b> ' + esc(status(item)) + '<br><b>Trạng thái xác nhận:</b> ' + esc(text(item,['acknowledgementStatus'])) + '<br><b>Thông báo lỗi:</b> ' + esc(text(item,['errorMessage'])) + '<br><b>Sync Job ID:</b> ' + esc(syncJobId);
         $('emailDetailBody').textContent = text(item,['body','content','message','text','html']) || JSON.stringify(item, null, 2);
         downloadLink.removeAttribute('href');
         downloadLink.classList.add('is-disabled');

@@ -140,10 +140,33 @@
         layouts.push({ layout: layout, container: container, controls: null });
     }
 
+    // Nhận diện nội dung ngày/giờ để giữ trên 1 dòng (không wrap).
+    var DATE_PATTERN = /^\s*\d{1,4}[\/\-.]\d{1,2}([\/\-.]\d{1,4})?(\s+\d{1,2}:\d{2}(:\d{2})?)?\s*$|^\s*\d{1,2}:\d{2}(:\d{2})?\s*$/;
+
+    // Bọc nội dung chỉ-văn-bản của ô vào <span> để căn giữa + kẹp 2 dòng bằng CSS.
+    // Bỏ qua ô có phần tử con (input, nút, link, select...) để không phá cấu trúc lọc/nút.
+    function enhanceCells(table) {
+        var cells = table.querySelectorAll('tbody > tr > td, tbody > tr > th');
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            if (cell.children.length !== 0) continue;
+            var raw = cell.textContent;
+            if (raw == null || raw.replace(/\s+/g, '') === '') continue;
+
+            var span = document.createElement('span');
+            span.className = 'atfm-cell-text';
+            if (DATE_PATTERN.test(raw)) span.className += ' atfm-cell-nowrap';
+            span.textContent = raw;
+            cell.textContent = '';
+            cell.appendChild(span);
+        }
+    }
+
     function refreshLayout(item) {
         if (!document.documentElement.contains(item.container)) return false;
         var table = item.container.querySelector('table');
         if (!table) return false;
+        enhanceCells(table);
 
         var containerTop = item.container.getBoundingClientRect().top;
         var availableHeight = window.innerHeight - Math.max(0, containerTop) - 86;
