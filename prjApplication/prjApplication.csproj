@@ -694,6 +694,7 @@
     <Content Include="FinishFlights\FinishedFlightsV3.aspx" />
     <Content Include="FinishFlights\ListFinishedFlights.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightAccepts.aspx" />
+    <Content Include="FinishFlights\ListFlightOnMess.aspx" />
     <Content Include="FinishFlights\ListVia.aspx" />
     <Content Include="FinishFlights\NotCompletedFlights.aspx" />
     <Content Include="FlightManagement\EmergencyFlight.aspx" />
@@ -2312,6 +2313,13 @@
     </Compile>
     <Compile Include="FinishFlights\ListFinishedFlights.aspx.designer.cs">
       <DependentUpon>ListFinishedFlights.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="FinishFlights\ListFlightOnMess.aspx.cs">
+      <DependentUpon>ListFlightOnMess.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FinishFlights\ListFlightOnMess.aspx.designer.cs">
+      <DependentUpon>ListFlightOnMess.aspx</DependentUpon>
     </Compile>
     <Compile Include="FinishFlights\ListVia.aspx.cs">
       <DependentUpon>ListVia.aspx</DependentUpon>
