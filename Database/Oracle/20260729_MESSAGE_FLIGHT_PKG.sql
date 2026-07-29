@@ -112,6 +112,11 @@ CREATE OR REPLACE PACKAGE BODY MESSAGE_FLIGHT_PKG AS
                   AND UPPER(PM.MESS_TYPE) = v_mess_type
                   AND
                   (
+                      PM.CONTENT IS NULL
+                      OR INSTR(UPPER(PM.CONTENT), 'THONG BAO') = 0
+                  )
+                  AND
+                  (
                       NVL(P_PART_NO, 0) = 0
                       OR PM.PART_NO = P_PART_NO
                   )
