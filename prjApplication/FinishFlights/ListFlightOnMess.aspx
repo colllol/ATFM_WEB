@@ -47,7 +47,46 @@
             text-transform: uppercase;
         }
 
-        #txtMessageDate { width: 118px; }
+        .message-flight-date-control {
+            position: relative;
+            display: flex;
+            width: 118px;
+        }
+
+        #txtMessageDate {
+            width: 88px;
+            border-radius: 5px 0 0 5px;
+        }
+
+        #btnMessageDatePicker {
+            width: 30px;
+            height: 34px;
+            padding: 0;
+            border: 1px solid #b9d3e7;
+            border-left: 0;
+            border-radius: 0 5px 5px 0;
+            color: #15527f;
+            background: #fff;
+        }
+
+        #btnMessageDatePicker:hover,
+        #btnMessageDatePicker:focus {
+            color: #fff;
+            background: #337ab7;
+        }
+
+        #nativeMessageDatePicker {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            border: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
         #ddlMessageType { width: 160px; }
         #ddlThongBaoMode { width: 178px; }
         #txtFromAir, #txtToAir, #txtOper { width: 82px; }
@@ -167,7 +206,13 @@
         <div class="message-flight-filter">
             <div class="message-flight-field">
                 <label for="txtMessageDate">Ngày điện văn</label>
-                <input id="txtMessageDate" type="text" maxlength="10" placeholder="DD-MM-YYYY" />
+                <div class="message-flight-date-control">
+                    <input id="txtMessageDate" type="text" maxlength="10" placeholder="DD-MM-YYYY" />
+                    <button type="button" id="btnMessageDatePicker" title="Chọn ngày điện văn" aria-label="Chọn ngày điện văn" onclick="openMessageDatePicker()">
+                        <i class="fa fa-calendar"></i>
+                    </button>
+                    <input id="nativeMessageDatePicker" type="date" tabindex="-1" aria-hidden="true" />
+                </div>
             </div>
 
             <div class="message-flight-field">
@@ -315,6 +360,30 @@
             }
 
             return date;
+        }
+
+        function syncNativeMessageDatePicker() {
+            var date = parseMessageDate($('#txtMessageDate').val());
+            if (!date) return;
+
+            var year = date.getFullYear();
+            var month = ('0' + (date.getMonth() + 1)).slice(-2);
+            var day = ('0' + date.getDate()).slice(-2);
+            $('#nativeMessageDatePicker').val(year + '-' + month + '-' + day);
+        }
+
+        function openMessageDatePicker() {
+            syncNativeMessageDatePicker();
+
+            var picker = document.getElementById('nativeMessageDatePicker');
+            if (!picker) return;
+
+            if (typeof picker.showPicker === 'function') {
+                picker.showPicker();
+            } else {
+                picker.focus();
+                picker.click();
+            }
         }
 
         function formatMessageFlightDate(value) {
@@ -609,6 +678,16 @@
             $('#txtMessageDate').val(
                 queryDate || dateFormat(new Date(), 'dd-mm-yyyy')
             ).multiDate();
+
+            syncNativeMessageDatePicker();
+            $('#nativeMessageDatePicker').on('change', function () {
+                var parts = String(this.value || '').split('-');
+                if (parts.length !== 3) return;
+
+                $('#txtMessageDate').val(
+                    parts[2] + '-' + parts[1] + '-' + parts[0]
+                ).trigger('change');
+            });
 
             if (queryType) {
                 var existingType = $('#ddlMessageType option').filter(function () {
