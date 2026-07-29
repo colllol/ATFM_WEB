@@ -60,6 +60,20 @@ namespace prjBusinessLogic
         {
             return new clsResuftAPI().GetTableHistory("api/DayFlights/GetHistoryById", id);
         }
+        public System.Data.DataTable GetPermissionByFlightId(string id)
+        {
+            return new clsResuftAPI().GetTableObj(
+                "api/DayFlights/GetPermBy?ID=" +
+                Uri.EscapeDataString(id ?? string.Empty));
+        }
+        public System.Data.DataTable GetPermissionLinkFiles(string id, string permType)
+        {
+            return new clsResuftAPI().GetTableObj(
+                "api/DayFlights/GetLinkFile?id=" +
+                Uri.EscapeDataString(id ?? string.Empty) +
+                "&permtype=" +
+                Uri.EscapeDataString(permType ?? string.Empty));
+        }
         public bool RestoreRecode(string id, string version, string idUser)
         {
             return new clsResuftAPI().RestoreRecord("api/DayFlights/RestoreHis", id, version, idUser);
