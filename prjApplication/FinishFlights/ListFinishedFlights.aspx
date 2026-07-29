@@ -494,7 +494,8 @@
         <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-refresh"></i>UPDATE</button>
         <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-danger" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash"></i>DELETE</button>
         <button type="button" id="btnClearSearch" class="btn btn-sm btn-default" onclick="btnClearValue_OnClick()"><i class="fa fa-eraser"></i>CLEAR SREACH</button>
-        <button type="button" id="btnAccepted" class="btn btn-sm btn-success" onclick="btnAcceptVisible_Onclick()"><i class="fa fa-check"></i>ACCEPTED</button>
+        <button type="button" id="btnAccepted" class="btn btn-sm btn-success" onclick="btnAcceptVisible_Onclick('finished')"><i class="fa fa-check"></i>ACCEPTED</button>
+        <button type="button" id="btnAcceptedCancel" class="btn btn-sm btn-success" onclick="btnAcceptVisible_Onclick('cancel')" style="display:none;"><i class="fa fa-check"></i>ACCEPTED</button>
         <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')" hidden aria-hidden="true" style="display:none !important;"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
         <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')" hidden aria-hidden="true" style="display:none !important;"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
         <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()" hidden aria-hidden="true" style="display:none !important;"><i class="fa fa-download"></i>EXPORT BRAVO</button>
@@ -751,7 +752,7 @@
             var stt = parseInt(((idx - 1) * pz) + 1);
             if (data.ListValue == null) return '';
             $.each(data.ListValue, function (a, b) {
-                kq += "<tr>"                    
+                kq += "<tr>"
                     + "<td>" + stt + "</td>"
                     + "<td></td>"
                     + "<td style=\'text-align: center;\'>" + returnEmpty(b.OPER_ID) + "</td>"
@@ -789,7 +790,7 @@
             var stt = parseInt(((idx - 1) * pz) + 1);
             if (data.ListValue == null) return '';
             $.each(data.ListValue, function (a, b) {
-                kq += "<tr>"
+                kq += "<tr id='" + b.FLIGHT_ID + "' data-isUpdate='false'>"
                    
                     + "<td>" + stt + "</td>"
                     + "<td></td>"
@@ -1048,9 +1049,10 @@
         function LoadDataGrid_Finished_NotComplate() {
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/FinishedFlights/GET_FINISHED_F_NOTCOMPLATE",
-		//url: urlApi + "api/ApiExtension/ExcuteTable?packageName=FINISH_FLIGHTS_PKG&storeName=GET_FINISHED_F_NOTCOMPLATE",
-                data: GetObjectSearch(),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=CANCELED_STATUS_PKG&storeName=GET_CANCELED_FLIGHTS",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(GetCanceledStatusSearchRequest(false)),
                 beforeSend: function () {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);
@@ -1074,7 +1076,10 @@
                     });
                 },
             }).always(function (data) {
-                if (data.ListValue == null) {
+                if (!data || !data.ListValue || data.ListValue.length === 0) {
+                    $('#tblSource tbody tr').remove();
+                    $('#tblSource').attr('data-total', 0);
+                    $("#totalsfinished").html("Tổng số : <b>0</b>");
                     unLoadingData('loaddingData');
                     return;
                 }
@@ -1181,6 +1186,51 @@
                 P_ISACCEPTED: 0,
                 PAGESIZE: isExport ? 100000 : (parseInt(ddlPageSize.value, 10) || 100),
                 PAGEINDEX: pageIndex
+            };
+
+            isSearch = false;
+            return request;
+        }
+
+        function GetCanceledStatusSearchRequest(isExport) {
+            if (!isExport && isSearch) {
+                $('#tblSource').attr('data-pageIndex', 1);
+            }
+
+            var pageIndex = isExport
+                ? 0
+                : Math.max(parseInt($('#tblSource').attr('data-pageIndex'), 10) - 1, 0);
+            var craftId = parseInt($('#txtCRAFT_ID').attr('data-craftid'), 10);
+
+            var request = {
+                P_PERMNBR: $('#txtPERMNBR').val() || '',
+                P_OPER_ID: $('#txtOPER_ID').val() || '',
+                P_PERMTYPE: $('#txtPERMTYPE').val() || '',
+                P_FLIGHT_TYPE: '',
+                P_PURPOSE: $('#txtPURPOSE').val() || '',
+                P_CRAFT_ID: isNaN(craftId) ? 0 : craftId,
+                P_CRAFT_TYPE: $('#txtCRAFT_TYPE').attr('data-craftid') || '',
+                P_VALIDHOURS: 0,
+                P_FLIGHTNBR: $('#txtFLIGHTNBR').val() || '',
+                P_REGISTRATION: $('#txtREGISTRATION').val() || '',
+                P_FROM_AIRP: $('#txtFROM_AIRP').val() || '',
+                P_TO_AIRP: $('#txtTO_AIRP').val() || '',
+                P_ETD: $('#txtETD').val() || '',
+                P_ETA: $('#txtETA').val() || '',
+                P_ATD: $('#txtATD').val() || '',
+                P_ATA: $('#txtATA').val() || '',
+                P_VIA: $('#txtVIA').val() || '',
+                P_FPL_VIA: $('#txtFPLVIA').val() || '',
+                P_REMARK: $('#txtREMARK').val() || '',
+                P_KHUNGGIO1: $('#txtFromTime').val() || '0000',
+                P_KHUNGGIO2: $('#txtToTime').val() || '2359',
+                P_PAGESIZE: isExport ? 100000 : (parseInt(ddlPageSize.value, 10) || 100),
+                P_PAGEINDEX: pageIndex,
+                P_STARTDATE: $('#txtFromDate').val(),
+                P_FINISHDATE: $('#txtToDate').val(),
+                P_WHECONDITION: $('#txtFLIGHTDATE').val() || '',
+                P_CAT_HA: parseInt(ddlTime_ID.value, 10) || 0,
+                P_ISACCEPTED: 0
             };
 
             isSearch = false;
@@ -1493,18 +1543,31 @@
             return batches;
         }
 
-        function acceptFinishedFlightBatch(batches, batchIndex, affectedTotal) {
+        function acceptFinishedFlightBatch(batches, batchIndex, affectedTotal, listType) {
+            var isCancel = listType === 'cancel';
+            var buttonSelector = isCancel ? '#btnAcceptedCancel' : '#btnAccepted';
+            var packageName = isCancel ? 'CANCELED_STATUS_PKG' : 'FINISHED_STATUS_PKG';
+            var storeName = isCancel
+                ? 'ACCEPT_CANCELED_FLIGHTS'
+                : 'ACCEPT_FINISHED_FLIGHTS';
+
             if (batchIndex >= batches.length) {
-                alert('Đã Accepted ' + affectedTotal + ' chuyến bay.');
+                alert('Đã Accepted ' + affectedTotal
+                    + (isCancel ? ' chuyến bay hủy.' : ' chuyến bay.'));
                 $('#tblSource').attr('data-pageIndex', 1);
                 isSearch = true;
-                LoadDataGrid();
+                if (isCancel) {
+                    LoadDataGrid_Finished_NotComplate();
+                } else {
+                    LoadDataGrid();
+                }
                 return;
             }
 
             $.ajax({
                 method: 'PUT',
-                url: urlApi + 'api/ApiExtension/ExcuteReturnInt?packageName=FINISHED_STATUS_PKG&storeName=ACCEPT_FINISHED_FLIGHTS',
+                url: urlApi + 'api/ApiExtension/ExcuteReturnInt?packageName='
+                    + packageName + '&storeName=' + storeName,
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 data: JSON.stringify({
@@ -1517,7 +1580,7 @@
                     : -1;
 
                 if (isNaN(affected) || affected < 0) {
-                    $('#btnAccepted').prop('disabled', false);
+                    $(buttonSelector).prop('disabled', false);
                     alert('Accepted không thành công. Đã cập nhật '
                         + affectedTotal + ' chuyến bay trước khi gặp lỗi.');
                     return;
@@ -1526,26 +1589,35 @@
                 acceptFinishedFlightBatch(
                     batches,
                     batchIndex + 1,
-                    affectedTotal + affected
+                    affectedTotal + affected,
+                    listType
                 );
             }).fail(function (xhr) {
                 console.error(
-                    '[ACCEPT FINISHED FLIGHTS] Request failed:',
+                    '[ACCEPT '
+                        + (isCancel ? 'CANCELED' : 'FINISHED')
+                        + ' FLIGHTS] Request failed:',
                     xhr.responseJSON || xhr.responseText
                 );
-                $('#btnAccepted').prop('disabled', false);
+                $(buttonSelector).prop('disabled', false);
                 alert('Không thể Accepted dữ liệu. Đã cập nhật '
                     + affectedTotal + ' chuyến bay trước khi gặp lỗi.');
             }).always(function () {
                 if (batchIndex === batches.length - 1) {
-                    $('#btnAccepted').prop('disabled', false);
+                    $(buttonSelector).prop('disabled', false);
                 }
             });
         }
 
-        function btnAcceptVisible_Onclick() {
-            if (!$('#chkKhb').prop('checked')) {
-                alert('Chức năng Accepted chỉ áp dụng cho danh sách Hoàn thành.');
+        function btnAcceptVisible_Onclick(listType) {
+            var isCancel = listType === 'cancel';
+            var isCorrectList = isCancel
+                ? $('#chkKhbDelete').prop('checked')
+                : $('#chkKhb').prop('checked');
+
+            if (!isCorrectList) {
+                alert('Chức năng Accepted chỉ áp dụng cho danh sách '
+                    + (isCancel ? 'Cancel.' : 'Hoàn thành.'));
                 return;
             }
 
@@ -1561,12 +1633,19 @@
             }
 
             if (!confirm('Accepted ' + ids.length
-                + ' chuyến bay đang hiển thị trong kết quả tìm kiếm?')) {
+                + (isCancel ? ' chuyến bay hủy' : ' chuyến bay')
+                + ' đang hiển thị trong kết quả tìm kiếm?')) {
                 return;
             }
 
-            $('#btnAccepted').prop('disabled', true);
-            acceptFinishedFlightBatch(splitFinishedFlightIds(ids), 0, 0);
+            var buttonSelector = isCancel ? '#btnAcceptedCancel' : '#btnAccepted';
+            $(buttonSelector).prop('disabled', true);
+            acceptFinishedFlightBatch(
+                splitFinishedFlightIds(ids),
+                0,
+                0,
+                listType
+            );
         }
 
         function btnMakeFinished_Onclick() {
@@ -1715,7 +1794,8 @@
             var khb_qtve = $('#chkQtve').prop('checked');
             var khb_chot = $('#chkChot').prop('checked');
 
-            $('#btnAccepted').prop('disabled', !khb);
+            $('#btnAccepted').toggle(khb).prop('disabled', false);
+            $('#btnAcceptedCancel').toggle(khb_delete).prop('disabled', false);
 
             if (khb) {$('#btnExport80').attr('disabled', 'disabled'); $('#btnInsertList').removeAttr('disabled'); $('#btnUpdateList').removeAttr('disabled'); $('#btnDeleteByChecked').removeAttr('disabled'); $('#btnExport').removeAttr('disabled'); $('#btnMove').attr('disabled', 'disabled'); $('#ddlTime').removeAttr('disabled'); $('#ddlSelect').removeAttr('disabled'); $('#ddlType').removeAttr('disabled'); $('#ddlFir').removeAttr('disabled'); btnSearch(); }
             if (khb_delete) { $('#btnExport80').removeAttr('disabled', 'disabled');$('#btnUpdateList').attr('disabled', 'disabled'); $('#btnDeleteByChecked').attr('disabled', 'disabled'); $('#btnInsertList').attr('disabled', 'disabled'); $('#ddlSelect').attr('disabled', 'disabled'); $('#ddlType').attr('disabled', 'disabled'); $('#ddlTime').attr('disabled', 'disabled'); $('#btnExport').attr('disabled', 'disabled'); $('#btnMove').removeAttr('disabled'); LoadDataGrid_Finished_NotComplate(); }
@@ -2387,13 +2467,12 @@
         }
 		
 		 function LoadDataGrid_ExportCancel() {
-            var _urlPath = "";
-            _urlPath= "api/FinishedFlights/GET_FINISHED_F_NOTCOMPLATE"
-			
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + _urlPath,
-                data: GetObjectSearchExport(),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=CANCELED_STATUS_PKG&storeName=GET_CANCELED_FLIGHTS",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(GetCanceledStatusSearchRequest(true)),
                 beforeSend: function () {
                 },
                 complete: function () {

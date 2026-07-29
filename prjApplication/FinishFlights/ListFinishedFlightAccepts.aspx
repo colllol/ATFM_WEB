@@ -746,7 +746,7 @@
             var stt = parseInt(((idx - 1) * pz) + 1);
             if (data.ListValue == null) return '';
             $.each(data.ListValue, function (a, b) {
-                kq += "<tr>"                    
+                kq += "<tr>"
                     + "<td>" + stt + "</td>"
                     + "<td></td>"
                     + "<td style=\'text-align: center;\'>" + returnEmpty(b.OPER_ID) + "</td>"
@@ -784,7 +784,7 @@
             var stt = parseInt(((idx - 1) * pz) + 1);
             if (data.ListValue == null) return '';
             $.each(data.ListValue, function (a, b) {
-                kq += "<tr>"
+                kq += "<tr id='" + b.FLIGHT_ID + "' data-isUpdate='false'>"
                    
                     + "<td>" + stt + "</td>"
                     + "<td></td>"
@@ -1043,9 +1043,10 @@
         function LoadDataGrid_Finished_NotComplate() {
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + "api/FinishedFlights/GET_FINISHED_F_NOTCOMPLATE",
-		//url: urlApi + "api/ApiExtension/ExcuteTable?packageName=FINISH_FLIGHTS_PKG&storeName=GET_FINISHED_F_NOTCOMPLATE",
-                data: GetObjectSearch(),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=CANCELED_STATUS_PKG&storeName=GET_CANCELED_FLIGHTS",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(GetCanceledAcceptedSearchRequest(false)),
                 beforeSend: function () {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);
@@ -1069,7 +1070,10 @@
                     });
                 },
             }).always(function (data) {
-                if (data.ListValue == null) {
+                if (!data || !data.ListValue || data.ListValue.length === 0) {
+                    $('#tblSource tbody tr').remove();
+                    $('#tblSource').attr('data-total', 0);
+                    $("#totalsfinished").html("Tổng số : <b>0</b>");
                     unLoadingData('loaddingData');
                     return;
                 }
@@ -1176,6 +1180,51 @@
                 P_ISACCEPTED: 1,
                 PAGESIZE: isExport ? 100000 : (parseInt(ddlPageSize.value, 10) || 100),
                 PAGEINDEX: pageIndex
+            };
+
+            isSearch = false;
+            return request;
+        }
+
+        function GetCanceledAcceptedSearchRequest(isExport) {
+            if (!isExport && isSearch) {
+                $('#tblSource').attr('data-pageIndex', 1);
+            }
+
+            var pageIndex = isExport
+                ? 0
+                : Math.max(parseInt($('#tblSource').attr('data-pageIndex'), 10) - 1, 0);
+            var craftId = parseInt($('#txtCRAFT_ID').attr('data-craftid'), 10);
+
+            var request = {
+                P_PERMNBR: $('#txtPERMNBR').val() || '',
+                P_OPER_ID: $('#txtOPER_ID').val() || '',
+                P_PERMTYPE: $('#txtPERMTYPE').val() || '',
+                P_FLIGHT_TYPE: '',
+                P_PURPOSE: $('#txtPURPOSE').val() || '',
+                P_CRAFT_ID: isNaN(craftId) ? 0 : craftId,
+                P_CRAFT_TYPE: $('#txtCRAFT_TYPE').attr('data-craftid') || '',
+                P_VALIDHOURS: 0,
+                P_FLIGHTNBR: $('#txtFLIGHTNBR').val() || '',
+                P_REGISTRATION: $('#txtREGISTRATION').val() || '',
+                P_FROM_AIRP: $('#txtFROM_AIRP').val() || '',
+                P_TO_AIRP: $('#txtTO_AIRP').val() || '',
+                P_ETD: $('#txtETD').val() || '',
+                P_ETA: $('#txtETA').val() || '',
+                P_ATD: $('#txtATD').val() || '',
+                P_ATA: $('#txtATA').val() || '',
+                P_VIA: $('#txtVIA').val() || '',
+                P_FPL_VIA: $('#txtFPLVIA').val() || '',
+                P_REMARK: $('#txtREMARK').val() || '',
+                P_KHUNGGIO1: $('#txtFromTime').val() || '0000',
+                P_KHUNGGIO2: $('#txtToTime').val() || '2359',
+                P_PAGESIZE: isExport ? 100000 : (parseInt(ddlPageSize.value, 10) || 100),
+                P_PAGEINDEX: pageIndex,
+                P_STARTDATE: $('#txtFromDate').val(),
+                P_FINISHDATE: $('#txtToDate').val(),
+                P_WHECONDITION: $('#txtFLIGHTDATE').val() || '',
+                P_CAT_HA: parseInt(ddlTime_ID.value, 10) || 0,
+                P_ISACCEPTED: 1
             };
 
             isSearch = false;
@@ -2263,13 +2312,12 @@
         }
 		
 		 function LoadDataGrid_ExportCancel() {
-            var _urlPath = "";
-            _urlPath= "api/FinishedFlights/GET_FINISHED_F_NOTCOMPLATE"
-			
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + _urlPath,
-                data: GetObjectSearchExport(),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=CANCELED_STATUS_PKG&storeName=GET_CANCELED_FLIGHTS",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(GetCanceledAcceptedSearchRequest(true)),
                 beforeSend: function () {
                 },
                 complete: function () {
