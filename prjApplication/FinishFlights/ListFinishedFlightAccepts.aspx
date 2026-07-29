@@ -1,4 +1,5 @@
 <%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlights.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlights" %>
+<%@ OutputCache Duration="1" Location="None" NoStore="true" VaryByParam="none" %>
 
 <%@ Import Namespace="prjBusinessLogic" %>
 <%@ Import Namespace="prjInfo" %>
@@ -1983,7 +1984,6 @@
 
     </script>
     <script>
-        LoadDataGrid();
         $('#txtFromDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
         $('#txtFromDate').multiDate();
         $('#txtToDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
@@ -2005,6 +2005,7 @@
         $('#txtDATE_OLD').multiDate();
         $('#txtFLIGHTDATE').multiDate();
         $('#btnMove').attr('disabled', 'disabled');
+        LoadDataGrid();
     </script>
     <script>
         function sortOnclick(ele) {
