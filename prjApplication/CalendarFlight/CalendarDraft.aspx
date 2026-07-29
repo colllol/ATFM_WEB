@@ -41,6 +41,40 @@
             padding-right: 5px;
             margin-top: -5px;
         }
+
+        /* Dong bo bo cuc bang danh sach voi nhom chuyen bay hoan thanh. */
+        #tblSource {
+            width: 100% !important;
+            max-width: 100%;
+            min-width: 0 !important;
+            table-layout: fixed;
+            font-size: clamp(8px, .65vw, 11px);
+        }
+
+        #tblSource th,
+        #tblSource td {
+            min-width: 0 !important;
+            padding: 0;
+            overflow: hidden;
+            vertical-align: middle;
+            text-align: center;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #tblSource input[type="text"],
+        #tblSource select {
+            box-sizing: border-box;
+            width: 100% !important;
+            min-width: 0 !important;
+            padding: 2px 1px;
+            font-size: inherit;
+            text-align: center;
+            text-overflow: ellipsis;
+        }
+
+        #tblSource th:nth-child(1), #tblSource td:nth-child(1) { width: 2.5%; }
+        #tblSource th:nth-child(2), #tblSource td:nth-child(2) { width: 3%; }
     </style>
 
     <style>
