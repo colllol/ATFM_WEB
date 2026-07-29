@@ -813,34 +813,11 @@
             return val == null ? "" : val;
         }
         function LoadDataGrid() {
-
-            var _urlPath = "";
-            if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 0))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_KHUNGTIME";
-            else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 0))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_HANG_QNOI";
-            else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 0))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_HANG_QTE";
-            else if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 1)) {
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_BAY_QNOI";
-            }
-            else if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 2))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_BAY_QTE";
-            else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 1))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQN_BAY_QNOI";
-            else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 2))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQN_BAY_QTE";
-            else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 1))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQT_BAY_QNOI";
-            else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 2))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQT_BAY_QTE";
-
-
-	   	
             var $request = $.ajax({
                 method: "PUT",
-                url: urlApi + _urlPath,
-                data: GetObjectSearch(),
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=FINISHED_STATUS_PKG&storeName=GET_FINISHED_FLIGHTS",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(GetFinishedStatusSearchRequest(false)),
                 beforeSend: function () {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);
@@ -864,7 +841,10 @@
                     });
                 },
             }).always(function (data) {
-                if (data.ListValue == null) {
+                if (!data || !data.ListValue || data.ListValue.length === 0) {
+                    $('#tblSource tbody tr').remove();
+                    $('#tblSource').attr('data-total', 0);
+                    $("#totalsfinished").html("Tổng số : <b>0</b>");
                     unLoadingData('loaddingData');
                     return;
                 }
@@ -1100,6 +1080,57 @@
             _obj['SANBAYDEN'] = $('#txtFromAir').val();
             isSearch = false;
             return _obj;
+        }
+
+        function GetFinishedStatusSearchRequest(isExport) {
+            if (!isExport && isSearch) {
+                $('#tblSource').attr('data-pageIndex', 1);
+            }
+
+            var pageIndex = isExport
+                ? 0
+                : Math.max(parseInt($('#tblSource').attr('data-pageIndex'), 10) - 1, 0);
+            var craftId = parseInt($('#txtCRAFT_ID').attr('data-craftid'), 10);
+
+            var request = {
+                PERMNBR: $('#txtPERMNBR').val() || '',
+                REGISTRATION: $('#txtREGISTRATION').val() || '',
+                FROM_AIRP: $('#txtFROM_AIRP').val() || '',
+                TO_AIRP: $('#txtTO_AIRP').val() || '',
+                PURPOSE: $('#txtPURPOSE').val() || '',
+                VALIDHOURS: 0,
+                OPER_ID: $('#txtOPER_ID').val() || '',
+                PERMTYPE: $('#txtPERMTYPE').val() || '',
+                FLIGHT_TYPE: '',
+                CRAFT_TYPE: $('#txtCRAFT_TYPE').attr('data-craftid') || '',
+                CRAFT_ID: isNaN(craftId) ? 0 : craftId,
+                REAL_CRAFT_TYPE: $('#txtREALCRAFT').val() || '',
+                FLIGHTNBR: $('#txtFLIGHTNBR').val() || '',
+                VIA: $('#txtVIA').val() || '',
+                FPL_VIA: $('#txtFPLVIA').val() || '',
+                REMARK: $('#txtREMARK').val() || '',
+                ETA: $('#txtETA').val() || '',
+                ETD: $('#txtETD').val() || '',
+                ATA: $('#txtATA').val() || '',
+                ATD: $('#txtATD').val() || '',
+                STARTDATE: $('#txtFromDate').val(),
+                FINISHDATE: $('#txtToDate').val(),
+                KHUNGGIO1: $('#txtFromTime').val() || '0000',
+                KHUNGGIO2: $('#txtToTime').val() || '2359',
+                WHECONDITION: $('#txtFLIGHTDATE').val() || '',
+                CAT_HA: parseInt(ddlTime_ID.value, 10) || 0,
+                TYPEOPER: parseInt(ddlOPer_ID.value, 10) || 0,
+                TYPEFLIGHT: parseInt(ddlTypeFlight.value, 10) || 0,
+                FIR: ddlFr.value || '0',
+                SANBAYDI: $('#txtFromAir').val() || '',
+                SANBAYDEN: $('#txtFromAir').val() || '',
+                P_ISACCEPTED: 0,
+                PAGESIZE: isExport ? 100000 : (parseInt(ddlPageSize.value, 10) || 100),
+                PAGEINDEX: pageIndex
+            };
+
+            isSearch = false;
+            return request;
         }
         function reloadCheckValid() {
             $(document).ready(function () {
@@ -2247,30 +2278,11 @@
         }
 		
         function LoadDataGrid_Export() {
-            var _urlPath = "";
-            if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 0))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_KHUNGTIME";
-            else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 0))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_HANG_QNOI";
-            else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 0))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_HANG_QTE";
-            else if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 1))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_BAY_QNOI";
-            else if ((parseInt(ddlOPer_ID.value) == 0) && (parseInt(ddlTypeFlight.value) == 2))
-                _urlPath = "api/FinishedFlights/GET_FINISHED_FLIGHTS_BAY_QTE";
-            else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 1))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQN_BAY_QNOI";
-            else if ((parseInt(ddlOPer_ID.value) == 1) && (parseInt(ddlTypeFlight.value) == 2))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQN_BAY_QTE";
-            else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 1))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQT_BAY_QNOI";
-            else if ((parseInt(ddlOPer_ID.value) == 2) && (parseInt(ddlTypeFlight.value) == 2))
-                _urlPath = "api/FinishedFlights/GET_FIN_FLIGHTS_HQT_BAY_QTE";
-
             var $request = $.ajax({
-                method: "PUT",                
-                url: urlApi + _urlPath,
-                data: GetObjectSearchExport(),
+                method: "PUT",
+                url: urlApi + "api/ApiExtension/ExcuteTable?packageName=FINISHED_STATUS_PKG&storeName=GET_FINISHED_FLIGHTS",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(GetFinishedStatusSearchRequest(true)),
                 beforeSend: function () {
                 },
                 complete: function () {
