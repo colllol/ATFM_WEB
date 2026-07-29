@@ -197,6 +197,7 @@
     <Content Include="FinishFlights\ListFinishedFlightsAirspaceReport.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightsMilitary.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightsMilitaryReport.aspx" />
+    <Content Include="FinishFlights\ListFlightAllNotCancel.aspx" />
     <Content Include="Properties\001 hungtn\WebForm1.aspx" />
     <Content Include="ActionHistory\List_ActionHistoryLogin.aspx" />
     <Content Include="ActionHistory\List_ActionHistory.aspx" />
@@ -694,7 +695,6 @@
     <Content Include="FinishFlights\FinishedFlightsV3.aspx" />
     <Content Include="FinishFlights\ListFinishedFlights.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightAccepts.aspx" />
-    <Content Include="FinishFlights\ListFlightOnMess.aspx" />
     <Content Include="FinishFlights\ListVia.aspx" />
     <Content Include="FinishFlights\NotCompletedFlights.aspx" />
     <Content Include="FlightManagement\EmergencyFlight.aspx" />
@@ -2313,13 +2313,6 @@
     </Compile>
     <Compile Include="FinishFlights\ListFinishedFlights.aspx.designer.cs">
       <DependentUpon>ListFinishedFlights.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="FinishFlights\ListFlightOnMess.aspx.cs">
-      <DependentUpon>ListFlightOnMess.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="FinishFlights\ListFlightOnMess.aspx.designer.cs">
-      <DependentUpon>ListFlightOnMess.aspx</DependentUpon>
     </Compile>
     <Compile Include="FinishFlights\ListVia.aspx.cs">
       <DependentUpon>ListVia.aspx</DependentUpon>
