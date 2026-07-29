@@ -265,9 +265,11 @@
             border: 0 !important;
             border-radius: 0 !important;
             box-shadow: none !important;
+            box-sizing: border-box;
             font-size: inherit;
             line-height: 1.25;
             text-overflow: ellipsis;
+            text-align: center;
         }
 
         #tblSource input.sInputCompare {
@@ -282,8 +284,19 @@
 
         #tblSource tbody td { height: 34px; }
 
-        #tblSource th:nth-child(1), #tblSource td:nth-child(1) { width: 3%; }
+        #tblSource th:nth-child(1), #tblSource td:nth-child(1) { width: 2.5%; }
         #tblSource th:nth-child(2), #tblSource td:nth-child(2) { width: 2.5%; }
+        #tblSource th:nth-child(3), #tblSource td:nth-child(3),
+        #tblSource th:nth-child(6), #tblSource td:nth-child(6),
+        #tblSource th:nth-child(7), #tblSource td:nth-child(7),
+        #tblSource th:nth-child(9), #tblSource td:nth-child(9),
+        #tblSource th:nth-child(10), #tblSource td:nth-child(10),
+        #tblSource th:nth-child(11), #tblSource td:nth-child(11),
+        #tblSource th:nth-child(13), #tblSource td:nth-child(13),
+        #tblSource th:nth-child(14), #tblSource td:nth-child(14),
+        #tblSource th:nth-child(19), #tblSource td:nth-child(19),
+        #tblSource th:nth-child(20), #tblSource td:nth-child(20) { width: 4%; }
+        #tblSource th:nth-child(12), #tblSource td:nth-child(12) { width: 6%; }
         #tblSource th:nth-child(15), #tblSource td:nth-child(15),
         #tblSource th:nth-child(16), #tblSource td:nth-child(16),
         #tblSource th:nth-child(17), #tblSource td:nth-child(17) { width: 6.5%; }
