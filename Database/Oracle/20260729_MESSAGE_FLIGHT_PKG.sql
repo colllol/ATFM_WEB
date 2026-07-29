@@ -9,6 +9,7 @@ CREATE OR REPLACE PACKAGE MESSAGE_FLIGHT_PKG AS
     (
         P_DATE         IN VARCHAR2,
         P_MESS_TYPE    IN VARCHAR2,
+        P_THONG_BAO_MODE IN NUMBER DEFAULT 0,
         P_PART_NO      IN NUMBER DEFAULT 0,
         P_FROM_AIRP    IN VARCHAR2 DEFAULT NULL,
         P_TO_AIRP      IN VARCHAR2 DEFAULT NULL,
@@ -60,6 +61,7 @@ CREATE OR REPLACE PACKAGE BODY MESSAGE_FLIGHT_PKG AS
     (
         P_DATE         IN VARCHAR2,
         P_MESS_TYPE    IN VARCHAR2,
+        P_THONG_BAO_MODE IN NUMBER DEFAULT 0,
         P_PART_NO      IN NUMBER DEFAULT 0,
         P_FROM_AIRP    IN VARCHAR2 DEFAULT NULL,
         P_TO_AIRP      IN VARCHAR2 DEFAULT NULL,
@@ -112,8 +114,21 @@ CREATE OR REPLACE PACKAGE BODY MESSAGE_FLIGHT_PKG AS
                   AND UPPER(PM.MESS_TYPE) = v_mess_type
                   AND
                   (
-                      PM.CONTENT IS NULL
-                      OR INSTR(UPPER(PM.CONTENT), 'THONG BAO') = 0
+                      NVL(P_THONG_BAO_MODE, 0) = 2
+                      OR
+                      (
+                          NVL(P_THONG_BAO_MODE, 0) = 1
+                          AND INSTR(UPPER(PM.CONTENT), 'THONG BAO') > 0
+                      )
+                      OR
+                      (
+                          NVL(P_THONG_BAO_MODE, 0) = 0
+                          AND
+                          (
+                              PM.CONTENT IS NULL
+                              OR INSTR(UPPER(PM.CONTENT), 'THONG BAO') = 0
+                          )
+                      )
                   )
                   AND
                   (

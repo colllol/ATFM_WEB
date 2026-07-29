@@ -17,6 +17,7 @@ BEGIN
     MESSAGE_FLIGHT_PKG.GET_FLIGHTS_ON_MESSAGE(
         P_DATE       => '29-07-2026',
         P_MESS_TYPE  => 'HVN MESSAGE',
+        P_THONG_BAO_MODE => 0,
         P_PART_NO    => 0,
         P_FROM_AIRP  => NULL,
         P_TO_AIRP    => NULL,

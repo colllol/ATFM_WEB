@@ -47,6 +47,7 @@
 
         #txtMessageDate { width: 120px; }
         #ddlMessageType { width: 170px; }
+        #ddlThongBaoMode { width: 190px; }
         #txtPartNo { width: 72px; }
         #txtFromAir, #txtToAir, #txtOper { width: 90px; }
         #ddlPageSize { width: 78px; }
@@ -175,6 +176,15 @@
                     <option value="OVER FLIGHTS">OVER FLIGHTS</option>
                     <option value="QS MESSAGE">QS MESSAGE</option>
                     <option value="AIRSPACE MESSAGE">AIRSPACE MESSAGE</option>
+                </select>
+            </div>
+
+            <div class="message-flight-field">
+                <label for="ddlThongBaoMode">Nội dung điện văn</label>
+                <select id="ddlThongBaoMode">
+                    <option value="0" selected="selected">KHÔNG CHỨA THONG BAO</option>
+                    <option value="1">CÓ CHỨA THONG BAO</option>
+                    <option value="2">TẤT CẢ</option>
                 </select>
             </div>
 
@@ -353,6 +363,7 @@
             return {
                 P_DATE: dateText,
                 P_MESS_TYPE: $('#ddlMessageType').val(),
+                P_THONG_BAO_MODE: parseInt($('#ddlThongBaoMode').val(), 10) || 0,
                 P_PART_NO: partNo,
                 P_FROM_AIRP: $.trim($('#txtFromAir').val()),
                 P_TO_AIRP: $.trim($('#txtToAir').val()),
@@ -421,8 +432,10 @@
 
         function updateMessageFlightCriteria(request) {
             var partText = request.P_PART_NO > 0 ? ' - PART ' + request.P_PART_NO : '';
+            var contentMode = $('#ddlThongBaoMode option:selected').text();
             $('#messageFlightCriteria').text(
-                request.P_DATE + ' - ' + request.P_MESS_TYPE + partText
+                request.P_DATE + ' - ' + request.P_MESS_TYPE
+                + ' - ' + contentMode + partText
             );
         }
 
@@ -596,6 +609,10 @@
             var queryDate = getMessageFlightQueryValue(['FlightDate', 'Date']);
             var queryType = getMessageFlightQueryValue(['MessType', 'MessageType']);
             var queryPart = getMessageFlightQueryValue(['PartNo', 'Part']);
+            var queryThongBaoMode = getMessageFlightQueryValue([
+                'ThongBaoMode',
+                'NotificationMode'
+            ]);
 
             $('#txtMessageDate').val(
                 queryDate || dateFormat(new Date(), 'dd-mm-yyyy')
@@ -616,6 +633,10 @@
 
             if (/^[0-9]+$/.test(queryPart)) {
                 $('#txtPartNo').val(queryPart);
+            }
+
+            if (/^[012]$/.test(queryThongBaoMode)) {
+                $('#ddlThongBaoMode').val(queryThongBaoMode);
             }
 
             $('#ddlPageSize').on('change', searchMessageFlights);
