@@ -8,8 +8,8 @@
         <!-- data-endpoint="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.aspx/GetData") %>"
         data-operators-endpoint="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.aspx/GetOperators") %>"> -->
         <header class="adsb-hero">
-            <div><span>VATM • ADS-B PERFORMANCE</span><h1>Tổng hợp chỉ số hiệu suất bay từ ADS-B</h1><p>Theo dõi lưu lượng LD và O/F dựa trên dữ liệu T_TRACKS_LOG.</p></div>
-            <div class="adsb-hero-badge"><small>Dữ liệu cập nhật</small><strong id="adsbUpdatedAt">--:--</strong><em>T_TRACKS_LOG</em></div>
+            <div><span>VATM • ADS-B PERFORMANCE</span><h1>Tổng hợp chỉ số hiệu suất bay từ ADS-B</h1><p>Theo dõi lưu lượng LD và O/F dựa trên dữ liệu TRACKS_LOG.</p></div>
+            <div class="adsb-hero-badge"><small>Dữ liệu cập nhật</small><strong id="adsbUpdatedAt">--:--</strong></div>
         </header>
 
         <div class="adsb-filter-card">
@@ -33,7 +33,7 @@
         </section>
 
         <section class="adsb-card adsb-table-card">
-            <div class="adsb-card-heading"><div><h2>Chi tiết T_TRACKS_LOG</h2><p id="adsbTableInfo">Chưa có dữ liệu</p></div><label class="adsb-page-size">Số dòng <select id="adsbPageSize"><option>50</option><option selected>100</option><option>200</option><option>500</option></select></label></div>
+            <div class="adsb-card-heading"><div><h2>Chi tiết dữ liệu.</h2><p id="adsbTableInfo">Chưa có dữ liệu</p></div><label class="adsb-page-size">Số dòng <select id="adsbPageSize"><option>50</option><option selected>100</option><option>200</option><option>500</option></select></label></div>
             <div class="adsb-table-scroll"><table><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th><th>STATUS</th><th>DATE</th><th>UPDATED_AT_UTC</th></tr></thead><tbody id="adsbTableBody"></tbody></table></div>
             <div class="adsb-pagination"><span id="adsbPageInfo"></span><div><button type="button" id="adsbPrev">‹ Trang trước</button><button type="button" id="adsbNext">Trang sau ›</button></div></div>
         </section>
