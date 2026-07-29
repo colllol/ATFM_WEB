@@ -10,9 +10,10 @@
 
         .message-flight-filter {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: flex-end;
-            gap: 8px 10px;
+            gap: 8px;
+            overflow-x: auto;
             margin-bottom: 8px;
             padding: 10px 12px;
             border: 1px solid #c8dced;
@@ -22,6 +23,7 @@
 
         .message-flight-field {
             display: flex;
+            flex: 0 0 auto;
             flex-direction: column;
             gap: 3px;
         }
@@ -45,21 +47,21 @@
             text-transform: uppercase;
         }
 
-        #txtMessageDate { width: 120px; }
-        #ddlMessageType { width: 170px; }
-        #ddlThongBaoMode { width: 190px; }
-        #txtPartNo { width: 72px; }
-        #txtFromAir, #txtToAir, #txtOper { width: 90px; }
-        #ddlPageSize { width: 78px; }
+        #txtMessageDate { width: 118px; }
+        #ddlMessageType { width: 160px; }
+        #ddlThongBaoMode { width: 178px; }
+        #txtFromAir, #txtToAir, #txtOper { width: 82px; }
+        #ddlPageSize { width: 70px; }
 
         .message-flight-actions {
             display: flex;
+            flex: 0 0 auto;
             gap: 6px;
             align-items: center;
         }
 
         .message-flight-actions .btn {
-            min-width: 105px;
+            min-width: 98px;
             height: 34px;
             font-weight: 700;
             text-transform: uppercase;
@@ -186,11 +188,6 @@
                     <option value="1">CÓ CHỨA THONG BAO</option>
                     <option value="2">TẤT CẢ</option>
                 </select>
-            </div>
-
-            <div class="message-flight-field">
-                <label for="txtPartNo">Part</label>
-                <input id="txtPartNo" type="number" min="0" step="1" value="0" title="0 = tất cả part" />
             </div>
 
             <div class="message-flight-field">
@@ -357,14 +354,11 @@
                 return null;
             }
 
-            var partNo = parseInt($('#txtPartNo').val(), 10);
-            if (isNaN(partNo) || partNo < 0) partNo = 0;
-
             return {
                 P_DATE: dateText,
                 P_MESS_TYPE: $('#ddlMessageType').val(),
                 P_THONG_BAO_MODE: parseInt($('#ddlThongBaoMode').val(), 10) || 0,
-                P_PART_NO: partNo,
+                P_PART_NO: 0,
                 P_FROM_AIRP: $.trim($('#txtFromAir').val()),
                 P_TO_AIRP: $.trim($('#txtToAir').val()),
                 P_OPER_ID: $.trim($('#txtOper').val()),
@@ -431,11 +425,10 @@
         }
 
         function updateMessageFlightCriteria(request) {
-            var partText = request.P_PART_NO > 0 ? ' - PART ' + request.P_PART_NO : '';
             var contentMode = $('#ddlThongBaoMode option:selected').text();
             $('#messageFlightCriteria').text(
                 request.P_DATE + ' - ' + request.P_MESS_TYPE
-                + ' - ' + contentMode + partText
+                + ' - ' + contentMode
             );
         }
 
@@ -608,7 +601,6 @@
         $(function () {
             var queryDate = getMessageFlightQueryValue(['FlightDate', 'Date']);
             var queryType = getMessageFlightQueryValue(['MessType', 'MessageType']);
-            var queryPart = getMessageFlightQueryValue(['PartNo', 'Part']);
             var queryThongBaoMode = getMessageFlightQueryValue([
                 'ThongBaoMode',
                 'NotificationMode'
@@ -631,20 +623,16 @@
                 $('#ddlMessageType').val(queryType);
             }
 
-            if (/^[0-9]+$/.test(queryPart)) {
-                $('#txtPartNo').val(queryPart);
-            }
-
             if (/^[012]$/.test(queryThongBaoMode)) {
                 $('#ddlThongBaoMode').val(queryThongBaoMode);
             }
 
             $('#ddlPageSize').on('change', searchMessageFlights);
-            $('#txtMessageDate, #txtPartNo, #txtFromAir, #txtToAir, #txtOper').on('keydown', function (event) {
+            $('#txtMessageDate, #txtFromAir, #txtToAir, #txtOper').on('keydown', function (event) {
                 if (event.which === 13) searchMessageFlights();
             });
 
-            if (queryDate || queryType || queryPart) {
+            if (queryDate || queryType) {
                 searchMessageFlights();
             }
         });
