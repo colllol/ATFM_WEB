@@ -3058,67 +3058,161 @@
             $('#txtSeasonPerm').val('');
             $('#txtDatePerm').val('');
             $('#txtHoursPerm').val('');
-            var $permNbr = $($(ele).find('td')[2]).text();
-            //if ($permNbr == 'NoPerm') return;
-            var kq = '';
-            var url = urlApi + '/api/DayFlights/GetPermBy?ID=' + ax.attr('data-id');
-            $.ajax({
-                method: "GET",
-                url: url,
-            }).always(function (data) {
-                $('#tblPermission tr').remove();
-                if (data.ListValue == null) return;
-                $('#txtAuthorPerm').val(data.ListValue[0]['AUTHOR_ID']);
-                $('#txtOperPerm').val(data.ListValue[0]['OPER_ID']);
-                $('#txtFlightNbrPerm').val(data.ListValue[0]['PERMNBR']);
-                $('#txtPermTypePerm').val(data.ListValue[0]['PERMTYPE']);
-                $('#txtVersionPerm').val(data.ListValue[0]['VERSION']);
-                $('#txtSeasonPerm').val(data.ListValue[0]['SEASON']);
-                $('#txtDatePerm').val(new Date(data.ListValue[0]['PERMDATE']).format('dd-mm-yyyy'));
-                $('#txtHoursPerm').val(data.ListValue[0]['VALIDHOURS']);
-                getLinkfile(urlApi + '/api/DayFlights/GetLinkFile', ax.attr('data-id'), 'SC');
-                if (data.ListValue[0]['FLIGHTTYPE'] == 'NO')
-                    kq += '<thead><tr><th>Call sign</th><th>Registration</th><th>From</th><th>To</th><th>Etd</th><th>Eta</th><th>Day flight</th><th>Craft</th><th>Purpose</th><th>Via</th><th>Remark</th><th>LastModify</th><th></th></tr></thead>';
-                else kq += '<thead><tr><th>Call Sign</th><th>Registration</th><th>From</th><th>To</th><th>Etd</th><th>Eta</th><th>DAY</th><th>Craft</th><th>Begin date</th><th>End date</th><th>Purpose</th><th>Via</th><th>Remark</th></tr>';
-                kq += '<tbody>';
-                $.each(data.ListValue, function (a, b) {
-                    kq += '<tr>';
-                    kq += '<td>' + b['FLIGHTNBR'] + '</td>';
-                    kq += '<td>' + b['REGISTRATION'] + '</td>';
-                    kq += '<td>' + b['FROM_AIRP'] + '</td>';
-                    kq += '<td>' + b['TO_AIRP'] + '</td>';
-                    kq += '<td>' + b['ETD'] + '</td>';
-                    kq += '<td>' + b['ETA'] + '</td>';
-                    if (b['FLIGHT_TYPE'] = 'SC')
-                        kq += '<td>' + (b['DAY1'] + b['DAY2'] + b['DAY3'] + b['DAY4'] + b['DAY5'] + b['DAY6'] + b['DAY7']).replace(/0/gi, '.') + '</td>';
-                    else kq += '<td>' + b['DAYFLIGHT'] + '</td>';
-                    kq += '<td>' + b['MA'] + '</td>';
-                    if (b['FLIGHT_TYPE'] = 'SC') {
-                        kq += '<td style=\"white-space: nowrap;\">' + (b['BEGINDATE'] == null ? '' : new Date(b['BEGINDATE']).format('dd-mm-yyyy')) + '</td>';
-                        kq += '<td style=\"white-space: nowrap;\">' + (b['ENDDATE'] == null ? '' : new Date(b['ENDDATE']).format('dd-mm-yyyy')) + '</td>';
-                    }
-                    kq += '<td>' + b['PURPOSE_ID'] + '</td>';
-                    kq += '<td style=\"word-break: break-all;\">' + b['VIA'] + '</td>';
-                    kq += '<td style=\"word-break: break-all;\">' + b['REMARK'] + '</td>';
-                    kq += '</tr>'
-                })
-                kq += '</tbody>';
-                $('#tblPermission').append(kq);
-            });
+            $('#tblPermission').html(
+                '<tbody><tr><td class="text-muted">Đang tải Permission...</td></tr></tbody>'
+            );
         }
-        function getLinkfile(url, id, ty) {
-            var url1 = url + '?id=' + id + '&permtype=' + ty;
-            $.ajax({
-                method: "GET",
-                url: url1,
-            }).always(function (ms) {
-                if (ms.ListValue == null) return;
-                $.each(ms.ListValue, function (a, b) {
-                    $('#lblLinkFile').append('<a href="' + b['URLPATH'] + b['FILENAME'] + '">' + b['FILENAME'] + '</a></br>');
 
-                })
+        function flightPermissionEncode(value) {
+            return $('<div/>').text(value == null ? '' : value).html();
+        }
+
+        function flightPermissionValue(row, name, alternateName) {
+            if (!row) return '';
+            if (row[name] != null) return row[name];
+            return alternateName && row[alternateName] != null
+                ? row[alternateName]
+                : '';
+        }
+
+        function flightPermissionDate(value) {
+            if (!value) return '';
+            var date = new Date(value);
+            return isNaN(date.getTime()) ? value : date.format('dd-mm-yyyy');
+        }
+
+        function renderFlightPermission(rows, linkFiles, errorMessage) {
+            rows = $.isArray(rows) ? rows : [];
+            linkFiles = $.isArray(linkFiles) ? linkFiles : [];
+
+            $('#tblPermission').empty();
+            $('#lblLinkFile').empty();
+
+            if (errorMessage) {
+                console.error('[Flight extension][Permission] ' + errorMessage);
+                $('#tblPermission').html(
+                    '<tbody><tr><td class="text-danger">' +
+                    flightPermissionEncode(errorMessage) +
+                    '</td></tr></tbody>'
+                );
+                return;
+            }
+
+            if (!rows.length) {
+                $('#tblPermission').html(
+                    '<tbody><tr><td class="text-muted">' +
+                    'Không có thông tin Permission cho chuyến bay này.' +
+                    '</td></tr></tbody>'
+                );
+                return;
+            }
+
+            var first = rows[0];
+            $('#txtAuthorPerm').val(flightPermissionValue(first, 'AUTHOR_ID'));
+            $('#txtOperPerm').val(flightPermissionValue(first, 'OPER_ID'));
+            $('#txtFlightNbrPerm').val(flightPermissionValue(first, 'PERMNBR'));
+            $('#txtPermTypePerm').val(flightPermissionValue(first, 'PERMTYPE'));
+            $('#txtVersionPerm').val(flightPermissionValue(first, 'VERSION'));
+            $('#txtSeasonPerm').val(flightPermissionValue(first, 'SEASON'));
+            $('#txtDatePerm').val(
+                flightPermissionDate(flightPermissionValue(first, 'PERMDATE'))
+            );
+            $('#txtHoursPerm').val(flightPermissionValue(first, 'VALIDHOURS'));
+
+            var firstType = String(
+                flightPermissionValue(first, 'FLIGHT_TYPE', 'FLIGHTTYPE')
+            ).toUpperCase();
+            var isNoPermissionType = firstType === 'NO';
+            var html = '<thead><tr>' +
+                '<th>Call sign</th><th>Registration</th><th>From</th>' +
+                '<th>To</th><th>Etd</th><th>Eta</th><th>Day</th>' +
+                '<th>Craft</th>';
+
+            if (!isNoPermissionType) {
+                html += '<th>Begin date</th><th>End date</th>';
+            }
+            html += '<th>Purpose</th><th>Via</th><th>Remark</th>' +
+                '</tr></thead><tbody>';
+
+            $.each(rows, function (_, row) {
+                var rowType = String(
+                    flightPermissionValue(row, 'FLIGHT_TYPE', 'FLIGHTTYPE')
+                ).toUpperCase();
+                var isSc = rowType === 'SC' || (!rowType && !isNoPermissionType);
+                var day = flightPermissionValue(row, 'DAYFLIGHT');
+
+                if (isSc) {
+                    day = '';
+                    for (var dayIndex = 1; dayIndex <= 7; dayIndex++) {
+                        day += flightPermissionValue(row, 'DAY' + dayIndex);
+                    }
+                    day = day.replace(/0/g, '.');
+                }
+
+                html += '<tr>' +
+                    '<td>' + flightPermissionEncode(
+                        flightPermissionValue(row, 'FLIGHTNBR')
+                    ) + '</td>' +
+                    '<td>' + flightPermissionEncode(
+                        flightPermissionValue(row, 'REGISTRATION')
+                    ) + '</td>' +
+                    '<td>' + flightPermissionEncode(
+                        flightPermissionValue(row, 'FROM_AIRP')
+                    ) + '</td>' +
+                    '<td>' + flightPermissionEncode(
+                        flightPermissionValue(row, 'TO_AIRP')
+                    ) + '</td>' +
+                    '<td>' + flightPermissionEncode(
+                        flightPermissionValue(row, 'ETD')
+                    ) + '</td>' +
+                    '<td>' + flightPermissionEncode(
+                        flightPermissionValue(row, 'ETA')
+                    ) + '</td>' +
+                    '<td>' + flightPermissionEncode(day) + '</td>' +
+                    '<td>' + flightPermissionEncode(
+                        flightPermissionValue(row, 'MA')
+                    ) + '</td>';
+
+                if (!isNoPermissionType) {
+                    html += '<td style="white-space:nowrap;">' +
+                        flightPermissionEncode(
+                            flightPermissionDate(
+                                flightPermissionValue(row, 'BEGINDATE')
+                            )
+                        ) + '</td>' +
+                        '<td style="white-space:nowrap;">' +
+                        flightPermissionEncode(
+                            flightPermissionDate(
+                                flightPermissionValue(row, 'ENDDATE')
+                            )
+                        ) + '</td>';
+                }
+
+                html += '<td>' + flightPermissionEncode(
+                    flightPermissionValue(row, 'PURPOSE_ID')
+                ) + '</td>' +
+                    '<td style="word-break:break-all;">' +
+                    flightPermissionEncode(flightPermissionValue(row, 'VIA')) +
+                    '</td>' +
+                    '<td style="word-break:break-all;">' +
+                    flightPermissionEncode(flightPermissionValue(row, 'REMARK')) +
+                    '</td></tr>';
             });
 
+            $('#tblPermission').html(html + '</tbody>');
+
+            $.each(linkFiles, function (_, file) {
+                var fileName = flightPermissionValue(file, 'FILENAME');
+                var fileUrl =
+                    flightPermissionValue(file, 'URLPATH') + fileName;
+                $('<a/>', {
+                    href: fileUrl,
+                    text: fileName,
+                    target: '_blank',
+                    rel: 'noopener noreferrer'
+                }).appendTo('#lblLinkFile');
+                $('#lblLinkFile').append('<br/>');
+            });
         }
         function btnUpdateStatusLetter_OnClick(id) {
             if ($('#txtStatusLetter').val() == '') return;

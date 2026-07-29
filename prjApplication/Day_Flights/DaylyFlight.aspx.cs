@@ -1268,17 +1268,61 @@ namespace prjApplication.Day_Flights
         {
             string kq = "";
             DataTable dt = new DayFlightTotalInfoDAL().GetInfoChangeById(thamso[0]);
-            if (dt == null) return "";
+            if (dt == null || dt.Rows.Count == 0) return "";
             kq += FlightInfoExtension_IsChange(dt.Rows[0]["CHANGEVALUE"].ToString());
             kq += FlightInfoExtension_IsTimeValid(dt.Rows[0]["HASTIMEVALID"].ToString() == "1" ? "YES" : "NO");
             kq += FlightInfoExtension_ChangeInfo(dt.Rows[0]["CHANGEVALUE"].ToString());
             kq += FlightInfoExtension_HasPerm(dt.Rows[0]["HASPERM"].ToString() == "1" ? "YES" : "NO");
+            kq += FlightInfoExtension_Permission(thamso[0]);
             kq += FlightInfoExtension_DienVanExt(thamso[0]);
             // view button access checked info change
             kq += FlightInfoExtension_ShowButtonAccess(thamso[0]);
             kq += $"<script>$('#btnUpdateStatusLetter').attr('onclick', 'btnUpdateStatusLetter_OnClick(\\'{thamso[0]}\\')');</script>";
             kq = System.Text.RegularExpressions.Regex.Replace(kq, @"\r\n?|\n", "<br>");
             return kq;
+        }
+
+        private string FlightInfoExtension_Permission(string flightId)
+        {
+            DataTable permission = null;
+            DataTable linkFiles = null;
+            string errorMessage = "";
+
+            try
+            {
+                var dal = new DayFlightsDAL();
+                permission = dal.GetPermissionByFlightId(flightId);
+
+                try
+                {
+                    linkFiles = dal.GetPermissionLinkFiles(flightId, "SC");
+                }
+                catch
+                {
+                    // File đính kèm không được làm hỏng phần thông tin Permission.
+                    linkFiles = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = "Không tải được thông tin Permission: " + ex.Message;
+            }
+
+            string permissionJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+                permission ?? new DataTable());
+            string linkFilesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+                linkFiles ?? new DataTable());
+            string errorJson = Newtonsoft.Json.JsonConvert.SerializeObject(errorMessage);
+
+            // Ngăn dữ liệu có chuỗi </script> kết thúc thẻ script được trả về callback.
+            permissionJson = permissionJson.Replace("</", "<\\/");
+            linkFilesJson = linkFilesJson.Replace("</", "<\\/");
+            errorJson = errorJson.Replace("</", "<\\/");
+
+            return "<script>renderFlightPermission(" +
+                permissionJson + "," +
+                linkFilesJson + "," +
+                errorJson + ");</script>";
         }
 
         private string viewPopupInfoExtensionInsert(string[] thamso)
