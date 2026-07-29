@@ -2183,7 +2183,27 @@
                     if (textNode) textNode.textContent = 'Đang tải dữ liệu...';
                 }
 
-                window.ATFMLoading = { show: showLoading, hide: function () { hideLoading(false); }, forceHide: function () { hideLoading(true); } };
+                // Request hoàn tất chưa đồng nghĩa dữ liệu đã được vẽ. Chờ callback cập nhật DOM
+                // và hai nhịp render của trình duyệt rồi mới giảm đúng một tác vụ loading.
+                function hideAfterRender(force) {
+                    var complete = function () {
+                        hideLoading(force === true);
+                    };
+                    if (window.requestAnimationFrame) {
+                        window.requestAnimationFrame(function () {
+                            window.requestAnimationFrame(complete);
+                        });
+                    } else {
+                        window.setTimeout(complete, 32);
+                    }
+                }
+
+                window.ATFMLoading = {
+                    show: showLoading,
+                    hide: function () { hideAfterRender(false); },
+                    hideAfterRender: function () { hideAfterRender(false); },
+                    forceHide: function () { hideLoading(true); }
+                };
                 window.addEventListener('load', function () { hideLoading(true); });
                 window.addEventListener('pageshow', function () { hideLoading(true); });
                 window.addEventListener('beforeunload', function () {
@@ -2229,7 +2249,8 @@
                     window.jQuery(document).ajaxStart(function () {
                         if (!shouldSuppressLoading()) showLoading('Đang tải dữ liệu...');
                     });
-                    window.jQuery(document).ajaxStop(function () { hideLoading(true); });
+                    // ajaxStop chạy sau các callback AJAX; chờ thêm render trước khi đóng.
+                    window.jQuery(document).ajaxStop(function () { hideAfterRender(false); });
                 }
 
                 if (window.fetch) {
@@ -2238,7 +2259,13 @@
                         var options = arguments.length > 1 ? arguments[1] : null;
                         if ((options && options.atfmSilent === true) || shouldSuppressLoading()) return originalFetch.apply(this, arguments);
                         showLoading('Đang tải dữ liệu...');
-                        return originalFetch.apply(this, arguments).then(function (response) { hideLoading(true); return response; }, function (error) { hideLoading(true); throw error; });
+                        return originalFetch.apply(this, arguments).then(function (response) {
+                            hideAfterRender(false);
+                            return response;
+                        }, function (error) {
+                            hideAfterRender(false);
+                            throw error;
+                        });
                     };
                 }
 
@@ -2249,10 +2276,13 @@
                         if (this.atfmSuppressLoading === true || shouldSuppressLoading()) return originalXhrSend.apply(this, arguments);
                         showLoading('Đang tải dữ liệu...');
                         var xhr = this;
-                        var finishLoading = function () { xhr.removeEventListener('loadend', finishLoading, false); hideLoading(true); };
+                        var finishLoading = function () {
+                            xhr.removeEventListener('loadend', finishLoading, false);
+                            hideAfterRender(false);
+                        };
                         this.addEventListener('loadend', finishLoading, false);
                         try { return originalXhrSend.apply(this, arguments); }
-                        catch (error) { hideLoading(true); throw error; }
+                        catch (error) { hideAfterRender(false); throw error; }
                     };
                 }
 
@@ -2288,7 +2318,7 @@
                                 if (!manager._atfmDateRequest) showLoading('Đang xử lý yêu cầu...');
                             });
                             manager.add_endRequest(function () {
-                                if (!manager._atfmDateRequest) hideLoading(true);
+                                if (!manager._atfmDateRequest) hideAfterRender(false);
                                 manager._atfmDateRequest = false;
                             });
                             manager._atfmLoadingHooked = true;

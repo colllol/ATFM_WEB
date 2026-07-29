@@ -1,6 +1,4 @@
-<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
-    CodeBehind="ListFinishedFlightsAirspaceReport.aspx.cs"
-    Inherits="prjApplication.FinishFlights.ListFinishedFlightsAirspaceReport" %>
+<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlightsAirspaceReport.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlightsAirspaceReport" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
     <link href="../Style/assets/css/bootstrap.min.css" rel="stylesheet" />
