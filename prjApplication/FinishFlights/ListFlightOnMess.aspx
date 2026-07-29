@@ -127,7 +127,7 @@
 
         #tblMessageFlights {
             width: 100%;
-            min-width: 1420px;
+            min-width: 1130px;
             margin: 0;
             table-layout: fixed;
         }
@@ -278,23 +278,23 @@
         <div class="message-flight-table-wrap">
             <table id="tblMessageFlights" class="table table-bordered">
                 <colgroup>
-                    <col style="width: 48px;" />
+                    <col style="width: 45px;" />
                     <col style="width: 82px;" />
                     <col style="width: 55px;" />
-                    <col style="width: 64px;" />
-                    <col style="width: 92px;" />
-                    <col style="width: 86px;" />
-                    <col style="width: 72px;" />
-                    <col style="width: 76px;" />
-                    <col style="width: 68px;" />
-                    <col style="width: 66px;" />
+                    <col style="width: 60px;" />
+                    <col style="width: 90px;" />
+                    <col style="width: 85px;" />
                     <col style="width: 65px;" />
+                    <col style="width: 70px;" />
                     <col style="width: 65px;" />
-                    <col style="width: 94px;" />
+                    <col style="width: 60px;" />
+                    <col style="width: 60px;" />
+                    <col style="width: 85px;" />
+                    <col style="width: 60px;" />
                     <col style="width: 62px;" />
-                    <col style="width: 62px;" />
-                    <col style="width: 190px;" />
-                    <col style="width: 210px;" />
+                    <col style="width: 60px;" />
+                    <col style="width: 145px;" />
+                    <col style="width: 180px;" />
                 </colgroup>
                 <thead>
                     <tr>
