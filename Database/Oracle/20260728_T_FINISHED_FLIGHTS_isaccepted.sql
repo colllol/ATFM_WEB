@@ -97,6 +97,13 @@ CREATE OR REPLACE PACKAGE FINISHED_STATUS_PKG AS
         PAGEINDEX       IN NUMBER DEFAULT 0,
         OUT_CURSOR      OUT T_CURSOR
     );
+
+    PROCEDURE ACCEPT_FINISHED_FLIGHTS
+    (
+        P_FLIGHT_IDS IN VARCHAR2,
+        P_USER       IN VARCHAR2 DEFAULT NULL,
+        P_RETURNCODE OUT NUMBER
+    );
 END FINISHED_STATUS_PKG;
 /
 
@@ -467,6 +474,98 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
              WHERE page_data.RNUM BETWEEN v_first_row AND v_last_row
              ORDER BY page_data.RNUM;
     END GET_FINISHED_FLIGHTS;
+
+    PROCEDURE ACCEPT_FINISHED_FLIGHTS
+    (
+        P_FLIGHT_IDS IN VARCHAR2,
+        P_USER       IN VARCHAR2 DEFAULT NULL,
+        P_RETURNCODE OUT NUMBER
+    )
+    IS
+        v_flight_ids VARCHAR2(4000);
+        v_id_count   PLS_INTEGER;
+    BEGIN
+        v_flight_ids := TRIM(BOTH ',' FROM TRIM(P_FLIGHT_IDS));
+
+        IF v_flight_ids IS NULL
+           OR NOT REGEXP_LIKE(v_flight_ids, '^[0-9]+(,[0-9]+)*$') THEN
+            RAISE_APPLICATION_ERROR(
+                -20003,
+                'P_FLIGHT_IDS must be a comma-separated list of numeric IDs'
+            );
+        END IF;
+
+        v_id_count := REGEXP_COUNT(v_flight_ids, ',') + 1;
+
+        UPDATE T_FINISHED_FLIGHTS t
+           SET t.ISACCEPTED = 1
+         WHERE t.ISACCEPTED = 0
+           AND t.FLIGHT_ID IN
+               (
+                   SELECT DISTINCT
+                          TO_NUMBER(
+                              REGEXP_SUBSTR(
+                                  v_flight_ids,
+                                  '[^,]+',
+                                  1,
+                                  LEVEL
+                              )
+                          )
+                     FROM DUAL
+                   CONNECT BY LEVEL <= v_id_count
+               );
+
+        P_RETURNCODE := SQL%ROWCOUNT;
+
+        IF P_RETURNCODE > 0 THEN
+            INSERT INTO T_ACTIONHISTORY
+            (
+                USERID,
+                FULLNAME,
+                HOSTIP,
+                DATEMODIFY,
+                ACTIONSCODE,
+                NEWS_ID,
+                NOTES,
+                MENU_ID
+            )
+            VALUES
+            (
+                0,
+                NVL(TRIM(P_USER), ' '),
+                ' ',
+                SYSDATE,
+                'ACCEPT FINISHED FLIGHTS',
+                0,
+                'VISIBLE_IDS=' || TO_CHAR(v_id_count)
+                    || '; ROWS=' || TO_CHAR(P_RETURNCODE),
+                905
+            );
+        END IF;
+
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            P_RETURNCODE := -1;
+
+            BEGIN
+                PROCESS_PKG.ADD_ERROR_LOG(
+                    'ACCEPT_FINISHED_FLIGHTS',
+                    SQLCODE,
+                    SUBSTR(
+                        SQLERRM
+                        || CHR(10)
+                        || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE,
+                        1,
+                        200
+                    )
+                );
+            EXCEPTION
+                WHEN OTHERS THEN
+                    NULL;
+            END;
+    END ACCEPT_FINISHED_FLIGHTS;
 END FINISHED_STATUS_PKG;
 /
 

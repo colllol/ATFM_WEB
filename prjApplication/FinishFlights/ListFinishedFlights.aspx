@@ -1,5 +1,6 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="ListFinishedFlights.aspx.cs" Inherits="prjApplication.FinishFlights.ListFinishedFlights" %>
 
+<%@ OutputCache Duration="1" Location="None" NoStore="true" VaryByParam="none" %>
 <%@ Import Namespace="prjBusinessLogic" %>
 <%@ Import Namespace="prjInfo" %>
 <%@ Register Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
@@ -493,9 +494,10 @@
         <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-refresh"></i>UPDATE</button>
         <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-danger" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash"></i>DELETE</button>
         <button type="button" id="btnClearSearch" class="btn btn-sm btn-default" onclick="btnClearValue_OnClick()"><i class="fa fa-eraser"></i>CLEAR SREACH</button>
-        <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
-        <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
-        <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>EXPORT BRAVO</button>
+        <button type="button" id="btnAccepted" class="btn btn-sm btn-success" onclick="btnAcceptVisible_Onclick()"><i class="fa fa-check"></i>ACCEPTED</button>
+        <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')" hidden aria-hidden="true" style="display:none !important;"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
+        <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')" hidden aria-hidden="true" style="display:none !important;"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
+        <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()" hidden aria-hidden="true" style="display:none !important;"><i class="fa fa-download"></i>EXPORT BRAVO</button>
         <button type="button" id="btnSearch" class="btn btn-sm btn-primary finished-search-button" onclick="btnSearch_OnClick()"><i class="fa fa-search"></i>SREACH</button>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
         </div>
@@ -1454,6 +1456,119 @@
             //btnSearch_OnClick();
         }
 
+        function getVisibleFinishedFlightIds() {
+            var ids = [];
+            var seen = {};
+
+            $('#tblSource tbody tr[id]').each(function () {
+                var id = String(this.id || '');
+                if (/^\d+$/.test(id) && !seen[id]) {
+                    seen[id] = true;
+                    ids.push(id);
+                }
+            });
+
+            return ids;
+        }
+
+        function splitFinishedFlightIds(ids) {
+            var batches = [];
+            var current = [];
+            var currentLength = 0;
+
+            $.each(ids, function (_, id) {
+                var addedLength = id.length + (current.length > 0 ? 1 : 0);
+                if (current.length > 0 && currentLength + addedLength > 3500) {
+                    batches.push(current);
+                    current = [];
+                    currentLength = 0;
+                    addedLength = id.length;
+                }
+
+                current.push(id);
+                currentLength += addedLength;
+            });
+
+            if (current.length > 0) batches.push(current);
+            return batches;
+        }
+
+        function acceptFinishedFlightBatch(batches, batchIndex, affectedTotal) {
+            if (batchIndex >= batches.length) {
+                alert('Đã Accepted ' + affectedTotal + ' chuyến bay.');
+                $('#tblSource').attr('data-pageIndex', 1);
+                isSearch = true;
+                LoadDataGrid();
+                return;
+            }
+
+            $.ajax({
+                method: 'PUT',
+                url: urlApi + 'api/ApiExtension/ExcuteReturnInt?packageName=FINISHED_STATUS_PKG&storeName=ACCEPT_FINISHED_FLIGHTS',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({
+                    P_FLIGHT_IDS: batches[batchIndex].join(','),
+                    P_USER: '<%= System.Web.HttpUtility.JavaScriptStringEncode(_user.UserName.ToString()) %>'
+                })
+            }).done(function (data) {
+                var affected = data && data.Code === '00'
+                    ? parseInt(data.ListValue, 10)
+                    : -1;
+
+                if (isNaN(affected) || affected < 0) {
+                    $('#btnAccepted').prop('disabled', false);
+                    alert('Accepted không thành công. Đã cập nhật '
+                        + affectedTotal + ' chuyến bay trước khi gặp lỗi.');
+                    return;
+                }
+
+                acceptFinishedFlightBatch(
+                    batches,
+                    batchIndex + 1,
+                    affectedTotal + affected
+                );
+            }).fail(function (xhr) {
+                console.error(
+                    '[ACCEPT FINISHED FLIGHTS] Request failed:',
+                    xhr.responseJSON || xhr.responseText
+                );
+                $('#btnAccepted').prop('disabled', false);
+                alert('Không thể Accepted dữ liệu. Đã cập nhật '
+                    + affectedTotal + ' chuyến bay trước khi gặp lỗi.');
+            }).always(function () {
+                if (batchIndex === batches.length - 1) {
+                    $('#btnAccepted').prop('disabled', false);
+                }
+            });
+        }
+
+        function btnAcceptVisible_Onclick() {
+            if (!$('#chkKhb').prop('checked')) {
+                alert('Chức năng Accepted chỉ áp dụng cho danh sách Hoàn thành.');
+                return;
+            }
+
+            if ($('#tblSource tbody tr[data-isUpdate="true"]').length > 0) {
+                alert('Vui lòng lưu các dòng đã sửa trước khi Accepted.');
+                return;
+            }
+
+            var ids = getVisibleFinishedFlightIds();
+            if (ids.length === 0) {
+                alert('Không có chuyến bay nào đang hiển thị để Accepted.');
+                return;
+            }
+
+            if (!confirm('Accepted ' + ids.length
+                + ' chuyến bay đang hiển thị trong kết quả tìm kiếm?')) {
+                return;
+            }
+
+            $('#btnAccepted').prop('disabled', true);
+            acceptFinishedFlightBatch(splitFinishedFlightIds(ids), 0, 0);
+        }
+
         function btnMakeFinished_Onclick() {
             var result = confirm("Do you want move data to finished fly?");
             if (result) {
@@ -1599,6 +1714,8 @@
             var khb_qndi = $('#chkQndi').prop('checked');
             var khb_qtve = $('#chkQtve').prop('checked');
             var khb_chot = $('#chkChot').prop('checked');
+
+            $('#btnAccepted').prop('disabled', !khb);
 
             if (khb) {$('#btnExport80').attr('disabled', 'disabled'); $('#btnInsertList').removeAttr('disabled'); $('#btnUpdateList').removeAttr('disabled'); $('#btnDeleteByChecked').removeAttr('disabled'); $('#btnExport').removeAttr('disabled'); $('#btnMove').attr('disabled', 'disabled'); $('#ddlTime').removeAttr('disabled'); $('#ddlSelect').removeAttr('disabled'); $('#ddlType').removeAttr('disabled'); $('#ddlFir').removeAttr('disabled'); btnSearch(); }
             if (khb_delete) { $('#btnExport80').removeAttr('disabled', 'disabled');$('#btnUpdateList').attr('disabled', 'disabled'); $('#btnDeleteByChecked').attr('disabled', 'disabled'); $('#btnInsertList').attr('disabled', 'disabled'); $('#ddlSelect').attr('disabled', 'disabled'); $('#ddlType').attr('disabled', 'disabled'); $('#ddlTime').attr('disabled', 'disabled'); $('#btnExport').attr('disabled', 'disabled'); $('#btnMove').removeAttr('disabled'); LoadDataGrid_Finished_NotComplate(); }
@@ -1987,7 +2104,6 @@
 
     </script>
     <script>
-        LoadDataGrid();
         $('#txtFromDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
         $('#txtFromDate').multiDate();
         $('#txtToDate').val(dateFormat(new Date().setDate(new Date().getDate() - 1), 'dd-mm-yyyy'));
@@ -2009,6 +2125,7 @@
         $('#txtDATE_OLD').multiDate();
         $('#txtFLIGHTDATE').multiDate();
         $('#btnMove').attr('disabled', 'disabled');
+        LoadDataGrid();
     </script>
     <script>
         function sortOnclick(ele) {
