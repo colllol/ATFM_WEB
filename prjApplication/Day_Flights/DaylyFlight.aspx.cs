@@ -794,10 +794,11 @@ namespace prjApplication.Day_Flights
                 c4 = $"<td class=\"{tdColorClassChange("FROM_AIRP", r["CHANGEVALUE"].ToString())} {textColorClassChange("FROM_AIRP", r["CHANGEVALUE"].ToString())}\">"
                     + $"<input type = 'text' data-control = '_updateAll' class=\"" + _color + "\"   id='txtFROM_AIRP" + i + "' style='width: 55px!important;' data-oldValue='" + r["FROM_AIRP"].ToString() + "' value='" + r["FROM_AIRP"].ToString() + "' onfocusin='binAutocomplete(this,\"AERO\")' onblur='checkIsUpdate(this)'/></td>";
 
-                if (!string.IsNullOrEmpty(r["CODE"].ToString()))
+                if (string.Equals(
+                    r["CODE"].ToString(),
+                    "CS",
+                    StringComparison.OrdinalIgnoreCase))
                 {
-                    if (r["CODE"].ToString() == "CS")
-                    {
                         if (!string.IsNullOrEmpty(r["ETD"].ToString()))
                         {
                             if (r["ETD"].ToString().ToUpper() != "OPEN")
@@ -835,7 +836,6 @@ namespace prjApplication.Day_Flights
                         {
                             c5B = $"<td><input type = 'text' data-control = '_updateAll' class=\"" + _color + "\" style='width: 55px!important;' data-minlenght='4' maxlength='6' id='txtETA" + i + "' value='' onblur='checkIsUpdate(this)'/></td>";
                         }
-                    }
                 }
                 else
                 {
@@ -1097,10 +1097,11 @@ namespace prjApplication.Day_Flights
 
 
 
-                if (!string.IsNullOrEmpty(r["CODE"].ToString()))
+                if (string.Equals(
+                    r["CODE"].ToString(),
+                    "CS",
+                    StringComparison.OrdinalIgnoreCase))
                 {
-                    if (r["CODE"].ToString() == "CS")
-                    {
                         if (!string.IsNullOrEmpty(r["ETD"].ToString()))
                         {
                             if (r["ETD"].ToString().ToUpper() != "OPEN")
@@ -1138,7 +1139,6 @@ namespace prjApplication.Day_Flights
                         {
                             c5B = $"<td><input type = 'text' data-control = '_updateAll' class=\"" + _color + "\" style='width: 55px!important;' data-minlenght='4' maxlength='6' id='txtETA" + i + "' value='' onblur='checkIsUpdate(this)'/></td>";
                         }
-                    }
                 }
                 else
                 {
