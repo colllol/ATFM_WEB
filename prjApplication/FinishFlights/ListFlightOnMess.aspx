@@ -109,6 +109,7 @@
         #tblMessageFlights th {
             height: 34px;
             font-size: 11px;
+            color: #fff !important;
             text-transform: uppercase;
             background: #337ab7;
         }
@@ -441,9 +442,24 @@
                 dataType: 'json',
                 data: JSON.stringify(request)
             }).done(function (data) {
-                var rows = data && data.Code === '00' && data.ListValue
-                    ? data.ListValue
-                    : [];
+                if (!data || String(data.Code) !== '00') {
+                    var apiMessage = data && data.Message
+                        ? data.Message
+                        : 'API không trả về kết quả hợp lệ.';
+
+                    console.error('[GET_FLIGHTS_ON_MESSAGE] API error:', data);
+                    messageFlightTotalRecords = 0;
+                    $('#tblMessageFlights tbody').html(
+                        '<tr><td colspan="17" class="message-flight-empty">'
+                        + escapeMessageFlightHtml(apiMessage)
+                        + '</td></tr>'
+                    );
+                    $('#messageFlightTotal').text('Tổng số: 0');
+                    alert('Không thể tải dữ liệu: ' + apiMessage);
+                    return;
+                }
+
+                var rows = data.ListValue || [];
 
                 messageFlightTotalRecords = rows.length > 0
                     ? parseInt(rows[0].SUMRECORD, 10) || 0
@@ -548,9 +564,16 @@
                 dataType: 'json',
                 data: JSON.stringify(request)
             }).done(function (data) {
-                var rows = data && data.Code === '00' && data.ListValue
-                    ? data.ListValue
-                    : [];
+                if (!data || String(data.Code) !== '00') {
+                    var apiMessage = data && data.Message
+                        ? data.Message
+                        : 'API không trả về kết quả hợp lệ.';
+                    console.error('[EXPORT FLIGHTS ON MESSAGE] API error:', data);
+                    alert('Không thể Export Excel: ' + apiMessage);
+                    return;
+                }
+
+                var rows = data.ListValue || [];
 
                 if (rows.length === 0) {
                     alert('Không có dữ liệu để Export Excel.');
