@@ -3228,26 +3228,57 @@
                 } else alert('Update success!');
             })
         }
-         function LoadDataGrid_Finished() {
-            /*LoadDataGrid_ExportFinish();  */
-			
-			var cf = confirm('Do you want export finished ?');
-            if (cf) {
+        function showFinishedExportLoading() {
+            if (window.ATFMLoading && typeof window.ATFMLoading.show === 'function') {
+                window.ATFMLoading.show('Đang xử lý và xuất chuyến bay hoàn thành...');
+            }
+        }
+
+        function hideFinishedExportLoading() {
+            if (window.ATFMLoading && typeof window.ATFMLoading.hideAfterRender === 'function') {
+                window.ATFMLoading.hideAfterRender();
+            }
+        }
+
+        function rejectFinishedExport(stage, response) {
+            var deferred = $.Deferred();
+            deferred.reject({ stage: stage, response: response });
+            return deferred.promise();
+        }
+
+        function LoadDataGrid_Finished() {
+            var cf = confirm('Do you want export finished ?');
+            if (!cf) return;
+
+            showFinishedExportLoading();
+
+            // Nhường một nhịp render để overlay hiển thị trước khi bắt đầu xử lý.
+            window.setTimeout(function () {
                 var url = urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=MAKE_FINISHED&storeName=make_finished_flights_news";
+
                 $.ajax({
-                    async: false,
                     method: "PUT",
                     url: url,
-                    data: JSON.stringify({ P_STRING: 'TEST' }),
-                }).always(function (data) {
-                    if (data.ListValue == null || data.ListValue == -1) {
-                        alert('Export Finished error!');
-                    } 
-					LoadDataGrid_ExportFinish();
-					alert('Success !');
-                })
-            }
-          
+                    data: JSON.stringify({ P_STRING: 'TEST' })
+                }).then(function (data) {
+                    if (!data || data.ListValue == null || data.ListValue == -1) {
+                        return rejectFinishedExport('MAKE_FINISHED', data);
+                    }
+
+                    return LoadDataGrid_ExportFinish();
+                }).done(function () {
+                    // Ba file được tạo cách nhau 300 ms; thông báo sau khi đã kích hoạt đủ lượt tải.
+                    window.setTimeout(function () {
+                        alert('Success !');
+                    }, 950);
+                }).fail(function (error) {
+                    console.error('[MOVEFINISH] Export Finished error:', error);
+                    alert('Export Finished error!');
+                }).always(function () {
+                    // Giữ overlay trong lúc ba link tải LD_OF, LD và OF lần lượt được kích hoạt.
+                    window.setTimeout(hideFinishedExportLoading, 900);
+                });
+            }, 50);
         }
 
 
@@ -3829,33 +3860,19 @@
 			//console.log(_obj);
 			
 		   
-			var $request = $.ajax({
+            var $request = $.ajax({
                 method: "PUT",
                 url: urlApi + _urlPath,
-                data: JSON.stringify(_obj),
-                beforeSend: function () {
-                },
-                complete: function () {
-                    unLoadingData('loaddingData');
-                },
-            }).always(function (data) {
-				//console.log(data);
-				if (data.ListValue == null) {
-                    unLoadingData('loaddingData');
-                    return;
+                data: JSON.stringify(_obj)
+            });
+
+            return $request.then(function (data) {
+                if (!data || data.ListValue == null) {
+                    return rejectFinishedExport('GET_EXPORT_DATA', data);
                 }
 
                 exportMoveFinishByPermType(data.ListValue);
-
-
             });
-			
-			
-			
-            $request.onreadystatechange = null;
-            $request.abort = null;
-            $request = null;
-			
         }
 				  
         function generate_excel(html) {
