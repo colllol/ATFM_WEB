@@ -3741,6 +3741,83 @@
 		function returnEmpty(val) {
             return val == null ? "" : val;
         }
+
+		function normalizeMoveFinishPermType(value) {
+            return $.trim(returnEmpty(value)).replace(/\s+/g, '').toUpperCase();
+        }
+
+		function buildMoveFinishExportTable(rows) {
+            var strAppend = RenderTableKhExport({ ListValue: rows });
+            var strHtml = "<table id='tblSourceExport' class='table table-bordered'>";
+            strHtml += "<thead style='color: red'>"
+                    + "<tr>"
+                    + "<th>OPER</th>"
+                    + "<th>CALLSIGN</th>"
+                    + "<th>REGIS</th>"
+                    + "<th>R_CRAFT</th>"
+                    + "<th>F_CRAFT</th>"
+                    + "<th>PURPOSE</th>"
+                    + "<th>P_TYPE</th>"
+                    + "<th>FROM</th>"
+                    + "<th>TO</th>"
+                    + "<th>FLIGHTDATE</th>"
+                    + "<th>ATD</th>"
+                    + "<th>ATA</th>"
+                    + "<th>VIA</th>"
+                    + "<th>FPL_VIA</th>"
+                    + "<th>REMARK</th>"
+                    + "<th>LASTUSER</th>"
+                    + "<th>ETD</th>"
+                    + "<th>ETA</th>"
+                    + "<th>EOBT</th>"
+                    + "</tr>"
+                    + "</thead>"
+                    + "<tbody>"
+                    + strAppend
+                    + "</tbody>"
+                    + "</table>";
+
+            return strHtml;
+        }
+
+		function exportMoveFinishByPermType(rows) {
+            var ldOfRows = [];
+            var ldRows = [];
+            var ofRows = [];
+
+            $.each(rows || [], function (_, row) {
+                var permType = normalizeMoveFinishPermType(row.PERMTYPE);
+                if (permType === 'LD') {
+                    ldOfRows.push(row);
+                    ldRows.push(row);
+                } else if (permType === 'O/F') {
+                    ldOfRows.push(row);
+                    ofRows.push(row);
+                }
+            });
+
+            var exportGroups = [
+                { suffix: 'LD_OF', rows: ldOfRows },
+                { suffix: 'LD', rows: ldRows },
+                { suffix: 'OF', rows: ofRows }
+            ];
+
+            console.log('[MOVEFINISH] Export by PERMTYPE', {
+                LD_OF: exportGroups[0].rows.length,
+                LD: ldRows.length,
+                OF: ofRows.length
+            });
+
+            $.each(exportGroups, function (index, group) {
+                window.setTimeout(function () {
+                    exportExelMOVEFINISH(
+                        buildMoveFinishExportTable(group.rows),
+                        group.suffix
+                    );
+                }, index * 300);
+            });
+        }
+
 		function LoadDataGrid_ExportFinish() {
             var _date = $('#ddlDateFlight option:selected').text() == '' ? new Date().format('dd-MM-yyyy') : $('#ddlDateFlight option:selected').text().replace(/\//gi, '-').replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$1/$2/$3').replace('/','-').replace('/','-');
            			
@@ -3767,42 +3844,8 @@
                     unLoadingData('loaddingData');
                     return;
                 }
-				
-				
-                var strAppend = RenderTableKhExport(data);
-				//alert(strAppend); + "<th>No</th>"
-                var strHtml = "<table id='tblSourceExport' class='table table-bordered'>";
-                strHtml += "<thead style='color: red'>"
-                        + "<tr>"
-                        
-                        + "<th>OPER</th>"
-                        + "<th>CALLSIGN</th>"
-                        + "<th>REGIS</th>"
-                        + "<th>R_CRAFT</th>"
-                        + "<th>F_CRAFT</th>"
-                        + "<th>PURPOSE</th>"
-                        + "<th>P_TYPE</th>"
-                        + "<th>FROM</th>"
-                        + "<th>TO</th>"
-                        + "<th>FLIGHTDATE</th>"
-                        + "<th>ATD</th>"
-                        + "<th>ATA</th>"
-                        + "<th>VIA</th>"
-                        + "<th>FPL_VIA</th>"
-                        + "<th>REMARK</th>"
-                        + "<th>LASTUSER</th>"
-                        + "<th>ETD</th>"
-                        + "<th>ETA</th>"
-                        + "<th>EOBT</th>"
-                        + "</tr>"
-                        + "</thead>"
-                        + strAppend
-                        + "<tbody>"
-                        + "</tbody>"
-                        + "</table>";
 
-				
-                exportExelMOVEFINISH(strHtml);
+                exportMoveFinishByPermType(data.ListValue);
 
 
             });
@@ -3819,7 +3862,7 @@
            
 			exportExel(html);
         }
-		function exportExelMOVEFINISH(_html) {
+		function exportExelMOVEFINISH(_html, fileSuffix) {
 			
             var dt = new Date();
             var day = dt.getDate();
@@ -3831,9 +3874,12 @@
 			
 			
             var textToSave = _html;
-            var textToSaveAsBlob = new Blob([textToSave], { type: "text/plain" });
+            var textToSaveAsBlob = new Blob([textToSave], { type: "application/vnd.ms-excel;charset=utf-8" });
             var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
-            var fileNameToSaveAs = 'exported_MOVEFINISH_' + postfix + '.xls';
+            var safeSuffix = fileSuffix
+                ? String(fileSuffix).replace(/[^0-9A-Za-z_-]/g, '_') + '_'
+                : '';
+            var fileNameToSaveAs = 'exported_MOVEFINISH_' + safeSuffix + postfix + '.xls';
             var downloadLink = document.createElement("a");
             downloadLink.download = fileNameToSaveAs;
             downloadLink.innerHTML = "Download File";
@@ -3842,6 +3888,10 @@
             downloadLink.style.display = "none";
             document.body.appendChild(downloadLink);
             downloadLink.click();
+
+            window.setTimeout(function () {
+                window.URL.revokeObjectURL(textToSaveAsURL);
+            }, 2000);
 
         }
         function exportExel(_html) {
