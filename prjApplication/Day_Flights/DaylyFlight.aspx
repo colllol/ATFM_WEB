@@ -2001,7 +2001,7 @@
                 RowFinish: isSroll ? (parseInt($('#grdSource tbody tr').last().attr('data-RowNumber'))
     + appenLoad) : ddlPageSize.value,
                 OptionDate: $('#ddlDateFlight').val(),
-                ROUTE: $('#txtROUTE').val(),
+                VIA: $('#txtROUTE').val(),
                 ROUTE_TT: $('#txtROUTE_TP').val()
                 
             }
@@ -4017,7 +4017,7 @@
                 OptionDate: $('#ddlDateFlight').val(),
                 //FLIGHTDATE: $('#ddlDateFlight option:selected').text() == '' ? new Date().format('dd/MM/yyyy') : $('#ddlDateFlight option:selected').text().replace(/\//gi, '-').replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$1/$2/$3'),
                 FLIGHTDATE:'07/09/2021',
-                ROUTE: $('#txtROUTE').val(),
+                VIA: $('#txtROUTE').val(),
                 ROUTE_TT: $('#txtROUTE_TP').val()
             }
             sObj = _obj;
