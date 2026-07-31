@@ -14,7 +14,8 @@ namespace prjInfo
         public Int64 FLIGHT_PK { get; set; }
         public Int64 PERM_ID { get; set; }
         public Int64 CRAFT_ID { get; set; }
-        public Int64 MTOW { get; set; }
+        //public Int64 MTOW { get; set; }
+        public decimal MTOW { get; set; }
         public string DAYSFLIGHT { get; set; }
         public string FLIGHTNBR { get; set; }
         public string REGISTRATION { get; set; }

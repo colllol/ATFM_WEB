@@ -227,10 +227,10 @@
             </div>
 
             <div class="message-flight-field">
-                <label for="ddlThongBaoMode">Nội dung điện văn</label>
+                <label for="ddlThongBaoMode">Mục đích</label>
                 <select id="ddlThongBaoMode">
-                    <option value="0" selected="selected">KHÔNG CHỨA THONG BAO</option>
-                    <option value="1">CÓ CHỨA THONG BAO</option>
+                    <option value="0" selected="selected">KẾ HOẠCH 15H</option>
+                    <option value="1">BỔ SUNG</option>
                     <option value="2">TẤT CẢ</option>
                 </select>
             </div>
@@ -279,8 +279,8 @@
             <table id="tblMessageFlights" class="table table-bordered">
                 <colgroup>
                     <col style="width: 45px;" />
-                    <col style="width: 82px;" />
-                    <col style="width: 55px;" />
+                   <%-- <col style="width: 82px;" />
+                    <col style="width: 55px;" />--%>
                     <col style="width: 60px;" />
                     <col style="width: 90px;" />
                     <col style="width: 85px;" />
@@ -291,7 +291,7 @@
                     <col style="width: 60px;" />
                     <col style="width: 85px;" />
                     <col style="width: 60px;" />
-                    <col style="width: 62px;" />
+                    <%--<col style="width: 62px;" />--%>
                     <col style="width: 60px;" />
                     <col style="width: 145px;" />
                     <col style="width: 180px;" />
@@ -299,8 +299,8 @@
                 <thead>
                     <tr>
                         <th>No</th>
-                        <th>Message ID</th>
-                        <th>Part</th>
+                       <%-- <th>Message ID</th>
+                        <th>Part</th>--%>
                         <th>Oper</th>
                         <th>Callsign</th>
                         <th>Registration</th>
@@ -312,7 +312,7 @@
                         <th>Flight date</th>
                         <th>ETD</th>
                         <th>ETA</th>
-                        <th>Flight ID</th>
+                        <%--<th>Flight ID</th>--%>
                         <th>Via</th>
                         <th>Remark</th>
                     </tr>
@@ -458,8 +458,8 @@
             $.each(rows, function (_, row) {
                 html.push('<tr data-flight-id="' + escapeMessageFlightHtml(row.FLIGHT_ID) + '">');
                 html.push('<td>' + escapeMessageFlightHtml(row.RNUM) + '</td>');
-                html.push('<td>' + escapeMessageFlightHtml(row.MESSAGE_ID) + '</td>');
-                html.push('<td>' + escapeMessageFlightHtml(row.PART_NO) + '</td>');
+                //html.push('<td>' + escapeMessageFlightHtml(row.MESSAGE_ID) + '</td>');
+                //html.push('<td>' + escapeMessageFlightHtml(row.PART_NO) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.OPER_ID) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.FLIGHTNBR) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.REGISTRATION) + '</td>');
@@ -471,7 +471,7 @@
                 html.push('<td>' + escapeMessageFlightHtml(formatMessageFlightDate(row.FLIGHTDATE)) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.ETD) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.ETA) + '</td>');
-                html.push('<td>' + escapeMessageFlightHtml(row.FLIGHT_ID) + '</td>');
+                //html.push('<td>' + escapeMessageFlightHtml(row.FLIGHT_ID) + '</td>');
                 html.push('<td class="text-left" title="' + escapeMessageFlightHtml(row.VIA) + '">' + escapeMessageFlightHtml(row.VIA) + '</td>');
                 html.push('<td class="text-left" title="' + escapeMessageFlightHtml(row.REMARK) + '">' + escapeMessageFlightHtml(row.REMARK) + '</td>');
                 html.push('</tr>');
@@ -583,8 +583,8 @@
             $.each(rows, function (_, row) {
                 html.push('<tr>');
                 html.push('<td>' + escapeMessageFlightHtml(row.RNUM) + '</td>');
-                html.push('<td>' + escapeMessageFlightHtml(row.MESSAGE_ID) + '</td>');
-                html.push('<td>' + escapeMessageFlightHtml(row.PART_NO) + '</td>');
+                //html.push('<td>' + escapeMessageFlightHtml(row.MESSAGE_ID) + '</td>');
+                //html.push('<td>' + escapeMessageFlightHtml(row.PART_NO) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.OPER_ID) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.FLIGHTNBR) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.REGISTRATION) + '</td>');
@@ -596,7 +596,7 @@
                 html.push('<td>' + escapeMessageFlightHtml(formatMessageFlightDate(row.FLIGHTDATE)) + '</td>');
                 html.push('<td>\'' + escapeMessageFlightHtml(row.ETD) + '</td>');
                 html.push('<td>\'' + escapeMessageFlightHtml(row.ETA) + '</td>');
-                html.push('<td>' + escapeMessageFlightHtml(row.FLIGHT_ID) + '</td>');
+                //html.push('<td>' + escapeMessageFlightHtml(row.FLIGHT_ID) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.VIA) + '</td>');
                 html.push('<td>' + escapeMessageFlightHtml(row.REMARK) + '</td>');
                 html.push('</tr>');

@@ -27,7 +27,8 @@ namespace prjApplication.Permission
                 else return 0;
             }
         }
-        public string NAMECHA { get { if (string.IsNullOrEmpty(_ID.ToString())) return ""; return new PermMasterScDAL().GetOneObject(_ID.ToString()).PERMNBR_ID; } }
+        public string NAMECHA { get { if (string.IsNullOrEmpty(_ID.ToString())) return "";
+                return new PermMasterScDAL().GetOneObject(_ID.ToString()).PERMNBR_ID; } }
         public string _ObjRender
         {
             get

@@ -2104,7 +2104,8 @@
             
 			//console.log(_obj);
 			
-		   
+            //console.log(_urlPath);
+
 			var $request = $.ajax({
                 method: "PUT",
                 url: urlApi + _urlPath,
@@ -3259,7 +3260,7 @@
                 $.ajax({
                     method: "PUT",
                     url: url,
-                    data: JSON.stringify({ P_STRING: 'TEST' })
+                    data: JSON.stringify({ P_STRING: '<%= _user.UserName%>' })
                 }).then(function (data) {
                     if (!data || data.ListValue == null || data.ListValue == -1) {
                         return rejectFinishedExport('MAKE_FINISHED', data);
@@ -3394,7 +3395,7 @@
 
 		$('#txt_FID').val(ax.attr('data-id'));
             console.log(ax.attr('data-id'));
-            var url = urlApi + '/api/DayFlights/GetPerm_GoingOnBy?ID=' + ax.attr('data-id');
+            var url = urlApi + 'api/DayFlights/GetPerm_GoingOnBy?ID=' + ax.attr('data-id');
             
             $.ajax({
                 method: "GET",

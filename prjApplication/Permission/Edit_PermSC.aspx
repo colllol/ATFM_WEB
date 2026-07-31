@@ -1063,7 +1063,7 @@
             var _bool =  checkInputDay(txtBEGINDATE_SC);
             //alert(_bool);
 
-            console.log(JSON.stringify(GetObjectInfo()));
+            //console.log(JSON.stringify(GetObjectInfo()));
 
             if($('#perm_id').html()!='')
                 GetArgWithPostBack(JSON.stringify(GetObjectInfo()) + '_____btnCreate_Details_Onclick',
@@ -1502,7 +1502,8 @@
             
             }
             
-            var kq ='';
+            var kq = '';
+            console.log(GetObjectInfo())
             $.ajax({
                 //async: false,
                 method: "PUT",
@@ -1533,7 +1534,8 @@
                     });
                 },
             }).always(function(data) {
-                if(data.ListValue==null){
+                console.log(data)
+                if (data.ListValue == null) {
                     unLoadingData();
                     return;
                 }
