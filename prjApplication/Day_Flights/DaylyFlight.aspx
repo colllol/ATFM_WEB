@@ -1190,18 +1190,18 @@
                             <input id="ddlTO_AIRP" type="text" data-autocomplete="AERO" class="sControl" style="width: 60px;" />
                         </td>
                         <td class="headSpec">
-                            <input id="txtETD" type="text" style="display: none;" class="sControl" />
+                            <input id="txtETD" type="text" class="sControl" maxlength="6" inputmode="numeric" style="width: 58px;" title="Tìm theo ETD" />
                         </td>
                         <td class="headSpec">
-                            <input id="txtPtd" type="text" style="display: none;" class="sControl" /></td>
+                            <input id="txtPtd" type="text" class="sControl" maxlength="6" inputmode="numeric" style="width: 58px;" title="Tìm theo EOBT" /></td>
                         <td class="headSpec">
-                            <input id="txtETA" type="text" style="display: none;" class="sControl" />
+                            <input id="txtETA" type="text" class="sControl" maxlength="6" inputmode="numeric" style="width: 58px;" title="Tìm theo ETA" />
                         </td>
 
                         <td class="headSpec">
-                            <input id="txtAtd" type="text" style="display: none;" class="sControl" /></td>
+                            <input id="txtAtd" type="text" class="sControl" maxlength="6" inputmode="numeric" style="width: 58px;" title="Tìm theo ATD" /></td>
                         <td class="headSpec">
-                            <input id="txtATA" type="text" style="display: none;" class="sControl" /></td>
+                            <input id="txtATA" type="text" class="sControl" maxlength="6" inputmode="numeric" style="width: 58px;" title="Tìm theo ATA" /></td>
                         <td class="headSpec">
                             <input id="txtROUTE" type="text" class="sControl" style="width: 120px;" /></td>
                         <td class="headSpec">
@@ -1903,7 +1903,7 @@
         var txtFROM_AIRP = document.getElementById('ddlFROM_AIRP');
         var txtTO_AIRP = document.getElementById('ddlTO_AIRP');
         var txtETD = document.getElementById('txtETD');
-        var txtETA = document.getElementById('txtETA ');
+        var txtETA = document.getElementById('txtETA');
         var txtPtd = document.getElementById('txtPtd');
         var txtAtd = document.getElementById('txtAtd');
         var txtATA = document.getElementById('txtATA');
@@ -1933,6 +1933,11 @@
             $('#txtPERMNBR').val('');
             $('#ddlFROM_AIRP').val('');
             $('#ddlTO_AIRP').val('');
+            $('#txtETD').val('');
+            $('#txtPtd').val('');
+            $('#txtETA').val('');
+            $('#txtAtd').val('');
+            $('#txtATA').val('');
             $('#txtROUTE').val('');
             $('#txtROUTE_TP').val('');
 
@@ -1962,20 +1967,24 @@
             //appenLoad = parseInt(ddlPageSize.value);
 
                         
+            var selectedTimeColumn = isRefresh ? '' : $('#ddlSelectViewColum').val();
+            var etdFilter = $.trim($('#txtETD').val());
+            var eobtFilter = $.trim($('#txtPtd').val());
+            var etaFilter = $.trim($('#txtETA').val());
+            var atdFilter = $.trim($('#txtAtd').val());
+            var ataFilter = $.trim($('#txtATA').val());
+
             var _obj = {
                 //STATUS: document.getElementById('ddlStatus').value,
                 PERMNBR: $('#txtPERMNBR').val(),
                 FLIGHTNBR: $('#txtFLIGHTNBR').val(),
                 FROM_AIRP: $('#ddlFROM_AIRP').val(),
                 TO_AIRP: $('#ddlTO_AIRP').val(),
-                ETA: isRefresh ? '' : ($('#ddlSelectViewColum').val() == 'ETA' ? 'ETA'
-    : ''),
-                ETD: isRefresh ? '' : ($('#ddlSelectViewColum').val() == 'ETD' ? 'ETD'
-    : ''),
-                ATD: isRefresh ? '' : ($('#ddlSelectViewColum').val() == 'ATD' ? 'ATD'
-    : ''),
-                ATA: isRefresh ? '' : ($('#ddlSelectViewColum').val() == 'ATA' ? 'ATA'
-    : ''),
+                ETA: etaFilter || (selectedTimeColumn == 'ETA' ? 'ETA' : ''),
+                ETD: etdFilter || (selectedTimeColumn == 'ETD' ? 'ETD' : ''),
+                ATD: atdFilter || (selectedTimeColumn == 'ATD' ? 'ATD' : ''),
+                ATA: ataFilter || (selectedTimeColumn == 'ATA' ? 'ATA' : ''),
+                PTD: eobtFilter,
                 CRAFT_ID: $('#ddlCRAFT_T').attr('data-craftid'),
                 CRAFT_TYPE: $('#ddlCRAFT_TP').val(),
                 REGISTRATION: $('#txtREGISTRATION').val(),
