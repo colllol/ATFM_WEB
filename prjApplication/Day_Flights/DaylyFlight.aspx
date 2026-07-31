@@ -184,7 +184,7 @@
 
         .dayly-table-actions {
             display: flex;
-            min-width: 112px;
+            min-width: 0;
             align-items: center;
             gap: 7px;
             padding: 2px 3px;
@@ -214,9 +214,44 @@
         .dayly-table-actions .glyphicon { font-size: 15px; }
 
         #grdSource thead tr.Spec > td.dayly-action-cell {
-            min-width: 225px;
-            padding-left: 10px !important;
+            width: 145px;
+            min-width: 145px;
+            max-width: 145px;
+            padding-left: 5px !important;
             border-right: 2px solid #2d8bc3 !important;
+        }
+
+        #grdSource thead tr:last-child > th:nth-child(2),
+        #grdSource tbody > tr > td:nth-child(2) {
+            width: 40px;
+            min-width: 40px;
+            max-width: 40px;
+            padding-left: 3px !important;
+            padding-right: 3px !important;
+            text-align: center !important;
+        }
+
+        #grdSource tbody > tr > td:nth-child(2) > label {
+            display: block;
+            margin: 0;
+            text-align: center;
+        }
+
+        #grdSource thead tr:last-child > th:nth-child(3),
+        #grdSource tbody > tr > td:nth-child(3) {
+            width: 55px;
+            min-width: 55px;
+            max-width: 55px;
+            padding-left: 3px !important;
+            padding-right: 3px !important;
+            text-align: center !important;
+        }
+
+        #ddlLetter_Type {
+            width: 48px !important;
+            min-width: 48px !important;
+            padding-left: 4px !important;
+            padding-right: 2px !important;
         }
 
         .dayly-top-actions {
