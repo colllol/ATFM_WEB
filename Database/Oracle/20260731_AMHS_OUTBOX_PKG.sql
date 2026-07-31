@@ -44,6 +44,12 @@ CREATE OR REPLACE PACKAGE AMHS_OUTBOX_PKG AS
         P_PAGEINDEX   IN NUMBER DEFAULT 0,
         P_OUT_CURSOR  OUT T_CURSOR
     );
+
+    PROCEDURE GET_OUTBOX_ADDRESSES
+    (
+        P_OUTBOX_ID   IN NUMBER,
+        P_OUT_CURSOR  OUT T_CURSOR
+    );
 END AMHS_OUTBOX_PKG;
 /
 
@@ -183,5 +189,37 @@ CREATE OR REPLACE PACKAGE BODY AMHS_OUTBOX_PKG AS
             WRITE_ERROR('AMHS_OUTBOX_PKG.GET_OUTBOX_MESSAGES');
             RAISE;
     END GET_OUTBOX_MESSAGES;
+
+    PROCEDURE GET_OUTBOX_ADDRESSES
+    (
+        P_OUTBOX_ID   IN NUMBER,
+        P_OUT_CURSOR  OUT T_CURSOR
+    )
+    IS
+        v_outbox_id OUTBOX_ORACLE.ID%TYPE;
+    BEGIN
+        v_outbox_id := TRUNC(P_OUTBOX_ID);
+
+        IF v_outbox_id IS NULL OR v_outbox_id <= 0 THEN
+            RAISE_APPLICATION_ERROR(
+                -20403,
+                'P_OUTBOX_ID must be greater than zero'
+            );
+        END IF;
+
+        OPEN P_OUT_CURSOR FOR
+            SELECT
+                ROW_NUMBER() OVER (ORDER BY A.ID) AS RNUM,
+                A.ID,
+                A.OUTBOX_ORACLE_ID,
+                A.ADDRESS
+            FROM OUTBOX_ADDRESS_ORACLE A
+            WHERE A.OUTBOX_ORACLE_ID = v_outbox_id
+            ORDER BY A.ID;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('AMHS_OUTBOX_PKG.GET_OUTBOX_ADDRESSES');
+            RAISE;
+    END GET_OUTBOX_ADDRESSES;
 END AMHS_OUTBOX_PKG;
 /

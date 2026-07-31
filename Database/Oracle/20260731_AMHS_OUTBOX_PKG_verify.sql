@@ -34,3 +34,21 @@ BEGIN
 END;
 /
 PRINT outbox_cursor;
+
+VARIABLE address_cursor REFCURSOR;
+DECLARE
+    v_outbox_id OUTBOX_ORACLE.ID%TYPE;
+BEGIN
+    SELECT MAX(ID)
+    INTO v_outbox_id
+    FROM OUTBOX_ORACLE;
+
+    IF v_outbox_id IS NOT NULL THEN
+        AMHS_OUTBOX_PKG.GET_OUTBOX_ADDRESSES(
+            P_OUTBOX_ID  => v_outbox_id,
+            P_OUT_CURSOR => :address_cursor
+        );
+    END IF;
+END;
+/
+PRINT address_cursor;

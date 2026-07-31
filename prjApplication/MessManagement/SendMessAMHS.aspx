@@ -175,6 +175,120 @@
             word-break: break-word;
         }
 
+        .amhs-address-link {
+            padding: 2px 7px;
+            border: 0;
+            border-radius: 4px;
+            color: #0b65a5;
+            font-weight: 700;
+            text-decoration: underline;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .amhs-address-link:hover,
+        .amhs-address-link:focus {
+            color: #fff;
+            text-decoration: none;
+            background: #337ab7;
+            outline: none;
+        }
+
+        body.amhs-address-dialog-open { overflow: hidden; }
+
+        .amhs-address-dialog {
+            position: fixed;
+            z-index: 1060;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            background: rgba(13, 41, 64, .52);
+        }
+
+        .amhs-address-dialog[hidden] { display: none !important; }
+
+        .amhs-address-panel {
+            display: flex;
+            flex-direction: column;
+            width: min(780px, 96vw);
+            max-height: 82vh;
+            overflow: hidden;
+            border: 1px solid #9fc4df;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, .28);
+        }
+
+        .amhs-address-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            color: #fff;
+            background: #337ab7;
+        }
+
+        .amhs-address-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .amhs-address-close {
+            width: 32px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 20px;
+            line-height: 28px;
+            background: transparent;
+        }
+
+        .amhs-address-close:hover,
+        .amhs-address-close:focus {
+            color: #337ab7;
+            background: #fff;
+            outline: none;
+        }
+
+        .amhs-address-body {
+            overflow: auto;
+            padding: 12px 14px 14px;
+        }
+
+        #tblAmhsAddresses {
+            width: 100%;
+            margin: 0;
+            table-layout: fixed;
+        }
+
+        #tblAmhsAddresses th,
+        #tblAmhsAddresses td {
+            padding: 7px 8px;
+            border-color: #c4d9e8;
+            vertical-align: top;
+        }
+
+        #tblAmhsAddresses th {
+            color: #fff;
+            text-align: center;
+            text-transform: uppercase;
+            background: #337ab7;
+        }
+
+        #tblAmhsAddresses td:first-child { text-align: center; }
+
+        #tblAmhsAddresses td:last-child {
+            text-align: left;
+            white-space: normal;
+            word-break: break-word;
+        }
+
         .amhs-outbox-empty,
         .amhs-outbox-loading {
             height: 72px;
@@ -293,12 +407,44 @@
         </div>
     </div>
 
+    <div id="amhsAddressDialog" class="amhs-address-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="amhsAddressDialogTitle" hidden="hidden" onclick="closeAmhsAddressDialogFromBackdrop(event)">
+        <div class="amhs-address-panel">
+            <div class="amhs-address-header">
+                <h3 id="amhsAddressDialogTitle">Danh sách địa chỉ nhận</h3>
+                <button type="button" id="btnCloseAmhsAddressDialog" class="amhs-address-close"
+                    aria-label="Đóng" title="Đóng" onclick="closeAmhsAddressDialog()">&times;</button>
+            </div>
+            <div class="amhs-address-body">
+                <table id="tblAmhsAddresses" class="table table-bordered">
+                    <colgroup>
+                        <col style="width: 58px;" />
+                        <col />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Địa chỉ nhận</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="2" class="amhs-outbox-loading">Đang tải địa chỉ...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script>
         var amhsOutboxPageIndex = 0;
         var amhsOutboxTotalRecords = 0;
         var amhsOutboxLoading = false;
         var amhsOutboxUrl = (window.reportApiBase || '')
             + 'api/ApiExtension/ExcuteTable?packageName=AMHS_OUTBOX_PKG&storeName=GET_OUTBOX_MESSAGES';
+        var amhsAddressUrl = (window.reportApiBase || '')
+            + 'api/ApiExtension/ExcuteTable?packageName=AMHS_OUTBOX_PKG&storeName=GET_OUTBOX_ADDRESSES';
+        var amhsAddressTrigger = null;
+        var amhsAddressRequest = null;
 
         function escapeAmhsHtml(value) {
             return $('<div/>').text(value == null ? '' : String(value)).html();
@@ -447,7 +593,14 @@
                 html.push('<td class="amhs-text-left amhs-cell-ellipsis" title="'
                     + escapeAmhsHtml(fromAddress) + '">' + escapeAmhsHtml(fromAddress) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.SUBJECT) + '</td>');
-                html.push('<td>' + escapeAmhsHtml(row.ADDRESS_COUNT) + '</td>');
+                var addressCount = parseInt(row.ADDRESS_COUNT, 10) || 0;
+                if (addressCount > 0) {
+                    html.push('<td><button type="button" class="amhs-address-link" data-outbox-id="'
+                        + escapeAmhsHtml(row.ID) + '" aria-label="Xem ' + addressCount
+                        + ' địa chỉ nhận">' + addressCount + '</button></td>');
+                } else {
+                    html.push('<td>0</td>');
+                }
                 html.push('<td>' + escapeAmhsHtml(row.ATTACH) + '</td>');
                 html.push('<td class="amhs-text-left"><div class="amhs-content-cell">'
                     + escapeAmhsHtml(content) + '</div></td>');
@@ -455,6 +608,108 @@
             });
 
             $('#tblAmhsOutbox tbody').html(html.join(''));
+        }
+
+        function renderAmhsAddressRows(rows) {
+            if (!rows || rows.length === 0) {
+                $('#tblAmhsAddresses tbody').html(
+                    '<tr><td colspan="2" class="amhs-outbox-empty">Không có địa chỉ nhận.</td></tr>'
+                );
+                return;
+            }
+
+            var html = [];
+            $.each(rows, function (index, row) {
+                html.push('<tr>');
+                html.push('<td>' + escapeAmhsHtml(row.RNUM || (index + 1)) + '</td>');
+                html.push('<td>' + escapeAmhsHtml(row.ADDRESS) + '</td>');
+                html.push('</tr>');
+            });
+            $('#tblAmhsAddresses tbody').html(html.join(''));
+        }
+
+        function openAmhsAddressDialog(outboxId, trigger) {
+            var numericId = parseInt(outboxId, 10);
+            if (!numericId || numericId <= 0) return;
+
+            if (amhsAddressRequest) {
+                amhsAddressRequest.abort();
+                amhsAddressRequest = null;
+            }
+
+            amhsAddressTrigger = trigger || document.activeElement;
+            $('#amhsAddressDialogTitle').text('Danh sách địa chỉ nhận - Outbox ID ' + numericId);
+            $('#tblAmhsAddresses tbody').html(
+                '<tr><td colspan="2" class="amhs-outbox-loading">Đang tải địa chỉ...</td></tr>'
+            );
+            $('#amhsAddressDialog').prop('hidden', false).attr('aria-busy', 'true');
+            $('body').addClass('amhs-address-dialog-open');
+            $('#btnCloseAmhsAddressDialog').focus();
+
+            var currentRequest = $.ajax({
+                method: 'PUT',
+                url: amhsAddressUrl,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({ P_OUTBOX_ID: numericId })
+            });
+            amhsAddressRequest = currentRequest;
+
+            currentRequest.done(function (data) {
+                if (!data || String(data.Code) !== '00') {
+                    var apiMessage = data && data.Message
+                        ? data.Message
+                        : 'API không trả về kết quả hợp lệ.';
+                    console.error('[GET_OUTBOX_ADDRESSES] API error:', data);
+                    $('#tblAmhsAddresses tbody').html(
+                        '<tr><td colspan="2" class="amhs-outbox-empty">'
+                        + escapeAmhsHtml(apiMessage) + '</td></tr>'
+                    );
+                    return;
+                }
+
+                renderAmhsAddressRows(data.ListValue || []);
+            }).fail(function (xhr, textStatus) {
+                if (textStatus === 'abort') return;
+                console.error(
+                    '[GET_OUTBOX_ADDRESSES] Request failed:',
+                    xhr.responseJSON || xhr.responseText
+                );
+                $('#tblAmhsAddresses tbody').html(
+                    '<tr><td colspan="2" class="amhs-outbox-empty">Không thể tải danh sách địa chỉ.</td></tr>'
+                );
+            }).always(function () {
+                if (amhsAddressRequest === currentRequest) {
+                    amhsAddressRequest = null;
+                }
+                $('#amhsAddressDialog').attr('aria-busy', 'false');
+            });
+        }
+
+        function closeAmhsAddressDialog() {
+            if ($('#amhsAddressDialog').prop('hidden')) return;
+
+            if (amhsAddressRequest) {
+                amhsAddressRequest.abort();
+                amhsAddressRequest = null;
+            }
+
+            var focusTarget = amhsAddressTrigger
+                && document.documentElement.contains(amhsAddressTrigger)
+                ? amhsAddressTrigger
+                : document.getElementById('btnSearchAmhsOutbox');
+            if (focusTarget && typeof focusTarget.focus === 'function') {
+                focusTarget.focus();
+            }
+            amhsAddressTrigger = null;
+            $('#amhsAddressDialog').prop('hidden', true).removeAttr('aria-busy');
+            $('body').removeClass('amhs-address-dialog-open');
+        }
+
+        function closeAmhsAddressDialogFromBackdrop(event) {
+            if (event && event.target && event.target.id === 'amhsAddressDialog') {
+                closeAmhsAddressDialog();
+            }
         }
 
         function updateAmhsOutboxPager() {
@@ -638,8 +893,16 @@
             });
 
             $('#ddlAmhsPageSize').on('change', searchAmhsOutbox);
+            $('#tblAmhsOutbox').on('click', '.amhs-address-link', function () {
+                openAmhsAddressDialog($(this).attr('data-outbox-id'), this);
+            });
             $('#txtAmhsFromDate, #txtAmhsToDate, #txtAmhsContent').on('keydown', function (event) {
                 if (event.which === 13) searchAmhsOutbox();
+            });
+            $(document).on('keydown.amhsAddressDialog', function (event) {
+                if (event.which === 27 && !$('#amhsAddressDialog').prop('hidden')) {
+                    closeAmhsAddressDialog();
+                }
             });
 
             searchAmhsOutbox();
