@@ -6,15 +6,15 @@ Hệ thống quản lý luồng không lưu xây dựng trên ASP.NET Web Forms,
 
 ## Thành phần solution
 
-| Project | Vai trò |
-|---|---|
-| `prjApplication` | Ứng dụng ASP.NET Web Forms chính |
-| `prjBusinessLogic` | Business logic và lớp gọi API |
-| `prjInfo` | Model/DTO |
-| `HPCServerDataAccess` | Truy cập dữ liệu legacy |
-| `HPCShareDLL` | Tiện ích dùng chung |
-| `prjComponents` | Web controls và helper |
-| `CustomControl` | Custom Web Forms controls |
+| Project               | Vai trò                          |
+| --------------------- | -------------------------------- |
+| `prjApplication`      | Ứng dụng ASP.NET Web Forms chính |
+| `prjBusinessLogic`    | Business logic và lớp gọi API    |
+| `prjInfo`             | Model/DTO                        |
+| `HPCServerDataAccess` | Truy cập dữ liệu legacy          |
+| `HPCShareDLL`         | Tiện ích dùng chung              |
+| `prjComponents`       | Web controls và helper           |
+| `CustomControl`       | Custom Web Forms controls        |
 
 ## Yêu cầu bắt buộc
 
@@ -192,3 +192,5 @@ Không commit `bin`, `obj`, `.vs`, `packages`, file upload, file backup, credent
 - Dùng tài khoản DB có quyền tối thiểu.
 - Đổi ngay credential nếu từng bị commit hoặc chia sẻ công khai.
 - Review `git diff --cached` trước mỗi lần push.
+
+Thực hiện lấy dữ liệu về từ [colllol/ATFM_WEB.git](https://github.com/colllol/ATFM_WEB.git) nhánh agent/initial-atfm-import
