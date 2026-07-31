@@ -254,6 +254,101 @@
             padding-right: 2px !important;
         }
 
+        #popFlightInfoInsert {
+            width: auto !important;
+            padding-right: 0 !important;
+        }
+
+        #popFlightInfoInsert .modal-dialog {
+            width: calc(100% - 30px);
+            max-width: 1080px;
+            margin: 28px auto;
+        }
+
+        #popFlightInfoInsert .modal-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #d8e3ec;
+        }
+
+        #popFlightInfoInsert .modal-body {
+            padding: 16px 18px 18px;
+        }
+
+        .flight-info-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 12px 10px;
+        }
+
+        .flight-info-field {
+            grid-column: span 2;
+            min-width: 0;
+        }
+
+        .flight-info-field.span-1 { grid-column: span 1; }
+        .flight-info-field.span-3 { grid-column: span 3; }
+        .flight-info-field.span-4 { grid-column: span 4; }
+        .flight-info-field.span-8 { grid-column: span 8; }
+
+        .flight-info-field > label {
+            display: block;
+            margin: 0 0 4px;
+            color: #35536b;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .flight-info-field input,
+        .flight-info-field select {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 34px !important;
+            box-sizing: border-box;
+            border: 1px solid #b8ccdc;
+            border-radius: 5px;
+            padding: 5px 8px;
+            color: #24445d;
+            background: #fff;
+        }
+
+        .flight-info-field input:disabled {
+            color: #77838d;
+            background: #eef2f5;
+        }
+
+        .flight-info-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #d8e3ec;
+        }
+
+        .flight-info-actions .btn {
+            min-width: 94px;
+            border-radius: 5px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 900px) {
+            .flight-info-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+            .flight-info-field.span-8 { grid-column: span 6; }
+        }
+
+        @media (max-width: 600px) {
+            .flight-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .flight-info-field,
+            .flight-info-field.span-3,
+            .flight-info-field.span-4,
+            .flight-info-field.span-8 { grid-column: span 2; }
+            .flight-info-field.span-1 { grid-column: span 1; }
+        }
+
         .dayly-top-actions {
             display: flex;
             align-items: center;
@@ -1584,193 +1679,23 @@
         </div>
     </div>
 
-    <div id="popFlightInfoInsert" class="modal fade" style="width: 1300px; padding-right: 20px;" role="dialog" tabindex="-1"
-        aria-labelledby="myModalLabel"
+    <div id="popFlightInfoInsert" class="modal fade" role="dialog" tabindex="-1"
+        aria-labelledby="flightInfoModalTitle"
         data-backdrop="false"
         aria-hidden="true">
-        <div class="modal-dialog wid_90">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close"
                         data-dismiss="modal">
                         ×</button>
-                    <h4 class="blue bigger">Add / Update Flight Info <span id="idBnr" style="color: red;"></span></h4>
+                    <h4 id="flightInfoModalTitle" class="blue bigger">Add / Update Flight Info <span id="idBnr" style="color: red;"></span></h4>
                 </div>
                 <div class="modal-body" id="txtContentExtensionInfoFlightInsert">
-
-
-                    <fieldset>
-
-                        <table>
-                            <tr>
-
-
-                                <td>
-                                    <dl>
-                                        <dt><b>CRAFT_T</b></dt>
-                                        <dt>
-                                            <input id="txt_popCRAFT_T" type="text" data-autocomplete="CRAFT" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>CAllSIGN</b></dt>
-                                        <dt>
-                                            <input id="txt_popCAllSIGN" type="text" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>FROM</b></dt>
-                                        <dt>
-                                            <input id="txt_popFROM" type="text" data-autocomplete="AERO" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>TO</b></dt>
-                                        <dt>
-                                            <input id="txt_popTO" type="text" data-autocomplete="AERO" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>ETD</b></dt>
-                                        <dt>
-                                            <input id="txt_popETD" type="text" data-number='true' maxlength='6' class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>EOBT</b></dt>
-                                        <dt>
-                                            <input id="txt_popEOBT" type="text" data-number='true' maxlength='6' class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>ETA</b></dt>
-                                        <dt>
-                                            <input id="txt_popETA" type="text" maxlength='7' class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>OPER</b></dt>
-                                        <dt>
-                                            <input id="txt_popOPER" type="text" data-autocomplete="OPER" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-
-                                <td>
-                                    <dl>
-                                        <dt><b>REMARK</b></dt>
-                                        <dt>
-                                            <input id="txt_popREMARK" type="text" class="wid_180px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>P_DATE</b></dt>
-                                        <dt>
-                                            <input id="txt_popPERMDATE" type="text" class="wid_180px" /></dt>
-                                    </dl>
-                                </td>
-
-                            </tr>
-                            <tr>
-                                <td>
-                                    <dl>
-                                        <dt><b>P_TYPE</b></dt>
-                                        <dt>
-                                            <input id="txt_popPERMTYPE" type="text" data-autocomplete="PERMTYPE" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-
-
-
-
-
-                                <td>
-                                    <dl>
-                                        <dt><b>F_TYPE</b></dt>
-                                        <dt>
-                                            <input id="txt_popFLIGHTTYPE" type="text" data-autocomplete="FLIGHTTYPE" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>PUR</b></dt>
-                                        <dt>
-                                            <input id="txt_popPUR" type="text" data-autocomplete="PURPOSE" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>VALID</b></dt>
-                                        <dt>
-                                            <input id="txt_popVALID" type="text" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>ATD</b></dt>
-                                        <dt>
-                                            <input id="txt_popATD" type="text" maxlength='6' class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>ATA</b></dt>
-                                        <dt>
-                                            <input id="txt_popATA" type="text" maxlength='6' class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>CRAFT_P</b></dt>
-                                        <dt>
-                                            <input id="txt_popCRAFT_P" type="text" data-autocomplete="CRAFT" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>REGIS</b></dt>
-                                        <dt>
-                                            <input id="txt_popREGIS" type="text" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-
-                                <td>
-                                    <dl>
-                                        <dt><b>PERM</b></dt>
-                                        <dt>
-                                            <input id="txt_popPERMNBR" type="text" class="wid_180px" /></dt>
-                                    </dl>
-                                </td>
-                                <td>
-                                    <dl>
-                                        <dt><b>ROUTE</b></dt>
-                                        <dt>
-                                            <input id="txt_popROUTE" type="text" class="wid_180px" /></dt>
-                                    </dl>
-                                </td>
-                                <td style="display: none;">
-                                    <dl>
-                                        <dt><b>ROUTE_FPL</b></dt>
-                                        <dt>
-                                            <input id="txt_popROUTE_FPL" type="text" class="wid_80px" /></dt>
-                                    </dl>
-                                </td>
-
-                            </tr>
-                        </table>
-
-                    </fieldset>
-
-
-                    <div class="row" style="text-align: center;">
-                        <select id="ddlSelectPop" class="wid_80px" style="height: 30px;">
+                    <div class="flight-info-grid">
+                        <div class="flight-info-field span-1">
+                            <label for="ddlSelectPop">LETTER</label>
+                            <select id="ddlSelectPop">
                             <option selected value="--">--</option>
                             <option value="FPL">FPL</option>
                             <option value="DEP">DEP</option>
@@ -1779,13 +1704,104 @@
                             <option value="CNL">CNL</option>
                             <option value="ARR">ARR</option>
                             <option value="NULL">NULL</option>
-                        </select>
+                            </select>
+                        </div>
+                        <div class="flight-info-field span-3">
+                            <label for="txt_popPERMNBR">PERM</label>
+                            <input id="txt_popPERMNBR" type="text" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popREGIS">REGIS</label>
+                            <input id="txt_popREGIS" type="text" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popCAllSIGN">CALLSIGN</label>
+                            <input id="txt_popCAllSIGN" type="text" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popFROM">FROM</label>
+                            <input id="txt_popFROM" type="text" data-autocomplete="AERO" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popTO">TO</label>
+                            <input id="txt_popTO" type="text" data-autocomplete="AERO" />
+                        </div>
+
+                        <div class="flight-info-field span-1">
+                            <label for="txt_popETD">ETD</label>
+                            <input id="txt_popETD" type="text" data-number="true" maxlength="6" />
+                        </div>
+                        <div class="flight-info-field span-1">
+                            <label for="txt_popEOBT">EOBT</label>
+                            <input id="txt_popEOBT" type="text" data-number="true" maxlength="6" />
+                        </div>
+                        <div class="flight-info-field span-1">
+                            <label for="txt_popETA">ETA</label>
+                            <input id="txt_popETA" type="text" maxlength="7" />
+                        </div>
+                        <div class="flight-info-field span-1">
+                            <label for="txt_popATD">ATD</label>
+                            <input id="txt_popATD" type="text" maxlength="6" />
+                        </div>
+                        <div class="flight-info-field span-1">
+                            <label for="txt_popATA">ATA</label>
+                            <input id="txt_popATA" type="text" maxlength="6" />
+                        </div>
+                        <div class="flight-info-field span-4">
+                            <label for="txt_popROUTE">ROUTE</label>
+                            <input id="txt_popROUTE" type="text" />
+                        </div>
+                        <div class="flight-info-field span-3">
+                            <label for="txt_popROUTE_FPL">ROUTE_FPL</label>
+                            <input id="txt_popROUTE_FPL" type="text" />
+                        </div>
+
+                        <div class="flight-info-field">
+                            <label for="txt_popCRAFT_T">CRAFT_T</label>
+                            <input id="txt_popCRAFT_T" type="text" data-autocomplete="CRAFT" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popCRAFT_P">CRAFT_P</label>
+                            <input id="txt_popCRAFT_P" type="text" data-autocomplete="CRAFT" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popPERMTYPE">P_TYPE</label>
+                            <input id="txt_popPERMTYPE" type="text" data-autocomplete="PERMTYPE" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popFLIGHTTYPE">F_TYPE</label>
+                            <input id="txt_popFLIGHTTYPE" type="text" data-autocomplete="FLIGHTTYPE" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popOPER">OPER</label>
+                            <input id="txt_popOPER" type="text" data-autocomplete="OPER" />
+                        </div>
+                        <div class="flight-info-field">
+                            <label for="txt_popPUR">PURPOSE</label>
+                            <input id="txt_popPUR" type="text" data-autocomplete="PURPOSE" />
+                        </div>
+
+                        <div class="flight-info-field span-1">
+                            <label for="txt_popVALID">VALID</label>
+                            <input id="txt_popVALID" type="text" />
+                        </div>
+                        <div class="flight-info-field span-3">
+                            <label for="txt_popPERMDATE">P_DATE</label>
+                            <input id="txt_popPERMDATE" type="text" />
+                        </div>
+                        <div class="flight-info-field span-8">
+                            <label for="txt_popREMARK">REMARK</label>
+                            <input id="txt_popREMARK" type="text" />
+                        </div>
+                    </div>
+
+                    <div class="flight-info-actions">
                         <input id="txt_FID" type="text" class="wid_180px" style="display: none;" />
-                        <button id="btnSaveInfoChange" onclick="btnInsert();" class="btn btn-sm btn-primary">
+                        <button id="btnSaveInfoChange" type="button" onclick="btnInsert();" class="btn btn-sm btn-primary">
                             <i class="ace-icon fa fa-save"></i>
                             Add New
                         </button>
-                        <button id="btnUpdateInfoChange" onclick="btnUpdate();" class="btn btn-sm btn-primary">
+                        <button id="btnUpdateInfoChange" type="button" onclick="btnUpdate();" class="btn btn-sm btn-primary">
                             <i class="ace-icon fa fa-save"></i>
                             Update
 
@@ -1795,11 +1811,9 @@
                             <i class="ace-icon fa fa-times"></i>
                             Cancel
                         </button>
-                        `				
-                        <button id="btnFinishFlight" onclick="fnFinishFlight();" class="btn btn-sm btn-primary">
-                            <i class="ace-icon fa fa-arrow"></i>
+                        <button id="btnFinishFlight" type="button" onclick="fnFinishFlight();" class="btn btn-sm btn-primary">
+                            <i class="ace-icon fa fa-arrow-right"></i>
                             Move Finished
-
                         </button>
                     </div>
                 </div>
