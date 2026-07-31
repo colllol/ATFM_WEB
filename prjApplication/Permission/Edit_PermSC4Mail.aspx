@@ -330,6 +330,7 @@
     <div id="divPermDetail">
         <label id="lblTotalRecord"></label>
         <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">Update all</button>
+        <button type="button" id="btnAcceptedPermSC" class="btn btn-sm btn-success" onclick="btnAcceptedPermSC_Onclick()">Accepted</button>
         <button type="button" id="btnGenList" class="btn btn-sm btn-primary" style="display:none;" onclick="btnUpdate_GenBack()">Gen Flights</button>
         <button type="button" id="btnSearchBy" class="btn btn-sm btn-primary" onclick="btnSearch_Click()">Search</button>
         <button type="button" id="btnClearSearch" class="btn btn-sm btn-primary" onclick="lnkClear_Click()">Clear search</button>
@@ -542,6 +543,7 @@
         var IdSelect = <%=_ID%>;  
         if (IdSelect == 0){  
             $('#btnUpdatePermMaster').hide();                       
+            $('#btnAcceptedPermSC').hide();
         }
         else
         {
@@ -549,6 +551,7 @@
             {                
                 document.getElementById("btnUpdatePermMaster").disabled = true;
                 document.getElementById("btnUpdateList").disabled = true;
+                document.getElementById("btnAcceptedPermSC").disabled = true;
             }
         }
                 
@@ -752,6 +755,60 @@
                 return ax.substring(0, iStart);
             }
             return ax;
+        }
+        function btnAcceptedPermSC_Onclick() {
+            var permId = $.trim($('#perm_id').html());
+            if (permId === '' || permId === '0') {
+                alert('Permission ID is required.');
+                return;
+            }
+
+            if (!confirm('Do you want to accept this permission and render schedule flights?')) {
+                return;
+            }
+
+            var $button = $('#btnAcceptedPermSC');
+            var url = urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=PERM_PKG&storeName=PAcceptedPermSC";
+
+            $.ajax({
+                method: "PUT",
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({ P_ID: parseInt(permId, 10) }),
+                beforeSend: function () {
+                    $button.prop('disabled', true);
+                    loadingData();
+                }
+            }).done(function (data) {
+                var rawResult = data == null
+                    ? null
+                    : (data.Value != null ? data.Value : data.ListValue);
+                var result = parseInt(rawResult, 10);
+                if (data != null && data.Code !== '-99' && result !== -1 && result !== -2) {
+                    alert('Accepted successfully.');
+                    LoadDataAjax();
+                    return;
+                }
+
+                if (result === -2) {
+                    alert('No permission detail was found.');
+                    return;
+                }
+
+                alert('Accepted error.');
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error('[PAcceptedPermSC] Request failed:', {
+                    status: xhr.status,
+                    textStatus: textStatus,
+                    error: errorThrown,
+                    responseText: xhr.responseText
+                });
+                alert('Accepted error: ' + (xhr.responseText || errorThrown || textStatus));
+            }).always(function () {
+                $button.prop('disabled', false);
+                unLoadingData('loaddingData');
+            });
         }
     </script>
 
@@ -1457,6 +1514,7 @@
                 {                
                     document.getElementById("btnUpdatePermMaster").disabled = true;
                     document.getElementById("btnUpdateList").disabled = true;
+                    document.getElementById("btnAcceptedPermSC").disabled = true;
                 }
                 return;
             }
@@ -1467,6 +1525,7 @@
                 {                
                     document.getElementById("btnUpdatePermMaster").disabled = true;
                     document.getElementById("btnUpdateList").disabled = true;
+                    document.getElementById("btnAcceptedPermSC").disabled = true;
                 }
             
             }
