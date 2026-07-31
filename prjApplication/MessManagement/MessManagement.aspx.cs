@@ -137,6 +137,9 @@ namespace prjApplication.MessManagement
                 case "btnSend_Onclick":
                     kq = btnSend_Onclick(ThamSo[4],ThamSo[0], ThamSo[1], ThamSo[2], ThamSo[3]);
                     break;
+                case "btnSendAMHS_Onclick":
+                    kq = btnSendAMHS_Onclick(ThamSo[4], ThamSo[0], ThamSo[1], ThamSo[2], ThamSo[3]);
+                    break;
                 case "btnOnclickAll":
                     kq = btnSendOnclickAll(ThamSo[0], ThamSo[1], ThamSo[2],ThamSo[4], ThamSo[3], ThamSo[5]);
                     break;
@@ -175,6 +178,8 @@ namespace prjApplication.MessManagement
                 return ax ? "Sussess!" : "Error!";
             }
         }
+
+
 
         private string btnSend_Onclick1(string toOrigin, string toAdd, string content)
         {
@@ -228,5 +233,72 @@ namespace prjApplication.MessManagement
                 return ax ? "Sussess!" : "Error!";
             }
         }
+        private string btnSendAMHS_Onclick(string toOrigin, string partNo, string messType, string toAdd, string content)
+        {
+            if (string.IsNullOrWhiteSpace(partNo) || string.IsNullOrWhiteSpace(content))
+            {
+                return "Không có nội dung điện văn để gửi AMHS.";
+            }
+
+            if (string.IsNullOrWhiteSpace(toAdd))
+            {
+                return "Chưa nhập địa chỉ nhận AMHS.";
+            }
+
+            try
+            {
+                // Luồng AMHS phải gọi message_send_one_amhs. Store này ghi dữ liệu vào
+                // OUTBOX_ORACLE và OUTBOX_ADDRESS_ORACLE trong cùng transaction.
+                object apiResult = new clsResuftAPI().GetValueApiExtension(
+                    "MESSAGE_PKG",
+                    "message_send_one_amhs",
+                    new
+                    {
+                        P_ORIGIN = toOrigin,
+                        P_TOADD = toAdd,
+                        P_CONTENT = content
+                    });
+
+                string resultCode = Convert.ToString(apiResult);
+                bool isSuccess = string.Equals(resultCode, "1", StringComparison.Ordinal);
+
+                WriteLogHistory2Database.WriteHistory2Database(
+                    _user.UserID,
+                    _user.UserFullName,
+                    "[MESSAGE_PKG.message_send_one_amhs]",
+                    0,
+                    string.Format("[SendAMHS][Result={0}]", string.IsNullOrEmpty(resultCode) ? "NULL" : resultCode),
+                    0);
+
+                if (!isSuccess)
+                {
+                    return string.IsNullOrEmpty(resultCode)
+                        ? "Gửi AMHS không thành công: API không trả về kết quả. Kiểm tra kết nối API và log MESSAGE_PKG."
+                        : "Gửi AMHS không thành công. Mã kết quả: " + resultCode + ".";
+                }
+
+                // Chỉ đánh dấu điện văn đã gửi sau khi MESSAGE_PKG xác nhận ghi Outbox thành công.
+                bool statusUpdated = new QlbOutBoxDAL().UpdateStatus(txtBEGINDATE.Value, partNo, messType);
+                if (!statusUpdated)
+                {
+                    return "Gửi AMHS thành công, nhưng chưa cập nhật được trạng thái điện văn nguồn.";
+                }
+
+                return "Gửi AMHS thành công.";
+            }
+            catch (Exception ex)
+            {
+                WriteLogHistory2Database.WriteHistory2Database(
+                    _user.UserID,
+                    _user.UserFullName,
+                    "[MESSAGE_PKG.message_send_one_amhs]",
+                    0,
+                    "[SendAMHS][Exception] " + ex.Message,
+                    0);
+
+                return "Gửi AMHS không thành công: " + ex.Message;
+            }
+        }
+
     }
 }

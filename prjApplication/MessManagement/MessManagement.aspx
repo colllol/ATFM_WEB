@@ -138,7 +138,11 @@
                     <button id="btnSendAll" onclick="btnOnclickAll()" class="btn btn-primary btn-sm"
                         type="button">
                         Send All</button>
-
+                     <button id="btnSendAMHS" onclick="btnOnAMHSclick()" class="btn btn-primary btn-sm" type="button">
+                        Send AMHS</button>
+                    <button id="btnSendAllAMHS" onclick="btnOnclickAll()" class="btn btn-primary btn-sm"
+                        type="button">
+                        Send All AMHS</button>
                 </div>
 
                 <div class="row">
@@ -244,6 +248,26 @@
             }
 
         }
+        function btnOnAMHSclick() {
+            var bx = checkMaxlength();
+            if (!bx) return;
+            var ax = checkValidCustomMinlenght('mCheck');
+            if (!ax) return;
+            if (confirm('Do you want confirm???')) {
+                var obj = {
+                    P_TOADD: $('#txtAddress').val(),
+                    P_CONTENT: $('#txtContent').val()
+                };
+
+                GetArgWithPostBack(partNo + phanCach + messType + phanCach + $('#txtAddress').val() + phanCach + $('#txtContent').val() + phanCach + $('#txtOrigin').val() + phanCachArg + 'btnSendAMHS_Onclick', 'btnSendAMHS_Onclick');
+            }
+            else {
+                return false;
+            }
+
+        }
+
+
         function DisplayResult(resulf, context) {
             if (context == 'btnGetAddredd') {
 
@@ -251,6 +275,9 @@
                 $('#txtAddress').val(resulf);
             }
             else if (context == 'btnSend_Onclick') {
+                alert(resulf);
+            }
+            else if (context == 'btnSendAMHS_Onclick') {
                 alert(resulf);
             }
             else if (context == 'RenderTopBarInfo') {
