@@ -1206,6 +1206,7 @@
     <Content Include="MessManagement\MessManagementZone.aspx" />
     <Content Include="MessManagement\MessManagementAirPort.aspx" />
     <Content Include="MessManagement\MessManagement.aspx" />
+    <Content Include="MessManagement\SendMessAMHS.aspx" />
     <Content Include="MessManagement\ShowMessageFullContent.aspx" />
     <Content Include="PermIMP\EditPermNoImp.aspx" />
     <Content Include="PermIMP\EditPermScImp.aspx" />
@@ -2551,6 +2552,13 @@
     </Compile>
     <Compile Include="MessManagement\MessManagement.aspx.designer.cs">
       <DependentUpon>MessManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="MessManagement\SendMessAMHS.aspx.cs">
+      <DependentUpon>SendMessAMHS.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="MessManagement\SendMessAMHS.aspx.designer.cs">
+      <DependentUpon>SendMessAMHS.aspx</DependentUpon>
     </Compile>
     <Compile Include="MessManagement\ShowMessageFullContent.aspx.cs">
       <DependentUpon>ShowMessageFullContent.aspx</DependentUpon>
