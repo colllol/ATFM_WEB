@@ -140,7 +140,7 @@
                         Send All</button>
                      <button id="btnSendAMHS" onclick="btnOnAMHSclick()" class="btn btn-primary btn-sm" type="button">
                         Send AMHS</button>
-                    <button id="btnSendAllAMHS" onclick="btnOnclickAll()" class="btn btn-primary btn-sm"
+                    <button id="btnSendAllAMHS" onclick="btnOnAMHSclickAll()" class="btn btn-primary btn-sm"
                         type="button">
                         Send All AMHS</button>
                 </div>
@@ -222,6 +222,52 @@
             }
             //GetArgWithPostBack(hd + phanCach + (dd == '' ? new Date().format('yyyy/mm/dd') : dd.replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, '$3/$2/$1')) + phanCachArg + 'btnOnclickAll', 'btnOnclickAll');
         }
+        function btnOnAMHSclickAll() {
+            //var hd = '',
+            //    dd = $('#ctl00_MainContent_txtBEGINDATE').val();
+            //var hd = prompt('Do you want send all message date: ' + dd + '. ' + (hd == '' ? 'Header: FF' : 'Header: ' + hd) + '???', '');
+
+            //var obj = {
+            //    P_HEADER: hd == '' ? 'FF' : hd,
+            //    P_DATE: dd == '' ? new Date().format('yyyy/mm/dd') : dd.replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, '$3/$2/$1')
+            //};
+            //alert(hd + phanCach + (dd == '' ? new Date().format('yyyy/mm/dd') : dd.replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, '$3/$2/$1')) + phanCachArg + 'btnOnclickAll');
+            // preloadImgAfterButton('btnSendAll', 'loaddingSendAll');
+
+            vn = 0;
+            ld = 0;
+            of = 0;
+            if ($('#chkVN').prop("checked") == true) {
+                vn = 1;
+            }
+            if ($('#chkLD').prop("checked") == true) {
+                ld = 1;
+            }
+            if ($('#chkOF').prop("checked") == true) {
+                of = 1;
+            }
+
+            dd = $('#ctl00_MainContent_txtBEGINDATE').val();
+            var bx = checkMaxlength();
+            if (!bx) return;
+            //var ax = checkValidCustomMinlenght('mCheck');
+            //if (!ax) return;
+            if (confirm('Do you want confirm???')) {
+                var obj = {
+                    P_TOADD: $('#txtAddress').val(),
+                    P_CONTENT: $('#txtContent').val()
+                };
+                preloadImgAfterButton('btnSendAllAMHS', 'loaddingSendAllAMHS');
+                GetArgWithPostBack(vn + phanCach + ld + phanCach + of + phanCach + $('#txtAddress').val() + phanCach + $('#txtOrigin').val() + phanCach + (dd == '' ? new Date().format('yyyy/mm/dd') : dd.replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, '$3/$2/$1')) + phanCachArg + 'btnOnAMHSclickAll', 'btnOnAMHSclickAll');
+            }
+            else {
+                return false;
+            }
+            //GetArgWithPostBack(hd + phanCach + (dd == '' ? new Date().format('yyyy/mm/dd') : dd.replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, '$3/$2/$1')) + phanCachArg + 'btnOnclickAll', 'btnOnclickAll');
+        }
+        
+
+
         function confirmAction() {
             if (confirm('Do you want confirm???')) {
                 return true;
@@ -293,6 +339,11 @@
                 unLoadingData('loaddingSendAll');
                 alert(resulf);
             }
+            else if (context == 'btnOnAMHSclickAll') {
+                unLoadingData('loaddingSendAllAMHS');
+                alert(resulf);
+            }
+            
         }
         function ViewContent(cl, u) {
             document.getElementById(cl).style.backgroundColor = '#FF0000';

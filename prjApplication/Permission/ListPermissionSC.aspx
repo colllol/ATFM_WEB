@@ -175,6 +175,7 @@
             <span class="glyphicon glyphicon-download-alt"></span>
                 EXPORT DATA INTO EXCEL
         </asp:LinkButton>
+       <a id="btnSearchAdv" class="btn btn-sm btn-primary" href="../FinishFlights/ListPermSC.aspx?Menu_ID=823"> SEARCH ADV</a>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
 
@@ -341,7 +342,8 @@
                         <td style="width: 200px"><%# Eval("AUTHOR_NAME") %></td>
                         <td style="width: 50px"><%# Eval("PERMTYPE") %></td>
                         <td style="width: 50px"><%# Eval("FLIGHTTYPE") %></td>
-                        <td style="width: 70px"  onclick="EditSC('<%# Eval("PERM_ID") %>')"><%# Eval("PERMNBR") %></td>
+                       <%-- <td style="width: 70px"  onclick="EditSC('<%# Eval("PERM_ID") %>')"><%# Eval("PERMNBR") %></td>--%>
+                        <td style="width: 70px"><%# Eval("PERMNBR") %></td>
                         <td style="width: 40px"><%# Eval("VERSION") %></td>
                         <td style="width: 90px"><%# Eval("PERMDATE", "{0:dd/MM/yyyy}") %></td>
                         <td style="width: 60px"><%# Eval("OPER_ID") %></td>

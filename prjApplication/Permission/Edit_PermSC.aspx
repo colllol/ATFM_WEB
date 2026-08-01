@@ -621,6 +621,7 @@
                     alert(resulf.substring(3));
                 } else if (resulf != '-1' && resulf != '-99') {
                     alert('Insert sussess!');
+                    ClearValue();
                     // Giữ nguyên dữ liệu đang nhập để người dùng có thể tạo chuyến tiếp theo.
                     // Payload tải lại chỉ chứa PERM_ID, không dùng các ô nhập làm bộ lọc.
                     LoadDataAjax(true);

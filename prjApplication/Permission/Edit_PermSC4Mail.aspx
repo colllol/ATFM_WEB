@@ -796,6 +796,11 @@
                     return;
                 }
 
+                if (result === -3) {
+                    alert('No active flight date was found.');
+                    return;
+                }
+
                 alert('Accepted error.');
             }).fail(function (xhr, textStatus, errorThrown) {
                 console.error('[PAcceptedPermSC] Request failed:', {

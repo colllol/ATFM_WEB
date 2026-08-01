@@ -110,7 +110,7 @@
             var targetPermId = result && result.targetPermId;
             if (!targetPermId) throw new Error('API job không trả về targetPermId.');
 
-            permissionLink.href = '../Permission/Edit_PermSC.aspx?Menu_ID=51&ID=' + encodeURIComponent(targetPermId);
+            permissionLink.href = '../Permission/Edit_PermSC4Mail.aspx?Menu_ID=51&ID=' + encodeURIComponent(targetPermId);
             permissionLink.classList.remove('is-disabled');
             permissionLink.removeAttribute('aria-disabled');
             permissionMessage.textContent = 'Số phép bay: ' + targetPermId;
