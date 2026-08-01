@@ -622,7 +622,9 @@
                 } else if (resulf != '-1' && resulf != '-99') {
                     alert('Insert sussess!');
                     ClearValue();
-                    LoadDataGrid();
+                    // Chỉ tải lại danh sách chi tiết chuyến bay của PERM_ID hiện tại.
+                    // Không gọi LoadDataGrid qua postback vì phần master không cần tải lại.
+                    LoadDataAjax();
                 } else alert('Insert error!');
             }
             if (context == 'mShowDetail') {
