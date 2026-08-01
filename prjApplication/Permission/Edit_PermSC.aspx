@@ -238,7 +238,7 @@
                             <tr>
                                 <td> 
                                      <label for="txtPERMNBR" style="font-size:12px;">Number</label><br />
-                                    <input id="txtPERMNBR" maxlength="5" data-minlenght="1" data-control="update" type="text"
+                                    <input id="txtPERMNBR" maxlength="8" data-minlenght="1" data-control="update" type="text"
                             class="wid_80px" style="height:25px;" />
                                 </td>
                                 <td> <label for="txtPERMTYPE" style="font-size:12px;">P Type</label><br />
