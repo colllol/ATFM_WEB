@@ -746,11 +746,9 @@
             return typ + ' ' + LPAD(nbr, 5, '0') + '/' + ses + '/' + au + '/' + ye.replace(/-/g,'/').split('/')[2];
         }
         function LPAD(nbr, iStart, sAlias) {
-            var ax = nbr;
-            if (nbr.length < iStart) {
-                ax = LPAD(sAlias + nbr, iStart, sAlias);
-            } else {
-                return ax.substring(0, iStart);
+            var ax = (nbr == null ? '' : nbr.toString()).trim();
+            while (ax.length < iStart) {
+                ax = sAlias + ax;
             }
             return ax;
         }

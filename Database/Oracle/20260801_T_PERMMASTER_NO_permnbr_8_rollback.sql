@@ -42,6 +42,8 @@ DECLARE
     l_error_count      PLS_INTEGER;
     l_max_length       PLS_INTEGER;
     l_char_length      PLS_INTEGER;
+    l_bk_max_length    PLS_INTEGER;
+    l_bk_char_length   PLS_INTEGER;
 
     FUNCTION replace_nth(
         p_source      IN CLOB,
@@ -113,6 +115,34 @@ BEGIN
         RAISE_APPLICATION_ERROR(
             -20302,
             'Unexpected PERMNBR length: ' || l_char_length
+        );
+    END IF;
+
+    SELECT NVL(MAX(LENGTH(PERMNBR)), 0)
+      INTO l_bk_max_length
+      FROM PERMMASTER_NO_BK;
+
+    IF l_bk_max_length > 5 THEN
+        RAISE_APPLICATION_ERROR(
+            -20303,
+            'Rollback blocked: PERMMASTER_NO_BK contains PERMNBR longer than 5 characters'
+        );
+    END IF;
+
+    SELECT CHAR_LENGTH
+      INTO l_bk_char_length
+      FROM USER_TAB_COLUMNS
+     WHERE TABLE_NAME = 'PERMMASTER_NO_BK'
+       AND COLUMN_NAME = 'PERMNBR';
+
+    IF l_bk_char_length = 8 THEN
+        EXECUTE IMMEDIATE
+            'ALTER TABLE PERMMASTER_NO_BK MODIFY (PERMNBR VARCHAR2(5 BYTE))';
+        DBMS_OUTPUT.PUT_LINE('Restored PERMMASTER_NO_BK.PERM NBR to VARCHAR2(5 BYTE).');
+    ELSIF l_bk_char_length <> 5 THEN
+        RAISE_APPLICATION_ERROR(
+            -20304,
+            'Unexpected PERMMASTER_NO_BK.PERM NBR length: ' || l_bk_char_length
         );
     END IF;
 

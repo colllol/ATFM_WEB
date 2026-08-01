@@ -554,8 +554,10 @@
             }
             if (resulf == '') return;
             if (context == 'btnCreateOnclick') {
-                if (resulf != '-1' && resulf != '-99') {
-                    txtPERMNBR_ID.value = createPermNBRID(ddlAUTHOR_ID.value, ddlPERMTYPE.value, txtPERMNBR.value);
+                if (resulf.indexOf('-2|') === 0) {
+                    alert(resulf.substring(3));
+                } else if (resulf != '-1' && resulf != '-99') {
+                    txtPERMNBR_ID.value = createPermNBRID(ddlAUTHOR_ID.value, ddlPERMTYPE.value, txtPERMNBR.value, txtPERMDATE.value);
                     document.getElementById('perm_id').innerHTML = resulf;
                     if (isCreatePermMaster) {
                         //mbtnAddNewFlightDetailOnclick();
@@ -566,7 +568,9 @@
                 } else alert('Insert error!');
             }
             if (context == 'mbtnAddNewFlightDetailOnclick') {
-                if (resulf != '-1' && resulf != '-99') {
+                if (resulf.indexOf('-2|') === 0) {
+                    alert(resulf.substring(3));
+                } else if (resulf != '-1' && resulf != '-99') {
                     alert('Insert sussess!');
                     mClearValueControl();
                     LoadDataGrid();
@@ -624,19 +628,19 @@
             ddlOPER_ID.value = obj['OPER_ID'];
             setSelectedValue(ddlPERMTYPE.id, obj['PERMTYPE']);
             setSelectedValue(ddlFLIGHTTYPE.id, obj['FLIGHTTYPE']);            
-            txtBillingAddress.value = obj['BILLINGADDRESS'].replace(/<br>/gi, '\r\n');
-            txtPermContent.value = obj['PERMCONTENT'].replace(/<br>/gi, '\r\n');
+            txtBillingAddress.value = obj['BILLINGADDRESS'] == null ? '' : obj['BILLINGADDRESS'].replace(/<br>/gi, '\r\n');
+            txtPermContent.value = obj['PERMCONTENT'] == null ? '' : obj['PERMCONTENT'].replace(/<br>/gi, '\r\n');
         }
         function ReadObj() {
             var x = 0;
             if (txtVALIDHOURS.value.trim() == '0' || txtVALIDHOURS.value.trim() == '') {
-                if (ddlPERMTYPE.value = 'LD') x = 24;
+                if (ddlPERMTYPE.value === 'LD') x = 24;
                 else x = 72;
             }
             else x = txtVALIDHOURS.value.trim();
             var obj = {
                 ID: $('#perm_id').html().trim() == "" ? 0 : $('#perm_id').html().trim(),
-                PERMNBR_ID: createPermNBRID(ddlAUTHOR_ID.value, ddlPERMTYPE.value, txtPERMNBR.value),
+                PERMNBR_ID: createPermNBRID(ddlAUTHOR_ID.value, ddlPERMTYPE.value, txtPERMNBR.value, txtPERMDATE.value),
                 AUTHOR_ID: ddlAUTHOR_ID.value,
                 PERMTYPE: ddlPERMTYPE.value,
                 FLIGHTTYPE: ddlFLIGHTTYPE.value,
@@ -644,19 +648,19 @@
                 VERSION: txtVERSION.value,
                 OPER_ID: ddlOPER_ID.value,
                 REFERENCE: txtREFERENCE.value,
-                VALIDHOURS: txtVALIDHOURS.value,
+                VALIDHOURS: x,
                 PERMDATE: txtPERMDATE.value.trim() == '' ? new Date().format('dd/mm/yyyy') : txtPERMDATE.value,
                 BILLINGADDRESS: txtBillingAddress.value,
-                PERMCONTENT: txtPERMCONTENT.value
+                PERMCONTENT: txtPermContent.value
             };
             return obj;
         }
         function btnUpdateOnclick() {
             if ($('#perm_id').html().trim() != '') {
-                //if (checkValidCustomMinlenght('update')) {
-                GetArgWithPostBack(JSON.stringify(ReadObj()) + '_____btnUpdateOnclick', 'btnUpdateOnclick');
-                //}
-                //else alert('Check validate!');
+                if (checkValidCustomMinlenght('update')) {
+                    GetArgWithPostBack(JSON.stringify(ReadObj()) + '_____btnUpdateOnclick', 'btnUpdateOnclick');
+                }
+                else alert('Check validate!');
             }
             else {
                 alert('Please select Flight');
@@ -687,18 +691,17 @@
         //        y = new Date().format('dd/mm/yyyy');
         //    return typ + ' ' + LPAD(nbr, 5, '0') + '/' + au + '/' + ye.split('/')[2];
         //}
-        function createPermNBRID(au, typ, nbr) {
-            var y = new Date().format('yyyy');
+        function createPermNBRID(au, typ, nbr, permDate) {
+            var match = (permDate || '').trim().match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/);
+            var y = match == null ? new Date().format('yyyy') : match[3];
             var ax = typ + ' ' + LPAD(nbr, 5, '0') + '/' + au + '/' + y;
             //return typ + ' ' + LPAD(nbr, 5, '0') + '/' + au + '/' + y;
             return ax;
         }
         function LPAD(nbr, iStart, sAlias) {
-            var ax = nbr;
-            if (nbr.length < iStart) {
-                ax = LPAD(sAlias + nbr, iStart, sAlias);
-            } else {
-                return ax.substring(0, iStart);
+            var ax = (nbr == null ? '' : nbr.toString()).trim();
+            while (ax.length < iStart) {
+                ax = sAlias + ax;
             }
             return ax;
         }
@@ -828,6 +831,33 @@
             return false;
         }
 
+        function validatePermNoDetailBeforeSave() {
+            if (!validatePermNoDayFlightBeforeSave()) return false;
+
+            if (mCRAFT_ID.value == null || mCRAFT_ID.value === '' || parseInt(mCRAFT_ID.value, 10) <= 0) {
+                alert('Vui lòng chọn loại tàu bay (Craft).');
+                mCRAFT_ID.focus();
+                return false;
+            }
+            if (mPURPOSE_ID.value == null || mPURPOSE_ID.value === '' || mPURPOSE_ID.value === '0') {
+                alert('Vui lòng chọn Purpose.');
+                mPURPOSE_ID.focus();
+                return false;
+            }
+            if (mFROM_AIRP.value == null || mFROM_AIRP.value === '' || mFROM_AIRP.value === '0') {
+                alert('Vui lòng chọn sân bay đi.');
+                mFROM_AIRP.focus();
+                return false;
+            }
+            if (mTO_AIRP.value == null || mTO_AIRP.value === '' || mTO_AIRP.value === '0') {
+                alert('Vui lòng chọn sân bay đến.');
+                mTO_AIRP.focus();
+                return false;
+            }
+
+            return true;
+        }
+
         function mGetObjectInfo() {
             var _obj = _objRender;
             _obj['ID'] = IdSelectDT;
@@ -854,7 +884,7 @@
         }
 
         function mbtnAddNewFlightDetailOnclick() {
-            if (!validatePermNoDayFlightBeforeSave()) return;
+            if (!validatePermNoDetailBeforeSave()) return;
 
             if ($('#perm_id').html().trim() != '')
                 GetArgWithPostBack(JSON.stringify(mGetObjectInfo()) + '_____mbtnAddNewFlightDetailOnclick', 'mbtnAddNewFlightDetailOnclick');
@@ -1397,6 +1427,37 @@
             var $lis = $('tr[data-isUpdate="true"]');
             var $lisIns = $('tr[data-isinsert="true"]');
             if ($lis.length == 0 && $lisIns.length == 0) { alert('No update.'); return; };
+
+            var invalidRow = null;
+            $lis.add($lisIns).each(function () {
+                var $row = $(this);
+                var $craft = $row.find('[id^="txtCRAFT_NAME"]').first();
+                var craftId = $craft.attr('data-craftid');
+                var $dayFlight = $row.find('[id^="txtDAYSFLIGHT"]').first();
+                normalizePermNoDayFlightInput($dayFlight[0]);
+
+                if (craftId == null || craftId === '' || isNaN(parseInt(craftId, 10)) || parseInt(craftId, 10) <= 0) {
+                    invalidRow = {
+                        input: $craft,
+                        message: 'Vui lòng chọn loại tàu bay (Craft) từ danh sách gợi ý cho chuyến '
+                            + ($row.find('[id^="txtFLIGHTNBR"]').first().val() || '') + '.'
+                    };
+                    return false;
+                }
+                if (!isValidPermNoDayFlight($dayFlight.val())) {
+                    invalidRow = {
+                        input: $dayFlight,
+                        message: 'Ngày bay không đúng định dạng dd-MM-yyyy.'
+                    };
+                    return false;
+                }
+            });
+            if (invalidRow != null) {
+                alert(invalidRow.message);
+                invalidRow.input.focus();
+                return;
+            }
+
             var c = 0;
             $.each($lis, function (a, b) {
                 var _obj = {};

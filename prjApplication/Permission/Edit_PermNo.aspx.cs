@@ -168,27 +168,65 @@ namespace prjApplication.Permission
             string kq = GetOneFlight(Request.Params["ID"]==null?"0": Request.Params["ID"]);
             this.ExcuteJavascript($"ReadInfoPerm('{ kq }');");
         }
+        private static void NormalizePermMasterNo(PermMasterNo obj)
+        {
+            if (obj == null)
+                throw new ArgumentException("Dữ liệu phép bay không hợp lệ.");
+
+            string permNbr = (obj.PERMNBR ?? string.Empty).Trim();
+            if (permNbr.Length < 1 || permNbr.Length > 8)
+                throw new ArgumentException("Number phải có từ 1 đến 8 ký tự.");
+            if (!obj.PERMDATE.HasValue)
+                throw new ArgumentException("Perm date không hợp lệ.");
+
+            obj.PERMNBR = permNbr;
+            obj.PERMNBR_ID = string.Format(
+                "{0} {1}/{2}/{3}",
+                (obj.PERMTYPE ?? string.Empty).Trim(),
+                permNbr.PadLeft(5, '0'),
+                (obj.AUTHOR_ID ?? string.Empty).Trim(),
+                obj.PERMDATE.Value.Year);
+
+            if (obj.VALIDHOURS <= 0)
+                obj.VALIDHOURS = string.Equals(obj.PERMTYPE, "LD", StringComparison.OrdinalIgnoreCase) ? 24 : 72;
+        }
+
         private string btnUpdateOnclick(string ThamSo)
         {
-            var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
-            var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermMasterNo>(ThamSo, dateTimeConverter);
-            obj.LASTUSER = _user.UserName.ToString();
-            bool kq = new PermMasterNoDAL().UpdateObject(obj);
-            string ax = kq.ToString() == true.ToString() ? "Update sussess" : "Update error";
-            WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermMasterNoDAL]", 0, $"[UpdateObject] [{ax}]", 0.0);
-            if (!kq)
-                return "Update error";
-            return "Update sussess";
+            try
+            {
+                var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
+                var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermMasterNo>(ThamSo, dateTimeConverter);
+                NormalizePermMasterNo(obj);
+                obj.LASTUSER = _user.UserName.ToString();
+                bool kq = new PermMasterNoDAL().UpdateObject(obj);
+                string ax = kq ? "Update success" : "Update error";
+                WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermMasterNoDAL]", 0, $"[UpdateObject] [{ax}]", 0.0);
+                return ax;
+            }
+            catch (Exception ex)
+            {
+                return "Update error: " + ex.Message;
+            }
         }
         private string btnCreateOnclick(string ThamSo)
         {
-            var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
-            var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermMasterNo>(ThamSo, dateTimeConverter);
-            obj.ID = 0;
-            var kq = new PermMasterNoDAL().InsertReturnId(obj);
-            string ax = kq.ToString() != "-1" ? "Insert sussess " : "Insert error";
-            WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermMasterNoDAL]", 0, $"[InsertObject] [{ax}]", 0.0);
-            return kq;
+            try
+            {
+                var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
+                var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermMasterNo>(ThamSo, dateTimeConverter);
+                NormalizePermMasterNo(obj);
+                obj.ID = 0;
+                obj.LASTUSER = _user.UserName.ToString();
+                var kq = new PermMasterNoDAL().InsertReturnId(obj);
+                string ax = kq != "-1" ? "Insert success" : "Insert error";
+                WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermMasterNoDAL]", 0, $"[InsertObject] [{ax}]", 0.0);
+                return kq;
+            }
+            catch (Exception ex)
+            {
+                return "-2|" + ex.Message;
+            }
         }
         protected string LoadDataGrid()
         {
@@ -216,13 +254,21 @@ namespace prjApplication.Permission
             {
                 var dateTimeConverter = new IsoDateTimeConverter { DateTimeFormat = "dd/MM/yyyy" };
                 var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<PermDetailNo>(ThamSo, dateTimeConverter);
+                if (obj.PERM_ID <= 0)
+                    return "-2|Không xác định được PERM_ID.";
+                if (obj.CRAFT_ID <= 0)
+                    return "-2|Vui lòng chọn loại tàu bay (Craft).";
+                if (string.IsNullOrWhiteSpace(obj.DAYSFLIGHT))
+                    return "-2|Ngày bay không được để trống.";
+                if (string.IsNullOrWhiteSpace(obj.FLIGHTNBR))
+                    return "-2|Call Sign không được để trống.";
                 obj.ID = 0;
                 var kq = new PermDetailNoDAL().InsertReturnId(obj);
                 string ax = kq.ToString() == "-1" ? "Insert error" : "Insert sussess";
                 WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermDetailNoDAL]", 0, $"[InsertReturnId] [{ax}]", 0.0);
                 return kq.ToString();
             }
-            catch (Exception ex) { return "-1"; }
+            catch (Exception ex) { return "-2|" + ex.Message; }
         }
 
         private string mbtnUpdateFlightDetailOnclick(string thamso)

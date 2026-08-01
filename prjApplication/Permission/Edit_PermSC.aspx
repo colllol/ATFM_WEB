@@ -601,7 +601,9 @@
                 alert(resulf);
             }
             if (context == 'btnCreateOnclick') {
-                if (resulf != '-1' && resulf != '-99') {
+                if (resulf.indexOf('-2|') === 0) {
+                    alert(resulf.substring(3));
+                } else if (resulf != '-1' && resulf != '-99') {
                     //alert('Insert sussess!');
                     txtPERMNBR_ID.value =createPermNBRID(ddlAUTHOR_ID.value, ddlPERMTYPE.value, txtPERMNBR.value, txtPERMDATE.value, ddlSEASON.value);
                     document.getElementById('perm_id').innerHTML=resulf;    
@@ -615,7 +617,9 @@
                 
             }
             if (context == 'btnCreate_Details_Onclick') {
-                if (resulf != '-1' && resulf != '-99') {
+                if (resulf.indexOf('-2|') === 0) {
+                    alert(resulf.substring(3));
+                } else if (resulf != '-1' && resulf != '-99') {
                     alert('Insert sussess!');
                     ClearValue();
                     LoadDataGrid();
@@ -746,11 +750,9 @@
             return typ + ' ' + LPAD(nbr, 5, '0') + '/' + ses + '/' + au + '/' + ye.replace(/-/g,'/').split('/')[2];
         }
         function LPAD(nbr, iStart, sAlias) {
-            var ax = nbr;
-            if (nbr.length < iStart) {
-                ax = LPAD(sAlias + nbr, iStart, sAlias);
-            } else {
-                return ax.substring(0, iStart);
+            var ax = (nbr == null ? '' : nbr.toString()).trim();
+            while (ax.length < iStart) {
+                ax = sAlias + ax;
             }
             return ax;
         }
@@ -1054,14 +1056,25 @@
         }
 
         function btnCreate_Details_Onclick() {
-            
+
            var txtBEGINDATE_SC = document.getElementById('<%= txtBEGINDATE_SC.ClientID%>');
            var txtENDDATE_SC = document.getElementById('<%= txtENDDATE_SC.ClientID%>');
 
-          // _obj['BEGINDATE'] = txtBEGINDATE_SC.value;
-          //_obj['ENDDATE'] = txtENDDATE_SC.value;
-            var _bool =  checkInputDay(txtBEGINDATE_SC);
-            //alert(_bool);
+            if (!checkInputDay(txtBEGINDATE_SC) || !checkInputDay(txtENDDATE_SC)) {
+                return;
+            }
+
+            if (!validateSingleDayCheckboxes()) {
+                alert('Ngày bay và ngày được chọn từ D1 đến D7 chưa khớp.');
+                return;
+            }
+
+            var craftId = ddlCRAFT_ID.getAttribute('data-craftid');
+            if (craftId == null || craftId === '' || isNaN(parseInt(craftId, 10)) || parseInt(craftId, 10) <= 0) {
+                alert('Vui lòng chọn loại tàu bay (Craft) từ danh sách gợi ý.');
+                ddlCRAFT_ID.focus();
+                return;
+            }
 
             //console.log(JSON.stringify(GetObjectInfo()));
 
@@ -1628,8 +1641,27 @@
             }
             var $lis = $('tr[data-isUpdate="true"]');
             var $lisIns = $('tr[data-isinsert="true"]');
-           
+
             if($lis.length == 0 && $lisIns.length==0) {alert('No update.'); return;};
+
+            var invalidCraftRow = null;
+            $lis.add($lisIns).each(function () {
+                var $craft = $(this).find('[id^="txtCRAFT_NAME"]').first();
+                var craftId = $craft.attr('data-craftid');
+                if (craftId == null || craftId === '' || isNaN(parseInt(craftId, 10)) || parseInt(craftId, 10) <= 0) {
+                    invalidCraftRow = {
+                        input: $craft,
+                        flightNbr: $(this).find('[id^="txtFLIGHTNBR"]').first().val() || ''
+                    };
+                    return false;
+                }
+            });
+            if (invalidCraftRow != null) {
+                alert('Vui lòng chọn loại tàu bay (Craft) từ danh sách gợi ý cho chuyến ' + invalidCraftRow.flightNbr + '.');
+                invalidCraftRow.input.focus();
+                return;
+            }
+
             var c=0;
             $.each($lis, function(a,b){
                 var _obj={};
