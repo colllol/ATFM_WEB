@@ -621,10 +621,9 @@
                     alert(resulf.substring(3));
                 } else if (resulf != '-1' && resulf != '-99') {
                     alert('Insert sussess!');
-                    ClearValue();
-                    // Chỉ tải lại danh sách chi tiết chuyến bay của PERM_ID hiện tại.
-                    // Không gọi LoadDataGrid qua postback vì phần master không cần tải lại.
-                    LoadDataAjax();
+                    // Giữ nguyên dữ liệu đang nhập để người dùng có thể tạo chuyến tiếp theo.
+                    // Payload tải lại chỉ chứa PERM_ID, không dùng các ô nhập làm bộ lọc.
+                    LoadDataAjax(true);
                 } else alert('Insert error!');
             }
             if (context == 'mShowDetail') {
@@ -1496,7 +1495,22 @@
                 }
             });
         }
-        function LoadDataAjax(){
+        function getPermDetailListRequest() {
+            var pageSize = parseInt($('#tblSource').attr('data-pageSize'), 10);
+            var pageIndex = parseInt($('#tblSource').attr('data-pageIndex'), 10);
+
+            if (isNaN(pageSize) || pageSize <= 0) pageSize = 1000;
+            if (isNaN(pageIndex) || pageIndex <= 0) pageIndex = 1;
+
+            return {
+                PERM_ID: $('#perm_id').html().trim(),
+                ID: 0,
+                RSTART: (pageIndex - 1) * pageSize,
+                RFINISH: pageIndex * pageSize
+            };
+        }
+
+        function LoadDataAjax(ignoreCurrentFilters){
             if ($('#perm_id').html() == '')
             {
                 if(qEdit!='True')
@@ -1518,12 +1532,15 @@
             }
             
             var kq = '';
-            console.log(GetObjectInfo())
+            var requestData = ignoreCurrentFilters === true
+                ? getPermDetailListRequest()
+                : GetObjectInfo();
+            console.log(requestData)
             $.ajax({
                 //async: false,
                 method: "PUT",
                 url: urlApi + "api/PermDetailSc/GetBySearch",                
-                data: GetObjectInfo(),
+                data: requestData,
                 beforeSend: function(){
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total',0);
