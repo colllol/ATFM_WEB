@@ -176,15 +176,15 @@
     }
     function reportRows(items) {
         return items.map(function (item) {
-            return { Oper: oper(item), Status: status(item), HasDatabaseData: item._databaseState === 'found', DatabaseState: item._databaseState };
+            return { Oper: oper(item), FileName: attachmentName(item) || '--', Status: status(item), HasDatabaseData: item._databaseState === 'found', DatabaseState: item._databaseState };
         });
     }
     function reportHtml(rows) {
         var body = rows.map(function (row, index) {
             var state = row.HasDatabaseData ? row.Status + ' - CÓ DỮ LIỆU DB' : row.DatabaseState === 'error' ? '[?] KHÔNG KIỂM TRA ĐƯỢC DATABASE' : '[!] KHÔNG CÓ DỮ LIỆU TRONG DATABASE';
-            return '<tr' + (row.HasDatabaseData ? '' : ' style="color:#b4232c;background:#fff0f1;font-weight:bold"') + '><td>' + (index + 1) + '</td><td>' + esc(row.Oper) + '</td><td>' + esc(state) + '</td></tr>';
+            return '<tr' + (row.HasDatabaseData ? '' : ' style="color:#b4232c;background:#fff0f1;font-weight:bold"') + '><td>' + (index + 1) + '</td><td>' + esc(row.Oper) + '</td><td>' + esc(row.FileName) + '</td><td>' + esc(state) + '</td></tr>';
         }).join('');
-        return '<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #777;padding:7px}th{background:#dceef8}</style></head><body><h2>BÁO CÁO TRẠNG THÁI DỮ LIỆU EMAIL</h2><table><thead><tr><th>STT</th><th>OPER (Tên hãng)</th><th>Trạng thái</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';
+        return '<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #777;padding:7px}th{background:#dceef8}</style></head><body><h2>BÁO CÁO TRẠNG THÁI DỮ LIỆU EMAIL</h2><table><thead><tr><th>STT</th><th>OPER (Tên hãng)</th><th>Tên file</th><th>Trạng thái</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';
     }
     function loadReportItems() {
         var senderFilter = $('emailReportSender').value.trim().toLowerCase();

@@ -177,7 +177,7 @@ namespace prjApplication.SLOTS
         {
             StringBuilder html = new StringBuilder();
             html.Append("<html><head><meta charset=\"utf-8\"><style>body{font-family:Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #777;padding:7px}th{background:#dceef8}.missing{color:#b4232c;background:#fff0f1;font-weight:bold}</style></head><body>");
-            html.Append("<h2>BÁO CÁO TRẠNG THÁI DỮ LIỆU EMAIL</h2><table><thead><tr><th>STT</th><th>OPER (Tên hãng)</th><th>Trạng thái</th></tr></thead><tbody>");
+            html.Append("<h2>BÁO CÁO TRẠNG THÁI DỮ LIỆU EMAIL</h2><table><thead><tr><th>STT</th><th>OPER (Tên hãng)</th><th>Tên file</th><th>Trạng thái</th></tr></thead><tbody>");
             for (int i = 0; i < rows.Count; i++)
             {
                 EmailReportRow row = rows[i] ?? new EmailReportRow();
@@ -189,6 +189,7 @@ namespace prjApplication.SLOTS
                         : "[!] KHÔNG CÓ DỮ LIỆU TRONG DATABASE";
                 html.Append("<tr").Append(hasData ? String.Empty : " class=\"missing\"").Append("><td>")
                     .Append(i + 1).Append("</td><td>").Append(WebEncode(row.Oper, "--"))
+                    .Append("</td><td>").Append(WebEncode(row.FileName, "--"))
                     .Append("</td><td>").Append(WebEncode(state, "--")).Append("</td></tr>");
             }
             html.Append("</tbody></table></body></html>");
@@ -203,6 +204,7 @@ namespace prjApplication.SLOTS
         public sealed class EmailReportRow
         {
             public string Oper { get; set; }
+            public string FileName { get; set; }
             public string Status { get; set; }
             public bool HasDatabaseData { get; set; }
             public string DatabaseState { get; set; }
