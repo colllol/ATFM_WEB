@@ -32,7 +32,7 @@ namespace prjApplication.SLOTS
             AddParameter(parameters, "from", fromDate);
             AddParameter(parameters, "to", toDate);
             parameters.Add("page=" + Math.Max(0, page));
-            parameters.Add("size=" + Math.Max(1, Math.Min(size, 500)));
+            parameters.Add("size=" + Math.Max(1, Math.Min(size, 100)));
 
             string separator = endpoint.Contains("?") ? "&" : "?";
             string requestUrl = endpoint + separator + String.Join("&", parameters);

@@ -188,19 +188,38 @@
     }
     function loadReportItems() {
         var senderFilter = $('emailReportSender').value.trim().toLowerCase();
-        var request = {
+        var baseRequest = {
             query: senderFilter || $('emailSearch').value.trim(), processingStatus: $('emailStatus').value,
             fromDate: $('emailFrom').value ? $('emailFrom').value + 'T00:00:00' : '',
-            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', page: 0, size: 500
+            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', size: 100
         };
-        return fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
-            return response.json().catch(function () { return null; }).then(function (payload) {
-                if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
-                return payload;
+        function requestPage(pageNumber) {
+            var request = {
+                query: baseRequest.query, processingStatus: baseRequest.processingStatus,
+                fromDate: baseRequest.fromDate, toDate: baseRequest.toDate,
+                page: pageNumber, size: baseRequest.size
+            };
+            return fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
+                return response.json().catch(function () { return null; }).then(function (payload) {
+                    if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
+                    if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
+                    return payload;
+                });
             });
-        }).then(function (payload) {
-            if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
-            var items = payloadItems(payload).filter(function (item) {
+        }
+        return requestPage(0).then(function (firstPayload) {
+            var firstItems = payloadItems(firstPayload), totalPagesFromApi = Number(firstPayload && firstPayload.totalPages);
+            var totalElements = Number(firstPayload && firstPayload.totalElements);
+            var availablePages = totalPagesFromApi > 0 ? totalPagesFromApi : totalElements > 0 ? Math.ceil(totalElements / 100) : 1;
+            var requests = [], pageLimit = Math.min(5, Math.max(1, availablePages));
+            for (var pageNumber = 1; pageNumber < pageLimit; pageNumber++) requests.push(requestPage(pageNumber));
+            return Promise.all(requests).then(function (remainingPayloads) {
+                var items = firstItems.slice();
+                remainingPayloads.forEach(function (payload) { items = items.concat(payloadItems(payload)); });
+                return items;
+            });
+        }).then(function (items) {
+            items = items.filter(function (item) {
                 return !senderFilter || text(item, ['sender','from','senderEmail']).toLowerCase().indexOf(senderFilter) >= 0;
             }).slice(0, 500);
             if (!items.length) throw new Error('Không có email phù hợp với bộ lọc báo cáo.');
