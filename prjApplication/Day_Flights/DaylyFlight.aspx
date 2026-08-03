@@ -3123,11 +3123,13 @@
         function viewPopupInfoExtension(ele) {
             $('#txtStatusLetter').val('');
             var ax = $(ele);
+            var flightId = ax.attr('data-flight-id') || ax.attr('id') || ax.attr('data-id');
             $('#grdSource tr').removeClass('active');
             ax.addClass('active');
             console.log(ax.attr('data-CallSign'));
             GetArgWithPostBack(ax.attr('data-id') + phanCach + ax.attr('data-timeM')
-    + phanCach + ax.attr('data-CallSign') + phanCachArg + 'viewPopupInfoExtension',
+    + phanCach + ax.attr('data-CallSign') + phanCach + flightId
+    + phanCachArg + 'viewPopupInfoExtension',
     'viewPopupInfoExtension');
 
             /*

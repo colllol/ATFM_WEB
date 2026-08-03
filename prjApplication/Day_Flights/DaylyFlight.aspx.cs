@@ -530,7 +530,7 @@ namespace prjApplication.Day_Flights
             foreach (DataRow r in dt.Rows)
             {
                 kq += $"<tr ondblclick=\"viewPopupInfoExtension(this)\""
-                    + $" data-id=\"{r["ID"]}\" data-timeM=\"{DateTime.Parse(r["FLIGHTDATE"].ToString()).ToString("dd-MM-yyyy hh:mm:ss")}\" data-RowNumber='{r["RNUM"]}' "
+                    + $" data-id=\"{r["ID"]}\" data-flight-id=\"{r["FLIGHT_ID"]}\" data-timeM=\"{DateTime.Parse(r["FLIGHTDATE"].ToString()).ToString("dd-MM-yyyy hh:mm:ss")}\" data-RowNumber='{r["RNUM"]}' "
                     + $"class=\"{trColorClass(r["LETTER_TYPE"], r["ETD"], r["ATD"], r["FLIGHTNBR"], r["PERMNBR"], r["HASPERM"])}\" data-CallSign=\"{r["FLIGHTNBR"]}\">";
 
                 c0 = $"<td style=\"width:10px;\" class=\"tdIconStatus\">"
@@ -748,7 +748,7 @@ namespace prjApplication.Day_Flights
                 _record = r["SumRecord"].ToString();
                 
                 kq += $"<tr data-isUpdate='false' ondblclick=\"viewPopupInfoExtension(this)\""
-                    + $" data-id=\"{r["ID"]}\" id=\"{r["FLIGHT_ID"]}\" data-timeM=\"{DateTime.Parse(r["FLIGHTDATE"].ToString()).ToString("dd-MM-yyyy hh:mm:ss")}\" data-RowNumber='{i.ToString()}' "
+                    + $" data-id=\"{r["ID"]}\" data-flight-id=\"{r["FLIGHT_ID"]}\" id=\"{r["FLIGHT_ID"]}\" data-timeM=\"{DateTime.Parse(r["FLIGHTDATE"].ToString()).ToString("dd-MM-yyyy hh:mm:ss")}\" data-RowNumber='{i.ToString()}' "
                     + $"class=\"{trColorClass(r["LETTER_TYPE"], r["ETD"], r["ATD"], r["FLIGHTNBR"], r["PERMNBR"], r["HASPERM"])}\" data-CallSign=\"{r["FLIGHTNBR"]}\">";
                                          
 
@@ -1050,7 +1050,7 @@ namespace prjApplication.Day_Flights
 
                 _record = r["SumRecord"].ToString();
                 kq += $"<tr data-isUpdate='false' ondblclick=\"viewPopupInfoExtension(this)\""
-                    + $" data-id=\"{r["ID"]}\" id=\"{r["FLIGHT_ID"]}\" data-timeM=\"{DateTime.Parse(r["FLIGHTDATE"].ToString()).ToString("dd-MM-yyyy hh:mm:ss")}\" data-RowNumber='{i.ToString()}' "
+                    + $" data-id=\"{r["ID"]}\" data-flight-id=\"{r["FLIGHT_ID"]}\" id=\"{r["FLIGHT_ID"]}\" data-timeM=\"{DateTime.Parse(r["FLIGHTDATE"].ToString()).ToString("dd-MM-yyyy hh:mm:ss")}\" data-RowNumber='{i.ToString()}' "
                     + $"class=\"{trColorClass(r["LETTER_TYPE"], r["ETD"], r["ATD"], r["FLIGHTNBR"], r["PERMNBR"], r["HASPERM"])}\" data-CallSign=\"{r["FLIGHTNBR"]}\">";
 
 
@@ -1267,18 +1267,22 @@ namespace prjApplication.Day_Flights
         private string viewPopupInfoExtension(string[] thamso)
         {
             string kq = "";
-            DataTable dt = new DayFlightTotalInfoDAL().GetInfoChangeById(thamso[0]);
+            string sourceRowId = thamso[0];
+            string flightId = thamso.Length > 3
+                ? thamso[3]
+                : sourceRowId;
+            DataTable dt = new DayFlightTotalInfoDAL().GetInfoChangeById(sourceRowId);
             if (dt == null || dt.Rows.Count == 0) return "";
             kq += FlightInfoExtension_IsChange(dt.Rows[0]["CHANGEVALUE"].ToString());
             kq += FlightInfoExtension_IsTimeValid(dt.Rows[0]["HASTIMEVALID"].ToString() == "1" ? "YES" : "NO");
             kq += FlightInfoExtension_ChangeInfo(dt.Rows[0]["CHANGEVALUE"].ToString());
             kq += FlightInfoExtension_HasPerm(dt.Rows[0]["HASPERM"].ToString() == "1" ? "YES" : "NO");
-            kq += FlightInfoExtension_Permission(thamso[0]);
-            kq += FlightInfoExtension_ActionHistory(thamso[0]);
-            kq += FlightInfoExtension_DienVanExt(thamso[0]);
+            kq += FlightInfoExtension_Permission(sourceRowId);
+            kq += FlightInfoExtension_ActionHistory(flightId);
+            kq += FlightInfoExtension_DienVanExt(sourceRowId);
             // view button access checked info change
-            kq += FlightInfoExtension_ShowButtonAccess(thamso[0]);
-            kq += $"<script>$('#btnUpdateStatusLetter').attr('onclick', 'btnUpdateStatusLetter_OnClick(\\'{thamso[0]}\\')');</script>";
+            kq += FlightInfoExtension_ShowButtonAccess(sourceRowId);
+            kq += $"<script>$('#btnUpdateStatusLetter').attr('onclick', 'btnUpdateStatusLetter_OnClick(\\'{sourceRowId}\\')');</script>";
             kq = System.Text.RegularExpressions.Regex.Replace(kq, @"\r\n?|\n", "<br>");
             return kq;
         }
