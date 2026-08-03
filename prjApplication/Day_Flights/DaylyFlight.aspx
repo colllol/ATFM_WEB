@@ -3498,6 +3498,13 @@
                 url: url,
             }).always(function (data) {                
                 if (data.ListValue == null) return;
+                var letterType = $.trim(data.ListValue[0]['LETTER_TYPE'] || '').toUpperCase();
+                var $letterSelect = $('#ddlSelectPop');
+                var hasLetterOption = $letterSelect.find('option').filter(function () {
+                    return String(this.value).toUpperCase() === letterType;
+                }).length > 0;
+
+                $letterSelect.val(hasLetterOption ? letterType : '--');
                 $('#txt_popPERMNBR').val(data.ListValue[0]['PERMNBR']);
                 $('#txt_popREGIS').val(data.ListValue[0]['REGISTRATION']);
                 $('#txt_popCAllSIGN').val(data.ListValue[0]['FLIGHTNBR']);
