@@ -13,6 +13,79 @@
         input, textarea {
             text-transform: uppercase;
         }
+
+        #popupPermDetailNoHistory .history-dialog {
+            width: min(1180px, calc(100% - 30px));
+            max-width: 1180px;
+            margin: 30px auto;
+        }
+
+        #popupPermDetailNoHistory .modal-body {
+            max-height: calc(100vh - 190px);
+            overflow: auto;
+            padding: 12px;
+        }
+
+        #tblPermDetailNoActionHistory {
+            width: 100%;
+            margin-bottom: 0;
+            background: #fff;
+        }
+
+        #tblPermDetailNoActionHistory thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 8px 6px;
+            color: #fff;
+            text-align: center;
+            vertical-align: middle;
+            background: #337ab7;
+        }
+
+        #tblPermDetailNoActionHistory tbody td {
+            padding: 7px 6px;
+            vertical-align: top;
+            border: 1px solid #d7e3ef;
+        }
+
+        #tblPermDetailNoActionHistory .history-center {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        #tblPermDetailNoActionHistory .history-date {
+            min-width: 145px;
+        }
+
+        #tblPermDetailNoActionHistory .history-change-detail {
+            min-width: 320px;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+        }
+
+        #tblPermDetailNoActionHistory .history-action-insert {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        #tblPermDetailNoActionHistory .history-action-update {
+            color: #1565c0;
+            font-weight: 600;
+        }
+
+        #tblPermDetailNoActionHistory .history-action-delete,
+        #tblPermDetailNoActionHistory .history-error {
+            color: #c62828;
+            font-weight: 600;
+        }
+
+        #tblPermDetailNoActionHistory .history-empty,
+        #tblPermDetailNoActionHistory .history-error,
+        #tblPermDetailNoActionHistory .history-loading {
+            padding: 24px;
+            text-align: center;
+        }
     </style>
     <style type="text/css">
         #dhtmltooltip {
@@ -217,7 +290,11 @@
                                     visible='true'>
                                     <i class="ace-icon fa fa-pencil bigger-130" onclick="Edit('<%# Eval("PERM_ID") %>')"></i>
                                 </a>
-                                <a href="#" class="bigger-140 show-details-btn" title="Show history">
+                                <a href="#" class="bigger-140 show-details-btn"
+                                    data-perm-id='<%# Eval("PERM_ID") %>'
+                                    data-perm-nbr='<%# System.Web.HttpUtility.HtmlAttributeEncode(Convert.ToString(Eval("PERMNBR_ID"))) %>'
+                                    title="Show history" aria-label="Show history"
+                                    onclick="return ShowPermDetailNoActionHistory(this);">
                                     <i class="ace-icon fa fa-angle-double-down"></i>
                                 </a>
                                 <asp:LinkButton runat="server" ID="lnkDelete" CssClass="ace-icon fa fa-trash-o bigger-130"
@@ -257,6 +334,48 @@
     </table>
     <div style="text-align: right; float:left">
         <cc1:PhanTrang ID="PhanTrang1" runat="server" PageSize="100" OnPaging_IndexChange="PhanTrang1_Paging_IndexChange" />
+    </div>
+
+    <div id="popupPermDetailNoHistory" class="modal cssHide" role="dialog" tabindex="-1"
+        aria-hidden="true" aria-labelledby="permDetailNoHistoryTitle">
+        <div class="modal-dialog history-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close"
+                        onclick="ClosePermDetailNoActionHistory();">×</button>
+                    <h4 id="permDetailNoHistoryTitle" class="blue bigger">
+                        Lịch sử thay đổi chi tiết phép bay NO
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <table id="tblPermDetailNoActionHistory" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Thao tác</th>
+                                <th>Detail ID</th>
+                                <th>Flight PK</th>
+                                <th>Callsign</th>
+                                <th>Người thực hiện</th>
+                                <th>Thời gian</th>
+                                <th>Thông tin thay đổi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="8" class="history-loading">Đang tải lịch sử...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary"
+                        onclick="ClosePermDetailNoActionHistory();">
+                        <i class="ace-icon fa fa-times"></i> Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
 <%--    <div id="searchExtension" class="modal fade" role="dialog" tabindex="-1" data-backdrop="false"
@@ -643,6 +762,52 @@
         var btnCancel = document.getElementById('btnCancel');
         var txtBillingAddress = document.getElementById('txtBillingAddress');
         var txtPermContent = document.getElementById('txtPermContent');
+        var permDetailNoHistoryTrigger = null;
+
+        function ShowPermDetailNoActionHistory(trigger) {
+            var permId = trigger.getAttribute('data-perm-id');
+            var permNbr = trigger.getAttribute('data-perm-nbr') || '';
+            var popup = document.getElementById('popupPermDetailNoHistory');
+            var tbody = document.querySelector('#tblPermDetailNoActionHistory tbody');
+
+            permDetailNoHistoryTrigger = trigger;
+            var openIcon = trigger.querySelector('i');
+            if (openIcon) {
+                openIcon.classList.remove('fa-angle-double-down');
+                openIcon.classList.add('fa-angle-double-up');
+            }
+            document.getElementById('permDetailNoHistoryTitle').textContent =
+                'Lịch sử thay đổi - ' + permNbr + ' (PERM_ID: ' + permId + ')';
+            tbody.innerHTML =
+                '<tr><td colspan="8" class="history-loading">Đang tải lịch sử...</td></tr>';
+            popup.className = 'modal cssShow';
+            popup.setAttribute('aria-hidden', 'false');
+            popup.focus();
+
+            GetArgWithPostBack(
+                permId + '_____LoadPermDetailNoActionHistory',
+                'LoadPermDetailNoActionHistory'
+            );
+            return false;
+        }
+
+        function ClosePermDetailNoActionHistory() {
+            var popup = document.getElementById('popupPermDetailNoHistory');
+
+            if (permDetailNoHistoryTrigger) {
+                var closeIcon = permDetailNoHistoryTrigger.querySelector('i');
+                if (closeIcon) {
+                    closeIcon.classList.remove('fa-angle-double-up');
+                    closeIcon.classList.add('fa-angle-double-down');
+                }
+                permDetailNoHistoryTrigger.focus();
+                permDetailNoHistoryTrigger = null;
+            }
+
+            popup.className = 'modal cssHide';
+            popup.setAttribute('aria-hidden', 'true');
+        }
+
         function ClosePopup(elem) {
             IdSelect = 0;
             document.getElementById(elem).className = "modal cssHide";
@@ -766,6 +931,9 @@
                     LoadDataGrid();
                 } else alert('Restore error!');
             }
+            if (context == 'LoadPermDetailNoActionHistory') {
+                document.querySelector('#tblPermDetailNoActionHistory tbody').innerHTML = resulf;
+            }
             if (context == 'btnSearchExtension_Click') {
                 if (resulf == '0') {
                     unLoadingData('preloadSearchExten');
@@ -799,11 +967,6 @@
             txtBillingAddress.value = obj['BILLINGADDRESS'];
             txtPermContent.value = obj['PERMCONTENT'];
         }
-        $('.show-details-btn').on('click', function (e) {
-            e.preventDefault();
-            $(this).closest('tr').next().toggleClass('open');
-            $(this).find(ace.vars['.icon']).toggleClass('fa-angle-double-down').toggleClass('fa-angle-double-up');
-        });
     </script>
 
     <%--Script for multi add--%>

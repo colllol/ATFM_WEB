@@ -52,6 +52,14 @@ namespace prjBusinessLogic
         {
             return new clsResuftAPI().GetTableHistory("api/PermHistory/GetbyIdPermDetailNoBk", id);
         }
+        public System.Data.DataTable GetActionHistoryByPermId(long permId)
+        {
+            return new clsResuftAPI().GetPostTableApiExtension(
+                "PERMDETAIL_NO_HISTORY_PKG",
+                "GET_BY_PERM_ID",
+                new { P_PERM_ID = permId }
+            );
+        }
         public bool RestoreRecode(string id, string version, string idUser)
         {
             return new clsResuftAPI().RestoreRecord("api/RestorePerm/RestorePermDetailNo", id, version, idUser);
