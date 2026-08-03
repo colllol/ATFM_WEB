@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Data;
+using System.Collections.Generic;
+using System.Linq;
 using System.Configuration;
 using System.Collections;
 using System.Web;
@@ -77,7 +79,80 @@ namespace prjApplication.Menu
         private void LoadCombo()
         {
             ddlParrentID.Items.Clear();
-            UltilFunc.BindCombox(this.ddlParrentID, "ID", "MenuName", "T_Menus", " 1=1 ", "---", "ParrentID");
+            ddlParrentID.Items.Add(new ListItem("<<------->>", "0"));
+
+            List<T_Menus> menus = new MenuDAL().GetAllMenus() ?? new List<T_Menus>();
+            int currentMenuId;
+            int.TryParse(Request["ID"], out currentMenuId);
+
+            HashSet<int> excludedMenuIds = GetMenuAndDescendantIds(menus, currentMenuId);
+            Dictionary<int, List<T_Menus>> menusByParent = menus
+                .Where(menu => !excludedMenuIds.Contains(menu.ID))
+                .GroupBy(menu => menu.ParrentID)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group
+                        .OrderBy(menu => menu.MenuOrder)
+                        .ThenBy(menu => menu.ID)
+                        .ToList()
+                );
+
+            AddMenuItems(0, 0, menusByParent, new HashSet<int>());
+        }
+
+        private static HashSet<int> GetMenuAndDescendantIds(List<T_Menus> menus, int menuId)
+        {
+            HashSet<int> excludedIds = new HashSet<int>();
+            if (menuId <= 0)
+                return excludedIds;
+
+            Dictionary<int, List<int>> childIdsByParent = menus
+                .GroupBy(menu => menu.ParrentID)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(menu => menu.ID).ToList()
+                );
+
+            Stack<int> pendingIds = new Stack<int>();
+            pendingIds.Push(menuId);
+            while (pendingIds.Count > 0)
+            {
+                int id = pendingIds.Pop();
+                if (!excludedIds.Add(id))
+                    continue;
+
+                List<int> childIds;
+                if (!childIdsByParent.TryGetValue(id, out childIds))
+                    continue;
+
+                foreach (int childId in childIds)
+                    pendingIds.Push(childId);
+            }
+
+            return excludedIds;
+        }
+
+        private void AddMenuItems(
+            int parentId,
+            int level,
+            Dictionary<int, List<T_Menus>> menusByParent,
+            HashSet<int> addedMenuIds)
+        {
+            List<T_Menus> childMenus;
+            if (!menusByParent.TryGetValue(parentId, out childMenus))
+                return;
+
+            foreach (T_Menus menu in childMenus)
+            {
+                if (!addedMenuIds.Add(menu.ID))
+                    continue;
+
+                string indentation = new string('\u00A0', level * 4);
+                ddlParrentID.Items.Add(
+                    new ListItem(indentation + menu.MenuName, menu.ID.ToString())
+                );
+                AddMenuItems(menu.ID, level + 1, menusByParent, addedMenuIds);
+            }
         }
         public override void DataBind()
         {
