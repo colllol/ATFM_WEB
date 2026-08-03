@@ -36,12 +36,6 @@
     }
     function statusClass(value) { var normalized = String(value).toLowerCase(); return /fail|error|reject/.test(normalized) ? 'failed' : /pending|wait|queue/.test(normalized) ? 'pending' : /sent|success|deliver|complete|ok/.test(normalized) ? 'success' : ''; }
     function oper(item) { return item._oper || text(item, ['operName','operatorName','airlineName','OPER_NAME','oper','OPER','airline','carrier']) || '--'; }
-    function databaseBadge(item) {
-        if (item._databaseState === 'found') return '<span class="email-db-status found"><i class="fa fa-check-circle"></i> Có dữ liệu</span>';
-        if (item._databaseState === 'missing') return '<span class="email-db-status missing"><i class="fa fa-exclamation-triangle"></i> Không có dữ liệu</span>';
-        if (item._databaseState === 'error') return '<span class="email-db-status error"><i class="fa fa-question-circle"></i> Không kiểm tra được</span>';
-        return '<span class="email-db-status checking"><i class="fa fa-spinner fa-spin"></i> Đang kiểm tra</span>';
-    }
     function setConnection(ok, message) { $('emailConnectionState').textContent = message; page.querySelector('.email-live').className = 'email-live ' + (ok ? 'is-online' : 'is-error'); }
     function applyFilters() {
         if ($('emailFrom').value && $('emailTo').value && $('emailFrom').value > $('emailTo').value) {
@@ -59,9 +53,10 @@
             var state = status(item), subject = text(item,['subject','title']) || '(Không có tiêu đề)';
             var sender = text(item,['sender','from','senderEmail']);
             var fileName = text(item,['attachmentName']);
-            var rowClass = item._databaseState === 'missing' ? ' class="email-row--no-data"' : '';
-            return '<tr' + rowClass + '><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(fileName) + '">' + esc(fileName) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td>' + databaseBadge(item) + '</td><td><button type="button" class="email-detail-button" data-index="' + index + '"><i class="fa fa-eye"></i></button></td></tr>';
-        }).join('') : '<tr><td colspan="8" class="email-empty-cell">Không có email phù hợp.</td></tr>';
+            var rowClass = item._databaseState === 'found' ? 'email-row--has-data' : item._databaseState === 'missing' ? 'email-row--no-data' : item._databaseState === 'error' ? 'email-row--db-error' : 'email-row--checking';
+            var databaseTitle = item._databaseState === 'found' ? 'Có dữ liệu trong database' : item._databaseState === 'missing' ? 'Không có dữ liệu trong database' : item._databaseState === 'error' ? 'Không kiểm tra được database' : 'Đang kiểm tra database';
+            return '<tr class="' + rowClass + '" title="' + databaseTitle + '"><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(fileName) + '">' + esc(fileName) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + index + '" title="Xem chi tiết email"><i class="fa fa-eye"></i></button></td></tr>';
+        }).join('') : '<tr><td colspan="7" class="email-empty-cell">Không có email phù hợp.</td></tr>';
         Array.prototype.forEach.call(document.querySelectorAll('.email-detail-button'), function (button) { button.onclick = function () { showDetail(filteredItems[parseInt(this.getAttribute('data-index'), 10)]); }; });
         $('emailTotal').textContent = totalItems.toLocaleString('vi-VN'); $('emailPageLabel').textContent = currentPage;
         $('emailPageInfo').textContent = 'Trang ' + currentPage + '/' + pages + ' · ' + totalItems.toLocaleString('vi-VN') + ' email';
@@ -101,13 +96,16 @@
             item._databaseState = state;
         });
     }
-    function inspectCurrentPage() {
-        var queue = filteredItems.slice(), cursor = 0;
+    function inspectItems(items) {
+        var queue = items.slice(), cursor = 0;
         function worker() {
             if (cursor >= queue.length) return Promise.resolve();
             return inspectDatabase(queue[cursor++]).then(worker);
         }
-        return Promise.all([worker(), worker(), worker(), worker()]).then(draw);
+        return Promise.all([worker(), worker(), worker(), worker()]);
+    }
+    function inspectCurrentPage() {
+        return inspectItems(filteredItems).then(draw);
     }
     function showDetail(item) {
         if (!item) return;
@@ -176,37 +174,81 @@
         detailRequestId++;
         $('emailDetailBackdrop').hidden = true;
     }
-    function reportRows() {
-        return filteredItems.map(function (item) {
+    function reportRows(items) {
+        return items.map(function (item) {
             return { Oper: oper(item), Status: status(item), HasDatabaseData: item._databaseState === 'found', DatabaseState: item._databaseState };
         });
     }
-    function reportHtml() {
-        var rows = reportRows();
+    function reportHtml(rows) {
         var body = rows.map(function (row, index) {
             var state = row.HasDatabaseData ? row.Status + ' - CÓ DỮ LIỆU DB' : row.DatabaseState === 'error' ? '[?] KHÔNG KIỂM TRA ĐƯỢC DATABASE' : '[!] KHÔNG CÓ DỮ LIỆU TRONG DATABASE';
             return '<tr' + (row.HasDatabaseData ? '' : ' style="color:#b4232c;background:#fff0f1;font-weight:bold"') + '><td>' + (index + 1) + '</td><td>' + esc(row.Oper) + '</td><td>' + esc(state) + '</td></tr>';
         }).join('');
         return '<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #777;padding:7px}th{background:#dceef8}</style></head><body><h2>BÁO CÁO TRẠNG THÁI DỮ LIỆU EMAIL</h2><table><thead><tr><th>STT</th><th>OPER (Tên hãng)</th><th>Trạng thái</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';
     }
+    function loadReportItems() {
+        var senderFilter = $('emailReportSender').value.trim().toLowerCase();
+        var request = {
+            query: senderFilter || $('emailSearch').value.trim(), processingStatus: $('emailStatus').value,
+            fromDate: $('emailFrom').value ? $('emailFrom').value + 'T00:00:00' : '',
+            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', page: 0, size: 500
+        };
+        return fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
+            return response.json().catch(function () { return null; }).then(function (payload) {
+                if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
+                return payload;
+            });
+        }).then(function (payload) {
+            if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
+            var items = payloadItems(payload).filter(function (item) {
+                return !senderFilter || text(item, ['sender','from','senderEmail']).toLowerCase().indexOf(senderFilter) >= 0;
+            }).slice(0, 500);
+            if (!items.length) throw new Error('Không có email phù hợp với bộ lọc báo cáo.');
+            return inspectItems(items).then(function () { return items; });
+        });
+    }
+    function validateReportSender() {
+        var input = $('emailReportSender');
+        if (input.value.trim() && !input.checkValidity()) {
+            $('emailReportMessage').className = 'email-report-message is-error';
+            $('emailReportMessage').textContent = 'Email người gửi dùng để lọc không hợp lệ.';
+            return false;
+        }
+        return true;
+    }
     function downloadReport() {
-        var format = $('emailReportFormat').value, extension = format === 'word' ? '.doc' : '.xls';
-        var blob = new Blob(['\ufeff', reportHtml()], { type: format === 'word' ? 'application/msword' : 'application/vnd.ms-excel' });
-        var link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'Bao_cao_Email_' + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '') + extension;
-        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href);
+        if (!validateReportSender()) return;
+        var button = $('emailReportDownload'), message = $('emailReportMessage');
+        button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tạo...';
+        message.className = 'email-report-message'; message.textContent = 'Đang lấy tối đa 500 email và kiểm tra database...';
+        loadReportItems().then(function (items) {
+            var rows = reportRows(items), format = $('emailReportFormat').value, extension = format === 'word' ? '.doc' : '.xls';
+            var blob = new Blob(['\ufeff', reportHtml(rows)], { type: format === 'word' ? 'application/msword' : 'application/vnd.ms-excel' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Bao_cao_Email_' + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '') + extension;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href);
+            message.className = 'email-report-message is-success'; message.textContent = 'Đã tạo báo cáo ' + rows.length + ' dòng.';
+        }).catch(function (error) {
+            message.className = 'email-report-message is-error'; message.textContent = 'Không thể tạo báo cáo: ' + error.message;
+        }).then(function () {
+            button.disabled = false; button.innerHTML = '<i class="fa fa-download"></i> Tải báo cáo';
+        });
     }
     function sendReport() {
         var recipient = $('emailReportRecipient').value.trim(), button = $('emailReportSend'), message = $('emailReportMessage');
+        if (!validateReportSender()) return;
         if (!recipient || !$('emailReportRecipient').checkValidity()) {
             message.className = 'email-report-message is-error'; message.textContent = 'Vui lòng nhập Gmail người nhận hợp lệ.'; return;
         }
         button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
         message.className = 'email-report-message'; message.textContent = '';
-        fetch(sendReportEndpoint, {
-            method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify({ recipient: recipient, format: $('emailReportFormat').value, rows: reportRows() })
+        message.textContent = 'Đang lấy tối đa 500 email và kiểm tra database...';
+        loadReportItems().then(function (items) {
+            return fetch(sendReportEndpoint, {
+                method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
+                body: JSON.stringify({ recipient: recipient, format: $('emailReportFormat').value, rows: reportRows(items) })
+            });
         }).then(function (response) {
             return response.json().catch(function () { return null; }).then(function (payload) {
                 if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));

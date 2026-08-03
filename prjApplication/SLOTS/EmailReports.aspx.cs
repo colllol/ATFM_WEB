@@ -32,7 +32,7 @@ namespace prjApplication.SLOTS
             AddParameter(parameters, "from", fromDate);
             AddParameter(parameters, "to", toDate);
             parameters.Add("page=" + Math.Max(0, page));
-            parameters.Add("size=" + Math.Max(1, Math.Min(size, 100)));
+            parameters.Add("size=" + Math.Max(1, Math.Min(size, 500)));
 
             string separator = endpoint.Contains("?") ? "&" : "?";
             string requestUrl = endpoint + separator + String.Join("&", parameters);
@@ -140,8 +140,8 @@ namespace prjApplication.SLOTS
 
             if (rows == null || rows.Count == 0)
                 throw new ArgumentException("Không có dữ liệu để tạo báo cáo.");
-            if (rows.Count > 100)
-                throw new ArgumentException("Mỗi báo cáo được gửi tối đa 100 dòng.");
+            if (rows.Count > 500)
+                throw new ArgumentException("Mỗi báo cáo được gửi tối đa 500 dòng.");
 
             format = String.Equals(format, "word", StringComparison.OrdinalIgnoreCase) ? "word" : "excel";
             string extension = format == "word" ? ".doc" : ".xls";
