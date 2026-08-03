@@ -305,6 +305,9 @@ namespace prjApplication.Permission
                 case "btnSearchExtension_Click":
                     kq = btnSearchExtension_Click(_arg[0]);
                     break;
+                case "LoadPermDetailActionHistory":
+                    kq = LoadPermDetailActionHistory(_arg[0]);
+                    break;
             }
             return kq;
         }
@@ -349,6 +352,87 @@ namespace prjApplication.Permission
             string ax = kq.ToString() == true.ToString() ? "Restore sussess" : "Restore error";
             WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[PermMasterScDAL]", 0, $"[RestoreRecode] [{ax}]", 0.0);
             return kq ? "OK" : "NOK";
+        }
+
+        private string LoadPermDetailActionHistory(string permIdValue)
+        {
+            long permId;
+            if (!long.TryParse(permIdValue, out permId) || permId <= 0)
+            {
+                return "<tr><td colspan='8' class='history-empty'>PERM_ID không hợp lệ.</td></tr>";
+            }
+
+            try
+            {
+                DataTable history = new PermDetailScDAL().GetActionHistoryByPermId(permId);
+                if (history == null || history.Rows.Count == 0)
+                {
+                    return "<tr><td colspan='8' class='history-empty'>Chưa có lịch sử thay đổi cho phép bay này.</td></tr>";
+                }
+
+                StringBuilder html = new StringBuilder();
+                int index = 0;
+                foreach (DataRow row in history.Rows)
+                {
+                    index++;
+                    string actionType = Convert.ToString(row["ACTION_TYPE"]).ToUpperInvariant();
+                    string actionName;
+                    switch (actionType)
+                    {
+                        case "INSERT":
+                            actionName = "Thêm mới";
+                            break;
+                        case "DELETE":
+                            actionName = "Xóa";
+                            break;
+                        default:
+                            actionName = "Cập nhật";
+                            break;
+                    }
+
+                    string changeDetail = HttpUtility.HtmlEncode(
+                        Convert.ToString(row["CHANGE_DETAIL"])
+                    )
+                    .Replace("\r\n", "<br />")
+                    .Replace("\n", "<br />");
+
+                    html.Append("<tr>");
+                    html.AppendFormat("<td class='history-center'>{0}</td>", index);
+                    html.AppendFormat(
+                        "<td class='history-center history-action-{0}'>{1}</td>",
+                        HttpUtility.HtmlAttributeEncode(actionType.ToLowerInvariant()),
+                        HttpUtility.HtmlEncode(actionName)
+                    );
+                    html.AppendFormat(
+                        "<td class='history-center'>{0}</td>",
+                        HttpUtility.HtmlEncode(Convert.ToString(row["PERM_DETAIL_ID"]))
+                    );
+                    html.AppendFormat(
+                        "<td class='history-center'>{0}</td>",
+                        HttpUtility.HtmlEncode(Convert.ToString(row["FLIGHT_PK"]))
+                    );
+                    html.AppendFormat(
+                        "<td>{0}</td>",
+                        HttpUtility.HtmlEncode(Convert.ToString(row["FLIGHTNBR"]))
+                    );
+                    html.AppendFormat(
+                        "<td>{0}</td>",
+                        HttpUtility.HtmlEncode(Convert.ToString(row["ACTION_USER"]))
+                    );
+                    html.AppendFormat(
+                        "<td class='history-center history-date'>{0}</td>",
+                        HttpUtility.HtmlEncode(Convert.ToString(row["ACTION_DATE"]))
+                    );
+                    html.AppendFormat("<td class='history-change-detail'>{0}</td>", changeDetail);
+                    html.Append("</tr>");
+                }
+
+                return html.ToString();
+            }
+            catch (Exception)
+            {
+                return "<tr><td colspan='8' class='history-error'>Không thể tải lịch sử thay đổi.</td></tr>";
+            }
         }
         private string btnUpdateOnclick(string ThamSo)
         {
