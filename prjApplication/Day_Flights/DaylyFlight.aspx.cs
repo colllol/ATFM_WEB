@@ -1352,12 +1352,25 @@ namespace prjApplication.Day_Flights
                     foreach (DataRow row in history.Rows)
                     {
                         string actionType = row["ACTION_TYPE"].ToString();
-                        string actionName = string.Equals(
+                        string actionName;
+                        if (string.Equals(
                             actionType,
                             "INSERT",
-                            StringComparison.OrdinalIgnoreCase)
-                                ? "Thêm mới"
-                                : "Cập nhật";
+                            StringComparison.OrdinalIgnoreCase))
+                        {
+                            actionName = "Thêm mới";
+                        }
+                        else if (string.Equals(
+                            actionType,
+                            "MOVE_DATE",
+                            StringComparison.OrdinalIgnoreCase))
+                        {
+                            actionName = "Chuyển ngày";
+                        }
+                        else
+                        {
+                            actionName = "Cập nhật";
+                        }
                         string changeDetail = history.Columns.Contains("CHANGE_DETAIL")
                             ? row["CHANGE_DETAIL"].ToString()
                             : string.Empty;

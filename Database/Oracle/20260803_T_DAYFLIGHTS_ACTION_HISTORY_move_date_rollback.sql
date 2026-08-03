@@ -1,30 +1,4 @@
--- Add field-level change details to the DaylyFlight action history.
-
-SET SERVEROUTPUT ON;
-
-PROMPT === 1. Add CHANGE_DETAIL column ===
-
-DECLARE
-    l_count PLS_INTEGER;
-BEGIN
-    SELECT COUNT(*)
-      INTO l_count
-      FROM USER_TAB_COLUMNS
-     WHERE TABLE_NAME = 'T_DAYFLIGHTS_ACTION_HISTORY'
-       AND COLUMN_NAME = 'CHANGE_DETAIL';
-
-    IF l_count = 0 THEN
-        EXECUTE IMMEDIATE
-            'ALTER TABLE T_DAYFLIGHTS_ACTION_HISTORY ' ||
-            'ADD (CHANGE_DETAIL CLOB)';
-        DBMS_OUTPUT.PUT_LINE('Added CHANGE_DETAIL.');
-    ELSE
-        DBMS_OUTPUT.PUT_LINE('CHANGE_DETAIL already exists.');
-    END IF;
-END;
-/
-
-PROMPT === 2. Replace audit trigger ===
+-- Restore the trigger behavior before MOVE_DATE support.
 
 CREATE OR REPLACE TRIGGER TRG_TDF_GOINGON_ACTION_HIS
 AFTER INSERT OR UPDATE OF LASTUSER ON T_DAY_FLIGHTS_GOINGON
@@ -59,22 +33,8 @@ DECLARE
     END APPEND_CHANGE;
 BEGIN
     IF INSERTING THEN
-        IF :NEW.CODE = 'CS'
-           AND :NEW.DATE_OLD IS NOT NULL
-           AND :NEW.FLIGHTDATE IS NOT NULL
-           AND TRUNC(:NEW.FLIGHTDATE) = TRUNC(:NEW.DATE_OLD) + 1
-        THEN
-            l_action_type := 'MOVE_DATE';
-            l_change_detail :=
-                   'P_DATE: ['
-                || TO_CHAR(:NEW.DATE_OLD, 'DD-MM-YYYY')
-                || '] -> ['
-                || TO_CHAR(:NEW.FLIGHTDATE, 'DD-MM-YYYY')
-                || ']';
-        ELSE
-            l_action_type := 'INSERT';
-            l_change_detail := 'NEW FLIGHT';
-        END IF;
+        l_action_type := 'INSERT';
+        l_change_detail := 'NEW FLIGHT';
     ELSE
         l_action_type := 'UPDATE';
 
@@ -145,48 +105,15 @@ END;
 
 ALTER TRIGGER TRG_TDF_GOINGON_ACTION_HIS ENABLE;
 
-PROMPT === 3. Return CHANGE_DETAIL through the API package ===
+UPDATE T_DAYFLIGHTS_ACTION_HISTORY
+   SET ACTION_TYPE = 'INSERT'
+ WHERE ACTION_TYPE = 'MOVE_DATE';
 
-CREATE OR REPLACE PACKAGE BODY DAYFLIGHT_HISTORY_PKG AS
-    PROCEDURE GET_BY_FLIGHT_ID
-    (
-        P_FLIGHT_ID IN T_DAYFLIGHTS_ACTION_HISTORY.FLIGHT_ID%TYPE,
-        P_OUT_CURSOR OUT T_CURSOR
-    )
-    IS
-    BEGIN
-        OPEN P_OUT_CURSOR FOR
-            SELECT HISTORY_ID,
-                   SOURCE_ROW_ID,
-                   FLIGHT_ID,
-                   ACTION_TYPE,
-                   CALLSIGN,
-                   TO_CHAR(FLIGHTDATE, 'DD-MM-YYYY') AS FLIGHTDATE,
-                   ACTION_USER,
-                   DBMS_LOB.SUBSTR(
-                       CHANGE_DETAIL,
-                       4000,
-                       1
-                   ) AS CHANGE_DETAIL,
-                   TO_CHAR(
-                       ACTION_DATE,
-                       'DD-MM-YYYY HH24:MI:SS'
-                   ) AS ACTION_DATE
-              FROM T_DAYFLIGHTS_ACTION_HISTORY
-             WHERE FLIGHT_ID = P_FLIGHT_ID
-             ORDER BY HISTORY_ID DESC;
-    END GET_BY_FLIGHT_ID;
-END DAYFLIGHT_HISTORY_PKG;
-/
+ALTER TABLE T_DAYFLIGHTS_ACTION_HISTORY
+    DROP CONSTRAINT CK_TDF_ACTION_HIS_TYPE;
 
-PROMPT === 4. Deployment result ===
+ALTER TABLE T_DAYFLIGHTS_ACTION_HISTORY
+    ADD CONSTRAINT CK_TDF_ACTION_HIS_TYPE
+        CHECK (ACTION_TYPE IN ('INSERT', 'UPDATE'));
 
-SELECT OBJECT_TYPE, OBJECT_NAME, STATUS
-  FROM USER_OBJECTS
- WHERE OBJECT_NAME IN
-       (
-           'T_DAYFLIGHTS_ACTION_HISTORY',
-           'TRG_TDF_GOINGON_ACTION_HIS',
-           'DAYFLIGHT_HISTORY_PKG'
-       )
- ORDER BY OBJECT_TYPE, OBJECT_NAME;
+COMMIT;
