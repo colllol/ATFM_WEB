@@ -2865,8 +2865,22 @@
             else { $(id).closest('tr').attr('data-isUpdate', 'false'); $(id).closest('tr').removeClass('success'); }
         }
 		
+		function setFinishFlightButtonState(isFinished) {
+            var $finishButton = $('#btnFinishFlight');
+            var disabled = isFinished === true;
+
+            $finishButton
+                .prop('disabled', disabled)
+                .attr('aria-disabled', disabled ? 'true' : 'false')
+                .attr('title', disabled
+                    ? 'Flight has already been moved to Finished.'
+                    : 'Move Finished');
+        }
+
 		function fnFinishFlight()
 		{
+			if ($('#btnFinishFlight').prop('disabled')) return;
+
 			//var _F = $('#txt_FID').val(ax.attr('data-id'));
             //var url = urlApi + '/api/DayFlights/GetPerm_GoingOnBy?ID=' + ax.attr('data-id');
 			var ax = $('#txt_FID').val();
@@ -3005,6 +3019,7 @@
                 $('#txt_popVALID').val('24');
                 $('#txt_popREMARK').val('');
                 $('#txt_FID').val('0');
+                setFinishFlightButtonState(false);
             
                 $('#ddlSelectPop').prop('selectedIndex', 0);
                 lbidBnr.innerText = '';
@@ -3505,6 +3520,9 @@
                 }).length > 0;
 
                 $letterSelect.val(hasLetterOption ? letterType : '--');
+                setFinishFlightButtonState(
+                    $.trim(String(data.ListValue[0]['MOVEFINISH'] || '0')) === '1'
+                );
                 $('#txt_popPERMNBR').val(data.ListValue[0]['PERMNBR']);
                 $('#txt_popREGIS').val(data.ListValue[0]['REGISTRATION']);
                 $('#txt_popCAllSIGN').val(data.ListValue[0]['FLIGHTNBR']);
