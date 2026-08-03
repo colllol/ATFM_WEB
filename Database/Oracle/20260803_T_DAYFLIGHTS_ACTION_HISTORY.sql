@@ -35,7 +35,7 @@ BEGIN
                 CONSTRAINT PK_T_DAYFLIGHTS_ACTION_HIS
                     PRIMARY KEY (HISTORY_ID),
                 CONSTRAINT CK_TDF_ACTION_HIS_TYPE
-                    CHECK (ACTION_TYPE IN ('INSERT', 'UPDATE', 'MOVE_DATE'))
+                    CHECK (ACTION_TYPE IN ('INSERT', 'UPDATE', 'MOVE_DATE', 'FINISH'))
             )
         ]';
         DBMS_OUTPUT.PUT_LINE('Created T_DAYFLIGHTS_ACTION_HISTORY.');
@@ -151,7 +151,13 @@ BEGIN
             l_change_detail := 'NEW FLIGHT';
         END IF;
     ELSE
-        l_action_type := 'UPDATE';
+        IF NVL(:OLD.MOVEFINISH, 0) <> NVL(:NEW.MOVEFINISH, 0)
+           AND NVL(:NEW.MOVEFINISH, 0) = 1
+        THEN
+            l_action_type := 'FINISH';
+        ELSE
+            l_action_type := 'UPDATE';
+        END IF;
 
         APPEND_CHANGE('LETTER', :OLD.LETTER_TYPE, :NEW.LETTER_TYPE);
         APPEND_CHANGE('PERM', :OLD.PERMNBR, :NEW.PERMNBR);

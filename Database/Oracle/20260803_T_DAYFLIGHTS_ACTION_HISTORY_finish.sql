@@ -1,30 +1,17 @@
--- Add field-level change details to the DaylyFlight action history.
+-- Record fnFinishFlight/A_TEST_SEARCH.MOVEFINISH_GOINGON in flight history.
 
 SET SERVEROUTPUT ON;
 
-PROMPT === 1. Add CHANGE_DETAIL column ===
+PROMPT === 1. Allow FINISH action type ===
 
-DECLARE
-    l_count PLS_INTEGER;
-BEGIN
-    SELECT COUNT(*)
-      INTO l_count
-      FROM USER_TAB_COLUMNS
-     WHERE TABLE_NAME = 'T_DAYFLIGHTS_ACTION_HISTORY'
-       AND COLUMN_NAME = 'CHANGE_DETAIL';
+ALTER TABLE T_DAYFLIGHTS_ACTION_HISTORY
+    DROP CONSTRAINT CK_TDF_ACTION_HIS_TYPE;
 
-    IF l_count = 0 THEN
-        EXECUTE IMMEDIATE
-            'ALTER TABLE T_DAYFLIGHTS_ACTION_HISTORY ' ||
-            'ADD (CHANGE_DETAIL CLOB)';
-        DBMS_OUTPUT.PUT_LINE('Added CHANGE_DETAIL.');
-    ELSE
-        DBMS_OUTPUT.PUT_LINE('CHANGE_DETAIL already exists.');
-    END IF;
-END;
-/
+ALTER TABLE T_DAYFLIGHTS_ACTION_HISTORY
+    ADD CONSTRAINT CK_TDF_ACTION_HIS_TYPE
+        CHECK (ACTION_TYPE IN ('INSERT', 'UPDATE', 'MOVE_DATE', 'FINISH'));
 
-PROMPT === 2. Replace audit trigger ===
+PROMPT === 2. Classify MOVEFINISH changes as FINISH ===
 
 CREATE OR REPLACE TRIGGER TRG_TDF_GOINGON_ACTION_HIS
 AFTER INSERT OR UPDATE OF LASTUSER ON T_DAY_FLIGHTS_GOINGON
@@ -151,48 +138,53 @@ END;
 
 ALTER TRIGGER TRG_TDF_GOINGON_ACTION_HIS ENABLE;
 
-PROMPT === 3. Return CHANGE_DETAIL through the API package ===
+PROMPT === 3. Make MOVEFINISH_GOINGON pass P_USER to the trigger ===
 
-CREATE OR REPLACE PACKAGE BODY DAYFLIGHT_HISTORY_PKG AS
-    PROCEDURE GET_BY_FLIGHT_ID
-    (
-        P_FLIGHT_ID IN T_DAYFLIGHTS_ACTION_HISTORY.FLIGHT_ID%TYPE,
-        P_OUT_CURSOR OUT T_CURSOR
-    )
-    IS
-    BEGIN
-        OPEN P_OUT_CURSOR FOR
-            SELECT HISTORY_ID,
-                   SOURCE_ROW_ID,
-                   FLIGHT_ID,
-                   ACTION_TYPE,
-                   CALLSIGN,
-                   TO_CHAR(FLIGHTDATE, 'DD-MM-YYYY') AS FLIGHTDATE,
-                   ACTION_USER,
-                   DBMS_LOB.SUBSTR(
-                       CHANGE_DETAIL,
-                       4000,
-                       1
-                   ) AS CHANGE_DETAIL,
-                   TO_CHAR(
-                       ACTION_DATE,
-                       'DD-MM-YYYY HH24:MI:SS'
-                   ) AS ACTION_DATE
-              FROM T_DAYFLIGHTS_ACTION_HISTORY
-             WHERE FLIGHT_ID = P_FLIGHT_ID
-             ORDER BY HISTORY_ID DESC;
-    END GET_BY_FLIGHT_ID;
-END DAYFLIGHT_HISTORY_PKG;
+DECLARE
+    l_ddl        CLOB;
+    l_old_sql    VARCHAR2(1000) :=
+        'Update T_DAY_FLIGHTS_GOINGON set MOVEFINISH=1  WHERE    FLIGHT_ID=P_ID ;';
+    l_new_sql    VARCHAR2(1000) :=
+        'Update T_DAY_FLIGHTS_GOINGON set MOVEFINISH=1, LASTUSER=P_USER  WHERE    FLIGHT_ID=P_ID ;';
+    l_cursor     INTEGER;
+BEGIN
+    SELECT DBMS_METADATA.GET_DDL('PACKAGE_BODY', 'A_TEST_SEARCH')
+      INTO l_ddl
+      FROM DUAL;
+
+    IF DBMS_LOB.INSTR(l_ddl, l_new_sql) > 0 THEN
+        DBMS_OUTPUT.PUT_LINE('A_TEST_SEARCH.MOVEFINISH_GOINGON already updated.');
+    ELSIF DBMS_LOB.INSTR(l_ddl, l_old_sql) > 0 THEN
+        l_ddl := REPLACE(l_ddl, l_old_sql, l_new_sql);
+        l_cursor := DBMS_SQL.OPEN_CURSOR;
+        BEGIN
+            DBMS_SQL.PARSE(l_cursor, l_ddl, DBMS_SQL.NATIVE);
+            DBMS_SQL.CLOSE_CURSOR(l_cursor);
+        EXCEPTION
+            WHEN OTHERS THEN
+                IF DBMS_SQL.IS_OPEN(l_cursor) THEN
+                    DBMS_SQL.CLOSE_CURSOR(l_cursor);
+                END IF;
+                RAISE;
+        END;
+        DBMS_OUTPUT.PUT_LINE('Updated A_TEST_SEARCH.MOVEFINISH_GOINGON.');
+    ELSE
+        RAISE_APPLICATION_ERROR(
+            -20031,
+            'Expected MOVEFINISH_GOINGON UPDATE statement was not found.'
+        );
+    END IF;
+END;
 /
 
 PROMPT === 4. Deployment result ===
 
 SELECT OBJECT_TYPE, OBJECT_NAME, STATUS
   FROM USER_OBJECTS
- WHERE OBJECT_NAME IN
-       (
-           'T_DAYFLIGHTS_ACTION_HISTORY',
-           'TRG_TDF_GOINGON_ACTION_HIS',
-           'DAYFLIGHT_HISTORY_PKG'
-       )
- ORDER BY OBJECT_TYPE, OBJECT_NAME;
+ WHERE OBJECT_NAME IN ('TRG_TDF_GOINGON_ACTION_HIS', 'A_TEST_SEARCH')
+ ORDER BY OBJECT_NAME, OBJECT_TYPE;
+
+SELECT NAME, TYPE, LINE, POSITION, TEXT
+  FROM USER_ERRORS
+ WHERE NAME IN ('TRG_TDF_GOINGON_ACTION_HIS', 'A_TEST_SEARCH')
+ ORDER BY NAME, TYPE, SEQUENCE;

@@ -1367,6 +1367,13 @@ namespace prjApplication.Day_Flights
                         {
                             actionName = "Chuyển ngày";
                         }
+                        else if (string.Equals(
+                            actionType,
+                            "FINISH",
+                            StringComparison.OrdinalIgnoreCase))
+                        {
+                            actionName = "Chuyển hoàn thành";
+                        }
                         else
                         {
                             actionName = "Cập nhật";
