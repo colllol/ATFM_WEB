@@ -897,7 +897,7 @@
 
         #divStatusIcon {
             font-size: 13px;
-            width: 28px;
+            width: 50px;
         }
 
         #grdSource .tdIconStatus {
