@@ -3,7 +3,8 @@
     <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/EmailReports.css?v=20260728-2") %>" />
     <section id="emailReportsPage" class="email-reports-page"
         data-email-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmails") %>"
-        data-job-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetTargetPermId") %>">
+        data-job-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetTargetPermId") %>"
+        data-send-report-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/SendReport") %>">
         <header class="email-hero">
             <div><span class="email-eyebrow"><i class="fa fa-envelope"></i> VATM · EMAIL REPORTS</span><h1>Báo cáo Email</h1><p>Tra cứu, lọc và xem chi tiết email từ hệ thống báo cáo.</p></div>
             <div class="email-live"><i class="email-live-dot"></i><div><small>Trạng thái kết nối</small><strong id="emailConnectionState">Chưa tải</strong></div></div>
@@ -28,7 +29,14 @@
         </section>
         <section class="email-card email-table-card">
             <div class="email-table-heading"><div><h2>Danh sách email</h2><p id="emailTableInfo">Chưa có dữ liệu</p></div><label class="email-page-size">Số dòng<select id="emailPageSize"><option>25</option><option selected>50</option><option>100</option></select></label></div>
-            <div class="email-table-wrap"><table class="email-table"><thead><tr><th>STT</th><th>Thời gian</th><th>Tiêu đề</th><th>Người gửi</th><th>Tệp đính kèm</th><th>Trạng thái</th><th></th></tr></thead><tbody id="emailRows"></tbody></table></div>
+            <div class="email-report-tools">
+                <label>Định dạng<select id="emailReportFormat"><option value="excel">Excel (.xls)</option><option value="word">Word (.doc)</option></select></label>
+                <label class="email-report-recipient">Gmail người nhận<input id="emailReportRecipient" type="email" placeholder="nguoinhan@gmail.com" /></label>
+                <button id="emailReportDownload" type="button" class="email-secondary-button"><i class="fa fa-download"></i> Tải báo cáo</button>
+                <button id="emailReportSend" type="button"><i class="fa fa-paper-plane"></i> Gửi qua Gmail</button>
+                <span id="emailReportMessage" class="email-report-message"></span>
+            </div>
+            <div class="email-table-wrap"><table class="email-table"><thead><tr><th>STT</th><th>Thời gian</th><th>Tiêu đề</th><th>Người gửi</th><th>Tệp đính kèm</th><th>Trạng thái</th><th>Dữ liệu DB</th><th></th></tr></thead><tbody id="emailRows"></tbody></table></div>
             <div class="email-pagination"><button id="emailPrev" type="button">‹ Trước</button><span id="emailPageInfo">Trang 1/1</span><button id="emailNext" type="button">Sau ›</button></div>
         </section>
         <div id="emailDetailBackdrop" class="email-detail-backdrop" hidden>
@@ -48,5 +56,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260729-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260803-1") %>"></script>
 </asp:Content>
