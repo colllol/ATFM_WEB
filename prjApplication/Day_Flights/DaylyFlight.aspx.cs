@@ -1274,6 +1274,7 @@ namespace prjApplication.Day_Flights
             kq += FlightInfoExtension_ChangeInfo(dt.Rows[0]["CHANGEVALUE"].ToString());
             kq += FlightInfoExtension_HasPerm(dt.Rows[0]["HASPERM"].ToString() == "1" ? "YES" : "NO");
             kq += FlightInfoExtension_Permission(thamso[0]);
+            kq += FlightInfoExtension_ActionHistory(thamso[0]);
             kq += FlightInfoExtension_DienVanExt(thamso[0]);
             // view button access checked info change
             kq += FlightInfoExtension_ShowButtonAccess(thamso[0]);
@@ -1323,6 +1324,65 @@ namespace prjApplication.Day_Flights
                 permissionJson + "," +
                 linkFilesJson + "," +
                 errorJson + ");</script>";
+        }
+
+        private string FlightInfoExtension_ActionHistory(string flightId)
+        {
+            string rowsHtml;
+
+            try
+            {
+                DataTable history = new DayFlightsDAL()
+                    .GetActionHistoryByFlightId(flightId);
+
+                if (history == null || history.Rows.Count == 0)
+                {
+                    rowsHtml =
+                        "<tr><td colspan='5' class='text-muted'>" +
+                        "Chưa có lịch sử thao tác cho chuyến bay này." +
+                        "</td></tr>";
+                }
+                else
+                {
+                    var html = new System.Text.StringBuilder();
+                    foreach (DataRow row in history.Rows)
+                    {
+                        string actionType = row["ACTION_TYPE"].ToString();
+                        string actionName = string.Equals(
+                            actionType,
+                            "INSERT",
+                            StringComparison.OrdinalIgnoreCase)
+                                ? "Thêm mới"
+                                : "Cập nhật";
+
+                        html.Append("<tr>")
+                            .Append("<td>")
+                            .Append(HttpUtility.HtmlEncode(actionName))
+                            .Append("</td><td>")
+                            .Append(HttpUtility.HtmlEncode(row["CALLSIGN"].ToString()))
+                            .Append("</td><td style='white-space:nowrap;'>")
+                            .Append(HttpUtility.HtmlEncode(row["FLIGHTDATE"].ToString()))
+                            .Append("</td><td>")
+                            .Append(HttpUtility.HtmlEncode(row["ACTION_USER"].ToString()))
+                            .Append("</td><td style='white-space:nowrap;'>")
+                            .Append(HttpUtility.HtmlEncode(row["ACTION_DATE"].ToString()))
+                            .Append("</td></tr>");
+                    }
+                    rowsHtml = html.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                rowsHtml =
+                    "<tr><td colspan='5' class='text-danger'>" +
+                    HttpUtility.HtmlEncode(
+                        "Không tải được lịch sử thao tác: " + ex.Message) +
+                    "</td></tr>";
+            }
+
+            string rowsJson = Newtonsoft.Json.JsonConvert.SerializeObject(rowsHtml)
+                .Replace("</", "<\\/");
+            return "<script>renderFlightActionHistory(" + rowsJson + ");</script>";
         }
 
         private string viewPopupInfoExtensionInsert(string[] thamso)

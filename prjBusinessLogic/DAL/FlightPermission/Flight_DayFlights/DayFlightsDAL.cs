@@ -74,6 +74,17 @@ namespace prjBusinessLogic
                 "&permtype=" +
                 Uri.EscapeDataString(permType ?? string.Empty));
         }
+        public System.Data.DataTable GetActionHistoryByFlightId(string id)
+        {
+            long flightId;
+            if (!long.TryParse(id, out flightId) || flightId <= 0)
+                return new System.Data.DataTable();
+
+            return new clsResuftAPI().GetPostTableApiExtension(
+                "DAYFLIGHT_HISTORY_PKG",
+                "GET_BY_FLIGHT_ID",
+                new { P_FLIGHT_ID = flightId });
+        }
         public bool RestoreRecode(string id, string version, string idUser)
         {
             return new clsResuftAPI().RestoreRecord("api/DayFlights/RestoreHis", id, version, idUser);
