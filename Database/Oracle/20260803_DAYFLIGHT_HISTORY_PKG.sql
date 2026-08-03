@@ -27,6 +27,11 @@ CREATE OR REPLACE PACKAGE BODY DAYFLIGHT_HISTORY_PKG AS
                    CALLSIGN,
                    TO_CHAR(FLIGHTDATE, 'DD-MM-YYYY') AS FLIGHTDATE,
                    ACTION_USER,
+                   DBMS_LOB.SUBSTR(
+                       CHANGE_DETAIL,
+                       4000,
+                       1
+                   ) AS CHANGE_DETAIL,
                    TO_CHAR(
                        ACTION_DATE,
                        'DD-MM-YYYY HH24:MI:SS'

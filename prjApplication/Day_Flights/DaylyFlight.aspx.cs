@@ -1342,7 +1342,7 @@ namespace prjApplication.Day_Flights
                 if (history == null || history.Rows.Count == 0)
                 {
                     rowsHtml =
-                        "<tr><td colspan='5' class='text-muted'>" +
+                        "<tr><td colspan='6' class='text-muted'>" +
                         "Chưa có lịch sử thao tác cho chuyến bay này." +
                         "</td></tr>";
                 }
@@ -1358,6 +1358,14 @@ namespace prjApplication.Day_Flights
                             StringComparison.OrdinalIgnoreCase)
                                 ? "Thêm mới"
                                 : "Cập nhật";
+                        string changeDetail = history.Columns.Contains("CHANGE_DETAIL")
+                            ? row["CHANGE_DETAIL"].ToString()
+                            : string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(changeDetail))
+                        {
+                            changeDetail = "Không có thông tin thay đổi (dữ liệu lịch sử cũ).";
+                        }
 
                         html.Append("<tr>")
                             .Append("<td>")
@@ -1370,6 +1378,8 @@ namespace prjApplication.Day_Flights
                             .Append(HttpUtility.HtmlEncode(row["ACTION_USER"].ToString()))
                             .Append("</td><td style='white-space:nowrap;'>")
                             .Append(HttpUtility.HtmlEncode(row["ACTION_DATE"].ToString()))
+                            .Append("</td><td style='text-align:left;white-space:pre-line;min-width:280px;'>")
+                            .Append(HttpUtility.HtmlEncode(changeDetail))
                             .Append("</td></tr>");
                     }
                     rowsHtml = html.ToString();
@@ -1378,7 +1388,7 @@ namespace prjApplication.Day_Flights
             catch (Exception ex)
             {
                 rowsHtml =
-                    "<tr><td colspan='5' class='text-danger'>" +
+                    "<tr><td colspan='6' class='text-danger'>" +
                     HttpUtility.HtmlEncode(
                         "Không tải được lịch sử thao tác: " + ex.Message) +
                     "</td></tr>";

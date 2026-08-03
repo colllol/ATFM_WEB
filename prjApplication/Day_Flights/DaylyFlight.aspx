@@ -1624,11 +1624,12 @@
                                     <th>Flight date</th>
                                     <th>User</th>
                                     <th>Action date</th>
+                                    <th>Changed information</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td colspan="5" class="text-muted">
+                                    <td colspan="6" class="text-muted">
                                         Chưa có lịch sử thao tác cho chuyến bay này.
                                     </td>
                                 </tr>
@@ -3148,14 +3149,14 @@
                 '<tbody><tr><td class="text-muted">Đang tải Permission...</td></tr></tbody>'
             );
             $('#tblFlightActionHistory tbody').html(
-                '<tr><td colspan="5" class="text-muted">' +
+                '<tr><td colspan="6" class="text-muted">' +
                 'Đang tải lịch sử thao tác...</td></tr>'
             );
         }
 
         function renderFlightActionHistory(rowsHtml) {
             $('#tblFlightActionHistory tbody').html(rowsHtml ||
-                '<tr><td colspan="5" class="text-muted">' +
+                '<tr><td colspan="6" class="text-muted">' +
                 'Chưa có lịch sử thao tác cho chuyến bay này.</td></tr>');
         }
 
