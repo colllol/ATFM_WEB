@@ -461,9 +461,12 @@
         #navbar.atfm-header .atfm-notification-title {
             display: block;
             max-width: 100%;
-            margin-bottom: 5px;
+            margin: 0 0 6px;
+            font-size: 13px;
             font-weight: 700;
+            line-height: 18px;
             overflow-wrap: anywhere;
+            white-space: normal;
             word-break: break-word;
         }
 
