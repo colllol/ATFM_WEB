@@ -365,6 +365,7 @@
         #navbar.atfm-header .atfm-notification-panel {
             width: 390px;
             max-width: calc(100vw - 24px);
+            overflow-x: hidden;
         }
 
         #navbar.atfm-header .atfm-popup-header {
@@ -412,12 +413,17 @@
 
         #navbar.atfm-header .atfm-notification-list {
             max-height: 390px;
+            overflow-x: hidden;
             overflow-y: auto;
             padding: 10px;
         }
 
         #navbar.atfm-header .atfm-notification-item {
             display: grid;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
             grid-template-columns: minmax(0, 1fr) auto;
             gap: 10px;
             margin-bottom: 8px;
@@ -454,8 +460,11 @@
 
         #navbar.atfm-header .atfm-notification-title {
             display: block;
+            max-width: 100%;
             margin-bottom: 5px;
             font-weight: 700;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         #navbar.atfm-header .atfm-notification-message,
@@ -464,6 +473,8 @@
             color: #66788a;
             font-size: 12px;
             line-height: 1.45;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         #navbar.atfm-header .atfm-notification-message { white-space: pre-line; }
