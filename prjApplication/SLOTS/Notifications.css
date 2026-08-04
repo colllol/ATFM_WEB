@@ -166,7 +166,10 @@
 .notifications-table tbody tr:hover td { background: #f7fbfd; }
 .notifications-table tbody tr.is-removing { opacity: 0; transform: translateX(16px); transition: opacity .2s ease, transform .2s ease; }
 .notifications-title-cell { color: #244f6b; font-weight: 700; }
-.notifications-content-cell { color: #557084; }
+.notifications-content-cell {
+    color: #557084;
+    white-space: pre-line;
+}
 .notifications-time-cell { color: #71889a; white-space: nowrap !important; }
 .notifications-action-heading,
 .notifications-action-cell { text-align: center !important; }

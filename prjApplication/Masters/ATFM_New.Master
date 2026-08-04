@@ -466,6 +466,7 @@
             line-height: 1.45;
         }
 
+        #navbar.atfm-header .atfm-notification-message { white-space: pre-line; }
         #navbar.atfm-header .atfm-notification-time { margin-top: 7px; color: #98a6b5; }
 
         #navbar.atfm-header .atfm-notification-read-one {

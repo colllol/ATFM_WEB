@@ -2,7 +2,7 @@
     CodeBehind="Notifications.aspx.cs" Inherits="prjApplication.SLOTS.Notifications" %>
 
 <asp:Content ID="NotificationsContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260723-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260804-1") %>" />
 
     <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>">
         <header class="notifications-page-header">
