@@ -20,7 +20,7 @@ namespace prjApplication.Menu
     public partial class ListMenu : PageCoreAdmin
     {
         
-        private const string _AliasSession = "ListCountry";
+        private const string _AliasSession = "ListMenu";
         protected void Page_Load(object sender, EventArgs e)
         {
             this.btnAddMenu.Visible = _Role.R_Add;
