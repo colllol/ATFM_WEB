@@ -29,3 +29,6 @@
 
 /* Biểu thị trạng thái database bằng màu toàn dòng, vẫn giữ cột Xem chi tiết. */
 .email-table tbody .email-row--has-data td{background:#ecfbf4;border-bottom-color:#bfe8d3}.email-table tbody .email-row--has-data td:first-child{box-shadow:inset 4px 0 #1a9b68}.email-table tbody .email-row--no-data td{background:#fff0f1;border-bottom-color:#f1c1c5}.email-table tbody .email-row--no-data td:first-child{box-shadow:inset 4px 0 #d83e49}.email-table tbody .email-row--db-error td{background:#fff9e8}.email-table tbody .email-row--checking td{background:#f7f9fb}.email-table tbody .email-row--has-data:hover td{background:#dff7eb}.email-table tbody .email-row--no-data:hover td{background:#ffe3e5}
+
+/* Chuyển nhanh giữa dữ liệu email và dữ liệu lấy từ thư mục Incoming. */
+.email-source-tabs{display:inline-flex;gap:4px;margin-top:18px;padding:4px;border:1px solid var(--border);border-radius:10px;background:#edf5fa}.email-source-tabs button{display:inline-flex;align-items:center;gap:7px;min-width:112px;justify-content:center;padding:9px 16px;border:0;border-radius:7px;color:#497087;background:transparent;font-weight:700;cursor:pointer}.email-source-tabs button.is-active{color:#fff;background:var(--blue);box-shadow:0 4px 10px rgba(25,119,181,.22)}.email-source-tabs button:focus{outline:2px solid #85c6e8;outline-offset:2px}

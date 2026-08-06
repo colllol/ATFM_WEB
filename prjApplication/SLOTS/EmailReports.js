@@ -2,7 +2,9 @@
     'use strict';
     var page = document.getElementById('emailReportsPage');
     if (!page) return;
-    var endpoint = page.getAttribute('data-email-endpoint');
+    var emailEndpoint = page.getAttribute('data-email-endpoint');
+    var incomingEndpoint = page.getAttribute('data-incoming-endpoint');
+    var endpoint = emailEndpoint, sourceMode = 'email';
     var jobEndpoint = page.getAttribute('data-job-endpoint');
     var sendReportEndpoint = page.getAttribute('data-send-report-endpoint');
     var allItems = [], filteredItems = [], currentPage = 1, pageSize = 50, totalItems = 0, totalPages = 1;
@@ -37,6 +39,20 @@
     function statusClass(value) { var normalized = String(value).toLowerCase(); return /fail|error|reject/.test(normalized) ? 'failed' : /pending|wait|queue/.test(normalized) ? 'pending' : /sent|success|deliver|complete|ok/.test(normalized) ? 'success' : ''; }
     function oper(item) { return item._oper || text(item, ['operName','operatorName','airlineName','OPER_NAME','oper','OPER','airline','carrier']) || '--'; }
     function setConnection(ok, message) { $('emailConnectionState').textContent = message; page.querySelector('.email-live').className = 'email-live ' + (ok ? 'is-online' : 'is-error'); }
+    function sourceLabel() { return sourceMode === 'incoming' ? 'Incoming' : 'email'; }
+    function selectSource(mode) {
+        sourceMode = mode === 'incoming' ? 'incoming' : 'email';
+        endpoint = sourceMode === 'incoming' ? incomingEndpoint : emailEndpoint;
+        currentPage = 1;
+        Array.prototype.forEach.call(document.querySelectorAll('[data-report-source]'), function (button) {
+            var active = button.getAttribute('data-report-source') === sourceMode;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        $('emailTableTitle').textContent = sourceMode === 'incoming' ? 'Danh sách Incoming' : 'Danh sách email';
+        $('emailError').hidden = true;
+        load(1);
+    }
     function applyFilters() {
         if ($('emailFrom').value && $('emailTo').value && $('emailFrom').value > $('emailTo').value) {
             $('emailError').textContent = 'Từ ngày không được lớn hơn đến ngày.';
@@ -59,7 +75,7 @@
         }).join('') : '<tr><td colspan="7" class="email-empty-cell">Không có email phù hợp.</td></tr>';
         Array.prototype.forEach.call(document.querySelectorAll('.email-detail-button'), function (button) { button.onclick = function () { showDetail(filteredItems[parseInt(this.getAttribute('data-index'), 10)]); }; });
         $('emailTotal').textContent = totalItems.toLocaleString('vi-VN'); $('emailPageLabel').textContent = currentPage;
-        $('emailPageInfo').textContent = 'Trang ' + currentPage + '/' + pages + ' · ' + totalItems.toLocaleString('vi-VN') + ' email';
+        $('emailPageInfo').textContent = 'Trang ' + currentPage + '/' + pages + ' · ' + totalItems.toLocaleString('vi-VN') + ' ' + sourceLabel();
         $('emailTableInfo').textContent = rows.length.toLocaleString('vi-VN') + ' bản ghi trên trang'; $('emailPrev').disabled = currentPage <= 1; $('emailNext').disabled = currentPage >= pages;
         var checking = rows.some(function (item) { return !/^(found|missing|error)$/.test(item._databaseState || ''); });
         $('emailReportDownload').disabled = !rows.length || checking;
@@ -239,13 +255,13 @@
         if (!validateReportSender()) return;
         var button = $('emailReportDownload'), message = $('emailReportMessage');
         button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tạo...';
-        message.className = 'email-report-message'; message.textContent = 'Đang lấy tối đa 500 email và kiểm tra database...';
+        message.className = 'email-report-message'; message.textContent = 'Đang lấy tối đa 500 bản ghi ' + sourceLabel() + ' và kiểm tra database...';
         loadReportItems().then(function (items) {
             var rows = reportRows(items), format = $('emailReportFormat').value, extension = format === 'word' ? '.doc' : '.xls';
             var blob = new Blob(['\ufeff', reportHtml(rows)], { type: format === 'word' ? 'application/msword' : 'application/vnd.ms-excel' });
             var link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'Bao_cao_Email_' + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '') + extension;
+            link.download = 'Bao_cao_' + (sourceMode === 'incoming' ? 'Incoming_' : 'Email_') + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '') + extension;
             document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href);
             message.className = 'email-report-message is-success'; message.textContent = 'Đã tạo báo cáo ' + rows.length + ' dòng.';
         }).catch(function (error) {
@@ -262,7 +278,7 @@
         }
         button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
         message.className = 'email-report-message'; message.textContent = '';
-        message.textContent = 'Đang lấy tối đa 500 email và kiểm tra database...';
+        message.textContent = 'Đang lấy tối đa 500 bản ghi ' + sourceLabel() + ' và kiểm tra database...';
         loadReportItems().then(function (items) {
             return fetch(sendReportEndpoint, {
                 method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
@@ -313,7 +329,7 @@
                 window.setTimeout(function () { load(retriesRemaining - 1); }, 600);
                 return;
             }
-            allItems = []; filteredItems = []; totalItems = 0; totalPages = 1; draw(); setConnection(false, 'Không kết nối'); $('emailError').textContent = 'Không thể tải dữ liệu email: ' + error.message; $('emailError').hidden = false;
+            allItems = []; filteredItems = []; totalItems = 0; totalPages = 1; draw(); setConnection(false, 'Không kết nối'); $('emailError').textContent = 'Không thể tải dữ liệu ' + sourceLabel() + ': ' + error.message; $('emailError').hidden = false;
         }).then(function () {
             apply.disabled = false;
             apply.innerHTML = '<i class="fa fa-search"></i> Tìm kiếm';
@@ -322,6 +338,7 @@
     $('emailApply').onclick = applyFilters; $('emailSearch').onkeydown = function (event) { if (event.key === 'Enter') applyFilters(); }; $('emailRefresh').onclick = function () { $('emailError').hidden = true; load(); }; $('emailPageSize').onchange = function () { pageSize = parseInt(this.value, 10); currentPage = 1; load(); };
     $('emailPrev').onclick = function () { if (currentPage > 1) { currentPage--; load(); } }; $('emailNext').onclick = function () { if (currentPage < totalPages) { currentPage++; load(); } };
     $('emailReportDownload').onclick = downloadReport; $('emailReportSend').onclick = sendReport;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-report-source]'), function (button) { button.onclick = function () { if (this.getAttribute('data-report-source') !== sourceMode) selectSource(this.getAttribute('data-report-source')); }; });
     $('emailDetailClose').onclick = closeDetail; $('emailDetailBackdrop').onclick = function (event) { if (event.target === this) closeDetail(); };
     load(1);
 }());

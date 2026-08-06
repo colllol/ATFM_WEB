@@ -25,7 +25,22 @@ namespace prjApplication.SLOTS
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static string GetEmails(string query, string processingStatus, string fromDate, string toDate, int page, int size)
         {
-            string endpoint = ConfigurationManager.AppSettings["APIEmail"];
+            return GetReportData("APIEmail", "email", query, processingStatus, fromDate, toDate, page, size);
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string GetIncoming(string query, string processingStatus, string fromDate, string toDate, int page, int size)
+        {
+            return GetReportData("APIIncoming", "Incoming", query, processingStatus, fromDate, toDate, page, size);
+        }
+
+        private static string GetReportData(string settingKey, string sourceName, string query, string processingStatus, string fromDate, string toDate, int page, int size)
+        {
+            string endpoint = ConfigurationManager.AppSettings[settingKey];
+            if (String.IsNullOrWhiteSpace(endpoint))
+                throw new ConfigurationErrorsException("Chưa cấu hình " + settingKey + " trong Web.config.");
+
             var parameters = new List<string>();
             AddParameter(parameters, "query", query);
             AddParameter(parameters, "processingStatus", processingStatus);
@@ -56,7 +71,7 @@ namespace prjApplication.SLOTS
             {
                 string detail = ReadErrorResponse(ex);
                 throw new InvalidOperationException(
-                    "Không thể kết nối API báo cáo email từ máy chủ ATFM." +
+                    "Không thể kết nối API báo cáo " + sourceName + " từ máy chủ ATFM." +
                     (String.IsNullOrWhiteSpace(detail) ? String.Empty : " Chi tiết: " + detail),
                     ex);
             }
