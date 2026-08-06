@@ -730,6 +730,7 @@
             background: #fff;
             box-shadow: 0 12px 30px rgba(20, 45, 65, .22);
             color: #263746;
+            overflow-x: hidden;
         }
 
         #navbar.atfm-header .atfm-notification-panel[hidden],
@@ -781,11 +782,16 @@
 
         .atfm-notification-list {
             max-height: 430px;
+            overflow-x: hidden;
             overflow-y: auto;
         }
 
         .atfm-notification-item {
             display: grid;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
             grid-template-columns: minmax(0, 1fr) auto;
             gap: 9px;
             padding: 11px 13px;
