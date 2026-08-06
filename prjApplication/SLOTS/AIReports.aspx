@@ -1,4 +1,4 @@
-<%@ Page Title="Báo cáo hoạt động AI" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeFile="AIReports.aspx.cs" Inherits="prjApplication.SLOTS.AIReports" %>
+<%@ Page Title="Báo cáo hoạt động AI" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="AIReports.aspx.cs" Inherits="prjApplication.SLOTS.AIReports" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/AIReports.css?v=20260722-1") %>" />
     <section id="aiReportsPage" class="ai-reports-page" data-endpoint="<%= ResolveUrl("~/SLOTS/AIReports.aspx/GetReports") %>">

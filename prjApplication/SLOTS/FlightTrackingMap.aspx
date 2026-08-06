@@ -1,4 +1,4 @@
-<%@ Page Title="Theo dõi chuyến bay ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeFile="FlightTrackingMap.aspx.cs" Inherits="prjApplication.SLOTS.FlightTrackingMap" %>
+<%@ Page Title="Theo dõi chuyến bay ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="FlightTrackingMap.aspx.cs" Inherits="prjApplication.SLOTS.FlightTrackingMap" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/FlightTrackingMap.css?v=20260712-4") %>" />
     <section class="track-map-page"
