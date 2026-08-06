@@ -13,6 +13,27 @@ namespace prjApplication.ReportNew
         [WebMethod]
         public static object GetData(string fromDate, string toDate, string oper, string airport, bool currentDay)
         {
+            try
+            {
+                return GetDataCore(fromDate, toDate, oper, airport, currentDay);
+            }
+            catch (Exception ex)
+            {
+                Exception rootError = ex.GetBaseException();
+                System.Diagnostics.Trace.TraceError(
+                    "FlightStatusRate.GetData failed: {0}",
+                    ex);
+
+                return new
+                {
+                    Code = "99",
+                    Message = "FlightStatusRate.GetData: " + rootError.Message
+                };
+            }
+        }
+
+        private static object GetDataCore(string fromDate, string toDate, string oper, string airport, bool currentDay)
+        {
             DateTime from;
             DateTime to;
             if (!DateTime.TryParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out from) ||

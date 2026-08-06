@@ -20,14 +20,28 @@
             body: JSON.stringify(data)
         })
             .then(function (response) {
-                return response.json().then(function (result) {
+                return response.text().then(function (text) {
+                    var result;
+                    try {
+                        result = text ? JSON.parse(text) : null;
+                    } catch (parseError) {
+                        var title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(text || '');
+                        var serverMessage = title
+                            ? title[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+                            : '';
+                        throw new Error(
+                            'HTTP ' + response.status + ': Server returned HTML instead of JSON' +
+                            (serverMessage ? ' (' + serverMessage + ')' : '')
+                        );
+                    }
                     if (!response.ok) throw new Error(result.Message || result.message || ('HTTP ' + response.status));
                     return result;
                 });
             })
             .then(function (result) {
+                result = result && Object.prototype.hasOwnProperty.call(result, 'd') ? result.d : result;
                 if (result.Code && result.Code !== '00') throw new Error(result.Message || 'Không thể tải dữ liệu.');
-                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);
+                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result);
             });
     }
 
