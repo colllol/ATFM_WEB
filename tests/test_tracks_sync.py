@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime
 from unittest.mock import patch
 
 from tools.TracksSyncPython import main
@@ -169,21 +170,90 @@ class TracksSyncTests(unittest.TestCase):
         self.assertIn("target.LAT = source.LAT", matched_sql)
         self.assertIn("target.LON = source.LON", matched_sql)
         self.assertIn("target.UPDATED_AT_UTC = source.UPDATED_AT_UTC", matched_sql)
-        for preserved_column in (
-            "target.FROM_AIRP",
-            "target.TO_AIRP",
-            "target.ETD",
-            "target.ETA",
-            "target.STATUS",
-            "target.PERMTYPE",
-        ):
-            self.assertNotIn(preserved_column, matched_sql)
+        self.assertIn("target.FROM_AIRP = CASE", matched_sql)
+        self.assertIn("target.TO_AIRP = CASE", matched_sql)
+        self.assertIn("target.PERMTYPE = CASE", matched_sql)
         self.assertIn("PERMTYPE, LAT, LON", cursor.batch_sql)
         self.assertEqual(21.0285, cursor.batch_data[0]["lat"])
         self.assertEqual(105.8542, cursor.batch_data[0]["lon"])
         self.assertEqual(1, written)
         self.assertEqual(1, conn.commits)
         self.assertTrue(cursor.closed)
+
+    def test_unknown_track_is_written_as_other(self):
+        track = candidate("2026-07-23 01:05:00", 21.25, 106.75)
+
+        rows = main.build_log_rows([track], {}, {(track.callsign, track.flight_date)})
+
+        self.assertEqual(1, len(rows))
+        self.assertEqual("OTHER", rows[0].permtype)
+        self.assertEqual(("", "", "", ""), (rows[0].from_airp, rows[0].to_airp, rows[0].etd, rows[0].eta))
+        self.assertEqual((21.25, 106.75), (rows[0].lat, rows[0].lon))
+
+    def test_duplicate_flights_are_selected_by_updated_time(self):
+        key = ("HVN123", "23-07-2026")
+        cursor = FakeCursor(
+            rows=[
+                ("HVN123", datetime(2026, 7, 23), "VVNB", "VVTS", "0100", "0300", "LD"),
+                ("HVN123", datetime(2026, 7, 23), "VVTS", "VVNB", "0500", "0700", "LD"),
+            ]
+        )
+        conn = FakeConnection(cursor)
+        sink = main.MessageSink()
+        messages = []
+        sink.write = messages.append
+
+        lookup = main.read_oracle_flights(
+            conn,
+            {"oracle": {"flight_table": "T_DAY_FLIGHTS_GOINGON"}},
+            [key],
+            sink,
+            {key: datetime(2026, 7, 23, 6, 0)},
+        )
+
+        self.assertEqual("0500", lookup.flights[key].etd)
+        self.assertFalse(lookup.skipped_keys)
+        self.assertIn("updated_at_utc", " ".join(messages))
+
+    def test_missing_oracle_match_is_classified_as_unknown(self):
+        key = ("HVN123", "23-07-2026")
+        lookup = main.read_oracle_flights(
+            FakeConnection(FakeCursor(rows=[])),
+            {"oracle": {"flight_table": "T_DAY_FLIGHTS_GOINGON"}},
+            [key],
+            main.MessageSink(),
+            {key: datetime(2026, 7, 23, 6, 0)},
+        )
+
+        self.assertIn(key, lookup.unknown_keys)
+        self.assertNotIn(key, lookup.skipped_keys)
+
+    def test_duplicate_flights_without_matching_window_are_skipped(self):
+        key = ("HVN123", "23-07-2026")
+        cursor = FakeCursor(
+            rows=[
+                ("HVN123", datetime(2026, 7, 23), "VVNB", "VVTS", "0100", "0300", "LD"),
+                ("HVN123", datetime(2026, 7, 23), "VVTS", "VVNB", "0500", "0700", "LD"),
+            ]
+        )
+        sink = main.MessageSink()
+        lookup = main.read_oracle_flights(
+            FakeConnection(cursor),
+            {"oracle": {"flight_table": "T_DAY_FLIGHTS_GOINGON"}},
+            [key],
+            sink,
+            {key: datetime(2026, 7, 23, 4, 0)},
+        )
+
+        self.assertNotIn(key, lookup.flights)
+        self.assertIn(key, lookup.skipped_keys)
+
+    def test_flight_time_window_supports_midnight(self):
+        flight_info = main.FlightInfo("HVN123", "23-07-2026", "VVNB", "VVTS", "2300", "0100", "LD")
+
+        self.assertTrue(main.flight_time_contains(datetime(2026, 7, 23, 23, 30), flight_info))
+        self.assertTrue(main.flight_time_contains(datetime(2026, 7, 24, 0, 30), flight_info))
+        self.assertFalse(main.flight_time_contains(datetime(2026, 7, 23, 12, 0), flight_info))
 
     def test_read_existing_log_keys_returns_only_requested_keys(self):
         cursor = FakeCursor(
