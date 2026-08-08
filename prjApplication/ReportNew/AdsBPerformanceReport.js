@@ -5,6 +5,7 @@
     if (!page) return;
 
     var rows = [], currentTrend = [], pageIndex = 1;
+    var restoreSidebarAfterModal = false;
     function byId(id) { return document.getElementById(id); }
     function value(id) { return byId(id).value; }
     function number(value) { return Number(value || 0).toLocaleString('vi-VN'); }
@@ -129,8 +130,21 @@
         if (!list.length) byId('adsbEndDayBody').innerHTML = '<tr><td colspan="11" class="adsb-no-data">Không có dữ liệu.</td></tr>';
         byId('adsbEndDayInfo').textContent = number(list.length) + ' bản ghi · ' + (data && data.fromDate ? data.fromDate + ' đến ' + data.toDate : 'theo bộ lọc hiện tại');
     }
+    function toggleSidebarForModal(opening) {
+        var workspace = document.querySelector('#main-container > .atfm-workspace');
+        var toggle = document.querySelector('#sidebar .atfm-sidebar-toggle');
+        if (!workspace || !toggle || window.innerWidth < 992) return;
+        if (opening) {
+            restoreSidebarAfterModal = !workspace.classList.contains('atfm-sidebar-collapsed');
+            if (restoreSidebarAfterModal) toggle.click();
+            return;
+        }
+        if (restoreSidebarAfterModal && workspace.classList.contains('atfm-sidebar-collapsed')) toggle.click();
+        restoreSidebarAfterModal = false;
+    }
     function openEndDay() {
         var modal = byId('adsbEndDayModal');
+        toggleSidebarForModal(true);
         modal.hidden = false;
         byId('adsbEndDayInfo').textContent = 'Đang tải dữ liệu...';
         byId('adsbEndDayBody').innerHTML = '<tr><td colspan="11" class="adsb-no-data">Đang tải...</td></tr>';
@@ -140,7 +154,10 @@
             byId('adsbEndDayInfo').textContent = 'Không thể tải báo cáo: ' + (error.message || error);
         });
     }
-    function closeEndDay() { byId('adsbEndDayModal').hidden = true; }
+    function closeEndDay() {
+        byId('adsbEndDayModal').hidden = true;
+        toggleSidebarForModal(false);
+    }
     function svgNode(name, attrs) {
         var node = document.createElementNS('http://www.w3.org/2000/svg', name);
         Object.keys(attrs || {}).forEach(function (key) { node.setAttribute(key, attrs[key]); });

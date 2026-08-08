@@ -1,7 +1,7 @@
 <%@ Page Title="Tổng hợp chỉ số hiệu suất bay từ ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeFile="AdsBPerformanceReport.aspx.cs" Inherits="prjApplication.ReportNew.AdsBPerformanceReport" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.css?v=20260722-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260808-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260808-2") %>" />
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260724-1") %>" />
     <section class="adsb-report-page"
             data-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetData"
@@ -46,9 +46,27 @@
     <div id="adsbEndDayModal" class="adsb-modal" hidden role="dialog" aria-modal="true" aria-labelledby="adsbEndDayTitle">
         <div class="adsb-modal-panel">
             <div class="adsb-modal-heading"><div><h2 id="adsbEndDayTitle">Báo cáo cuối ngày</h2><p id="adsbEndDayInfo">Đang tải dữ liệu...</p></div><button type="button" id="adsbEndDayClose" class="adsb-modal-close" aria-label="Đóng">×</button></div>
-            <div class="adsb-modal-table"><table><thead><tr><th>CALLSIGN</th><th>OPER</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th><th>STATUS</th><th>TIME_IN</th><th>TIME_OUT</th><th>DATE</th></tr></thead><tbody id="adsbEndDayBody"></tbody></table></div>
+            <div class="adsb-modal-table">
+                <table class="adsb-endday-grid">
+                    <colgroup>
+                        <col class="adsb-col-callsign" />
+                        <col class="adsb-col-oper" />
+                        <col class="adsb-col-permtype" />
+                        <col class="adsb-col-airport" />
+                        <col class="adsb-col-airport" />
+                        <col class="adsb-col-time" />
+                        <col class="adsb-col-time" />
+                        <col class="adsb-col-status" />
+                        <col class="adsb-col-contact" />
+                        <col class="adsb-col-contact" />
+                        <col class="adsb-col-date" />
+                    </colgroup>
+                    <thead><tr><th>CALLSIGN</th><th>OPER</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th><th>STATUS</th><th>TIME_IN</th><th>TIME_OUT</th><th>DATE</th></tr></thead>
+                    <tbody id="adsbEndDayBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
     <script src="<%= ResolveUrl("~/ReportNew/ReportControls.js?v=20260724-1") %>"></script>
-    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260724-1") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260808-2") %>"></script>
 </asp:Content>
