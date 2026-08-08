@@ -1571,3 +1571,4 @@ Quy ước:
 2026-08-08 | prjApplication/ReportNew/AdsBPerformanceReport.js | Nhận diện cờ OTHER dạng boolean hoặc số từ API để bộ đếm và popup không bỏ sót bản ghi.
 2026-08-08 | tools/TracksSyncPython/main.py; tools/TracksSyncPython/README.md; tests/test_tracks_sync.py; Database/Oracle/20260808_T_TRACKS_LOG_add_time_in_out.sql; Database/Oracle/20260808_T_TRACKS_LOG_add_time_in_out_rollback.sql | Danh dau moi dong T_DAY_FLIGHTS_GOINGON thieu FROM/TO la OTHER; them TIME_IN/TIME_OUT theo lan cham FIR dau va lan chuyen FIR, migration Oracle idempotent va test gom/tron du lieu.
 2026-08-08 | tests/test_tracks_sync.py | Mo rong assertion schema tao moi de xac nhan T_TRACKS_LOG co TIME_IN/TIME_OUT ngay tu DDL ban dau.
+2026-08-08 | tools/dist/ATFM-TracksSync.exe; tools/dist/ATFM-TracksSync-CLI.exe; tools/dist/ATFM-Data-Tools.exe; tools/build/* | Build lai cac EXE ATFM TracksSync va Unified Tool sau khi cap nhat TIME_IN/TIME_OUT; CLI --help chay thanh cong.
