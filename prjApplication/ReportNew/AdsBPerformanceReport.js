@@ -51,7 +51,10 @@
             status: row.Status != null ? row.Status : row.status,
             statusText: row.StatusText != null ? row.StatusText : row.statusText,
             date: row.Date != null ? row.Date : row.date,
-            updatedAtUtc: row.UpdatedAtUtc != null ? row.UpdatedAtUtc : row.updatedAtUtc
+            updatedAtUtc: row.UpdatedAtUtc != null ? row.UpdatedAtUtc : row.updatedAtUtc,
+            timeIn: row.TimeIn != null ? row.TimeIn : row.timeIn,
+            timeOut: row.TimeOut != null ? row.TimeOut : row.timeOut,
+            isOther: row.IsOther != null ? row.IsOther : row.isOther
         };
     }
     function normalizeData(data) {
@@ -60,6 +63,7 @@
             total: data.Total != null ? data.Total : data.total,
             ld: data.Ld != null ? data.Ld : data.ld,
             of: data.Of != null ? data.Of : data.of,
+            other: data.Other != null ? data.Other : data.other,
             operatorCount: data.OperatorCount != null ? data.OperatorCount : data.operatorCount,
             serverTime: data.ServerTime != null ? data.ServerTime : data.serverTime,
             trend: (data.Trend || data.trend || []).map(normalizeTrend),
@@ -98,14 +102,45 @@
     }
     function renderKpis(data) {
         var total = Number(data.total || 0), ld = Number(data.ld || 0), of = Number(data.of || 0);
+        var other = data.other == null ? rows.filter(isOther).length : Number(data.other || 0);
         byId('adsbTotal').textContent = number(total);
         byId('adsbLd').textContent = number(ld);
         byId('adsbOf').textContent = number(of);
+        byId('adsbOther').textContent = number(other);
         byId('adsbOperCount').textContent = number(data.operatorCount);
         byId('adsbLdRate').textContent = (total ? ld * 100 / total : 0).toFixed(1) + '%';
         byId('adsbOfRate').textContent = (total ? of * 100 / total : 0).toFixed(1) + '%';
         byId('adsbUpdatedAt').textContent = data.serverTime || '--:--';
     }
+    function isOther(row) {
+        return row && (row.isOther === true || String(row.permType || '').toUpperCase() === 'OTHER' || !String(row.fromAirp || '').trim() || !String(row.toAirp || '').trim());
+    }
+    function statusText(status) {
+        return Number(status) === 1 ? 'VVHN' : (Number(status) === 2 ? 'VVHM' : 'Không xác định');
+    }
+    function renderEndDay(data) {
+        var list = (data && (data.rows || data.Rows) || []).map(normalizeRow);
+        byId('adsbEndDayBody').innerHTML = list.map(function (row) {
+            return '<tr><td><strong>' + escapeHtml(row.callsign) + '</strong></td><td>' + escapeHtml(row.oper || '-') + '</td>' +
+                '<td><span class="adsb-perm ' + (isOther(row) ? 'other' : (row.permType === 'LD' ? 'ld' : 'of')) + '">' + escapeHtml(isOther(row) ? 'OTHER' : (row.permType || '-')) + '</span></td>' +
+                '<td>' + escapeHtml(row.fromAirp || '-') + '</td><td>' + escapeHtml(row.toAirp || '-') + '</td><td>' + escapeHtml(row.etd || '-') + '</td><td>' + escapeHtml(row.eta || '-') + '</td>' +
+                '<td>' + escapeHtml(statusText(row.status)) + '</td><td>' + escapeHtml(row.timeIn || '-') + '</td><td>' + escapeHtml(row.timeOut || '-') + '</td><td>' + escapeHtml(row.date || '-') + '</td></tr>';
+        }).join('');
+        if (!list.length) byId('adsbEndDayBody').innerHTML = '<tr><td colspan="11" class="adsb-no-data">Không có dữ liệu.</td></tr>';
+        byId('adsbEndDayInfo').textContent = number(list.length) + ' bản ghi · ' + (data && data.fromDate ? data.fromDate + ' đến ' + data.toDate : 'theo bộ lọc hiện tại');
+    }
+    function openEndDay() {
+        var modal = byId('adsbEndDayModal');
+        modal.hidden = false;
+        byId('adsbEndDayInfo').textContent = 'Đang tải dữ liệu...';
+        byId('adsbEndDayBody').innerHTML = '<tr><td colspan="11" class="adsb-no-data">Đang tải...</td></tr>';
+        post(page.dataset.enddayEndpoint, payload(true)).then(function (data) {
+            renderEndDay(data && data.d ? data.d : data);
+        }).catch(function (error) {
+            byId('adsbEndDayInfo').textContent = 'Không thể tải báo cáo: ' + (error.message || error);
+        });
+    }
+    function closeEndDay() { byId('adsbEndDayModal').hidden = true; }
     function svgNode(name, attrs) {
         var node = document.createElementNS('http://www.w3.org/2000/svg', name);
         Object.keys(attrs || {}).forEach(function (key) { node.setAttribute(key, attrs[key]); });
@@ -173,6 +208,10 @@
     function apply() { loadOperators(true).then(loadData).catch(showError); }
 
     byId('adsbApply').addEventListener('click', apply);
+    byId('adsbEndDay').addEventListener('click', openEndDay);
+    byId('adsbEndDayClose').addEventListener('click', closeEndDay);
+    byId('adsbEndDayModal').addEventListener('click', function (event) { if (event.target === this) closeEndDay(); });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeEndDay(); });
     byId('adsbPermType').addEventListener('change', function () { loadOperators(false).catch(showError); });
     byId('adsbPageSize').addEventListener('change', function () { pageIndex = 1; renderTable(); });
     byId('adsbPrev').addEventListener('click', function () { if (pageIndex > 1) { pageIndex--; renderTable(); } });

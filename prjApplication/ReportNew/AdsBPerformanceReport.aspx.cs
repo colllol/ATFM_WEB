@@ -21,6 +21,8 @@ namespace prjApplication.ReportNew
             public int Status { get; set; }
             public DateTime FlightDate { get; set; }
             public string UpdatedAtUtc { get; set; }
+            public string TimeIn { get; set; }
+            public string TimeOut { get; set; }
             public string PermType { get; set; }
             public string Oper { get; set; }
         }
@@ -46,6 +48,7 @@ namespace prjApplication.ReportNew
                 }).ToList();
             int ld = items.Count(x => String.Equals(x.PermType, "LD", StringComparison.OrdinalIgnoreCase));
             int of = items.Count(x => String.Equals(x.PermType, "O/F", StringComparison.OrdinalIgnoreCase));
+            int other = items.Count(IsOther);
 
             return new
             {
@@ -54,6 +57,7 @@ namespace prjApplication.ReportNew
                 total = items.Count,
                 ld = ld,
                 of = of,
+                other = other,
                 operatorCount = items.Select(x => x.Oper).Where(x => !String.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
                 trend = trend,
                 rows = items.Select((item, index) => new
@@ -70,7 +74,40 @@ namespace prjApplication.ReportNew
                     status = item.Status,
                     statusText = item.Status == 1 ? "VVHN" : (item.Status == 2 ? "VVHM" : "Không xác định"),
                     date = item.FlightDate.ToString("dd/MM/yyyy"),
-                    updatedAtUtc = item.UpdatedAtUtc
+                    updatedAtUtc = item.UpdatedAtUtc,
+                    timeIn = item.TimeIn,
+                    timeOut = item.TimeOut,
+                    isOther = IsOther(item)
+                }).ToList()
+            };
+        }
+
+        [WebMethod]
+        public static object GetEndOfDay(string fromDate, string toDate, string permType, string oper)
+        {
+            DateTime from;
+            DateTime to;
+            ParseDateRange(fromDate, toDate, out from, out to);
+            List<LogItem> items = LoadLogs(from, to, NormalizeFilter(permType), NormalizeFilter(oper));
+            return new
+            {
+                source = "T_TRACKS_LOG",
+                fromDate = from.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture),
+                toDate = to.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture),
+                total = items.Count,
+                rows = items.Select(item => new
+                {
+                    callsign = item.Callsign,
+                    oper = item.Oper,
+                    permType = IsOther(item) ? "OTHER" : item.PermType,
+                    fromAirp = item.FromAirp,
+                    toAirp = item.ToAirp,
+                    etd = item.Etd,
+                    eta = item.Eta,
+                    status = item.Status,
+                    timeIn = item.TimeIn,
+                    timeOut = item.TimeOut,
+                    date = item.FlightDate.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)
                 }).ToList()
             };
         }
@@ -117,6 +154,8 @@ namespace prjApplication.ReportNew
                             Status = reader["STATUS"] == DBNull.Value ? 0 : Convert.ToInt32(reader["STATUS"], CultureInfo.InvariantCulture),
                             FlightDate = Convert.ToDateTime(reader["LOG_DATE"], CultureInfo.InvariantCulture),
                             UpdatedAtUtc = Convert.ToString(reader["UPDATED_AT_UTC"]).Trim(),
+                            TimeIn = Convert.ToString(reader["TIME_IN"]).Trim(),
+                            TimeOut = Convert.ToString(reader["TIME_OUT"]).Trim(),
                             PermType = Convert.ToString(reader["PERMTYPE"]).Trim().ToUpperInvariant(),
                             Oper = Convert.ToString(reader["OPER_ID"]).Trim().ToUpperInvariant()
                         });
@@ -132,14 +171,15 @@ namespace prjApplication.ReportNew
                 WITH LOG_DATA AS (
                     SELECT L.TRLOG_ID, L.CALLSIGN, L.FROM_AIRP, L.TO_AIRP,
                            L.ETD, L.ETA, L.STATUS, L.UPDATED_AT_UTC,
+                           L.TIME_IN, L.TIME_OUT,
                            UPPER(TRIM(L.PERMTYPE)) PERMTYPE,
                            TO_DATE(L.""DATE"", 'DD-MM-YYYY') LOG_DATE,
                            (SELECT MAX(UPPER(TRIM(D.OPER_ID)))
                               FROM T_DAY_FLIGHTS_GOINGON D
                              WHERE UPPER(TRIM(D.FLIGHTNBR)) = UPPER(TRIM(L.CALLSIGN))
                                AND TRUNC(D.FLIGHTDATE) = TO_DATE(L.""DATE"", 'DD-MM-YYYY')
-                               AND (UPPER(TRIM(D.PERMTYPE)) = 'O/F'
-                                    OR (TRIM(D.FROM_AIRP) IS NOT NULL AND TRIM(D.TO_AIRP) IS NOT NULL))) OPER_ID
+                               AND TRIM(D.FROM_AIRP) IS NOT NULL
+                               AND TRIM(D.TO_AIRP) IS NOT NULL) OPER_ID
                       FROM T_TRACKS_LOG L
                      WHERE REGEXP_LIKE(L.""DATE"", '^[0-9]{2}-[0-9]{2}-[0-9]{4}$')
                 ) ";
@@ -155,7 +195,7 @@ namespace prjApplication.ReportNew
             }
             return baseQuery + @"
                 SELECT TRLOG_ID, CALLSIGN, FROM_AIRP, TO_AIRP, ETD, ETA,
-                       STATUS, UPDATED_AT_UTC, PERMTYPE, LOG_DATE, OPER_ID
+                       STATUS, UPDATED_AT_UTC, TIME_IN, TIME_OUT, PERMTYPE, LOG_DATE, OPER_ID
                   FROM LOG_DATA
                  WHERE LOG_DATE >= :fromDate AND LOG_DATE < :toDate
                    AND (:permType IS NULL OR PERMTYPE = :permType)
@@ -168,7 +208,8 @@ namespace prjApplication.ReportNew
             command.BindByName = true;
             command.CommandTimeout = 90;
             command.Parameters.Add("fromDate", OracleDbType.Date).Value = from.Date;
-            command.Parameters.Add("toDate", OracleDbType.Date).Value = to.Date;
+            // Khoang ngay tren giao dien la bao gom ca ngay ket thuc.
+            command.Parameters.Add("toDate", OracleDbType.Date).Value = to.Date.AddDays(1);
             command.Parameters.Add("permType", OracleDbType.Varchar2).Value = permType == null ? (object)DBNull.Value : permType;
             if (command.CommandText.IndexOf(":oper", StringComparison.Ordinal) >= 0)
                 command.Parameters.Add("oper", OracleDbType.Varchar2).Value = oper == null ? (object)DBNull.Value : oper;
@@ -178,6 +219,14 @@ namespace prjApplication.ReportNew
         {
             string normalized = (value ?? String.Empty).Trim().ToUpperInvariant();
             return normalized.Length == 0 || normalized == "ALL" ? null : normalized;
+        }
+
+        private static bool IsOther(LogItem item)
+        {
+            return String.Equals(item.PermType, "OTHER", StringComparison.OrdinalIgnoreCase)
+                || String.IsNullOrWhiteSpace(item.FromAirp)
+                || String.IsNullOrWhiteSpace(item.ToAirp)
+                || String.IsNullOrWhiteSpace(item.Oper);
         }
 
         private static void ParseDateRange(string fromDate, string toDate, out DateTime from, out DateTime to)
