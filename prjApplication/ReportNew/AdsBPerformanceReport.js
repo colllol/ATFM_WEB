@@ -113,7 +113,7 @@
         byId('adsbUpdatedAt').textContent = data.serverTime || '--:--';
     }
     function isOther(row) {
-        return row && (row.isOther === true || String(row.permType || '').toUpperCase() === 'OTHER' || !String(row.fromAirp || '').trim() || !String(row.toAirp || '').trim());
+        return row && (row.isOther === true || Number(row.isOther) === 1 || String(row.permType || '').toUpperCase() === 'OTHER' || !String(row.fromAirp || '').trim() || !String(row.toAirp || '').trim());
     }
     function statusText(status) {
         return Number(status) === 1 ? 'VVHN' : (Number(status) === 2 ? 'VVHM' : 'Không xác định');

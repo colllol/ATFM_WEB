@@ -34,6 +34,9 @@ class TrackCandidate:
     status: int
     lat: float
     lon: float
+    time_in: str = ""
+    time_out: str = ""
+    first_status: int = 0
 
 
 @dataclass
@@ -60,6 +63,9 @@ class LogRow:
     permtype: str
     lat: float
     lon: float
+    time_in: str = ""
+    time_out: str = ""
+    first_status: int = 0
 
 
 @dataclass
@@ -476,6 +482,8 @@ def read_tracks(cfg: Dict, polygons: Dict, sink: MessageSink, full: bool = False
                         status=status,
                         lat=float(lat),
                         lon=float(lon),
+                        time_in=updated_dt.strftime(WATERMARK_FORMAT),
+                        first_status=status,
                     )
                 )
     sink.write(f"Doc public.tracks: {len(rows)} dong nam trong FIR can doi chieu.")
@@ -483,13 +491,33 @@ def read_tracks(cfg: Dict, polygons: Dict, sink: MessageSink, full: bool = False
 
 
 def dedupe_tracks(rows: Iterable[TrackCandidate]) -> List[TrackCandidate]:
-    best: Dict[Tuple[str, str], TrackCandidate] = {}
+    grouped: Dict[Tuple[str, str], List[TrackCandidate]] = {}
     for row in rows:
-        key = (row.callsign, row.flight_date)
-        old = best.get(key)
-        if old is None or row.update_text >= old.update_text:
-            best[key] = row
-    return list(best.values())
+        grouped.setdefault((row.callsign, row.flight_date), []).append(row)
+    result: List[TrackCandidate] = []
+    for group in grouped.values():
+        ordered = sorted(group, key=lambda item: item.update_text)
+        latest = ordered[-1]
+        first = ordered[0]
+        time_out = ""
+        for item in ordered[1:]:
+            if item.status != first.status:
+                time_out = item.update_text
+                break
+        result.append(
+            TrackCandidate(
+                callsign=latest.callsign,
+                flight_date=latest.flight_date,
+                update_text=latest.update_text,
+                status=latest.status,
+                lat=latest.lat,
+                lon=latest.lon,
+                time_in=first.time_in or first.update_text,
+                time_out=time_out,
+                first_status=first.status,
+            )
+        )
+    return result
 
 
 def ensure_schema(conn) -> None:
@@ -509,6 +537,8 @@ def ensure_schema(conn) -> None:
                     "DATE" VARCHAR2(10),
                     UPDATED_AT_UTC VARCHAR2(19),
                     PERMTYPE VARCHAR2(50),
+                    TIME_IN VARCHAR2(19),
+                    TIME_OUT VARCHAR2(19),
                     LAT NUMBER NOT NULL,
                     LON NUMBER NOT NULL
                 )';
@@ -544,6 +574,8 @@ def ensure_schema(conn) -> None:
         add_column_if_missing(cur, "T_TRACKS_LOG", "DATE", '"DATE" VARCHAR2(10)')
         add_column_if_missing(cur, "T_TRACKS_LOG", "UPDATED_AT_UTC", "UPDATED_AT_UTC VARCHAR2(19)")
         add_column_if_missing(cur, "T_TRACKS_LOG", "PERMTYPE", "PERMTYPE VARCHAR2(50)")
+        add_column_if_missing(cur, "T_TRACKS_LOG", "TIME_IN", "TIME_IN VARCHAR2(19)")
+        add_column_if_missing(cur, "T_TRACKS_LOG", "TIME_OUT", "TIME_OUT VARCHAR2(19)")
         add_column_if_missing(cur, "T_TRACKS_LOG", "LAT", "LAT NUMBER")
         add_column_if_missing(cur, "T_TRACKS_LOG", "LON", "LON NUMBER")
         ensure_unique_log_key(cur)
@@ -660,12 +692,20 @@ def read_oracle_flights(
                     seen_keys.add(key)
                     if not is_flight_route_valid(flight):
                         invalid_route_count += 1
-                        continue
+                        flight = FlightInfo(
+                            callsign=flight.callsign,
+                            flight_date=flight.flight_date,
+                            from_airp=flight.from_airp,
+                            to_airp=flight.to_airp,
+                            etd=flight.etd,
+                            eta=flight.eta,
+                            permtype=UNKNOWN_FLIGHT_TYPE,
+                        )
                     collected.setdefault(key, []).append(flight)
         if invalid_route_count:
             sink.write(
-                f"Bo qua {invalid_route_count} dong co PERMTYPE khong phai O/F "
-                "nhung thieu FROM_AIRP hoac TO_AIRP."
+                f"Danh dau {invalid_route_count} dong thieu FROM_AIRP hoac TO_AIRP "
+                f"la {UNKNOWN_FLIGHT_TYPE} (chuyen bay khac)."
             )
         ambiguous_examples: List[str] = []
         skipped_duplicate_count = 0
@@ -722,9 +762,6 @@ def chunks(values: Sequence[str], size: int) -> Iterable[Sequence[str]]:
 
 
 def is_flight_route_valid(flight: FlightInfo) -> bool:
-    permtype = (flight.permtype or "").strip().upper()
-    if permtype == "O/F":
-        return True
     return bool((flight.from_airp or "").strip() and (flight.to_airp or "").strip())
 
 
@@ -808,6 +845,9 @@ def merge_logs(conn, rows: Sequence[LogRow]) -> int:
                    :status STATUS,
                    :updated_at_utc UPDATED_AT_UTC,
                    :permtype PERMTYPE,
+                   :time_in TIME_IN,
+                   :time_out TIME_OUT,
+                   :first_status FIRST_STATUS,
                    :lat LAT,
                    :lon LON
             FROM DUAL
@@ -825,12 +865,23 @@ def merge_logs(conn, rows: Sequence[LogRow]) -> int:
             target.ETD = CASE WHEN NVL(UPPER(TRIM(target.PERMTYPE)), 'OTHER') = 'OTHER' AND source.PERMTYPE <> 'OTHER' THEN source.ETD ELSE target.ETD END,
             target.ETA = CASE WHEN NVL(UPPER(TRIM(target.PERMTYPE)), 'OTHER') = 'OTHER' AND source.PERMTYPE <> 'OTHER' THEN source.ETA ELSE target.ETA END,
             target.STATUS = CASE WHEN NVL(UPPER(TRIM(target.PERMTYPE)), 'OTHER') = 'OTHER' AND source.PERMTYPE <> 'OTHER' THEN source.STATUS ELSE target.STATUS END,
-            target.PERMTYPE = CASE WHEN NVL(UPPER(TRIM(target.PERMTYPE)), 'OTHER') = 'OTHER' AND source.PERMTYPE <> 'OTHER' THEN source.PERMTYPE ELSE target.PERMTYPE END
+            target.PERMTYPE = CASE WHEN NVL(UPPER(TRIM(target.PERMTYPE)), 'OTHER') = 'OTHER' AND source.PERMTYPE <> 'OTHER' THEN source.PERMTYPE ELSE target.PERMTYPE END,
+            target.TIME_IN = CASE
+                WHEN target.TIME_IN IS NULL OR source.TIME_IN < target.TIME_IN THEN source.TIME_IN
+                ELSE target.TIME_IN
+            END,
+            target.TIME_OUT = CASE
+                WHEN target.TIME_OUT IS NOT NULL THEN target.TIME_OUT
+                WHEN source.TIME_OUT IS NOT NULL THEN source.TIME_OUT
+                WHEN target.STATUS IS NOT NULL AND source.FIRST_STATUS <> target.STATUS THEN source.TIME_IN
+                ELSE target.TIME_OUT
+            END
         WHEN NOT MATCHED THEN INSERT
-            (TRLOG_ID, CALLSIGN, FROM_AIRP, TO_AIRP, ETD, ETA, STATUS, "DATE", UPDATED_AT_UTC, PERMTYPE, LAT, LON)
+            (TRLOG_ID, CALLSIGN, FROM_AIRP, TO_AIRP, ETD, ETA, STATUS, "DATE", UPDATED_AT_UTC, PERMTYPE, LAT, LON, TIME_IN, TIME_OUT)
         VALUES
             (T_TRACKS_LOG_SEQ.NEXTVAL, source.CALLSIGN, source.FROM_AIRP, source.TO_AIRP, source.ETD, source.ETA,
-             source.STATUS, source."DATE", source.UPDATED_AT_UTC, source.PERMTYPE, source.LAT, source.LON)
+             source.STATUS, source."DATE", source.UPDATED_AT_UTC, source.PERMTYPE, source.LAT, source.LON,
+             source.TIME_IN, source.TIME_OUT)
     """
     cur = conn.cursor()
     try:
@@ -845,6 +896,9 @@ def merge_logs(conn, rows: Sequence[LogRow]) -> int:
                 "status": row.status,
                 "updated_at_utc": row.updated_at_utc,
                 "permtype": row.permtype,
+                "time_in": row.time_in,
+                "time_out": row.time_out,
+                "first_status": row.first_status,
                 "lat": row.lat,
                 "lon": row.lon,
             }
@@ -884,6 +938,9 @@ def build_log_rows(
                 permtype=flight.permtype,
                 lat=item.lat,
                 lon=item.lon,
+                time_in=item.time_in or item.update_text,
+                time_out=item.time_out,
+                first_status=item.first_status or item.status,
             )
         )
     return rows
@@ -978,7 +1035,7 @@ def verify_logs(
         cur.execute(
             '''
             SELECT CALLSIGN, "DATE", FROM_AIRP, TO_AIRP, ETD, ETA,
-                   STATUS, UPDATED_AT_UTC, PERMTYPE, LAT, LON
+                   STATUS, UPDATED_AT_UTC, PERMTYPE, TIME_IN, TIME_OUT, LAT, LON
             FROM T_TRACKS_LOG
             '''
         )
@@ -1025,9 +1082,10 @@ def coordinates_match(
 
 
 def log_row_matches(expected: LogRow, actual: Sequence[object], compare_all: bool) -> bool:
-    if len(actual) != 9:
+    if len(actual) not in (9, 11):
         return False
-    actual_coordinates = (as_optional_float(actual[7]), as_optional_float(actual[8]))
+    coordinate_offset = 9 if len(actual) == 11 else 7
+    actual_coordinates = (as_optional_float(actual[coordinate_offset]), as_optional_float(actual[coordinate_offset + 1]))
     if not coordinates_match((expected.lat, expected.lon), actual_coordinates):
         return False
     if not compare_all:
@@ -1041,7 +1099,12 @@ def log_row_matches(expected: LogRow, actual: Sequence[object], compare_all: boo
         expected.updated_at_utc,
         expected.permtype,
     )
-    return expected_values == tuple(as_text(value) for value in actual[:7])
+    if len(actual) == 11:
+        expected_values += (expected.time_in, expected.time_out)
+        actual_values = actual[:9]
+    else:
+        actual_values = actual[:7]
+    return expected_values == tuple(as_text(value) for value in actual_values)
 
 
 def run_gui() -> None:

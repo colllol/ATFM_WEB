@@ -44,12 +44,12 @@ class FakeConnection:
         self.commits += 1
 
 
-def candidate(update_text, lat, lon):
+def candidate(update_text, lat, lon, status=1):
     return main.TrackCandidate(
         callsign="HVN123",
         flight_date="23-07-2026",
         update_text=update_text,
-        status=1,
+        status=status,
         lat=lat,
         lon=lon,
     )
@@ -113,6 +113,8 @@ class TracksSyncTests(unittest.TestCase):
         calls = [call.args for call in add_column.call_args_list]
         self.assertIn((cursor, "T_TRACKS_LOG", "LAT", "LAT NUMBER"), calls)
         self.assertIn((cursor, "T_TRACKS_LOG", "LON", "LON NUMBER"), calls)
+        self.assertIn((cursor, "T_TRACKS_LOG", "TIME_IN", "TIME_IN VARCHAR2(19)"), calls)
+        self.assertIn((cursor, "T_TRACKS_LOG", "TIME_OUT", "TIME_OUT VARCHAR2(19)"), calls)
         create_table_sql = cursor.executed[0][0]
         self.assertIn("LAT NUMBER NOT NULL", create_table_sql)
         self.assertIn("LON NUMBER NOT NULL", create_table_sql)
@@ -174,6 +176,7 @@ class TracksSyncTests(unittest.TestCase):
         self.assertIn("target.TO_AIRP = CASE", matched_sql)
         self.assertIn("target.PERMTYPE = CASE", matched_sql)
         self.assertIn("PERMTYPE, LAT, LON", cursor.batch_sql)
+        self.assertIn("TIME_IN, TIME_OUT", cursor.batch_sql)
         self.assertEqual(21.0285, cursor.batch_data[0]["lat"])
         self.assertEqual(105.8542, cursor.batch_data[0]["lon"])
         self.assertEqual(1, written)
@@ -189,6 +192,35 @@ class TracksSyncTests(unittest.TestCase):
         self.assertEqual("OTHER", rows[0].permtype)
         self.assertEqual(("", "", "", ""), (rows[0].from_airp, rows[0].to_airp, rows[0].etd, rows[0].eta))
         self.assertEqual((21.25, 106.75), (rows[0].lat, rows[0].lon))
+
+    def test_dedupe_tracks_records_first_contact_and_next_fir_contact(self):
+        rows = [
+            candidate("2026-07-23 01:00:00", 20.0, 105.0, status=1),
+            candidate("2026-07-23 01:05:00", 20.1, 105.1, status=1),
+            candidate("2026-07-23 01:10:00", 20.2, 105.2, status=2),
+        ]
+
+        result = main.dedupe_tracks(rows)
+
+        self.assertEqual(1, len(result))
+        self.assertEqual("2026-07-23 01:00:00", result[0].time_in)
+        self.assertEqual("2026-07-23 01:10:00", result[0].time_out)
+        self.assertEqual(2, result[0].status)
+        self.assertEqual(1, result[0].first_status)
+
+    def test_missing_route_is_classified_as_other(self):
+        key = ("HVN123", "23-07-2026")
+        cursor = FakeCursor(rows=[("HVN123", datetime(2026, 7, 23), "", "VVTS", "0100", "0300", "O/F")])
+        lookup = main.read_oracle_flights(
+            FakeConnection(cursor),
+            {"oracle": {"flight_table": "T_DAY_FLIGHTS_GOINGON"}},
+            [key],
+            main.MessageSink(),
+            {key: datetime(2026, 7, 23, 2, 0)},
+        )
+
+        self.assertEqual("OTHER", lookup.flights[key].permtype)
+        self.assertFalse(lookup.skipped_keys)
 
     def test_duplicate_flights_are_selected_by_updated_time(self):
         key = ("HVN123", "23-07-2026")
