@@ -118,6 +118,8 @@ class TracksSyncTests(unittest.TestCase):
         create_table_sql = cursor.executed[0][0]
         self.assertIn("LAT NUMBER NOT NULL", create_table_sql)
         self.assertIn("LON NUMBER NOT NULL", create_table_sql)
+        self.assertIn("TIME_IN VARCHAR2(19)", create_table_sql)
+        self.assertIn("TIME_OUT VARCHAR2(19)", create_table_sql)
         self.assertEqual(1, conn.commits)
 
     def test_enforce_coordinate_constraints_keeps_legacy_null_rows(self):
