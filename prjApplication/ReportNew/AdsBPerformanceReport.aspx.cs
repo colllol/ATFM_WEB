@@ -43,11 +43,12 @@ namespace prjApplication.ReportNew
                 {
                     key = group.Key.ToString("yyyy-MM-dd"),
                     label = group.Key.ToString("dd/MM"),
-                    ld = group.Count(x => String.Equals(x.PermType, "LD", StringComparison.OrdinalIgnoreCase)),
-                    of = group.Count(x => String.Equals(x.PermType, "O/F", StringComparison.OrdinalIgnoreCase))
+                    ld = group.Count(x => !IsOther(x) && String.Equals(x.PermType, "LD", StringComparison.OrdinalIgnoreCase)),
+                    of = group.Count(x => !IsOther(x) && String.Equals(x.PermType, "O/F", StringComparison.OrdinalIgnoreCase)),
+                    other = group.Count(IsOther)
                 }).ToList();
-            int ld = items.Count(x => String.Equals(x.PermType, "LD", StringComparison.OrdinalIgnoreCase));
-            int of = items.Count(x => String.Equals(x.PermType, "O/F", StringComparison.OrdinalIgnoreCase));
+            int ld = items.Count(x => !IsOther(x) && String.Equals(x.PermType, "LD", StringComparison.OrdinalIgnoreCase));
+            int of = items.Count(x => !IsOther(x) && String.Equals(x.PermType, "O/F", StringComparison.OrdinalIgnoreCase));
             int other = items.Count(IsOther);
 
             return new

@@ -1,7 +1,7 @@
 <%@ Page Title="Tổng hợp chỉ số hiệu suất bay từ ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeFile="AdsBPerformanceReport.aspx.cs" Inherits="prjApplication.ReportNew.AdsBPerformanceReport" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.css?v=20260722-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260808-2") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260808-3") %>" />
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260724-1") %>" />
     <section class="adsb-report-page"
             data-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetData"
@@ -32,7 +32,7 @@
         </div>
 
         <section class="adsb-card adsb-chart-card">
-            <div class="adsb-card-heading"><div><h2>Biến động chuyến bay theo ngày</h2><p>Di chuột vào từng mốc để xem số lượng LD và O/F.</p></div><div class="adsb-chart-legend"><span><i class="ld"></i>LD</span><span><i class="of"></i>O/F</span></div></div>
+            <div class="adsb-card-heading"><div><h2>Biến động chuyến bay theo ngày</h2><p>Di chuột vào từng mốc để xem số lượng LD, O/F và chuyến bay khác.</p></div><div class="adsb-chart-legend"><span><i class="ld"></i>LD</span><span><i class="of"></i>O/F</span><span><i class="other"></i>Chuyến bay khác</span></div></div>
             <div id="adsbChart" class="adsb-chart"><div class="adsb-empty">Đang tải biểu đồ...</div></div>
         </section>
 
@@ -68,5 +68,5 @@
         </div>
     </div>
     <script src="<%= ResolveUrl("~/ReportNew/ReportControls.js?v=20260724-1") %>"></script>
-    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260808-2") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260808-3") %>"></script>
 </asp:Content>

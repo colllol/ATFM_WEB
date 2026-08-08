@@ -3,6 +3,7 @@
 .adsb-kpis{grid-template-columns:repeat(5,1fr)}
 .adsb-kpis .adsb-kpi-other:before{background:#e05252}
 .adsb-perm.other{background:#ffe1e1;color:#b73838}
+.adsb-chart-legend{flex-wrap:wrap}.adsb-chart-legend i.other{background:#e05252}.adsb-line.other{stroke:#e05252}.adsb-point.other{fill:#e05252}
 .adsb-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(13,42,66,.55);box-sizing:border-box;transition:left .2s ease}
 .adsb-modal[hidden]{display:none}
 .adsb-modal-panel{width:calc(100% - 32px);max-width:1500px;max-height:90vh;overflow:hidden;border:1px solid #d4e3ee;border-radius:8px;background:#fff;box-shadow:0 20px 60px rgba(13,42,66,.3)}

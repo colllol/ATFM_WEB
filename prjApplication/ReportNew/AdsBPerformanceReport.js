@@ -35,7 +35,8 @@
             key: item.Key != null ? item.Key : item.key,
             label: item.Label != null ? item.Label : item.label,
             ld: item.Ld != null ? item.Ld : item.ld,
-            of: item.Of != null ? item.Of : item.of
+            of: item.Of != null ? item.Of : item.of,
+            other: item.Other != null ? item.Other : item.other
         };
     }
     function normalizeRow(row) {
@@ -60,6 +61,19 @@
     }
     function normalizeData(data) {
         data = data || {};
+        var normalizedRows = (data.Rows || data.rows || []).map(normalizeRow);
+        var normalizedTrend = (data.Trend || data.trend || []).map(normalizeTrend);
+        var otherByDate = {};
+        normalizedRows.forEach(function (row) {
+            if (!isOther(row)) return;
+            var match = String(row.date || '').match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+            if (!match) return;
+            var key = match[3] + '-' + match[2] + '-' + match[1];
+            otherByDate[key] = (otherByDate[key] || 0) + 1;
+        });
+        normalizedTrend.forEach(function (point) {
+            if (point.other == null) point.other = otherByDate[point.key] || 0;
+        });
         return {
             total: data.Total != null ? data.Total : data.total,
             ld: data.Ld != null ? data.Ld : data.ld,
@@ -67,8 +81,8 @@
             other: data.Other != null ? data.Other : data.other,
             operatorCount: data.OperatorCount != null ? data.OperatorCount : data.operatorCount,
             serverTime: data.ServerTime != null ? data.ServerTime : data.serverTime,
-            trend: (data.Trend || data.trend || []).map(normalizeTrend),
-            rows: (data.Rows || data.rows || []).map(normalizeRow)
+            trend: normalizedTrend,
+            rows: normalizedRows
         };
     }
     function iso(date) {
@@ -114,7 +128,7 @@
         byId('adsbUpdatedAt').textContent = data.serverTime || '--:--';
     }
     function isOther(row) {
-        return row && (row.isOther === true || Number(row.isOther) === 1 || String(row.permType || '').toUpperCase() === 'OTHER' || !String(row.fromAirp || '').trim() || !String(row.toAirp || '').trim());
+        return row && (row.isOther === true || Number(row.isOther) === 1 || String(row.permType || '').toUpperCase() === 'OTHER' || !String(row.fromAirp || '').trim() || !String(row.toAirp || '').trim() || !String(row.oper || '').trim());
     }
     function statusText(status) {
         return Number(status) === 1 ? 'VVHN' : (Number(status) === 2 ? 'VVHM' : 'Không xác định');
@@ -169,7 +183,7 @@
         if (!points || !points.length) { host.innerHTML = '<div class="adsb-empty">Không có dữ liệu trong khoảng lọc.</div>'; return; }
         var width = Math.max(760, host.clientWidth || 900), height = 350, left = 54, right = 24, top = 24, bottom = 48;
         var plotW = width - left - right, plotH = height - top - bottom;
-        var max = Math.max(1, Math.max.apply(null, points.map(function (p) { return Math.max(Number(p.ld), Number(p.of)); })));
+        var max = Math.max(1, Math.max.apply(null, points.map(function (p) { return Math.max(Number(p.ld), Number(p.of), Number(p.other)); })));
         var svg = svgNode('svg', { viewBox: '0 0 ' + width + ' ' + height, role: 'img', 'aria-label': 'Biểu đồ LD và O/F theo ngày' });
         for (var i = 0; i <= 5; i++) {
             var y = top + plotH * i / 5, grid = svgNode('line', { x1: left, y1: y, x2: width - right, y2: y, class: 'adsb-grid' });
@@ -180,7 +194,7 @@
         function xAt(index) { return left + (points.length === 1 ? plotW / 2 : plotW * index / (points.length - 1)); }
         function yAt(v) { return top + plotH - Number(v || 0) * plotH / max; }
         function linePath(field) { return points.map(function (p, index) { return (index ? 'L' : 'M') + xAt(index).toFixed(1) + ',' + yAt(p[field]).toFixed(1); }).join(' '); }
-        ['ld', 'of'].forEach(function (field) {
+        ['ld', 'of', 'other'].forEach(function (field) {
             svg.appendChild(svgNode('path', { d: linePath(field), class: 'adsb-line ' + field }));
             points.forEach(function (point, index) {
                 var circle = svgNode('circle', { cx: xAt(index), cy: yAt(point[field]), r: 5, class: 'adsb-point ' + field, tabindex: '0' });
@@ -202,7 +216,7 @@
         byId('adsbTableBody').innerHTML = current.map(function (row) {
             var statusClass = Number(row.status) === 1 ? 's1' : (Number(row.status) === 2 ? 's2' : 'unknown');
             return '<tr><td>' + row.no + '</td><td><strong>' + escapeHtml(row.callsign) + '</strong></td><td>' + escapeHtml(row.oper || '-') + '</td>' +
-                '<td><span class="adsb-perm ' + (row.permType === 'LD' ? 'ld' : 'of') + '">' + escapeHtml(row.permType || '-') + '</span></td>' +
+                '<td><span class="adsb-perm ' + (isOther(row) ? 'other' : (row.permType === 'LD' ? 'ld' : 'of')) + '">' + escapeHtml(isOther(row) ? 'OTHER' : (row.permType || '-')) + '</span></td>' +
                 '<td>' + escapeHtml(row.fromAirp || '-') + '</td><td>' + escapeHtml(row.toAirp || '-') + '</td><td>' + escapeHtml(row.etd || '-') + '</td><td>' + escapeHtml(row.eta || '-') + '</td>' +
                 '<td><span class="adsb-status ' + statusClass + '">' + escapeHtml(row.statusText) + '</span></td><td>' + escapeHtml(row.date) + '</td><td>' + escapeHtml(row.updatedAtUtc || '-') + '</td></tr>';
         }).join('');
