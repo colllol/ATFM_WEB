@@ -249,6 +249,10 @@
                 EXPORT DATA INTO EXCEL
         </asp:LinkButton>
        <a id="btnSearchAdv" class="btn btn-sm btn-primary" href="../FinishFlights/ListPermSC.aspx?Menu_ID=823"> SEARCH ADV</a>
+        <a id="btnSearchPermissionAdv" class="btn btn-sm btn-primary"
+            href="<%= Page.ResolveUrl("~/Permission/SearchPermissionAdv.aspx?Menu_ID=" + Request.QueryString["Menu_ID"]) %>">
+            <span class="glyphicon glyphicon-search"></span> SEARCH PERMISSION ADV
+        </a>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
     </div>
 

@@ -225,6 +225,10 @@
                                             <span class="glyphicon glyphicon-download-alt"></span>
                                             Export data into Excel
             </asp:LinkButton>
+            <a id="btnSearchPermissionAdv" class="btn btn-sm btn-primary"
+                href="<%= Page.ResolveUrl("~/Permission/SearchPermissionAdv.aspx?Menu_ID=" + Request.QueryString["Menu_ID"]) %>">
+                <span class="glyphicon glyphicon-search"></span> Search Permission Adv
+            </a>
         </div>
 
     </div>

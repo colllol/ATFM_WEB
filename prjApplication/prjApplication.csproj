@@ -1221,6 +1221,9 @@
     <Content Include="Permission\Edit_PermSC.aspx" />
     <Content Include="Permission\Edit_PermSC4Mail.aspx" />
     <Content Include="Permission\SearchExtension.aspx" />
+    <Content Include="Permission\SearchPermissionAdv.aspx" />
+    <Content Include="Permission\SearchPermissionAdv.css" />
+    <Content Include="Permission\SearchPermissionAdv.js" />
     <Content Include="PlanMessage\PlanMessage.aspx" />
     <Content Include="QLBMB\ExportKHB.aspx" />
     <Content Include="QLBMB\ExportSchedule.aspx" />
@@ -2657,6 +2660,13 @@
     </Compile>
     <Compile Include="Permission\SearchExtension.aspx.designer.cs">
       <DependentUpon>SearchExtension.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Permission\SearchPermissionAdv.aspx.cs">
+      <DependentUpon>SearchPermissionAdv.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Permission\SearchPermissionAdv.aspx.designer.cs">
+      <DependentUpon>SearchPermissionAdv.aspx</DependentUpon>
     </Compile>
     <Compile Include="PlanMessage\PlanMessage.aspx.cs">
       <DependentUpon>PlanMessage.aspx</DependentUpon>
