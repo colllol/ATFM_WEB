@@ -108,7 +108,7 @@
             <div class="spa-modal-body">
                 <div class="spa-detail-table-wrap">
                     <table class="spa-table spa-detail-table">
-                        <thead>
+                        <thead id="spaDetailHead">
                             <tr>
                                 <th>NO</th>
                                 <th>CALLSIGN</th>
@@ -141,5 +141,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-9") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-10") %>"></script>
 </asp:Content>

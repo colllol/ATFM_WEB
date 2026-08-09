@@ -280,6 +280,7 @@
 
     function flightRowsHtml(result) {
         var flights = result.Flights || [];
+        var isNoPermission = result.SourceType === 'NO';
         return flights.length ? flights.map(function (flight, index) {
             return '<tr>' +
                 '<td>' + (index + 1) + '</td>' +
@@ -290,8 +291,9 @@
                 '<td>' + esc(flight.Etd) + '</td>' +
                 '<td>' + esc(flight.Eta) + '</td>' +
                 '<td>' + esc(flight.DaysFlight) + '</td>' +
-                '<td>' + esc(flight.BeginDate) + '</td>' +
-                '<td>' + esc(flight.EndDate) + '</td>' +
+                (isNoPermission ? '' :
+                    '<td>' + esc(flight.BeginDate) + '</td>' +
+                    '<td>' + esc(flight.EndDate) + '</td>') +
                 '<td>' + esc(flight.Craft) + '</td>' +
                 '<td>' + esc(flight.Purpose) + '</td>' +
                 '<td>' + esc(flight.Mtow) + '</td>' +
@@ -300,19 +302,32 @@
                 '<td>' + esc(flight.Status) + '</td>' +
                 '<td title="' + esc(flight.LastModify) + '">' + esc(flight.LastUser) + '</td>' +
                 '</tr>';
-        }).join('') : '<tr><td colspan="17" class="spa-empty">Phép chưa có thông tin chi tiết.</td></tr>';
+        }).join('') : '<tr><td colspan="' + (isNoPermission ? 15 : 17) +
+            '" class="spa-empty">Phép chưa có thông tin chi tiết.</td></tr>';
     }
 
-    function inlineDetailTableHeadHtml() {
+    function popupDetailTableHeadHtml(sourceType) {
+        return '<tr>' +
+            '<th>NO</th><th>CALLSIGN</th><th>REGISTRATION</th><th>FROM</th><th>TO</th>' +
+            '<th>ETD</th><th>ETA</th><th>DAY/DATE</th>' +
+            (sourceType === 'NO' ? '' : '<th>BEGIN DATE</th><th>END DATE</th>') +
+            '<th>CRAFT</th><th>PURPOSE</th><th>MTOW</th><th>VIA</th><th>REMARK</th>' +
+            '<th>STATUS</th><th>LAST USER</th></tr>';
+    }
+
+    function inlineDetailTableHeadHtml(sourceType) {
         return '<thead><tr>' +
             '<th>NO</th><th>CALLSIGN</th><th>FROM</th><th>TO</th>' +
-            '<th>ETD</th><th>ETA</th><th>DAY/DATE</th><th>BEGIN DATE</th><th>END DATE</th>' +
+            '<th>ETD</th><th>ETA</th><th>DAY/DATE</th>' +
+            (sourceType === 'NO' ? '' : '<th>BEGIN DATE</th><th>END DATE</th>') +
             '<th>CRAFT</th><th>PURPOSE</th><th>MTOW</th><th>VIA</th><th>REMARK</th>' +
             '<th>STATUS</th><th>LAST USER</th></tr></thead>';
     }
 
-    function inlineDetailColgroupHtml() {
-        var widths = [3, 7, 4, 4, 5, 5, 7, 7, 7, 5, 6, 5, 10, 13, 5, 7];
+    function inlineDetailColgroupHtml(sourceType) {
+        var widths = sourceType === 'NO'
+            ? [3, 8, 5, 5, 6, 6, 8, 6, 7, 6, 12, 15, 6, 7]
+            : [3, 7, 4, 4, 5, 5, 7, 7, 7, 5, 6, 5, 10, 13, 5, 7];
         return '<colgroup>' + widths.map(function (width) {
             return '<col style="width:' + width + '%" />';
         }).join('') + '</colgroup>';
@@ -320,6 +335,7 @@
 
     function inlineFlightRowsHtml(result) {
         var flights = result.Flights || [];
+        var isNoPermission = result.SourceType === 'NO';
         return flights.length ? flights.map(function (flight, index) {
             return '<tr>' +
                 '<td>' + (index + 1) + '</td>' +
@@ -329,8 +345,9 @@
                 '<td>' + esc(flight.Etd) + '</td>' +
                 '<td>' + esc(flight.Eta) + '</td>' +
                 '<td>' + esc(flight.DaysFlight) + '</td>' +
-                '<td>' + esc(flight.BeginDate) + '</td>' +
-                '<td>' + esc(flight.EndDate) + '</td>' +
+                (isNoPermission ? '' :
+                    '<td>' + esc(flight.BeginDate) + '</td>' +
+                    '<td>' + esc(flight.EndDate) + '</td>') +
                 '<td>' + esc(flight.Craft) + '</td>' +
                 '<td>' + esc(flight.Purpose) + '</td>' +
                 '<td>' + esc(flight.Mtow) + '</td>' +
@@ -339,7 +356,8 @@
                 '<td>' + esc(flight.Status) + '</td>' +
                 '<td title="' + esc(flight.LastModify) + '">' + esc(flight.LastUser) + '</td>' +
                 '</tr>';
-        }).join('') : '<tr><td colspan="16" class="spa-empty">Phép chưa có thông tin chi tiết.</td></tr>';
+        }).join('') : '<tr><td colspan="' + (isNoPermission ? 14 : 16) +
+            '" class="spa-empty">Phép chưa có thông tin chi tiết.</td></tr>';
     }
 
     function getPermissionDetail(sourceType, permId) {
@@ -366,6 +384,11 @@
         document.getElementById('spaDetailTitle').textContent = 'Flight details - ' + permNbr;
         document.getElementById('spaDetailSubtitle').textContent =
             result.SourceType + ' • PERM_ID: ' + result.PermId + ' • ' + result.Total + ' flight(s)';
+        document.getElementById('spaDetailHead').innerHTML = popupDetailTableHeadHtml(result.SourceType);
+        document.querySelector('.spa-detail-table').classList.toggle(
+            'spa-detail-table-no',
+            result.SourceType === 'NO'
+        );
         document.getElementById('spaDetailRows').innerHTML = flightRowsHtml(result);
     }
 
@@ -424,8 +447,10 @@
                 detailRow.querySelector('.spa-inline-caption').textContent =
                     result.SourceType + ' • PERM_ID: ' + result.PermId + ' • ' + result.Total + ' flight(s)';
                 detailRow.querySelector('.spa-inline-table-wrap').innerHTML =
-                    '<table class="spa-table spa-inline-detail-table">' + inlineDetailColgroupHtml() +
-                    inlineDetailTableHeadHtml() + '<tbody>' + inlineFlightRowsHtml(result) + '</tbody></table>';
+                    '<table class="spa-table spa-inline-detail-table">' +
+                    inlineDetailColgroupHtml(result.SourceType) +
+                    inlineDetailTableHeadHtml(result.SourceType) +
+                    '<tbody>' + inlineFlightRowsHtml(result) + '</tbody></table>';
             })
             .catch(function (error) {
                 if (!detailRow.parentNode) return;
@@ -453,15 +478,22 @@
     function loadDetail(sourceType, permId, permNbr) {
         document.getElementById('spaDetailTitle').textContent = 'Flight details - ' + permNbr;
         document.getElementById('spaDetailSubtitle').textContent = 'Đang tải dữ liệu...';
+        document.getElementById('spaDetailHead').innerHTML = popupDetailTableHeadHtml(sourceType);
+        document.querySelector('.spa-detail-table').classList.toggle(
+            'spa-detail-table-no',
+            sourceType === 'NO'
+        );
         document.getElementById('spaDetailRows').innerHTML =
-            '<tr><td colspan="17" class="spa-empty">Đang tải dữ liệu...</td></tr>';
+            '<tr><td colspan="' + (sourceType === 'NO' ? 15 : 17) +
+            '" class="spa-empty">Đang tải dữ liệu...</td></tr>';
         openModal();
 
         getPermissionDetail(sourceType, permId)
             .then(function (result) { renderDetail(result, permNbr); })
             .catch(function (error) {
                 document.getElementById('spaDetailRows').innerHTML =
-                    '<tr><td colspan="17" class="spa-empty">' + esc(error.message) + '</td></tr>';
+                    '<tr><td colspan="' + (sourceType === 'NO' ? 15 : 17) +
+                    '" class="spa-empty">' + esc(error.message) + '</td></tr>';
             });
     }
 

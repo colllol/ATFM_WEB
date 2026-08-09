@@ -327,6 +327,7 @@ body.spa-modal-open { overflow: hidden; }
 
 .spa-modal-body { padding: 15px 18px; overflow: auto; }
 .spa-detail-table { min-width: 1650px; }
+.spa-detail-table.spa-detail-table-no { min-width: 1420px; }
 .spa-detail-table .spa-text-cell {
     max-width: 260px;
     text-align: left;
