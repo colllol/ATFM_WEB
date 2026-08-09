@@ -261,7 +261,16 @@
             'oper=' + encodeURIComponent(columnFilter('Oper'))
         ].join('&');
         var handlerPath = window.location.pathname.replace(/[^/]+$/, 'SearchPermissionAdvExport.ashx');
-        window.location.href = handlerPath + '?' + query;
+        var downloadFrame = document.getElementById('spaExcelDownloadFrame');
+        if (!downloadFrame) {
+            downloadFrame = document.createElement('iframe');
+            downloadFrame.id = 'spaExcelDownloadFrame';
+            downloadFrame.name = 'spaExcelDownloadFrame';
+            downloadFrame.title = 'Export Excel download';
+            downloadFrame.style.display = 'none';
+            document.body.appendChild(downloadFrame);
+        }
+        downloadFrame.src = handlerPath + '?' + query + '&_=' + new Date().getTime();
     }
 
     function flightRowsHtml(result) {

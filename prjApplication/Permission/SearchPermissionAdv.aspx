@@ -141,5 +141,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-7") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-8") %>"></script>
 </asp:Content>
