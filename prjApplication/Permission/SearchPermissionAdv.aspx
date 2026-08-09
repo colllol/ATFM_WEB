@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-4") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-5") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -17,6 +17,14 @@
             <label class="spa-field" for="spaPermissionDate">
                 <span>Ngày cấp phép</span>
                 <input id="spaPermissionDate" type="date" />
+            </label>
+            <label class="spa-field spa-field-time" for="spaFromTime">
+                <span>Từ giờ ETD/ETA</span>
+                <input id="spaFromTime" type="time" step="60" value="00:00" />
+            </label>
+            <label class="spa-field spa-field-time" for="spaToTime">
+                <span>Đến giờ ETD/ETA</span>
+                <input id="spaToTime" type="time" step="60" value="23:59" />
             </label>
             <button id="spaSearch" class="spa-button spa-button-primary" type="button">
                 <i class="fa fa-search"></i> Search
@@ -116,5 +124,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-4") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-5") %>"></script>
 </asp:Content>

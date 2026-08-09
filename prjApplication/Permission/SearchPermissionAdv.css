@@ -35,6 +35,8 @@
     margin: 0;
 }
 
+.spa-field-time { min-width: 120px; }
+
 .spa-field span {
     color: #245372;
     font-size: 11px;

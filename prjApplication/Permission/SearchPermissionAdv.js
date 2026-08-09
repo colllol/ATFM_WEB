@@ -7,6 +7,8 @@
     var filteredPermissions = [];
     var lastDetailTrigger = null;
     var detailCache = {};
+    var activeFromTime = '00:00';
+    var activeToTime = '23:59';
 
     function post(method, data) {
         return fetch(window.location.pathname + '/' + method, {
@@ -145,9 +147,21 @@
 
     function search() {
         var dateInput = document.getElementById('spaPermissionDate');
+        var fromTimeInput = document.getElementById('spaFromTime');
+        var toTimeInput = document.getElementById('spaToTime');
         if (!dateInput.value) {
             alert('Vui lòng chọn ngày cấp phép.');
             dateInput.focus();
+            return;
+        }
+        if (!fromTimeInput.value || !toTimeInput.value) {
+            alert('Vui lòng nhập đầy đủ khung giờ.');
+            (!fromTimeInput.value ? fromTimeInput : toTimeInput).focus();
+            return;
+        }
+        if (fromTimeInput.value > toTimeInput.value) {
+            alert('Từ giờ không được lớn hơn Đến giờ.');
+            fromTimeInput.focus();
             return;
         }
 
@@ -156,11 +170,18 @@
         document.getElementById('spaPermissionRows').innerHTML =
             '<tr><td colspan="9" class="spa-empty"><i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>';
 
-        post('SearchByPermissionDate', { permissionDate: dateInput.value })
+        post('SearchByPermissionDate', {
+            permissionDate: dateInput.value,
+            fromTime: fromTimeInput.value,
+            toTime: toTimeInput.value
+        })
             .then(function (result) {
                 permissions = result.Items || [];
+                activeFromTime = result.FromTime || fromTimeInput.value;
+                activeToTime = result.ToTime || toTimeInput.value;
                 document.getElementById('spaSearchCaption').textContent =
-                    'Ngày cấp phép: ' + (result.PermissionDate || dateInput.value);
+                    'Ngày cấp phép: ' + (result.PermissionDate || dateInput.value) +
+                    ' • ETD/ETA ' + activeFromTime + ' - ' + activeToTime;
                 applyColumnFilters();
             })
             .catch(function (error) {
@@ -206,11 +227,13 @@
     }
 
     function getPermissionDetail(sourceType, permId) {
-        var key = sourceType + ':' + permId;
+        var key = sourceType + ':' + permId + ':' + activeFromTime + ':' + activeToTime;
         if (!detailCache[key]) {
             detailCache[key] = post('GetPermissionDetail', {
                 sourceType: sourceType,
-                permId: permId
+                permId: permId,
+                fromTime: activeFromTime,
+                toTime: activeToTime
             }).catch(function (error) {
                 delete detailCache[key];
                 throw error;
@@ -324,16 +347,24 @@
 
     function init() {
         var dateInput = document.getElementById('spaPermissionDate');
+        var fromTimeInput = document.getElementById('spaFromTime');
+        var toTimeInput = document.getElementById('spaToTime');
         if (!dateInput) return;
 
         dateInput.value = isoToday();
+        fromTimeInput.value = '00:00';
+        toTimeInput.value = '23:59';
         document.getElementById('spaSearch').addEventListener('click', search);
         document.getElementById('spaClear').addEventListener('click', function () {
             dateInput.value = isoToday();
+            fromTimeInput.value = '00:00';
+            toTimeInput.value = '23:59';
             clearColumnFilters();
             permissions = [];
             filteredPermissions = [];
             detailCache = {};
+            activeFromTime = '00:00';
+            activeToTime = '23:59';
             document.getElementById('spaSearchCaption').textContent = 'Chọn ngày cấp phép và nhấn Search.';
             renderPermissions();
         });
@@ -344,6 +375,12 @@
             });
         });
         dateInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') search();
+        });
+        fromTimeInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') search();
+        });
+        toTimeInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') search();
         });
         document.getElementById('spaPrev').addEventListener('click', function () {

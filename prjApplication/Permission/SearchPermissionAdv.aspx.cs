@@ -51,11 +51,21 @@ namespace prjApplication.Permission
         }
 
         [WebMethod]
-        public static object SearchByPermissionDate(string permissionDate)
+        public static object SearchByPermissionDate(
+            string permissionDate,
+            string fromTime,
+            string toTime)
         {
             try
             {
                 DateTime selectedDate = ParsePermissionDate(permissionDate);
+                TimeSpan selectedFromTime = ParseSearchTime(fromTime, "Từ giờ");
+                TimeSpan selectedToTime = ParseSearchTime(toTime, "Đến giờ");
+                if (selectedFromTime > selectedToTime)
+                    throw new ArgumentException("Từ giờ không được lớn hơn Đến giờ.");
+
+                string selectedFromHhmm = selectedFromTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
+                string selectedToHhmm = selectedToTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
                 var items = new List<PermissionSummary>();
 
                 const string sql = @"
@@ -77,6 +87,17 @@ namespace prjApplication.Permission
                         LEFT JOIN M_FPAUTHOR a ON a.AUTHOR_CODE = m.AUTHOR_ID
                         WHERE m.PERMDATE >= :selectedDate
                           AND m.PERMDATE < :nextDate
+                          AND EXISTS
+                          (
+                              SELECT 1
+                              FROM T_PERMDETAIL_SC d
+                              WHERE d.PERM_ID = m.PERM_ID
+                                AND
+                                (
+                                    LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                    OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                )
+                          )
 
                         UNION ALL
 
@@ -94,6 +115,17 @@ namespace prjApplication.Permission
                         LEFT JOIN M_FPAUTHOR a ON a.AUTHOR_CODE = m.AUTHOR_ID
                         WHERE m.PERMDATE >= :selectedDate
                           AND m.PERMDATE < :nextDate
+                          AND EXISTS
+                          (
+                              SELECT 1
+                              FROM T_PERMDETAIL_NO d
+                              WHERE d.PERM_ID = m.PERM_ID
+                                AND
+                                (
+                                    LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                    OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                )
+                          )
                     )
                     ORDER BY PERMNBR, SOURCE_TYPE";
 
@@ -104,6 +136,8 @@ namespace prjApplication.Permission
                     command.CommandTimeout = 60;
                     command.Parameters.Add("selectedDate", OracleDbType.Date).Value = selectedDate.Date;
                     command.Parameters.Add("nextDate", OracleDbType.Date).Value = selectedDate.Date.AddDays(1);
+                    command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value = selectedFromHhmm;
+                    command.Parameters.Add("toHhmm", OracleDbType.Varchar2).Value = selectedToHhmm;
                     connection.Open();
 
                     using (var reader = command.ExecuteReader())
@@ -132,6 +166,8 @@ namespace prjApplication.Permission
                     Code = "00",
                     Message = "Success",
                     PermissionDate = selectedDate.ToString("dd-MM-yyyy"),
+                    FromTime = selectedFromTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
+                    ToTime = selectedToTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
                     Total = items.Count,
                     Items = items
                 };
@@ -143,7 +179,11 @@ namespace prjApplication.Permission
         }
 
         [WebMethod]
-        public static object GetPermissionDetail(string sourceType, long permId)
+        public static object GetPermissionDetail(
+            string sourceType,
+            long permId,
+            string fromTime,
+            string toTime)
         {
             try
             {
@@ -153,12 +193,25 @@ namespace prjApplication.Permission
                 if (permId <= 0)
                     throw new ArgumentException("PERM_ID không hợp lệ.");
 
+                TimeSpan selectedFromTime = ParseSearchTime(fromTime, "Từ giờ");
+                TimeSpan selectedToTime = ParseSearchTime(toTime, "Đến giờ");
+                if (selectedFromTime > selectedToTime)
+                    throw new ArgumentException("Từ giờ không được lớn hơn Đến giờ.");
+
+                string selectedFromHhmm = selectedFromTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
+                string selectedToHhmm = selectedToTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
+
                 List<PermissionFlightInfo> flights;
 
                 using (var connection = CreateConnection())
                 {
                     connection.Open();
-                    flights = LoadFlights(connection, normalizedType, permId);
+                    flights = LoadFlights(
+                        connection,
+                        normalizedType,
+                        permId,
+                        selectedFromHhmm,
+                        selectedToHhmm);
                 }
 
                 return new
@@ -180,7 +233,9 @@ namespace prjApplication.Permission
         private static List<PermissionFlightInfo> LoadFlights(
             OracleConnection connection,
             string sourceType,
-            long permId)
+            long permId,
+            string fromHhmm,
+            string toHhmm)
         {
             string sql = sourceType == "SC" ? @"
                 SELECT d.ID, d.FLIGHT_PK, d.FLIGHTNBR, d.REGISTRATION,
@@ -200,6 +255,11 @@ namespace prjApplication.Permission
                 FROM T_PERMDETAIL_SC d
                 LEFT JOIN M_CRAFT_TYPE c ON c.CRAFT_ID = d.CRAFT_ID
                 WHERE d.PERM_ID = :permId
+                  AND
+                  (
+                      LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                      OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                  )
                 ORDER BY d.ID" : @"
                 SELECT d.ID, d.FLIGHT_PK, d.FLIGHTNBR, d.REGISTRATION,
                        d.FROM_AIRP, d.TO_AIRP, d.ETD, d.ETA,
@@ -214,6 +274,11 @@ namespace prjApplication.Permission
                 FROM T_PERMDETAIL_NO d
                 LEFT JOIN M_CRAFT_TYPE c ON c.CRAFT_ID = d.CRAFT_ID
                 WHERE d.PERM_ID = :permId
+                  AND
+                  (
+                      LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                      OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                  )
                 ORDER BY d.ID";
 
             var flights = new List<PermissionFlightInfo>();
@@ -222,6 +287,8 @@ namespace prjApplication.Permission
                 command.BindByName = true;
                 command.CommandTimeout = 60;
                 command.Parameters.Add("permId", OracleDbType.Int64).Value = permId;
+                command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value = fromHhmm;
+                command.Parameters.Add("toHhmm", OracleDbType.Varchar2).Value = toHhmm;
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -269,6 +336,27 @@ namespace prjApplication.Permission
                 throw new ArgumentException("Ngày cấp phép không hợp lệ.");
             }
             return result.Date;
+        }
+
+        private static TimeSpan ParseSearchTime(string value, string fieldName)
+        {
+            string normalized = (value ?? String.Empty).Trim();
+            if (normalized.Length == 4 && normalized.IndexOf(':') < 0)
+                normalized = normalized.Insert(2, ":");
+
+            TimeSpan result;
+            if (!TimeSpan.TryParseExact(
+                    normalized,
+                    @"hh\:mm",
+                    CultureInfo.InvariantCulture,
+                    out result) ||
+                result < TimeSpan.Zero ||
+                result >= TimeSpan.FromDays(1))
+            {
+                throw new ArgumentException(fieldName + " không hợp lệ. Định dạng yêu cầu HH:mm.");
+            }
+
+            return result;
         }
 
         private static OracleConnection CreateConnection()
