@@ -1223,6 +1223,7 @@
     <Content Include="Permission\SearchExtension.aspx" />
     <Content Include="Permission\SearchPermissionAdv.aspx" />
     <Content Include="Permission\SearchPermissionAdv.css" />
+    <Content Include="Permission\SearchPermissionAdvExport.ashx" />
     <Content Include="Permission\SearchPermissionAdv.js" />
     <Content Include="PlanMessage\PlanMessage.aspx" />
     <Content Include="QLBMB\ExportKHB.aspx" />
@@ -2667,6 +2668,9 @@
     </Compile>
     <Compile Include="Permission\SearchPermissionAdv.aspx.designer.cs">
       <DependentUpon>SearchPermissionAdv.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Permission\SearchPermissionAdvExport.ashx.cs">
+      <DependentUpon>SearchPermissionAdvExport.ashx</DependentUpon>
     </Compile>
     <Compile Include="PlanMessage\PlanMessage.aspx.cs">
       <DependentUpon>PlanMessage.aspx</DependentUpon>

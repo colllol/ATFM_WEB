@@ -62,9 +62,16 @@ namespace prjApplication.Permission
             try
             {
                 DateTime selectedDate = ParsePermissionDate(permissionDate);
-                TimeSpan selectedFromTime = ParseSearchTime(fromTime, "Từ giờ");
-                TimeSpan selectedToTime = ParseSearchTime(toTime, "Đến giờ");
-                if (selectedFromTime > selectedToTime)
+                bool hasFromTime = !String.IsNullOrWhiteSpace(fromTime);
+                bool hasToTime = !String.IsNullOrWhiteSpace(toTime);
+                bool useTimeFilter = hasFromTime || hasToTime;
+                TimeSpan selectedFromTime = hasFromTime
+                    ? ParseSearchTime(fromTime, "Từ giờ")
+                    : TimeSpan.Zero;
+                TimeSpan selectedToTime = hasToTime
+                    ? ParseSearchTime(toTime, "Đến giờ")
+                    : new TimeSpan(23, 59, 0);
+                if (useTimeFilter && selectedFromTime > selectedToTime)
                     throw new ArgumentException("Từ giờ không được lớn hơn Đến giờ.");
 
                 string selectedFromHhmm = selectedFromTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
@@ -72,6 +79,10 @@ namespace prjApplication.Permission
                 string normalizedFromAirp = NormalizeDetailFilter(fromAirp);
                 string normalizedToAirp = NormalizeDetailFilter(toAirp);
                 string normalizedVia = NormalizeDetailFilter(via);
+                bool useDetailFilter = useTimeFilter ||
+                    !String.IsNullOrEmpty(normalizedFromAirp) ||
+                    !String.IsNullOrEmpty(normalizedToAirp) ||
+                    !String.IsNullOrEmpty(normalizedVia);
                 var items = new List<PermissionSummary>();
 
                 const string sql = @"
@@ -93,19 +104,24 @@ namespace prjApplication.Permission
                         LEFT JOIN M_FPAUTHOR a ON a.AUTHOR_CODE = m.AUTHOR_ID
                         WHERE m.PERMDATE >= :selectedDate
                           AND m.PERMDATE < :nextDate
-                          AND EXISTS
+                          AND
                           (
-                              SELECT 1
-                              FROM T_PERMDETAIL_SC d
-                              WHERE d.PERM_ID = m.PERM_ID
+                              :useDetailFilter = 0
+                              OR EXISTS
+                              (
+                                SELECT 1
+                                FROM T_PERMDETAIL_SC d
+                                WHERE d.PERM_ID = m.PERM_ID
                                 AND
                                 (
-                                    LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                    :useTimeFilter = 0
+                                    OR LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                     OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                 )
                                 AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
                                 AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
                                 AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
+                              )
                           )
 
                         UNION ALL
@@ -124,19 +140,24 @@ namespace prjApplication.Permission
                         LEFT JOIN M_FPAUTHOR a ON a.AUTHOR_CODE = m.AUTHOR_ID
                         WHERE m.PERMDATE >= :selectedDate
                           AND m.PERMDATE < :nextDate
-                          AND EXISTS
+                          AND
                           (
-                              SELECT 1
-                              FROM T_PERMDETAIL_NO d
-                              WHERE d.PERM_ID = m.PERM_ID
+                              :useDetailFilter = 0
+                              OR EXISTS
+                              (
+                                SELECT 1
+                                FROM T_PERMDETAIL_NO d
+                                WHERE d.PERM_ID = m.PERM_ID
                                 AND
                                 (
-                                    LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                    :useTimeFilter = 0
+                                    OR LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                     OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                 )
                                 AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
                                 AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
                                 AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
+                              )
                           )
                     )
                     ORDER BY PERMNBR, SOURCE_TYPE";
@@ -148,6 +169,8 @@ namespace prjApplication.Permission
                     command.CommandTimeout = 60;
                     command.Parameters.Add("selectedDate", OracleDbType.Date).Value = selectedDate.Date;
                     command.Parameters.Add("nextDate", OracleDbType.Date).Value = selectedDate.Date.AddDays(1);
+                    command.Parameters.Add("useDetailFilter", OracleDbType.Int32).Value = useDetailFilter ? 1 : 0;
+                    command.Parameters.Add("useTimeFilter", OracleDbType.Int32).Value = useTimeFilter ? 1 : 0;
                     command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value = selectedFromHhmm;
                     command.Parameters.Add("toHhmm", OracleDbType.Varchar2).Value = selectedToHhmm;
                     command.Parameters.Add("fromAirp", OracleDbType.Varchar2).Value = ToOracleValue(normalizedFromAirp);
@@ -181,8 +204,13 @@ namespace prjApplication.Permission
                     Code = "00",
                     Message = "Success",
                     PermissionDate = selectedDate.ToString("dd-MM-yyyy"),
-                    FromTime = selectedFromTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
-                    ToTime = selectedToTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
+                    HasTimeFilter = useTimeFilter,
+                    FromTime = useTimeFilter
+                        ? selectedFromTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture)
+                        : String.Empty,
+                    ToTime = useTimeFilter
+                        ? selectedToTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture)
+                        : String.Empty,
                     FromAirp = normalizedFromAirp,
                     ToAirp = normalizedToAirp,
                     Via = normalizedVia,
@@ -214,9 +242,16 @@ namespace prjApplication.Permission
                 if (permId <= 0)
                     throw new ArgumentException("PERM_ID không hợp lệ.");
 
-                TimeSpan selectedFromTime = ParseSearchTime(fromTime, "Từ giờ");
-                TimeSpan selectedToTime = ParseSearchTime(toTime, "Đến giờ");
-                if (selectedFromTime > selectedToTime)
+                bool hasFromTime = !String.IsNullOrWhiteSpace(fromTime);
+                bool hasToTime = !String.IsNullOrWhiteSpace(toTime);
+                bool useTimeFilter = hasFromTime || hasToTime;
+                TimeSpan selectedFromTime = hasFromTime
+                    ? ParseSearchTime(fromTime, "Từ giờ")
+                    : TimeSpan.Zero;
+                TimeSpan selectedToTime = hasToTime
+                    ? ParseSearchTime(toTime, "Đến giờ")
+                    : new TimeSpan(23, 59, 0);
+                if (useTimeFilter && selectedFromTime > selectedToTime)
                     throw new ArgumentException("Từ giờ không được lớn hơn Đến giờ.");
 
                 string selectedFromHhmm = selectedFromTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
@@ -234,6 +269,7 @@ namespace prjApplication.Permission
                         connection,
                         normalizedType,
                         permId,
+                        useTimeFilter,
                         selectedFromHhmm,
                         selectedToHhmm,
                         normalizedFromAirp,
@@ -261,6 +297,7 @@ namespace prjApplication.Permission
             OracleConnection connection,
             string sourceType,
             long permId,
+            bool useTimeFilter,
             string fromHhmm,
             string toHhmm,
             string fromAirp,
@@ -287,7 +324,8 @@ namespace prjApplication.Permission
                 WHERE d.PERM_ID = :permId
                   AND
                   (
-                      LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                      :useTimeFilter = 0
+                      OR LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                       OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                   )
                   AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
@@ -309,7 +347,8 @@ namespace prjApplication.Permission
                 WHERE d.PERM_ID = :permId
                   AND
                   (
-                      LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                      :useTimeFilter = 0
+                      OR LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                       OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                   )
                   AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
@@ -323,6 +362,7 @@ namespace prjApplication.Permission
                 command.BindByName = true;
                 command.CommandTimeout = 60;
                 command.Parameters.Add("permId", OracleDbType.Int64).Value = permId;
+                command.Parameters.Add("useTimeFilter", OracleDbType.Int32).Value = useTimeFilter ? 1 : 0;
                 command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value = fromHhmm;
                 command.Parameters.Add("toHhmm", OracleDbType.Varchar2).Value = toHhmm;
                 command.Parameters.Add("fromAirp", OracleDbType.Varchar2).Value = ToOracleValue(fromAirp);

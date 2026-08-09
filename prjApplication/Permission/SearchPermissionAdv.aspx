@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-6") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-7") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -14,19 +14,19 @@
         </header>
 
         <div class="spa-filter-card">
-            <label class="spa-field" for="spaPermissionDate">
+            <label class="spa-field spa-field-date" for="spaPermissionDate">
                 <span>Ngày cấp phép</span>
                 <input id="spaPermissionDate" type="date" />
             </label>
             <label class="spa-field spa-field-time" for="spaFromTime">
                 <span>Từ giờ ETD/ETA</span>
                 <input id="spaFromTime" class="spa-time-input" type="text" inputmode="numeric"
-                    maxlength="5" value="00:00" placeholder="00:00" autocomplete="off" />
+                    maxlength="5" placeholder="00:00" autocomplete="off" />
             </label>
             <label class="spa-field spa-field-time" for="spaToTime">
                 <span>Đến giờ ETD/ETA</span>
                 <input id="spaToTime" class="spa-time-input" type="text" inputmode="numeric"
-                    maxlength="5" value="23:59" placeholder="23:59" autocomplete="off" />
+                    maxlength="5" placeholder="23:59" autocomplete="off" />
             </label>
             <label class="spa-field spa-field-criteria" for="spaFromAirp">
                 <span>From</span>
@@ -45,6 +45,9 @@
             </button>
             <button id="spaClear" class="spa-button spa-button-muted" type="button">
                 <i class="fa fa-eraser"></i> Clear
+            </button>
+            <button id="spaExportExcel" class="spa-button spa-button-excel" type="button" disabled>
+                <i class="fa fa-file-excel-o"></i> Export Excel
             </button>
         </div>
 
@@ -138,5 +141,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-6") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-7") %>"></script>
 </asp:Content>

@@ -7,8 +7,9 @@
     var filteredPermissions = [];
     var lastDetailTrigger = null;
     var detailCache = {};
-    var activeFromTime = '00:00';
-    var activeToTime = '23:59';
+    var activePermissionDate = '';
+    var activeFromTime = '';
+    var activeToTime = '';
     var activeFromAirp = '';
     var activeToAirp = '';
     var activeVia = '';
@@ -71,6 +72,10 @@
         button.innerHTML = loading
             ? '<i class="fa fa-spinner fa-spin"></i> Loading...'
             : '<i class="fa fa-search"></i> Search';
+    }
+
+    function setExportEnabled(enabled) {
+        document.getElementById('spaExportExcel').disabled = !enabled;
     }
 
     function renderPermissions() {
@@ -171,52 +176,92 @@
             dateInput.focus();
             return;
         }
-        if (!isValid24HourTime(fromTimeInput.value) || !isValid24HourTime(toTimeInput.value)) {
-            alert('Khung giờ phải đúng định dạng 24h HH:mm, từ 00:00 đến 23:59.');
-            (!isValid24HourTime(fromTimeInput.value) ? fromTimeInput : toTimeInput).focus();
+        var fromTimeValue = fromTimeInput.value.trim();
+        var toTimeValue = toTimeInput.value.trim();
+        if ((fromTimeValue && !isValid24HourTime(fromTimeValue)) ||
+            (toTimeValue && !isValid24HourTime(toTimeValue))) {
+            alert('Khung giờ phải đúng định dạng 24h HH:mm, từ 00:00 đến 23:59. Có thể để trống nếu không lọc theo giờ.');
+            (fromTimeValue && !isValid24HourTime(fromTimeValue) ? fromTimeInput : toTimeInput).focus();
             return;
         }
-        if (fromTimeInput.value > toTimeInput.value) {
+        if ((fromTimeValue || toTimeValue) &&
+            (fromTimeValue || '00:00') > (toTimeValue || '23:59')) {
             alert('Từ giờ không được lớn hơn Đến giờ.');
             fromTimeInput.focus();
             return;
         }
 
         setSearchLoading(true);
+        setExportEnabled(false);
         detailCache = {};
         document.getElementById('spaPermissionRows').innerHTML =
             '<tr><td colspan="9" class="spa-empty"><i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>';
 
         post('SearchByPermissionDate', {
             permissionDate: dateInput.value,
-            fromTime: fromTimeInput.value,
-            toTime: toTimeInput.value,
+            fromTime: fromTimeValue,
+            toTime: toTimeValue,
             fromAirp: fromAirpInput.value,
             toAirp: toAirpInput.value,
             via: viaInput.value
         })
             .then(function (result) {
                 permissions = result.Items || [];
-                activeFromTime = result.FromTime || fromTimeInput.value;
-                activeToTime = result.ToTime || toTimeInput.value;
+                activePermissionDate = dateInput.value;
+                activeFromTime = result.HasTimeFilter ? (result.FromTime || '') : '';
+                activeToTime = result.HasTimeFilter ? (result.ToTime || '') : '';
                 activeFromAirp = result.FromAirp || '';
                 activeToAirp = result.ToAirp || '';
                 activeVia = result.Via || '';
                 document.getElementById('spaSearchCaption').textContent =
                     'Ngày cấp phép: ' + (result.PermissionDate || dateInput.value) +
-                    ' • ETD/ETA ' + activeFromTime + ' - ' + activeToTime +
+                    (result.HasTimeFilter ? ' • ETD/ETA ' + activeFromTime + ' - ' + activeToTime : '') +
                     (activeFromAirp ? ' • FROM ' + activeFromAirp : '') +
                     (activeToAirp ? ' • TO ' + activeToAirp : '') +
                     (activeVia ? ' • VIA ' + activeVia : '');
                 applyColumnFilters();
+                setExportEnabled(permissions.length > 0);
             })
             .catch(function (error) {
+                activePermissionDate = '';
                 permissions = [];
                 filteredPermissions = [];
                 applyColumnFilters();
+                setExportEnabled(false);
                 alert(error.message);
             })
             .then(function () { setSearchLoading(false); });
+    }
+
+    function exportExcel() {
+        if (!activePermissionDate || !permissions.length) {
+            alert('Vui lòng Search dữ liệu trước khi Export Excel.');
+            return;
+        }
+
+        function columnFilter(field) {
+            var input = document.querySelector('[data-filter-field="' + field + '"]');
+            return input ? input.value.trim() : '';
+        }
+
+        var query = [
+            'permissionDate=' + encodeURIComponent(activePermissionDate),
+            'fromTime=' + encodeURIComponent(activeFromTime),
+            'toTime=' + encodeURIComponent(activeToTime),
+            'fromAirp=' + encodeURIComponent(activeFromAirp),
+            'toAirp=' + encodeURIComponent(activeToAirp),
+            'via=' + encodeURIComponent(activeVia),
+            'permNbr=' + encodeURIComponent(columnFilter('PermNbr')),
+            'author=' + encodeURIComponent(columnFilter('Author')),
+            'pType=' + encodeURIComponent(columnFilter('PType')),
+            'fType=' + encodeURIComponent(columnFilter('FType')),
+            'number=' + encodeURIComponent(columnFilter('Number')),
+            'version=' + encodeURIComponent(columnFilter('Version')),
+            'masterDate=' + encodeURIComponent(columnFilter('PermissionDate')),
+            'oper=' + encodeURIComponent(columnFilter('Oper'))
+        ].join('&');
+        var handlerPath = window.location.pathname.replace(/[^/]+$/, 'SearchPermissionAdvExport.ashx');
+        window.location.href = handlerPath + '?' + query;
     }
 
     function flightRowsHtml(result) {
@@ -416,13 +461,14 @@
         if (!dateInput) return;
 
         dateInput.value = isoToday();
-        fromTimeInput.value = '00:00';
-        toTimeInput.value = '23:59';
+        fromTimeInput.value = '';
+        toTimeInput.value = '';
         document.getElementById('spaSearch').addEventListener('click', search);
+        document.getElementById('spaExportExcel').addEventListener('click', exportExcel);
         document.getElementById('spaClear').addEventListener('click', function () {
             dateInput.value = isoToday();
-            fromTimeInput.value = '00:00';
-            toTimeInput.value = '23:59';
+            fromTimeInput.value = '';
+            toTimeInput.value = '';
             fromAirpInput.value = '';
             toAirpInput.value = '';
             viaInput.value = '';
@@ -430,11 +476,13 @@
             permissions = [];
             filteredPermissions = [];
             detailCache = {};
-            activeFromTime = '00:00';
-            activeToTime = '23:59';
+            activePermissionDate = '';
+            activeFromTime = '';
+            activeToTime = '';
             activeFromAirp = '';
             activeToAirp = '';
             activeVia = '';
+            setExportEnabled(false);
             document.getElementById('spaSearchCaption').textContent = 'Chọn ngày cấp phép và nhấn Search.';
             renderPermissions();
         });

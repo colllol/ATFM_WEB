@@ -19,10 +19,10 @@
 
 .spa-filter-card {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-end;
-    gap: 10px;
-    padding: 13px 15px;
+    gap: 7px;
+    padding: 11px 12px;
     border: 1px solid #c9deef;
     border-radius: 9px;
     background: #f3f9fd;
@@ -36,9 +36,10 @@
     margin: 0;
 }
 
-.spa-field-time { min-width: 120px; }
-.spa-field-criteria { min-width: 92px; }
-.spa-field-via { min-width: 145px; }
+.spa-field-date { min-width: 145px; }
+.spa-field-time { min-width: 92px; max-width: 100px; }
+.spa-field-criteria { min-width: 64px; max-width: 72px; }
+.spa-field-via { min-width: 100px; max-width: 120px; }
 
 .spa-time-input,
 #spaFromAirp,
@@ -78,6 +79,8 @@
 .spa-button-primary:hover { background: #2478b4; }
 .spa-button-muted { background: #7d93a4; }
 .spa-button-muted:hover { background: #667e90; }
+.spa-button-excel { min-width: 125px; background: #63a866; }
+.spa-button-excel:hover { background: #4d9251; }
 .spa-button:disabled { opacity: .6; cursor: not-allowed; }
 
 .spa-result-head {
@@ -337,7 +340,7 @@ body.spa-modal-open { overflow: hidden; }
     text-align: center;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .spa-filter-card { flex-wrap: wrap; }
     .spa-result-head { flex-direction: column; }
 }
