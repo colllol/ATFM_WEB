@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-2") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-3") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -44,6 +44,17 @@
                         <th>VERSION</th>
                         <th>DATE</th>
                         <th>OPER</th>
+                    </tr>
+                    <tr class="spa-column-filters">
+                        <th></th>
+                        <th><input type="text" data-filter-field="PermNbr" aria-label="Filter PERMNBR" autocomplete="off" /></th>
+                        <th><input type="text" data-filter-field="Author" aria-label="Filter AUTHOR" autocomplete="off" /></th>
+                        <th><input type="text" data-filter-field="PType" aria-label="Filter PTYPE" autocomplete="off" /></th>
+                        <th><input type="text" data-filter-field="FType" aria-label="Filter FTYPE" autocomplete="off" /></th>
+                        <th><input type="text" data-filter-field="Number" aria-label="Filter NUMBER" autocomplete="off" /></th>
+                        <th><input type="text" data-filter-field="Version" aria-label="Filter VERSION" autocomplete="off" /></th>
+                        <th><input type="text" data-filter-field="PermissionDate" aria-label="Filter DATE" placeholder="DD-MM-YYYY" autocomplete="off" /></th>
+                        <th><input type="text" data-filter-field="Oper" aria-label="Filter OPER" autocomplete="off" /></th>
                     </tr>
                 </thead>
                 <tbody id="spaPermissionRows">
@@ -105,5 +116,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-2") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-3") %>"></script>
 </asp:Content>

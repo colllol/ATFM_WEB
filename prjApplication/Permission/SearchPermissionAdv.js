@@ -4,6 +4,7 @@
     var pageSize = 100;
     var currentPage = 1;
     var permissions = [];
+    var filteredPermissions = [];
     var lastDetailTrigger = null;
 
     function post(method, data) {
@@ -57,10 +58,10 @@
 
     function renderPermissions() {
         var body = document.getElementById('spaPermissionRows');
-        var totalPages = Math.max(1, Math.ceil(permissions.length / pageSize));
+        var totalPages = Math.max(1, Math.ceil(filteredPermissions.length / pageSize));
         if (currentPage > totalPages) currentPage = totalPages;
         var start = (currentPage - 1) * pageSize;
-        var rows = permissions.slice(start, start + pageSize);
+        var rows = filteredPermissions.slice(start, start + pageSize);
 
         if (!rows.length) {
             body.innerHTML = '<tr><td colspan="9" class="spa-empty">Không có phép phù hợp.</td></tr>';
@@ -81,8 +82,11 @@
             }).join('');
         }
 
-        document.getElementById('spaTotal').textContent = 'Tổng số: ' + permissions.length.toLocaleString('vi-VN');
-        document.getElementById('spaPager').hidden = permissions.length <= pageSize;
+        document.getElementById('spaTotal').textContent = filteredPermissions.length === permissions.length
+            ? 'Tổng số: ' + permissions.length.toLocaleString('vi-VN')
+            : 'Tổng số: ' + filteredPermissions.length.toLocaleString('vi-VN') +
+                ' / ' + permissions.length.toLocaleString('vi-VN');
+        document.getElementById('spaPager').hidden = filteredPermissions.length <= pageSize;
         document.getElementById('spaPageInfo').textContent = 'Trang ' + currentPage + '/' + totalPages;
         document.getElementById('spaPrev').disabled = currentPage <= 1;
         document.getElementById('spaNext').disabled = currentPage >= totalPages;
@@ -96,6 +100,37 @@
                     this.textContent
                 );
             });
+        });
+    }
+
+    function normalizeFilterValue(value) {
+        return String(value == null ? '' : value).trim().toLocaleUpperCase('vi-VN');
+    }
+
+    function applyColumnFilters() {
+        var filters = Array.prototype.map.call(
+            document.querySelectorAll('[data-filter-field]'),
+            function (input) {
+                return {
+                    field: input.getAttribute('data-filter-field'),
+                    value: normalizeFilterValue(input.value)
+                };
+            }
+        ).filter(function (filter) { return filter.value !== ''; });
+
+        filteredPermissions = filters.length ? permissions.filter(function (item) {
+            return filters.every(function (filter) {
+                return normalizeFilterValue(item[filter.field]).indexOf(filter.value) !== -1;
+            });
+        }) : permissions.slice();
+
+        currentPage = 1;
+        renderPermissions();
+    }
+
+    function clearColumnFilters() {
+        Array.prototype.forEach.call(document.querySelectorAll('[data-filter-field]'), function (input) {
+            input.value = '';
         });
     }
 
@@ -114,15 +149,14 @@
         post('SearchByPermissionDate', { permissionDate: dateInput.value })
             .then(function (result) {
                 permissions = result.Items || [];
-                currentPage = 1;
                 document.getElementById('spaSearchCaption').textContent =
                     'Ngày cấp phép: ' + (result.PermissionDate || dateInput.value);
-                renderPermissions();
+                applyColumnFilters();
             })
             .catch(function (error) {
                 permissions = [];
-                currentPage = 1;
-                renderPermissions();
+                filteredPermissions = [];
+                applyColumnFilters();
                 alert(error.message);
             })
             .then(function () { setSearchLoading(false); });
@@ -197,10 +231,17 @@
         document.getElementById('spaSearch').addEventListener('click', search);
         document.getElementById('spaClear').addEventListener('click', function () {
             dateInput.value = isoToday();
+            clearColumnFilters();
             permissions = [];
-            currentPage = 1;
+            filteredPermissions = [];
             document.getElementById('spaSearchCaption').textContent = 'Chọn ngày cấp phép và nhấn Search.';
             renderPermissions();
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-filter-field]'), function (input) {
+            input.addEventListener('input', applyColumnFilters);
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') event.preventDefault();
+            });
         });
         dateInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') search();
@@ -209,7 +250,7 @@
             if (currentPage > 1) { currentPage--; renderPermissions(); }
         });
         document.getElementById('spaNext').addEventListener('click', function () {
-            var totalPages = Math.max(1, Math.ceil(permissions.length / pageSize));
+            var totalPages = Math.max(1, Math.ceil(filteredPermissions.length / pageSize));
             if (currentPage < totalPages) { currentPage++; renderPermissions(); }
         });
         document.getElementById('spaDetailClose').addEventListener('click', closeModal);
