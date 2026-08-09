@@ -9,6 +9,9 @@
     var detailCache = {};
     var activeFromTime = '00:00';
     var activeToTime = '23:59';
+    var activeFromAirp = '';
+    var activeToAirp = '';
+    var activeVia = '';
 
     function post(method, data) {
         return fetch(window.location.pathname + '/' + method, {
@@ -49,6 +52,17 @@
         return now.getFullYear() + '-' +
             String(now.getMonth() + 1).padStart(2, '0') + '-' +
             String(now.getDate()).padStart(2, '0');
+    }
+
+    function formatTimeInput(input) {
+        var digits = input.value.replace(/\D/g, '').slice(0, 4);
+        input.value = digits.length > 2
+            ? digits.slice(0, 2) + ':' + digits.slice(2)
+            : digits;
+    }
+
+    function isValid24HourTime(value) {
+        return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
     }
 
     function setSearchLoading(loading) {
@@ -149,14 +163,17 @@
         var dateInput = document.getElementById('spaPermissionDate');
         var fromTimeInput = document.getElementById('spaFromTime');
         var toTimeInput = document.getElementById('spaToTime');
+        var fromAirpInput = document.getElementById('spaFromAirp');
+        var toAirpInput = document.getElementById('spaToAirp');
+        var viaInput = document.getElementById('spaVia');
         if (!dateInput.value) {
             alert('Vui lòng chọn ngày cấp phép.');
             dateInput.focus();
             return;
         }
-        if (!fromTimeInput.value || !toTimeInput.value) {
-            alert('Vui lòng nhập đầy đủ khung giờ.');
-            (!fromTimeInput.value ? fromTimeInput : toTimeInput).focus();
+        if (!isValid24HourTime(fromTimeInput.value) || !isValid24HourTime(toTimeInput.value)) {
+            alert('Khung giờ phải đúng định dạng 24h HH:mm, từ 00:00 đến 23:59.');
+            (!isValid24HourTime(fromTimeInput.value) ? fromTimeInput : toTimeInput).focus();
             return;
         }
         if (fromTimeInput.value > toTimeInput.value) {
@@ -173,15 +190,24 @@
         post('SearchByPermissionDate', {
             permissionDate: dateInput.value,
             fromTime: fromTimeInput.value,
-            toTime: toTimeInput.value
+            toTime: toTimeInput.value,
+            fromAirp: fromAirpInput.value,
+            toAirp: toAirpInput.value,
+            via: viaInput.value
         })
             .then(function (result) {
                 permissions = result.Items || [];
                 activeFromTime = result.FromTime || fromTimeInput.value;
                 activeToTime = result.ToTime || toTimeInput.value;
+                activeFromAirp = result.FromAirp || '';
+                activeToAirp = result.ToAirp || '';
+                activeVia = result.Via || '';
                 document.getElementById('spaSearchCaption').textContent =
                     'Ngày cấp phép: ' + (result.PermissionDate || dateInput.value) +
-                    ' • ETD/ETA ' + activeFromTime + ' - ' + activeToTime;
+                    ' • ETD/ETA ' + activeFromTime + ' - ' + activeToTime +
+                    (activeFromAirp ? ' • FROM ' + activeFromAirp : '') +
+                    (activeToAirp ? ' • TO ' + activeToAirp : '') +
+                    (activeVia ? ' • VIA ' + activeVia : '');
                 applyColumnFilters();
             })
             .catch(function (error) {
@@ -218,22 +244,57 @@
         }).join('') : '<tr><td colspan="17" class="spa-empty">Phép chưa có thông tin chi tiết.</td></tr>';
     }
 
-    function detailTableHeadHtml() {
+    function inlineDetailTableHeadHtml() {
         return '<thead><tr>' +
-            '<th>NO</th><th>CALLSIGN</th><th>REGISTRATION</th><th>FROM</th><th>TO</th>' +
+            '<th>NO</th><th>CALLSIGN</th><th>FROM</th><th>TO</th>' +
             '<th>ETD</th><th>ETA</th><th>DAY/DATE</th><th>BEGIN DATE</th><th>END DATE</th>' +
             '<th>CRAFT</th><th>PURPOSE</th><th>MTOW</th><th>VIA</th><th>REMARK</th>' +
             '<th>STATUS</th><th>LAST USER</th></tr></thead>';
     }
 
+    function inlineDetailColgroupHtml() {
+        var widths = [3, 7, 4, 4, 5, 5, 7, 7, 7, 5, 6, 5, 10, 13, 5, 7];
+        return '<colgroup>' + widths.map(function (width) {
+            return '<col style="width:' + width + '%" />';
+        }).join('') + '</colgroup>';
+    }
+
+    function inlineFlightRowsHtml(result) {
+        var flights = result.Flights || [];
+        return flights.length ? flights.map(function (flight, index) {
+            return '<tr>' +
+                '<td>' + (index + 1) + '</td>' +
+                '<td><strong>' + esc(flight.Callsign) + '</strong></td>' +
+                '<td>' + esc(flight.FromAirp) + '</td>' +
+                '<td>' + esc(flight.ToAirp) + '</td>' +
+                '<td>' + esc(flight.Etd) + '</td>' +
+                '<td>' + esc(flight.Eta) + '</td>' +
+                '<td>' + esc(flight.DaysFlight) + '</td>' +
+                '<td>' + esc(flight.BeginDate) + '</td>' +
+                '<td>' + esc(flight.EndDate) + '</td>' +
+                '<td>' + esc(flight.Craft) + '</td>' +
+                '<td>' + esc(flight.Purpose) + '</td>' +
+                '<td>' + esc(flight.Mtow) + '</td>' +
+                '<td>' + esc(flight.Via) + '</td>' +
+                '<td>' + esc(flight.Remark) + '</td>' +
+                '<td>' + esc(flight.Status) + '</td>' +
+                '<td title="' + esc(flight.LastModify) + '">' + esc(flight.LastUser) + '</td>' +
+                '</tr>';
+        }).join('') : '<tr><td colspan="16" class="spa-empty">Phép chưa có thông tin chi tiết.</td></tr>';
+    }
+
     function getPermissionDetail(sourceType, permId) {
-        var key = sourceType + ':' + permId + ':' + activeFromTime + ':' + activeToTime;
+        var key = [sourceType, permId, activeFromTime, activeToTime,
+            activeFromAirp, activeToAirp, activeVia].join(':');
         if (!detailCache[key]) {
             detailCache[key] = post('GetPermissionDetail', {
                 sourceType: sourceType,
                 permId: permId,
                 fromTime: activeFromTime,
-                toTime: activeToTime
+                toTime: activeToTime,
+                fromAirp: activeFromAirp,
+                toAirp: activeToAirp,
+                via: activeVia
             }).catch(function (error) {
                 delete detailCache[key];
                 throw error;
@@ -304,8 +365,8 @@
                 detailRow.querySelector('.spa-inline-caption').textContent =
                     result.SourceType + ' • PERM_ID: ' + result.PermId + ' • ' + result.Total + ' flight(s)';
                 detailRow.querySelector('.spa-inline-table-wrap').innerHTML =
-                    '<table class="spa-table spa-inline-detail-table">' + detailTableHeadHtml() +
-                    '<tbody>' + flightRowsHtml(result) + '</tbody></table>';
+                    '<table class="spa-table spa-inline-detail-table">' + inlineDetailColgroupHtml() +
+                    inlineDetailTableHeadHtml() + '<tbody>' + inlineFlightRowsHtml(result) + '</tbody></table>';
             })
             .catch(function (error) {
                 if (!detailRow.parentNode) return;
@@ -349,6 +410,9 @@
         var dateInput = document.getElementById('spaPermissionDate');
         var fromTimeInput = document.getElementById('spaFromTime');
         var toTimeInput = document.getElementById('spaToTime');
+        var fromAirpInput = document.getElementById('spaFromAirp');
+        var toAirpInput = document.getElementById('spaToAirp');
+        var viaInput = document.getElementById('spaVia');
         if (!dateInput) return;
 
         dateInput.value = isoToday();
@@ -359,12 +423,18 @@
             dateInput.value = isoToday();
             fromTimeInput.value = '00:00';
             toTimeInput.value = '23:59';
+            fromAirpInput.value = '';
+            toAirpInput.value = '';
+            viaInput.value = '';
             clearColumnFilters();
             permissions = [];
             filteredPermissions = [];
             detailCache = {};
             activeFromTime = '00:00';
             activeToTime = '23:59';
+            activeFromAirp = '';
+            activeToAirp = '';
+            activeVia = '';
             document.getElementById('spaSearchCaption').textContent = 'Chọn ngày cấp phép và nhấn Search.';
             renderPermissions();
         });
@@ -382,6 +452,14 @@
         });
         toTimeInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') search();
+        });
+        fromTimeInput.addEventListener('input', function () { formatTimeInput(this); });
+        toTimeInput.addEventListener('input', function () { formatTimeInput(this); });
+        [fromAirpInput, toAirpInput, viaInput].forEach(function (input) {
+            input.addEventListener('input', function () { this.value = this.value.toUpperCase(); });
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') search();
+            });
         });
         document.getElementById('spaPrev').addEventListener('click', function () {
             if (currentPage > 1) { currentPage--; renderPermissions(); }

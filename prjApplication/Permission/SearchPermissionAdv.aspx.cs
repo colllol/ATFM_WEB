@@ -54,7 +54,10 @@ namespace prjApplication.Permission
         public static object SearchByPermissionDate(
             string permissionDate,
             string fromTime,
-            string toTime)
+            string toTime,
+            string fromAirp,
+            string toAirp,
+            string via)
         {
             try
             {
@@ -66,6 +69,9 @@ namespace prjApplication.Permission
 
                 string selectedFromHhmm = selectedFromTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
                 string selectedToHhmm = selectedToTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
+                string normalizedFromAirp = NormalizeDetailFilter(fromAirp);
+                string normalizedToAirp = NormalizeDetailFilter(toAirp);
+                string normalizedVia = NormalizeDetailFilter(via);
                 var items = new List<PermissionSummary>();
 
                 const string sql = @"
@@ -97,6 +103,9 @@ namespace prjApplication.Permission
                                     LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                     OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                 )
+                                AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
+                                AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
+                                AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
                           )
 
                         UNION ALL
@@ -125,6 +134,9 @@ namespace prjApplication.Permission
                                     LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                     OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                                 )
+                                AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
+                                AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
+                                AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
                           )
                     )
                     ORDER BY PERMNBR, SOURCE_TYPE";
@@ -138,6 +150,9 @@ namespace prjApplication.Permission
                     command.Parameters.Add("nextDate", OracleDbType.Date).Value = selectedDate.Date.AddDays(1);
                     command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value = selectedFromHhmm;
                     command.Parameters.Add("toHhmm", OracleDbType.Varchar2).Value = selectedToHhmm;
+                    command.Parameters.Add("fromAirp", OracleDbType.Varchar2).Value = ToOracleValue(normalizedFromAirp);
+                    command.Parameters.Add("toAirp", OracleDbType.Varchar2).Value = ToOracleValue(normalizedToAirp);
+                    command.Parameters.Add("via", OracleDbType.Varchar2).Value = ToOracleValue(normalizedVia);
                     connection.Open();
 
                     using (var reader = command.ExecuteReader())
@@ -168,6 +183,9 @@ namespace prjApplication.Permission
                     PermissionDate = selectedDate.ToString("dd-MM-yyyy"),
                     FromTime = selectedFromTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
                     ToTime = selectedToTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
+                    FromAirp = normalizedFromAirp,
+                    ToAirp = normalizedToAirp,
+                    Via = normalizedVia,
                     Total = items.Count,
                     Items = items
                 };
@@ -183,7 +201,10 @@ namespace prjApplication.Permission
             string sourceType,
             long permId,
             string fromTime,
-            string toTime)
+            string toTime,
+            string fromAirp,
+            string toAirp,
+            string via)
         {
             try
             {
@@ -200,6 +221,9 @@ namespace prjApplication.Permission
 
                 string selectedFromHhmm = selectedFromTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
                 string selectedToHhmm = selectedToTime.ToString(@"hhmm", CultureInfo.InvariantCulture);
+                string normalizedFromAirp = NormalizeDetailFilter(fromAirp);
+                string normalizedToAirp = NormalizeDetailFilter(toAirp);
+                string normalizedVia = NormalizeDetailFilter(via);
 
                 List<PermissionFlightInfo> flights;
 
@@ -211,7 +235,10 @@ namespace prjApplication.Permission
                         normalizedType,
                         permId,
                         selectedFromHhmm,
-                        selectedToHhmm);
+                        selectedToHhmm,
+                        normalizedFromAirp,
+                        normalizedToAirp,
+                        normalizedVia);
                 }
 
                 return new
@@ -235,7 +262,10 @@ namespace prjApplication.Permission
             string sourceType,
             long permId,
             string fromHhmm,
-            string toHhmm)
+            string toHhmm,
+            string fromAirp,
+            string toAirp,
+            string via)
         {
             string sql = sourceType == "SC" ? @"
                 SELECT d.ID, d.FLIGHT_PK, d.FLIGHTNBR, d.REGISTRATION,
@@ -260,6 +290,9 @@ namespace prjApplication.Permission
                       LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                       OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                   )
+                  AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
+                  AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
+                  AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
                 ORDER BY d.ID" : @"
                 SELECT d.ID, d.FLIGHT_PK, d.FLIGHTNBR, d.REGISTRATION,
                        d.FROM_AIRP, d.TO_AIRP, d.ETD, d.ETA,
@@ -279,6 +312,9 @@ namespace prjApplication.Permission
                       LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                       OR LPAD(TRIM(d.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
                   )
+                  AND (:fromAirp IS NULL OR UPPER(TRIM(d.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
+                  AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
+                  AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
                 ORDER BY d.ID";
 
             var flights = new List<PermissionFlightInfo>();
@@ -289,6 +325,9 @@ namespace prjApplication.Permission
                 command.Parameters.Add("permId", OracleDbType.Int64).Value = permId;
                 command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value = fromHhmm;
                 command.Parameters.Add("toHhmm", OracleDbType.Varchar2).Value = toHhmm;
+                command.Parameters.Add("fromAirp", OracleDbType.Varchar2).Value = ToOracleValue(fromAirp);
+                command.Parameters.Add("toAirp", OracleDbType.Varchar2).Value = ToOracleValue(toAirp);
+                command.Parameters.Add("via", OracleDbType.Varchar2).Value = ToOracleValue(via);
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -357,6 +396,16 @@ namespace prjApplication.Permission
             }
 
             return result;
+        }
+
+        private static string NormalizeDetailFilter(string value)
+        {
+            return (value ?? String.Empty).Trim().ToUpperInvariant();
+        }
+
+        private static object ToOracleValue(string value)
+        {
+            return String.IsNullOrWhiteSpace(value) ? (object)DBNull.Value : value;
         }
 
         private static OracleConnection CreateConnection()

@@ -19,6 +19,7 @@
 
 .spa-filter-card {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     gap: 10px;
     padding: 13px 15px;
@@ -36,6 +37,13 @@
 }
 
 .spa-field-time { min-width: 120px; }
+.spa-field-criteria { min-width: 92px; }
+.spa-field-via { min-width: 145px; }
+
+.spa-time-input,
+#spaFromAirp,
+#spaToAirp,
+#spaVia { text-transform: uppercase; }
 
 .spa-field span {
     color: #245372;
@@ -217,11 +225,24 @@
 }
 .spa-inline-table-wrap {
     width: 100%;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
     border: 1px solid #bfd7e9;
     background: #fff;
 }
-.spa-inline-detail-table { min-width: 1500px; }
+.spa-inline-detail-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+.spa-inline-detail-table th,
+.spa-inline-detail-table td {
+    padding: 5px 3px;
+    font-size: 10px;
+    line-height: 14px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
 .spa-inline-loading,
 .spa-inline-error { padding: 22px; text-align: center; }
 .spa-inline-error { color: #ba2c2c; }

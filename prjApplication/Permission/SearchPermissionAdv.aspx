@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-5") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-6") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -20,11 +20,25 @@
             </label>
             <label class="spa-field spa-field-time" for="spaFromTime">
                 <span>Từ giờ ETD/ETA</span>
-                <input id="spaFromTime" type="time" step="60" value="00:00" />
+                <input id="spaFromTime" class="spa-time-input" type="text" inputmode="numeric"
+                    maxlength="5" value="00:00" placeholder="00:00" autocomplete="off" />
             </label>
             <label class="spa-field spa-field-time" for="spaToTime">
                 <span>Đến giờ ETD/ETA</span>
-                <input id="spaToTime" type="time" step="60" value="23:59" />
+                <input id="spaToTime" class="spa-time-input" type="text" inputmode="numeric"
+                    maxlength="5" value="23:59" placeholder="23:59" autocomplete="off" />
+            </label>
+            <label class="spa-field spa-field-criteria" for="spaFromAirp">
+                <span>From</span>
+                <input id="spaFromAirp" type="text" maxlength="10" autocomplete="off" />
+            </label>
+            <label class="spa-field spa-field-criteria" for="spaToAirp">
+                <span>To</span>
+                <input id="spaToAirp" type="text" maxlength="10" autocomplete="off" />
+            </label>
+            <label class="spa-field spa-field-via" for="spaVia">
+                <span>Via</span>
+                <input id="spaVia" type="text" maxlength="100" autocomplete="off" />
             </label>
             <button id="spaSearch" class="spa-button spa-button-primary" type="button">
                 <i class="fa fa-search"></i> Search
@@ -124,5 +138,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-5") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-6") %>"></script>
 </asp:Content>
