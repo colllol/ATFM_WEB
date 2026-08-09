@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-3") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-4") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -116,5 +116,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-3") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-4") %>"></script>
 </asp:Content>

@@ -162,6 +162,68 @@
     cursor: pointer;
 }
 
+.spa-perm-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+.spa-inline-toggle {
+    width: 25px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid #9ec5df;
+    border-radius: 4px;
+    color: #217db8;
+    background: #edf7fd;
+    cursor: pointer;
+}
+
+.spa-inline-toggle:hover,
+.spa-inline-toggle[aria-expanded="true"] {
+    color: #fff;
+    background: #368ccb;
+}
+
+.spa-table .spa-inline-cell {
+    padding: 0;
+    border-top: 2px solid #368ccb;
+    background: #eef7fc;
+}
+
+.spa-inline-panel { padding: 10px 12px 13px; }
+.spa-inline-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    color: #17557e;
+    text-align: left;
+}
+.spa-inline-caption { color: #6c8191; font-size: 11px; }
+.spa-inline-close {
+    width: 28px;
+    height: 27px;
+    margin-left: auto;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    background: #7d93a4;
+    font-size: 20px;
+    line-height: 24px;
+}
+.spa-inline-table-wrap {
+    width: 100%;
+    overflow: auto;
+    border: 1px solid #bfd7e9;
+    background: #fff;
+}
+.spa-inline-detail-table { min-width: 1500px; }
+.spa-inline-loading,
+.spa-inline-error { padding: 22px; text-align: center; }
+.spa-inline-error { color: #ba2c2c; }
+
 .spa-badge {
     display: inline-block;
     min-width: 34px;
@@ -209,7 +271,7 @@ body.spa-modal-open { overflow: hidden; }
 }
 
 .spa-modal-dialog {
-    width: min(1500px, 100%);
+    width: min(1120px, 100%);
     max-height: calc(100vh - 44px);
     display: flex;
     flex-direction: column;
