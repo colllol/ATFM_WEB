@@ -88,7 +88,9 @@
     }
     function applyDatabaseResult(item, syncJobId, result) {
         var targetPermId = result.targetPermId || null;
-        var state = targetPermId ? 'found' : result.state || 'missing';
+        var state = result.hasDatabaseData === false
+            ? (result.state || 'missing')
+            : targetPermId ? 'found' : (result.state || 'missing');
         var cached = {
             state: state,
             oper: result.oper || '',
