@@ -90,7 +90,11 @@
         Array.prototype.forEach.call(body.querySelectorAll('.spa-perm-link'), function (button) {
             button.addEventListener('click', function () {
                 lastDetailTrigger = this;
-                loadDetail(this.getAttribute('data-source'), Number(this.getAttribute('data-perm-id')));
+                loadDetail(
+                    this.getAttribute('data-source'),
+                    Number(this.getAttribute('data-perm-id')),
+                    this.textContent
+                );
             });
         });
     }
@@ -124,39 +128,12 @@
             .then(function () { setSearchLoading(false); });
     }
 
-    function masterField(label, value, wide) {
-        return '<div class="spa-master-item' + (wide ? ' spa-master-wide' : '') + '">' +
-            '<span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>';
-    }
-
-    function renderDetail(result) {
-        var master = result.Master;
-        var masterInfo = document.getElementById('spaMasterInfo');
+    function renderDetail(result, permNbr) {
         var detailBody = document.getElementById('spaDetailRows');
 
-        document.getElementById('spaDetailTitle').textContent = 'Permission detail - ' + (master.PermNbr || '');
+        document.getElementById('spaDetailTitle').textContent = 'Flight details - ' + permNbr;
         document.getElementById('spaDetailSubtitle').textContent =
-            master.SourceType + ' • PERM_ID: ' + master.PermId + ' • ' + result.Total + ' flight(s)';
-
-        masterInfo.innerHTML =
-            masterField('PERMNBR', master.PermNbr) +
-            masterField('AUTHOR', master.Author) +
-            masterField('PTYPE', master.PType) +
-            masterField('FTYPE', master.FType) +
-            masterField('NUMBER', master.Number) +
-            masterField('VERSION', master.Version) +
-            masterField('SEASON', master.Season) +
-            masterField('DATE', master.PermissionDate) +
-            masterField('OPER', master.Oper) +
-            masterField('VALID HOURS', master.ValidHours) +
-            masterField('VALID FROM', master.ValidFrom) +
-            masterField('VALID TO', master.ValidTo) +
-            masterField('STATUS', master.Status) +
-            masterField('LAST USER', master.LastUser) +
-            masterField('LAST MODIFY', master.LastModify) +
-            masterField('REFERENCE', master.Reference, true) +
-            masterField('PERM CONTENT', master.Content, true) +
-            masterField('BILLING ADDRESS', master.BillingAddress, true);
+            result.SourceType + ' • PERM_ID: ' + result.PermId + ' • ' + result.Total + ' flight(s)';
 
         var flights = result.Flights || [];
         detailBody.innerHTML = flights.length ? flights.map(function (flight, index) {
@@ -197,22 +174,18 @@
         if (lastDetailTrigger) lastDetailTrigger.focus();
     }
 
-    function loadDetail(sourceType, permId) {
-        document.getElementById('spaDetailTitle').textContent = 'Permission detail';
+    function loadDetail(sourceType, permId, permNbr) {
+        document.getElementById('spaDetailTitle').textContent = 'Flight details - ' + permNbr;
         document.getElementById('spaDetailSubtitle').textContent = 'Đang tải dữ liệu...';
-        document.getElementById('spaMasterInfo').innerHTML =
-            '<div class="spa-detail-loading"><i class="fa fa-spinner fa-spin"></i> Đang tải thông tin phép...</div>';
         document.getElementById('spaDetailRows').innerHTML =
             '<tr><td colspan="17" class="spa-empty">Đang tải dữ liệu...</td></tr>';
         openModal();
 
         post('GetPermissionDetail', { sourceType: sourceType, permId: permId })
-            .then(renderDetail)
+            .then(function (result) { renderDetail(result, permNbr); })
             .catch(function (error) {
-                document.getElementById('spaMasterInfo').innerHTML =
-                    '<div class="spa-detail-error">' + esc(error.message) + '</div>';
                 document.getElementById('spaDetailRows').innerHTML =
-                    '<tr><td colspan="17" class="spa-empty">Không thể tải chi tiết.</td></tr>';
+                    '<tr><td colspan="17" class="spa-empty">' + esc(error.message) + '</td></tr>';
             });
     }
 

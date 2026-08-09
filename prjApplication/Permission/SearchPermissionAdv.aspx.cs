@@ -23,30 +23,6 @@ namespace prjApplication.Permission
             public string Oper { get; set; }
         }
 
-        private sealed class PermissionMasterInfo
-        {
-            public string SourceType { get; set; }
-            public long PermId { get; set; }
-            public string PermNbr { get; set; }
-            public string Author { get; set; }
-            public string PType { get; set; }
-            public string FType { get; set; }
-            public string Number { get; set; }
-            public string Version { get; set; }
-            public string Season { get; set; }
-            public string PermissionDate { get; set; }
-            public string Oper { get; set; }
-            public string ValidHours { get; set; }
-            public string ValidFrom { get; set; }
-            public string ValidTo { get; set; }
-            public string Reference { get; set; }
-            public string Content { get; set; }
-            public string BillingAddress { get; set; }
-            public string Status { get; set; }
-            public string LastUser { get; set; }
-            public string LastModify { get; set; }
-        }
-
         private sealed class PermissionFlightInfo
         {
             public long Id { get; set; }
@@ -177,24 +153,11 @@ namespace prjApplication.Permission
                 if (permId <= 0)
                     throw new ArgumentException("PERM_ID không hợp lệ.");
 
-                PermissionMasterInfo master;
-                var flights = new List<PermissionFlightInfo>();
+                List<PermissionFlightInfo> flights;
 
                 using (var connection = CreateConnection())
                 {
                     connection.Open();
-                    master = LoadMaster(connection, normalizedType, permId);
-                    if (master == null)
-                    {
-                        return new
-                        {
-                            Code = "04",
-                            Message = "Không tìm thấy thông tin phép.",
-                            Master = (object)null,
-                            Flights = flights
-                        };
-                    }
-
                     flights = LoadFlights(connection, normalizedType, permId);
                 }
 
@@ -202,7 +165,8 @@ namespace prjApplication.Permission
                 {
                     Code = "00",
                     Message = "Success",
-                    Master = master,
+                    SourceType = normalizedType,
+                    PermId = permId,
                     Total = flights.Count,
                     Flights = flights
                 };
@@ -210,82 +174,6 @@ namespace prjApplication.Permission
             catch (Exception ex)
             {
                 return ErrorResult("GetPermissionDetail", ex);
-            }
-        }
-
-        private static PermissionMasterInfo LoadMaster(
-            OracleConnection connection,
-            string sourceType,
-            long permId)
-        {
-            string tableName = sourceType == "SC" ? "T_PERMMASTER_SC" : "T_PERMMASTER_NO";
-            string seasonSql = sourceType == "SC" ? "NVL(TRIM(m.SEASON), '-')" : "'-'";
-            string validFromSql = sourceType == "SC"
-                ? "NVL(TO_CHAR(m.BEGINDATE, 'DD-MM-YYYY'), '-')"
-                : "'-'";
-            string validToSql = sourceType == "SC"
-                ? "NVL(TO_CHAR(m.ENDDATE, 'DD-MM-YYYY'), '-')"
-                : "'-'";
-
-            string sql = @"
-                SELECT '" + sourceType + @"' SOURCE_TYPE,
-                       m.PERM_ID,
-                       NVL(TRIM(m.PERMNBR_ID), TRIM(m.PERMNBR)) PERMNBR,
-                       NVL(TRIM(a.AUTHOR_NAME), TRIM(m.AUTHOR_ID)) AUTHOR,
-                       TRIM(m.PERMTYPE) PTYPE,
-                       NVL(TRIM(m.FLIGHTTYPE), '" + sourceType + @"') FTYPE,
-                       TRIM(m.PERMNBR) PERM_NUMBER,
-                       NVL(TRIM(m.VERSION), '-') VERSION_NAME,
-                       " + seasonSql + @" SEASON_NAME,
-                       TO_CHAR(m.PERMDATE, 'DD-MM-YYYY') PERMISSION_DATE,
-                       TRIM(m.OPER_ID) OPER,
-                       NVL(TO_CHAR(m.VALIDHOURS), '-') VALID_HOURS,
-                       " + validFromSql + @" VALID_FROM,
-                       " + validToSql + @" VALID_TO,
-                       NVL(m.REFERENCE, '-') REFERENCE_VALUE,
-                       NVL(m.PERMCONTENT, '-') CONTENT_VALUE,
-                       NVL(m.BILLINGADDRESS, '-') BILLING_ADDRESS,
-                       NVL(TRIM(m.STATUS), '-') STATUS_VALUE,
-                       NVL(TRIM(m.LASTUSER), '-') LAST_USER,
-                       NVL(TO_CHAR(m.LASTMODIFY, 'DD-MM-YYYY HH24:MI:SS'), '-') LAST_MODIFY
-                FROM " + tableName + @" m
-                LEFT JOIN M_FPAUTHOR a ON a.AUTHOR_CODE = m.AUTHOR_ID
-                WHERE m.PERM_ID = :permId";
-
-            using (var command = new OracleCommand(sql, connection))
-            {
-                command.BindByName = true;
-                command.CommandTimeout = 60;
-                command.Parameters.Add("permId", OracleDbType.Int64).Value = permId;
-
-                using (var reader = command.ExecuteReader())
-                {
-                    if (!reader.Read()) return null;
-
-                    return new PermissionMasterInfo
-                    {
-                        SourceType = ReadString(reader, "SOURCE_TYPE"),
-                        PermId = ReadInt64(reader, "PERM_ID"),
-                        PermNbr = ReadString(reader, "PERMNBR"),
-                        Author = ReadString(reader, "AUTHOR"),
-                        PType = ReadString(reader, "PTYPE"),
-                        FType = ReadString(reader, "FTYPE"),
-                        Number = ReadString(reader, "PERM_NUMBER"),
-                        Version = ReadString(reader, "VERSION_NAME"),
-                        Season = ReadString(reader, "SEASON_NAME"),
-                        PermissionDate = ReadString(reader, "PERMISSION_DATE"),
-                        Oper = ReadString(reader, "OPER"),
-                        ValidHours = ReadString(reader, "VALID_HOURS"),
-                        ValidFrom = ReadString(reader, "VALID_FROM"),
-                        ValidTo = ReadString(reader, "VALID_TO"),
-                        Reference = ReadString(reader, "REFERENCE_VALUE"),
-                        Content = ReadString(reader, "CONTENT_VALUE"),
-                        BillingAddress = ReadString(reader, "BILLING_ADDRESS"),
-                        Status = ReadString(reader, "STATUS_VALUE"),
-                        LastUser = ReadString(reader, "LAST_USER"),
-                        LastModify = ReadString(reader, "LAST_MODIFY")
-                    };
-                }
             }
         }
 

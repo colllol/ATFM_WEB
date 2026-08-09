@@ -213,45 +213,6 @@ body.spa-modal-open { overflow: hidden; }
 }
 
 .spa-modal-body { padding: 15px 18px; overflow: auto; }
-.spa-modal-body h3 {
-    margin: 16px 0 8px;
-    color: #1b506f;
-    font-size: 15px;
-    text-transform: uppercase;
-}
-
-.spa-master-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(150px, 1fr));
-    gap: 8px;
-}
-
-.spa-master-item {
-    min-height: 54px;
-    padding: 8px 10px;
-    border: 1px solid #d5e5f0;
-    border-radius: 5px;
-    background: #f7fbfe;
-}
-
-.spa-master-item span {
-    display: block;
-    margin-bottom: 4px;
-    color: #6e8495;
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.spa-master-item strong {
-    display: block;
-    color: #173d58;
-    font-size: 12px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-
-.spa-master-wide { grid-column: span 5; }
 .spa-detail-table { min-width: 1650px; }
 .spa-detail-table .spa-text-cell {
     max-width: 260px;
@@ -259,14 +220,6 @@ body.spa-modal-open { overflow: hidden; }
     white-space: normal;
     overflow-wrap: anywhere;
 }
-
-.spa-detail-loading,
-.spa-detail-error {
-    grid-column: 1 / -1;
-    padding: 25px;
-    text-align: center;
-}
-.spa-detail-error { color: #bd2f2f; }
 
 .spa-modal-footer {
     padding: 10px 18px;
@@ -276,7 +229,5 @@ body.spa-modal-open { overflow: hidden; }
 
 @media (max-width: 900px) {
     .spa-filter-card { flex-wrap: wrap; }
-    .spa-master-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
-    .spa-master-wide { grid-column: span 2; }
     .spa-result-head { flex-direction: column; }
 }

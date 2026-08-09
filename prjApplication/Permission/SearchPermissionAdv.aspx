@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-2") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -70,8 +70,6 @@
                 <button id="spaDetailClose" class="spa-modal-close" type="button" aria-label="Close">&times;</button>
             </div>
             <div class="spa-modal-body">
-                <div id="spaMasterInfo" class="spa-master-grid"></div>
-                <h3>Flight details</h3>
                 <div class="spa-detail-table-wrap">
                     <table class="spa-table spa-detail-table">
                         <thead>
@@ -107,5 +105,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-1") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-2") %>"></script>
 </asp:Content>
