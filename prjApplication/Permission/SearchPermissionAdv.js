@@ -109,10 +109,15 @@
             }).join('');
         }
 
-        document.getElementById('spaTotal').textContent = filteredPermissions.length === permissions.length
-            ? 'Tổng số: ' + permissions.length.toLocaleString('vi-VN')
-            : 'Tổng số: ' + filteredPermissions.length.toLocaleString('vi-VN') +
-                ' / ' + permissions.length.toLocaleString('vi-VN');
+        var totalFlights = filteredPermissions.reduce(function (total, item) {
+            return total + Number(item.DetailCount || 0);
+        }, 0);
+        document.getElementById('spaTotal').textContent =
+            'Tổng số phép: ' + filteredPermissions.length.toLocaleString('vi-VN') +
+            ' • Tổng số chuyến bay: ' + totalFlights.toLocaleString('vi-VN') +
+            (filteredPermissions.length === permissions.length
+                ? ''
+                : ' / ' + permissions.length.toLocaleString('vi-VN') + ' phép');
         document.getElementById('spaPager').hidden = filteredPermissions.length <= pageSize;
         document.getElementById('spaPageInfo').textContent = 'Trang ' + currentPage + '/' + totalPages;
         document.getElementById('spaPrev').disabled = currentPage <= 1;

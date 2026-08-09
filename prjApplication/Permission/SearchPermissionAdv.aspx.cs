@@ -21,6 +21,7 @@ namespace prjApplication.Permission
             public string Version { get; set; }
             public string PermissionDate { get; set; }
             public string Oper { get; set; }
+            public int DetailCount { get; set; }
         }
 
         private sealed class PermissionFlightInfo
@@ -87,7 +88,7 @@ namespace prjApplication.Permission
 
                 const string sql = @"
                     SELECT SOURCE_TYPE, PERM_ID, PERMNBR, AUTHOR, PTYPE, FTYPE,
-                           PERM_NUMBER, VERSION_NAME, PERMISSION_DATE, OPER
+                           PERM_NUMBER, VERSION_NAME, PERMISSION_DATE, OPER, DETAIL_COUNT
                     FROM
                     (
                         SELECT 'SC' SOURCE_TYPE,
@@ -99,7 +100,21 @@ namespace prjApplication.Permission
                                TRIM(m.PERMNBR) PERM_NUMBER,
                                NVL(TRIM(m.VERSION), '-') VERSION_NAME,
                                TO_CHAR(m.PERMDATE, 'DD-MM-YYYY') PERMISSION_DATE,
-                               TRIM(m.OPER_ID) OPER
+                               TRIM(m.OPER_ID) OPER,
+                               (
+                                   SELECT COUNT(*)
+                                   FROM T_PERMDETAIL_SC dc
+                                   WHERE dc.PERM_ID = m.PERM_ID
+                                     AND
+                                     (
+                                         :useTimeFilter = 0
+                                         OR LPAD(TRIM(dc.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                         OR LPAD(TRIM(dc.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                     )
+                                     AND (:fromAirp IS NULL OR UPPER(TRIM(dc.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
+                                     AND (:toAirp IS NULL OR UPPER(TRIM(dc.TO_AIRP)) LIKE '%' || :toAirp || '%')
+                                     AND (:via IS NULL OR UPPER(TRIM(dc.VIA)) LIKE '%' || :via || '%')
+                               ) DETAIL_COUNT
                         FROM T_PERMMASTER_SC m
                         LEFT JOIN M_FPAUTHOR a ON a.AUTHOR_CODE = m.AUTHOR_ID
                         WHERE m.PERMDATE >= :selectedDate
@@ -135,7 +150,21 @@ namespace prjApplication.Permission
                                TRIM(m.PERMNBR) PERM_NUMBER,
                                NVL(TRIM(m.VERSION), '-') VERSION_NAME,
                                TO_CHAR(m.PERMDATE, 'DD-MM-YYYY') PERMISSION_DATE,
-                               TRIM(m.OPER_ID) OPER
+                               TRIM(m.OPER_ID) OPER,
+                               (
+                                   SELECT COUNT(*)
+                                   FROM T_PERMDETAIL_NO dc
+                                   WHERE dc.PERM_ID = m.PERM_ID
+                                     AND
+                                     (
+                                         :useTimeFilter = 0
+                                         OR LPAD(TRIM(dc.ETD), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                         OR LPAD(TRIM(dc.ETA), 4, '0') BETWEEN :fromHhmm AND :toHhmm
+                                     )
+                                     AND (:fromAirp IS NULL OR UPPER(TRIM(dc.FROM_AIRP)) LIKE '%' || :fromAirp || '%')
+                                     AND (:toAirp IS NULL OR UPPER(TRIM(dc.TO_AIRP)) LIKE '%' || :toAirp || '%')
+                                     AND (:via IS NULL OR UPPER(TRIM(dc.VIA)) LIKE '%' || :via || '%')
+                               ) DETAIL_COUNT
                         FROM T_PERMMASTER_NO m
                         LEFT JOIN M_FPAUTHOR a ON a.AUTHOR_CODE = m.AUTHOR_ID
                         WHERE m.PERMDATE >= :selectedDate
@@ -193,7 +222,8 @@ namespace prjApplication.Permission
                                 Number = ReadString(reader, "PERM_NUMBER"),
                                 Version = ReadString(reader, "VERSION_NAME"),
                                 PermissionDate = ReadString(reader, "PERMISSION_DATE"),
-                                Oper = ReadString(reader, "OPER")
+                                Oper = ReadString(reader, "OPER"),
+                                DetailCount = ReadInt32(reader, "DETAIL_COUNT")
                             });
                         }
                     }
@@ -460,6 +490,12 @@ namespace prjApplication.Permission
         {
             object value = reader[columnName];
             return value == DBNull.Value ? 0L : Convert.ToInt64(value, CultureInfo.InvariantCulture);
+        }
+
+        private static int ReadInt32(OracleDataReader reader, string columnName)
+        {
+            object value = reader[columnName];
+            return value == DBNull.Value ? 0 : Convert.ToInt32(value, CultureInfo.InvariantCulture);
         }
 
         private static string ReadString(OracleDataReader reader, string columnName)
