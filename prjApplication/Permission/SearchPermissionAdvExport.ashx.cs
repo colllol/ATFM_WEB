@@ -35,7 +35,13 @@ namespace prjApplication.Permission
         {
             try
             {
-                DateTime permissionDate = ParsePermissionDate(context.Request.QueryString["permissionDate"]);
+                string legacyPermissionDate = context.Request.QueryString["permissionDate"];
+                DateTime fromPermissionDate = ParsePermissionDate(
+                    context.Request.QueryString["fromPermissionDate"] ?? legacyPermissionDate);
+                DateTime toPermissionDate = ParsePermissionDate(
+                    context.Request.QueryString["toPermissionDate"] ?? legacyPermissionDate);
+                if (fromPermissionDate > toPermissionDate)
+                    throw new ArgumentException("Từ ngày cấp phép không được lớn hơn Đến ngày cấp phép.");
                 string fromTimeText = (context.Request.QueryString["fromTime"] ?? String.Empty).Trim();
                 string toTimeText = (context.Request.QueryString["toTime"] ?? String.Empty).Trim();
                 bool useTimeFilter = fromTimeText.Length > 0 || toTimeText.Length > 0;
@@ -73,8 +79,8 @@ namespace prjApplication.Permission
                 {
                     command.BindByName = true;
                     command.CommandTimeout = 180;
-                    command.Parameters.Add("selectedDate", OracleDbType.Date).Value = permissionDate.Date;
-                    command.Parameters.Add("nextDate", OracleDbType.Date).Value = permissionDate.Date.AddDays(1);
+                    command.Parameters.Add("selectedDate", OracleDbType.Date).Value = fromPermissionDate.Date;
+                    command.Parameters.Add("nextDate", OracleDbType.Date).Value = toPermissionDate.Date.AddDays(1);
                     command.Parameters.Add("useDetailFilter", OracleDbType.Int32).Value = useDetailFilter ? 1 : 0;
                     command.Parameters.Add("useTimeFilter", OracleDbType.Int32).Value = useTimeFilter ? 1 : 0;
                     command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value =
@@ -104,10 +110,11 @@ namespace prjApplication.Permission
                         context.Response.AddHeader(
                             "Content-Disposition",
                             "attachment; filename=SearchPermissionAdv_" +
-                            permissionDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture) + ".xls");
+                            fromPermissionDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture) + "_" +
+                            toPermissionDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture) + ".xls");
                         context.Response.BinaryWrite(Encoding.UTF8.GetPreamble());
-                        context.Response.Write(BuildExcelHeader(permissionDate, useTimeFilter, fromTime, toTime,
-                            fromAirp, toAirp, via));
+                        context.Response.Write(BuildExcelHeader(fromPermissionDate, toPermissionDate,
+                            useTimeFilter, fromTime, toTime, fromAirp, toAirp, via));
 
                         while (reader.Read())
                         {
@@ -141,7 +148,8 @@ namespace prjApplication.Permission
         }
 
         private static string BuildExcelHeader(
-            DateTime permissionDate,
+            DateTime fromPermissionDate,
+            DateTime toPermissionDate,
             bool useTimeFilter,
             TimeSpan fromTime,
             TimeSpan toTime,
@@ -150,7 +158,10 @@ namespace prjApplication.Permission
             string via)
         {
             var criteria = new StringBuilder();
-            criteria.Append("Ngày cấp phép: ").Append(permissionDate.ToString("dd-MM-yyyy"));
+            criteria.Append("Ngày cấp phép: ")
+                .Append(fromPermissionDate.ToString("dd-MM-yyyy"))
+                .Append(" - ")
+                .Append(toPermissionDate.ToString("dd-MM-yyyy"));
             if (useTimeFilter)
             {
                 criteria.Append(" | ETD/ETA: ")

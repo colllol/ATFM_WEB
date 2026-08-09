@@ -7,7 +7,8 @@
     var filteredPermissions = [];
     var lastDetailTrigger = null;
     var detailCache = {};
-    var activePermissionDate = '';
+    var activeFromPermissionDate = '';
+    var activeToPermissionDate = '';
     var activeFromTime = '';
     var activeToTime = '';
     var activeFromAirp = '';
@@ -170,15 +171,21 @@
     }
 
     function search() {
-        var dateInput = document.getElementById('spaPermissionDate');
+        var fromDateInput = document.getElementById('spaFromPermissionDate');
+        var toDateInput = document.getElementById('spaToPermissionDate');
         var fromTimeInput = document.getElementById('spaFromTime');
         var toTimeInput = document.getElementById('spaToTime');
         var fromAirpInput = document.getElementById('spaFromAirp');
         var toAirpInput = document.getElementById('spaToAirp');
         var viaInput = document.getElementById('spaVia');
-        if (!dateInput.value) {
-            alert('Vui lòng chọn ngày cấp phép.');
-            dateInput.focus();
+        if (!fromDateInput.value || !toDateInput.value) {
+            alert('Vui lòng chọn đầy đủ Từ ngày và Đến ngày cấp phép.');
+            (!fromDateInput.value ? fromDateInput : toDateInput).focus();
+            return;
+        }
+        if (fromDateInput.value > toDateInput.value) {
+            alert('Từ ngày cấp phép không được lớn hơn Đến ngày cấp phép.');
+            fromDateInput.focus();
             return;
         }
         var fromTimeValue = fromTimeInput.value.trim();
@@ -203,7 +210,8 @@
             '<tr><td colspan="9" class="spa-empty"><i class="fa fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>';
 
         post('SearchByPermissionDate', {
-            permissionDate: dateInput.value,
+            fromPermissionDate: fromDateInput.value,
+            toPermissionDate: toDateInput.value,
             fromTime: fromTimeValue,
             toTime: toTimeValue,
             fromAirp: fromAirpInput.value,
@@ -212,14 +220,17 @@
         })
             .then(function (result) {
                 permissions = result.Items || [];
-                activePermissionDate = dateInput.value;
+                activeFromPermissionDate = fromDateInput.value;
+                activeToPermissionDate = toDateInput.value;
                 activeFromTime = result.HasTimeFilter ? (result.FromTime || '') : '';
                 activeToTime = result.HasTimeFilter ? (result.ToTime || '') : '';
                 activeFromAirp = result.FromAirp || '';
                 activeToAirp = result.ToAirp || '';
                 activeVia = result.Via || '';
                 document.getElementById('spaSearchCaption').textContent =
-                    'Ngày cấp phép: ' + (result.PermissionDate || dateInput.value) +
+                    'Ngày cấp phép: ' +
+                    (result.FromPermissionDate || fromDateInput.value) + ' - ' +
+                    (result.ToPermissionDate || toDateInput.value) +
                     (result.HasTimeFilter ? ' • ETD/ETA ' + activeFromTime + ' - ' + activeToTime : '') +
                     (activeFromAirp ? ' • FROM ' + activeFromAirp : '') +
                     (activeToAirp ? ' • TO ' + activeToAirp : '') +
@@ -228,7 +239,8 @@
                 setExportEnabled(permissions.length > 0);
             })
             .catch(function (error) {
-                activePermissionDate = '';
+                activeFromPermissionDate = '';
+                activeToPermissionDate = '';
                 permissions = [];
                 filteredPermissions = [];
                 applyColumnFilters();
@@ -239,7 +251,7 @@
     }
 
     function exportExcel() {
-        if (!activePermissionDate || !permissions.length) {
+        if (!activeFromPermissionDate || !activeToPermissionDate || !permissions.length) {
             alert('Vui lòng Search dữ liệu trước khi Export Excel.');
             return;
         }
@@ -250,7 +262,8 @@
         }
 
         var query = [
-            'permissionDate=' + encodeURIComponent(activePermissionDate),
+            'fromPermissionDate=' + encodeURIComponent(activeFromPermissionDate),
+            'toPermissionDate=' + encodeURIComponent(activeToPermissionDate),
             'fromTime=' + encodeURIComponent(activeFromTime),
             'toTime=' + encodeURIComponent(activeToTime),
             'fromAirp=' + encodeURIComponent(activeFromAirp),
@@ -498,21 +511,24 @@
     }
 
     function init() {
-        var dateInput = document.getElementById('spaPermissionDate');
+        var fromDateInput = document.getElementById('spaFromPermissionDate');
+        var toDateInput = document.getElementById('spaToPermissionDate');
         var fromTimeInput = document.getElementById('spaFromTime');
         var toTimeInput = document.getElementById('spaToTime');
         var fromAirpInput = document.getElementById('spaFromAirp');
         var toAirpInput = document.getElementById('spaToAirp');
         var viaInput = document.getElementById('spaVia');
-        if (!dateInput) return;
+        if (!fromDateInput || !toDateInput) return;
 
-        dateInput.value = isoToday();
+        fromDateInput.value = isoToday();
+        toDateInput.value = isoToday();
         fromTimeInput.value = '';
         toTimeInput.value = '';
         document.getElementById('spaSearch').addEventListener('click', search);
         document.getElementById('spaExportExcel').addEventListener('click', exportExcel);
         document.getElementById('spaClear').addEventListener('click', function () {
-            dateInput.value = isoToday();
+            fromDateInput.value = isoToday();
+            toDateInput.value = isoToday();
             fromTimeInput.value = '';
             toTimeInput.value = '';
             fromAirpInput.value = '';
@@ -522,14 +538,16 @@
             permissions = [];
             filteredPermissions = [];
             detailCache = {};
-            activePermissionDate = '';
+            activeFromPermissionDate = '';
+            activeToPermissionDate = '';
             activeFromTime = '';
             activeToTime = '';
             activeFromAirp = '';
             activeToAirp = '';
             activeVia = '';
             setExportEnabled(false);
-            document.getElementById('spaSearchCaption').textContent = 'Chọn ngày cấp phép và nhấn Search.';
+            document.getElementById('spaSearchCaption').textContent =
+                'Chọn khoảng ngày cấp phép và nhấn Search.';
             renderPermissions();
         });
         Array.prototype.forEach.call(document.querySelectorAll('[data-filter-field]'), function (input) {
@@ -538,7 +556,10 @@
                 if (event.key === 'Enter') event.preventDefault();
             });
         });
-        dateInput.addEventListener('keydown', function (event) {
+        fromDateInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') search();
+        });
+        toDateInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') search();
         });
         fromTimeInput.addEventListener('keydown', function (event) {

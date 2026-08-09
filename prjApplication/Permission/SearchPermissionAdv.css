@@ -36,10 +36,10 @@
     margin: 0;
 }
 
-.spa-field-date { min-width: 145px; }
-.spa-field-time { min-width: 92px; max-width: 100px; }
-.spa-field-criteria { min-width: 64px; max-width: 72px; }
-.spa-field-via { min-width: 100px; max-width: 120px; }
+.spa-field-date { min-width: 128px; max-width: 135px; }
+.spa-field-time { min-width: 86px; max-width: 92px; }
+.spa-field-criteria { min-width: 58px; max-width: 64px; }
+.spa-field-via { min-width: 88px; max-width: 100px; }
 
 .spa-time-input,
 #spaFromAirp,

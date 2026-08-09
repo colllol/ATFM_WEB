@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-7") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-8") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -14,9 +14,13 @@
         </header>
 
         <div class="spa-filter-card">
-            <label class="spa-field spa-field-date" for="spaPermissionDate">
-                <span>Ngày cấp phép</span>
-                <input id="spaPermissionDate" type="date" />
+            <label class="spa-field spa-field-date" for="spaFromPermissionDate">
+                <span>Từ ngày cấp phép</span>
+                <input id="spaFromPermissionDate" type="date" />
+            </label>
+            <label class="spa-field spa-field-date" for="spaToPermissionDate">
+                <span>Đến ngày cấp phép</span>
+                <input id="spaToPermissionDate" type="date" />
             </label>
             <label class="spa-field spa-field-time" for="spaFromTime">
                 <span>Từ giờ ETD/ETA</span>
@@ -52,8 +56,8 @@
         </div>
 
         <div class="spa-result-head">
-            <strong id="spaTotal">Tổng số: 0</strong>
-            <span id="spaSearchCaption">Chọn ngày cấp phép và nhấn Search.</span>
+            <strong id="spaTotal">Tổng số phép: 0 • Tổng số chuyến bay: 0</strong>
+            <span id="spaSearchCaption">Chọn khoảng ngày cấp phép và nhấn Search.</span>
         </div>
 
         <div class="spa-table-wrap">
@@ -141,5 +145,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-10") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-11") %>"></script>
 </asp:Content>

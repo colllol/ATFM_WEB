@@ -53,7 +53,8 @@ namespace prjApplication.Permission
 
         [WebMethod]
         public static object SearchByPermissionDate(
-            string permissionDate,
+            string fromPermissionDate,
+            string toPermissionDate,
             string fromTime,
             string toTime,
             string fromAirp,
@@ -62,7 +63,10 @@ namespace prjApplication.Permission
         {
             try
             {
-                DateTime selectedDate = ParsePermissionDate(permissionDate);
+                DateTime selectedFromDate = ParsePermissionDate(fromPermissionDate);
+                DateTime selectedToDate = ParsePermissionDate(toPermissionDate);
+                if (selectedFromDate > selectedToDate)
+                    throw new ArgumentException("Từ ngày cấp phép không được lớn hơn Đến ngày cấp phép.");
                 bool hasFromTime = !String.IsNullOrWhiteSpace(fromTime);
                 bool hasToTime = !String.IsNullOrWhiteSpace(toTime);
                 bool useTimeFilter = hasFromTime || hasToTime;
@@ -196,8 +200,8 @@ namespace prjApplication.Permission
                 {
                     command.BindByName = true;
                     command.CommandTimeout = 60;
-                    command.Parameters.Add("selectedDate", OracleDbType.Date).Value = selectedDate.Date;
-                    command.Parameters.Add("nextDate", OracleDbType.Date).Value = selectedDate.Date.AddDays(1);
+                    command.Parameters.Add("selectedDate", OracleDbType.Date).Value = selectedFromDate.Date;
+                    command.Parameters.Add("nextDate", OracleDbType.Date).Value = selectedToDate.Date.AddDays(1);
                     command.Parameters.Add("useDetailFilter", OracleDbType.Int32).Value = useDetailFilter ? 1 : 0;
                     command.Parameters.Add("useTimeFilter", OracleDbType.Int32).Value = useTimeFilter ? 1 : 0;
                     command.Parameters.Add("fromHhmm", OracleDbType.Varchar2).Value = selectedFromHhmm;
@@ -233,7 +237,8 @@ namespace prjApplication.Permission
                 {
                     Code = "00",
                     Message = "Success",
-                    PermissionDate = selectedDate.ToString("dd-MM-yyyy"),
+                    FromPermissionDate = selectedFromDate.ToString("dd-MM-yyyy"),
+                    ToPermissionDate = selectedToDate.ToString("dd-MM-yyyy"),
                     HasTimeFilter = useTimeFilter,
                     FromTime = useTimeFilter
                         ? selectedFromTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture)
