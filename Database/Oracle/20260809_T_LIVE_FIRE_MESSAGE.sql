@@ -173,7 +173,8 @@ END LIVE_FIRE_MESSAGE_PKG;
 /
 
 CREATE OR REPLACE PACKAGE BODY LIVE_FIRE_MESSAGE_PKG AS
-    c_menu_url CONSTANT VARCHAR2(200) := 'MessManagement/LiveFireMessage.aspx';
+    c_menu_url          CONSTANT VARCHAR2(200) := 'MessManagement/LiveFireMessage.aspx';
+    c_approval_menu_url CONSTANT VARCHAR2(200) := 'MessManagement/LiveFireMessageAccepted.aspx';
 
     FUNCTION PARSE_DATE(p_value IN VARCHAR2) RETURN DATE IS
     BEGIN
@@ -196,7 +197,13 @@ CREATE OR REPLACE PACKAGE BODY LIVE_FIRE_MESSAGE_PKG AS
           JOIN T_USERMENU um ON um.USER_ID = u.USERID
           JOIN T_MENUS m ON m.ID = um.MENU_ID
          WHERE LOWER(TRIM(u.USERNAME)) = LOWER(TRIM(p_user))
-           AND LOWER(TRIM(m.MENUURL)) = LOWER(c_menu_url)
+           AND (
+                LOWER(TRIM(m.MENUURL)) = LOWER(c_menu_url)
+                OR (
+                    UPPER(p_right) = 'PUB'
+                    AND LOWER(TRIM(m.MENUURL)) = LOWER(c_approval_menu_url)
+                )
+           )
            AND CASE UPPER(p_right)
                    WHEN 'ADD'  THEN NVL(um.R_ADD, 0)
                    WHEN 'EDIT' THEN NVL(um.R_EDIT, 0)
@@ -288,7 +295,12 @@ CREATE OR REPLACE PACKAGE BODY LIVE_FIRE_MESSAGE_PKG AS
                       FROM T_LIVE_FIRE_MESSAGE m
                      WHERE m.MESSAGE_DATE >= v_from_date
                        AND m.MESSAGE_DATE < v_to_date + 1
-                       AND (NVL(p_STATUS, -1) = -1 OR m.STATUS = p_STATUS)
+                       AND (
+                            NVL(p_STATUS, -1) = -1
+                            OR (p_STATUS = -2 AND m.STATUS IN (0, 3))
+                            OR (p_STATUS = -3 AND m.STATUS IN (1, 2, 4))
+                            OR m.STATUS = p_STATUS
+                       )
                        AND (v_keyword IS NULL
                             OR UPPER(m.MESSAGE_CODE) LIKE '%' || v_keyword || '%'
                             OR UPPER(m.SUBJECT) LIKE '%' || v_keyword || '%'
@@ -361,13 +373,16 @@ CREATE OR REPLACE PACKAGE BODY LIVE_FIRE_MESSAGE_PKG AS
         p_USER                IN VARCHAR2,
         p_ReturnCode          OUT NUMBER
     ) IS
-        v_id NUMBER;
+        v_id           NUMBER;
+        v_message_date DATE;
     BEGIN
         IF TRIM(p_SUBJECT) IS NULL OR TRIM(p_LOCATION_TEXT) IS NULL
            OR TRIM(p_DRAFT_CONTENT) IS NULL THEN
             p_ReturnCode := -4;
             RETURN;
         END IF;
+
+        v_message_date := PARSE_DATE(p_MESSAGE_DATE);
 
         IF NVL(p_ID, 0) = 0 THEN
             IF NOT HAS_MENU_RIGHT(p_USER, 'ADD') THEN
@@ -389,7 +404,7 @@ CREATE OR REPLACE PACKAGE BODY LIVE_FIRE_MESSAGE_PKG AS
             )
             VALUES
             (
-                v_id, PARSE_DATE(p_MESSAGE_DATE), TRIM(p_MESSAGE_CODE),
+                v_id, v_message_date, TRIM(p_MESSAGE_CODE),
                 TRIM(p_SUBJECT), p_INTRO_TEXT, TRIM(p_LOCATION_TEXT),
                 p_COORDINATES_JSON, p_COORDINATES_TEXT,
                 p_FIRING_DIRECTION, p_TRAJECTORY_HEIGHT, p_TRAJECTORY_RANGE,
@@ -408,7 +423,7 @@ CREATE OR REPLACE PACKAGE BODY LIVE_FIRE_MESSAGE_PKG AS
 
             v_id := p_ID;
             UPDATE T_LIVE_FIRE_MESSAGE
-               SET MESSAGE_DATE = PARSE_DATE(p_MESSAGE_DATE),
+               SET MESSAGE_DATE = v_message_date,
                    MESSAGE_CODE = TRIM(p_MESSAGE_CODE),
                    SUBJECT = TRIM(p_SUBJECT), INTRO_TEXT = p_INTRO_TEXT,
                    LOCATION_TEXT = TRIM(p_LOCATION_TEXT),
@@ -566,7 +581,7 @@ CREATE OR REPLACE PACKAGE BODY LIVE_FIRE_MESSAGE_PKG AS
         DELETE FROM T_PLAN_MESSAGE
          WHERE STATUS = 0
            AND MESS_TYPE = 'LIVE FIRE MESSAGE'
-           AND LISTFLIGHTID = TO_CHAR(p_ID);
+           AND DBMS_LOB.SUBSTR(LISTFLIGHTID, 4000, 1) = TO_CHAR(p_ID);
 
         INSERT INTO T_PLAN_MESSAGE
         (

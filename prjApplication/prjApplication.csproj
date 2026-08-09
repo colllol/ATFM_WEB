@@ -202,6 +202,9 @@
     <Content Include="MessManagement\LiveFireMessage.aspx" />
     <Content Include="MessManagement\LiveFireMessage.css" />
     <Content Include="MessManagement\LiveFireMessage.js" />
+    <Content Include="MessManagement\LiveFireMessageAccepted.aspx" />
+    <Content Include="MessManagement\LiveFireMessageAccepted.css" />
+    <Content Include="MessManagement\LiveFireMessageAccepted.js" />
     <Content Include="Properties\001 hungtn\WebForm1.aspx" />
     <Content Include="ActionHistory\List_ActionHistoryLogin.aspx" />
     <Content Include="ActionHistory\List_ActionHistory.aspx" />
@@ -1695,6 +1698,13 @@
     </Compile>
     <Compile Include="MessManagement\LiveFireMessage.aspx.designer.cs">
       <DependentUpon>LiveFireMessage.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="MessManagement\LiveFireMessageAccepted.aspx.cs">
+      <DependentUpon>LiveFireMessageAccepted.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="MessManagement\LiveFireMessageAccepted.aspx.designer.cs">
+      <DependentUpon>LiveFireMessageAccepted.aspx</DependentUpon>
     </Compile>
     <!-- Bản lưu để tái sử dụng, không tham gia biên dịch vì dùng cùng class với ATFM.Master. -->
     <None Include="Masters\ATFM - Copy.Master.cs">

@@ -15,12 +15,9 @@
             </label>
             <label>TRẠNG THÁI
                 <select id="lfStatus">
-                    <option value="-1">TẤT CẢ</option>
+                    <option value="-2">NHÁP VÀ TỪ CHỐI</option>
                     <option value="0">NHÁP</option>
-                    <option value="2">CHỜ DUYỆT</option>
-                    <option value="1">ĐÃ DUYỆT</option>
                     <option value="3">TỪ CHỐI</option>
-                    <option value="4">ĐÃ EXPORT</option>
                 </select>
             </label>
             <label class="lf-keyword">TỪ KHÓA
@@ -40,7 +37,7 @@
 
         <div class="lf-summary">
             <span id="lfTotal">TỔNG SỐ: 0</span>
-            <span class="lf-status-help">Nháp → Chờ duyệt → Đã duyệt → Đã export</span>
+            <span class="lf-status-help">Màn hình nhập liệu: Nháp và điện văn bị từ chối</span>
         </div>
 
         <div class="lf-grid-wrap">
@@ -145,9 +142,6 @@
             <footer>
                 <button id="lfSave" type="button" class="lf-btn lf-primary">LƯU NHÁP</button>
                 <button id="lfSubmit" type="button" class="lf-btn lf-success">GỬI DUYỆT</button>
-                <button id="lfApprove" type="button" class="lf-btn lf-success">DUYỆT</button>
-                <button id="lfReject" type="button" class="lf-btn lf-danger">TỪ CHỐI</button>
-                <button id="lfExport" type="button" class="lf-btn lf-warning">EXPORT ĐIỆN VĂN</button>
                 <button id="lfCancel" type="button" class="lf-btn lf-light">ĐÓNG</button>
             </footer>
         </div>
