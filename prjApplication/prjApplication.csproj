@@ -199,6 +199,9 @@
     <Content Include="FinishFlights\ListFinishedFlightsMilitaryReport.aspx" />
     <Content Include="FinishFlights\ListFlightAllNotCancel.aspx" />
     <Content Include="FinishFlights\ListFlightOnMess.aspx" />
+    <Content Include="MessManagement\LiveFireMessage.aspx" />
+    <Content Include="MessManagement\LiveFireMessage.css" />
+    <Content Include="MessManagement\LiveFireMessage.js" />
     <Content Include="Properties\001 hungtn\WebForm1.aspx" />
     <Content Include="ActionHistory\List_ActionHistoryLogin.aspx" />
     <Content Include="ActionHistory\List_ActionHistory.aspx" />
@@ -1685,6 +1688,13 @@
     </Compile>
     <Compile Include="FinishFlights\ListFinishedFlightsAirspaceReport.aspx.designer.cs">
       <DependentUpon>ListFinishedFlightsAirspaceReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="MessManagement\LiveFireMessage.aspx.cs">
+      <DependentUpon>LiveFireMessage.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="MessManagement\LiveFireMessage.aspx.designer.cs">
+      <DependentUpon>LiveFireMessage.aspx</DependentUpon>
     </Compile>
     <!-- Bản lưu để tái sử dụng, không tham gia biên dịch vì dùng cùng class với ATFM.Master. -->
     <None Include="Masters\ATFM - Copy.Master.cs">
