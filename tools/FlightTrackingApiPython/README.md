@@ -21,6 +21,8 @@ python main.py
 
 Các endpoint:
 
+- `GET /` hoặc `GET /swagger/`: mở Swagger UI để xem và thử API trên trình duyệt.
+- `GET /openapi.json`: tải đặc tả Swagger/OpenAPI dạng JSON.
 - `GET /health/live`: kiểm tra tiến trình đang chạy.
 - `GET /health/ready`: kiểm tra PostgreSQL có kết nối được hay không.
 - `GET /api/v1/tracks?date=yyyy-MM-dd`: lấy vị trí mới nhất của từng callsign.
@@ -54,6 +56,9 @@ Trên máy đích, giải nén ZIP, sửa các giá trị trong `FlightTrackingA
 Vì bản EXE chạy ẩn, dùng `http://127.0.0.1:5088/health/live` và
 `http://127.0.0.1:5088/health/ready` để kiểm tra trạng thái. Có thể dừng tiến trình bằng Task Manager
 với tên `ATFM-FlightTrackingApi.exe`.
+
+Mở `http://127.0.0.1:5088/swagger/` trên máy chạy API để dùng Swagger UI. Nếu truy cập từ máy
+khác, thay `127.0.0.1` bằng IP của máy chạy API và bảo đảm firewall cho phép cổng 5088.
 
 Nếu chỉ sao chép riêng EXE mà chưa có file cấu hình, chạy
 `.\ATFM-FlightTrackingApi.exe --init-config` để tạo file mới cạnh EXE.

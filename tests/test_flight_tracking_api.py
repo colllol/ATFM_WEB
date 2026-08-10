@@ -15,6 +15,24 @@ def config():
 
 
 class FlightTrackingApiTests(unittest.TestCase):
+    def test_swagger_ui_and_openapi_spec_are_available(self):
+        app = main.create_app(config())
+        client = app.test_client()
+
+        redirect_response = client.get("/")
+        ui_response = client.get("/swagger/")
+        spec_response = client.get("/openapi.json")
+        specification = spec_response.get_json()
+
+        self.assertEqual(302, redirect_response.status_code)
+        self.assertEqual("/swagger/", redirect_response.headers["Location"])
+        self.assertEqual(200, ui_response.status_code)
+        self.assertIn(b"swagger-ui", ui_response.data.lower())
+        self.assertEqual(200, spec_response.status_code)
+        self.assertIn("/health/live", specification["paths"])
+        self.assertIn("/health/ready", specification["paths"])
+        self.assertIn("/api/v1/tracks", specification["paths"])
+
     def test_live_does_not_require_api_key(self):
         app = main.create_app(config())
         response = app.test_client().get("/health/live")
