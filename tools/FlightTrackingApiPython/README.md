@@ -39,7 +39,8 @@ Trên máy Windows đã cài Python, chạy từ thư mục gốc project:
 
 Kết quả:
 
-- `tools\dist\ATFM-FlightTrackingApi.exe`: file chạy độc lập.
+- `tools\dist\ATFM-FlightTrackingApi.exe`: file chạy độc lập dưới nền, không hiện cửa sổ
+  console hoặc biểu tượng trên taskbar Windows.
 - `tools\dist\ATFM-FlightTrackingApi-package.zip`: gói chuyển máy gồm EXE, file cấu hình
   `FlightTrackingApi.local.json` có thể sửa trực tiếp và README.
 
@@ -49,6 +50,10 @@ Trên máy đích, giải nén ZIP, sửa các giá trị trong `FlightTrackingA
 .\ATFM-FlightTrackingApi.exe --check
 .\ATFM-FlightTrackingApi.exe
 ```
+
+Vì bản EXE chạy ẩn, dùng `http://127.0.0.1:5088/health/live` và
+`http://127.0.0.1:5088/health/ready` để kiểm tra trạng thái. Có thể dừng tiến trình bằng Task Manager
+với tên `ATFM-FlightTrackingApi.exe`.
 
 Nếu chỉ sao chép riêng EXE mà chưa có file cấu hình, chạy
 `.\ATFM-FlightTrackingApi.exe --init-config` để tạo file mới cạnh EXE.
