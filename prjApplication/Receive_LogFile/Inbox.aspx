@@ -329,14 +329,15 @@
             var _date1 = new Date().format('mm-yyyy');
             var _date2 = $('#txtFromDateSearch').val().substring(3,($('#txtFromDateSearch').val().length));
             
-            if (_date1 == _date2)
-            {                
-                LoadData();
-            }                
-            else
-            {                
-                LoadDataLogFile();
-            }
+            //if (_date1 == _date2)
+            //{                
+            //    LoadData();
+            //}                
+            //else
+            //{                
+            //    LoadDataLogFile();
+            //}
+            LoadData();
                
         }
         function lblNbr_OnRowClick(ty, id) {
