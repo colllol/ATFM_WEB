@@ -1,5 +1,7 @@
 import unittest
 from datetime import datetime, timezone
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from tools.FlightTrackingApiPython import main
 
@@ -62,6 +64,20 @@ class FlightTrackingApiTests(unittest.TestCase):
     def test_validate_config_requires_database_credentials(self):
         with self.assertRaisesRegex(ValueError, "host"):
             main.validate_config(main.deepcopy(main.DEFAULT_CONFIG))
+
+    def test_loads_tracks_sync_shared_config(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "TracksSync.local.json"
+            path.write_text(
+                '{"postgres":{"host":"db","username":"reader","password":"secret"},'
+                '"flight_tracking_api":{"port":5099}}',
+                encoding="utf-8",
+            )
+
+            loaded = main.load_config(path)
+
+        self.assertEqual("db", loaded["postgres"]["host"])
+        self.assertEqual(5099, loaded["flight_tracking_api"]["port"])
 
 
 if __name__ == "__main__":

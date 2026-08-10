@@ -35,6 +35,7 @@ python .\tools\TracksSyncPython\main.py --mode check
 python .\tools\TracksSyncPython\main.py --mode sync
 python .\tools\TracksSyncPython\main.py --mode verify
 python .\tools\TracksSyncPython\main.py --mode all
+python .\tools\TracksSyncPython\main.py --mode config
 ```
 
 Chay lai toan bo, bo qua watermark:
@@ -51,15 +52,21 @@ python .\tools\TracksSyncPython\main.py
 
 ## Build va ban EXE
 
-Build ca hai ban bang lenh:
+Build TracksSync, Flight Tracking API va goi chuyen may bang lenh:
 
 ```powershell
 .\tools\build_tracks_sync.ps1
 ```
 
-- `tools\dist\ATFM-TracksSync.exe`: giao dien Windows, dung cac nut Kiem tra/Ghi/Xac minh, Auto theo chu ky giay va Stop de dung Auto.
-- `tools\dist\ATFM-TracksSync-CLI.exe`: ban dong lenh, ho tro `--mode check|sync|verify|all` va `--full`.
+- `tools\dist\ATFM-TracksSync.exe`: giao dien Windows, co nut Test cau hinh, Kiem tra/Ghi/Xac minh, Auto va Stop.
+- `tools\dist\ATFM-TracksSync-CLI.exe`: ban dong lenh, ho tro `--mode config|check|sync|verify|all` va `--full`.
+- `tools\dist\ATFM-FlightTrackingApi.exe`: API doc PostgreSQL, chay doc lap voi TracksSync.
+- `tools\dist\ATFM-TracksSync-package.zip`: goi chuyen may gom TracksSync GUI, API va mot file `TracksSync.local.json` dung chung.
 - Toan bo file trung gian cua PyInstaller nam trong `tools\build`.
+
+Khi mo `ATFM-TracksSync.exe`, chuong trinh tu kiem tra va khoi dong
+`ATFM-FlightTrackingApi.exe` o che do an cua so console. API la tien trinh doc lap, tiep tuc chay khi dong
+giao dien TracksSync. Hai file EXE phai nam cung thu muc.
 
 Che do Auto chay lien tuc theo thu tu Kiem tra -> Ghi -> Xac minh tren cung tap du lieu moi.
 Sau khi mot luot hoan tat, tool moi dem nguoc so giay da nhap va bat dau luot ke tiep.
@@ -81,3 +88,18 @@ Với bản EXE trong `tools\dist`, tool tự tìm thư mục gốc project đ�
 `TracksSync.local.json` cùng thư mục với EXE.
 
 Xem mau tai `TracksSync.sample.json`. File `*.local.json` va `*.watermark.log` khong nen dua len Git.
+
+Section API trong cung file cau hinh:
+
+```json
+"flight_tracking_api": {
+  "host": "0.0.0.0",
+  "port": 5088,
+  "threads": 8,
+  "max_lookback_days": 7
+}
+```
+
+`host = 0.0.0.0` cho phep API lang nghe tren cac card mang cua may. TracksSync tu dung
+`127.0.0.1` khi goi health check noi bo. Nut **Test cau hinh** kiem tra PostgreSQL, Oracle, GeoJSON FIR
+va trang thai san sang cua API, khong ghi du lieu nghiep vu.

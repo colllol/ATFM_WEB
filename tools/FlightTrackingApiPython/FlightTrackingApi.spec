@@ -4,7 +4,7 @@ a = Analysis(
     ["main.py"],
     pathex=[],
     binaries=[],
-    datas=[("FlightTrackingApi.example.json", ".")],
+    datas=[("..\\TracksSyncPython\\TracksSync.sample.json", ".")],
     hiddenimports=["psycopg_binary"],
     hookspath=[],
     hooksconfig={},

@@ -39,8 +39,8 @@ if (Test-Path -LiteralPath $zipPath) {
 
 New-Item -ItemType Directory -Path $packagePath | Out-Null
 Copy-Item -LiteralPath (Join-Path $distPath "ATFM-FlightTrackingApi.exe") -Destination $packagePath
-Copy-Item -LiteralPath (Join-Path $sourcePath "FlightTrackingApi.example.json") `
-    -Destination (Join-Path $packagePath "FlightTrackingApi.local.json")
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot "TracksSyncPython\TracksSync.sample.json") `
+    -Destination (Join-Path $packagePath "TracksSync.local.json")
 Copy-Item -LiteralPath (Join-Path $sourcePath "README.md") -Destination $packagePath
 Compress-Archive -Path (Join-Path $packagePath "*") -DestinationPath $zipPath -CompressionLevel Optimal
 

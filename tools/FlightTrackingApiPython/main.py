@@ -15,7 +15,7 @@ from waitress import serve
 
 
 LOGGER = logging.getLogger("flight_tracking_api")
-CONFIG_FILE_NAME = "FlightTrackingApi.local.json"
+CONFIG_FILE_NAME = "TracksSync.local.json"
 DATE_FORMAT = "%Y-%m-%d"
 
 LATEST_TRACKS_SQL = """
@@ -55,12 +55,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "sslmode": "prefer",
         "connect_timeout": 10,
     },
-    "server": {
+    "flight_tracking_api": {
         "host": "0.0.0.0",
         "port": 5088,
         "threads": 8,
-    },
-    "api": {
         "max_lookback_days": 7,
     },
 }
@@ -77,8 +75,19 @@ def resource_directory() -> Path:
     return Path(bundle_path) if bundle_path else Path(__file__).resolve().parent
 
 
+def config_candidates() -> List[Path]:
+    paths: List[Path] = []
+    environment_path = os.getenv("TRACKS_CONFIG")
+    if environment_path:
+        paths.append(Path(environment_path))
+    paths.append(executable_directory() / CONFIG_FILE_NAME)
+    if not getattr(sys, "frozen", False):
+        paths.append(Path(__file__).resolve().parents[2] / "prjApplication" / "App_Data" / CONFIG_FILE_NAME)
+    return paths
+
+
 def default_config_path() -> Path:
-    return executable_directory() / CONFIG_FILE_NAME
+    return config_candidates()[0]
 
 
 def merge_config(target: Dict[str, Any], source: Dict[str, Any]) -> Dict[str, Any]:
@@ -92,23 +101,29 @@ def merge_config(target: Dict[str, Any], source: Dict[str, Any]) -> Dict[str, An
 
 def load_config(path: Optional[Path] = None) -> Dict[str, Any]:
     config = deepcopy(DEFAULT_CONFIG)
-    config_path = path or default_config_path()
+    config_path = path
+    if config_path is None:
+        config_path = next((candidate for candidate in config_candidates() if candidate.exists()), default_config_path())
     if config_path.exists():
-        with config_path.open("r", encoding="utf-8") as stream:
+        with config_path.open("r", encoding="utf-8-sig") as stream:
             loaded = json.load(stream)
         if not isinstance(loaded, dict):
             raise ValueError("File cấu hình phải chứa một JSON object.")
+        # Đọc được file FlightTrackingApi.local.json cũ trong giai đoạn chuyển đổi.
+        if "server" in loaded and "flight_tracking_api" not in loaded:
+            loaded["flight_tracking_api"] = dict(loaded["server"])
+            loaded["flight_tracking_api"].update(loaded.get("api", {}))
         merge_config(config, loaded)
 
     environment_values = {
-        ("postgres", "host"): os.getenv("FLIGHT_API_PG_HOST"),
-        ("postgres", "port"): os.getenv("FLIGHT_API_PG_PORT"),
-        ("postgres", "database"): os.getenv("FLIGHT_API_PG_DATABASE"),
-        ("postgres", "username"): os.getenv("FLIGHT_API_PG_USERNAME"),
-        ("postgres", "password"): os.getenv("FLIGHT_API_PG_PASSWORD"),
+        ("postgres", "host"): os.getenv("TRACKS_PG_HOST") or os.getenv("FLIGHT_API_PG_HOST"),
+        ("postgres", "port"): os.getenv("TRACKS_PG_PORT") or os.getenv("FLIGHT_API_PG_PORT"),
+        ("postgres", "database"): os.getenv("TRACKS_PG_DATABASE") or os.getenv("FLIGHT_API_PG_DATABASE"),
+        ("postgres", "username"): os.getenv("TRACKS_PG_USERNAME") or os.getenv("FLIGHT_API_PG_USERNAME"),
+        ("postgres", "password"): os.getenv("TRACKS_PG_PASSWORD") or os.getenv("FLIGHT_API_PG_PASSWORD"),
         ("postgres", "sslmode"): os.getenv("FLIGHT_API_PG_SSLMODE"),
-        ("server", "host"): os.getenv("FLIGHT_API_HOST"),
-        ("server", "port"): os.getenv("FLIGHT_API_PORT"),
+        ("flight_tracking_api", "host"): os.getenv("FLIGHT_API_HOST"),
+        ("flight_tracking_api", "port"): os.getenv("FLIGHT_API_PORT"),
     }
     for (section, key), value in environment_values.items():
         if value not in (None, ""):
@@ -116,9 +131,10 @@ def load_config(path: Optional[Path] = None) -> Dict[str, Any]:
 
     config["postgres"]["port"] = int(config["postgres"]["port"])
     config["postgres"]["connect_timeout"] = int(config["postgres"]["connect_timeout"])
-    config["server"]["port"] = int(config["server"]["port"])
-    config["server"]["threads"] = int(config["server"]["threads"])
-    config["api"]["max_lookback_days"] = int(config["api"]["max_lookback_days"])
+    config["flight_tracking_api"]["port"] = int(config["flight_tracking_api"]["port"])
+    config["flight_tracking_api"]["threads"] = int(config["flight_tracking_api"]["threads"])
+    config["flight_tracking_api"]["max_lookback_days"] = int(config["flight_tracking_api"]["max_lookback_days"])
+    config["_config_source"] = str(config_path.resolve()) if config_path.exists() else "environment/default"
     return config
 
 
@@ -129,12 +145,13 @@ def validate_config(config: Dict[str, Any]) -> None:
         raise ValueError("Thiếu cấu hình PostgreSQL: " + ", ".join(missing) + ".")
     if not 1 <= int(postgres["port"]) <= 65535:
         raise ValueError("postgres.port không hợp lệ.")
-    if not 1 <= int(config["server"]["port"]) <= 65535:
-        raise ValueError("server.port không hợp lệ.")
-    if not 1 <= int(config["server"]["threads"]) <= 128:
-        raise ValueError("server.threads phải từ 1 đến 128.")
-    if not 0 <= int(config["api"]["max_lookback_days"]) <= 366:
-        raise ValueError("api.max_lookback_days phải từ 0 đến 366.")
+    api = config["flight_tracking_api"]
+    if not 1 <= int(api["port"]) <= 65535:
+        raise ValueError("flight_tracking_api.port không hợp lệ.")
+    if not 1 <= int(api["threads"]) <= 128:
+        raise ValueError("flight_tracking_api.threads phải từ 1 đến 128.")
+    if not 0 <= int(api["max_lookback_days"]) <= 366:
+        raise ValueError("flight_tracking_api.max_lookback_days phải từ 0 đến 366.")
 
 
 def connection_parameters(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -211,7 +228,7 @@ def create_app(
             requested_date = datetime.now(timezone.utc).date()
 
         today = datetime.now(timezone.utc).date()
-        earliest = today - timedelta(days=config["api"]["max_lookback_days"])
+        earliest = today - timedelta(days=config["flight_tracking_api"]["max_lookback_days"])
         if requested_date < earliest or requested_date > today:
             return jsonify(error=f"Chỉ được truy vấn từ {earliest:%Y-%m-%d} đến {today:%Y-%m-%d}."), 400
 
@@ -235,7 +252,7 @@ def write_initial_config(target: Path) -> None:
     if target.exists():
         raise FileExistsError(f"File đã tồn tại: {target}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    example_path = resource_directory() / "FlightTrackingApi.example.json"
+    example_path = resource_directory() / "TracksSync.sample.json"
     if example_path.exists():
         shutil.copyfile(example_path, target)
     else:
@@ -268,19 +285,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     configure_console_encoding()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     args = parse_arguments(argv)
-    config_path = args.config or default_config_path()
+    config_path = args.config
 
     if args.init_config:
-        write_initial_config(config_path)
-        print(f"Đã tạo file cấu hình: {config_path}")
+        target_path = config_path or default_config_path()
+        write_initial_config(target_path)
+        print(f"Đã tạo file cấu hình: {target_path}")
         return 0
 
     try:
         config = load_config(config_path)
         if args.host:
-            config["server"]["host"] = args.host
+            config["flight_tracking_api"]["host"] = args.host
         if args.port:
-            config["server"]["port"] = args.port
+            config["flight_tracking_api"]["port"] = args.port
         validate_config(config)
         if args.check:
             check_database(config)
@@ -290,7 +308,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         LOGGER.error("Không thể khởi động: %s", exc)
         return 2
 
-    server = config["server"]
+    server = config["flight_tracking_api"]
     LOGGER.info("Flight Tracking API đang lắng nghe tại http://%s:%s", server["host"], server["port"])
     serve(create_app(config), host=server["host"], port=server["port"], threads=server["threads"])
     return 0

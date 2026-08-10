@@ -387,6 +387,21 @@ class TracksSyncTests(unittest.TestCase):
 
         self.assertIn("dung 0, sai 1, thieu 0", messages[-1])
 
+    def test_flight_api_base_url_uses_loopback_for_wildcard_host(self):
+        cfg = {"flight_tracking_api": {"host": "0.0.0.0", "port": 5088}}
+
+        self.assertEqual("http://127.0.0.1:5088", main.flight_api_base_url(cfg))
+
+    @patch.object(main, "flight_api_command")
+    @patch.object(main, "flight_api_is_running", return_value=True)
+    def test_start_flight_api_does_not_start_duplicate_process(self, _is_running, command):
+        cfg = {"flight_tracking_api": {"host": "0.0.0.0", "port": 5088}}
+
+        started = main.start_flight_api_hidden(cfg)
+
+        self.assertFalse(started)
+        command.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

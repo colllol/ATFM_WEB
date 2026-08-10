@@ -1,3 +1,5 @@
 psycopg[binary]>=3.2
 oracledb>=2.0
+Flask>=3.1,<4
+waitress>=3.0,<4
 pyinstaller>=6.0

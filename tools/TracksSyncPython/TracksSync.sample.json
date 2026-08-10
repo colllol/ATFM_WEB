@@ -4,7 +4,9 @@
     "port": 5432,
     "database": "postgres",
     "username": "postgres",
-    "password": "POSTGRES_PASSWORD"
+    "password": "POSTGRES_PASSWORD",
+    "sslmode": "prefer",
+    "connect_timeout": 10
   },
   "oracle": {
     "host": "ORACLE_HOST",
@@ -16,6 +18,12 @@
   },
   "fir": {
     "geojson_path": "C:\\Users\\Admin\\Downloads\\vietnam-fir-VVHM-VVHN.geojson"
+  },
+  "flight_tracking_api": {
+    "host": "0.0.0.0",
+    "port": 5088,
+    "threads": 8,
+    "max_lookback_days": 7
   },
   "watermark_path": ""
 }
