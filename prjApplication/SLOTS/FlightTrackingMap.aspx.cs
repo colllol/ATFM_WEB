@@ -4,9 +4,8 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
+using System.Net;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Web.Hosting;
 using System.Web.Script.Serialization;
 using System.Web.Services;
@@ -16,8 +15,6 @@ namespace prjApplication.SLOTS
 {
     public partial class FlightTrackingMap : prjApplication.ReportNew.ReportPageBase
     {
-        private static readonly HttpClient TrackApiClient = new HttpClient();
-
         private sealed class TrackRow
         {
             public string FlightId { get; set; }
@@ -136,49 +133,67 @@ namespace prjApplication.SLOTS
                 timeoutSeconds = 10;
             }
 
-            using (var request = new HttpRequestMessage(HttpMethod.Get, endpoint))
+            var request = (HttpWebRequest)WebRequest.Create(endpoint);
+            request.Method = "GET";
+            request.Accept = "application/json";
+            request.Timeout = timeoutSeconds * 1000;
+            request.ReadWriteTimeout = timeoutSeconds * 1000;
+
+            HttpWebResponse response = null;
+            try
             {
-                using (var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
-                using (HttpResponseMessage response = TrackApiClient.SendAsync(request, cancellation.Token).GetAwaiter().GetResult())
+                response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (WebException exception)
+            {
+                response = exception.Response as HttpWebResponse;
+                if (response == null)
                 {
-                    string content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        throw new InvalidOperationException(
-                            "Flight Tracking API trả về HTTP " + (int)response.StatusCode + ". " + LimitText(content, 300));
-                    }
-
-                    TrackApiResponse payload = new JavaScriptSerializer().Deserialize<TrackApiResponse>(content);
-                    if (payload == null || payload.flights == null) return new List<TrackRow>();
-
-                    var rows = new List<TrackRow>();
-                    foreach (TrackApiItem item in payload.flights)
-                    {
-                        DateTime updatedAt;
-                        if (item == null
-                            || String.IsNullOrWhiteSpace(item.callsign)
-                            || !DateTime.TryParseExact(
-                                item.updatedAtUtc,
-                                "yyyy-MM-dd'T'HH:mm:ss",
-                                CultureInfo.InvariantCulture,
-                                DateTimeStyles.None,
-                                out updatedAt))
-                        {
-                            continue;
-                        }
-
-                        rows.Add(new TrackRow
-                        {
-                            FlightId = item.flightIdCurrent ?? String.Empty,
-                            Callsign = item.callsign,
-                            UpdatedAt = updatedAt,
-                            Latitude = item.latitude,
-                            Longitude = item.longitude,
-                            Heading = item.heading
-                        });
-                    }
-                    return rows;
+                    throw new InvalidOperationException("Không thể kết nối Flight Tracking API tại " + baseUrl + ".", exception);
                 }
+            }
+
+            using (response)
+            using (Stream responseStream = response.GetResponseStream())
+            using (var reader = new StreamReader(responseStream ?? Stream.Null))
+            {
+                string content = reader.ReadToEnd();
+                if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
+                {
+                    throw new InvalidOperationException(
+                        "Flight Tracking API trả về HTTP " + (int)response.StatusCode + ". " + LimitText(content, 300));
+                }
+
+                TrackApiResponse payload = new JavaScriptSerializer().Deserialize<TrackApiResponse>(content);
+                if (payload == null || payload.flights == null) return new List<TrackRow>();
+
+                var rows = new List<TrackRow>();
+                foreach (TrackApiItem item in payload.flights)
+                {
+                    DateTime updatedAt;
+                    if (item == null
+                        || String.IsNullOrWhiteSpace(item.callsign)
+                        || !DateTime.TryParseExact(
+                            item.updatedAtUtc,
+                            "yyyy-MM-dd'T'HH:mm:ss",
+                            CultureInfo.InvariantCulture,
+                            DateTimeStyles.None,
+                            out updatedAt))
+                    {
+                        continue;
+                    }
+
+                    rows.Add(new TrackRow
+                    {
+                        FlightId = item.flightIdCurrent ?? String.Empty,
+                        Callsign = item.callsign,
+                        UpdatedAt = updatedAt,
+                        Latitude = item.latitude,
+                        Longitude = item.longitude,
+                        Heading = item.heading
+                    });
+                }
+                return rows;
             }
         }
 
