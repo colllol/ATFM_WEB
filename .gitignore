@@ -42,3 +42,5 @@ prjApplication/BinNews/
 prjApplication/Sound/DayFlight/
 **/PublishProfiles/
 **/artifacts/
+tools/build/FlightTrackingApi/
+tools/dist/ATFM-FlightTrackingApi-package/

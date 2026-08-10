@@ -128,7 +128,6 @@ namespace prjApplication.SLOTS
         private static List<TrackRow> LoadTodayTracks(DateTime today)
         {
             string baseUrl = RequireAppSetting("FlightTrackingApiBaseUrl").TrimEnd('/');
-            string apiKey = RequireAppSetting("FlightTrackingApiKey");
             string endpoint = baseUrl + "/api/v1/tracks?date=" + today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             int timeoutSeconds;
             if (!Int32.TryParse(ConfigurationManager.AppSettings["FlightTrackingApiTimeoutSeconds"], out timeoutSeconds)
@@ -139,7 +138,6 @@ namespace prjApplication.SLOTS
 
             using (var request = new HttpRequestMessage(HttpMethod.Get, endpoint))
             {
-                request.Headers.Add("X-API-Key", apiKey);
                 using (var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
                 using (HttpResponseMessage response = TrackApiClient.SendAsync(request, cancellation.Token).GetAwaiter().GetResult())
                 {
