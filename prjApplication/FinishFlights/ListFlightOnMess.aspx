@@ -675,9 +675,16 @@
                 'NotificationMode'
             ]);
 
-            $('#txtMessageDate').val(
+            var $messageDate = $('#txtMessageDate').val(
                 queryDate || dateFormat(new Date(), 'dd-mm-yyyy')
-            ).multiDate();
+            );
+
+            // multiDate la helper cuc bo cua mot so trang cu, khong phai
+            // plugin dung chung. Bo qua khi helper khong duoc nap; nut lich
+            // native ben canh van dam nhiem viec chon ngay.
+            if (typeof $.fn.multiDate === 'function') {
+                $messageDate.multiDate();
+            }
 
             syncNativeMessageDatePicker();
             $('#nativeMessageDatePicker').on('change', function () {
