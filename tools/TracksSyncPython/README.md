@@ -57,13 +57,14 @@ Build ca hai ban bang lenh:
 .\tools\build_tracks_sync.ps1
 ```
 
-- `tools\dist\ATFM-TracksSync.exe`: giao dien Windows, dung cac nut Kiem tra/Ghi/Xac minh va Auto theo chu ky giay.
+- `tools\dist\ATFM-TracksSync.exe`: giao dien Windows, dung cac nut Kiem tra/Ghi/Xac minh, Auto theo chu ky giay va Stop de dung Auto.
 - `tools\dist\ATFM-TracksSync-CLI.exe`: ban dong lenh, ho tro `--mode check|sync|verify|all` va `--full`.
 - Toan bo file trung gian cua PyInstaller nam trong `tools\build`.
 
 Che do Auto chay lien tuc theo thu tu Kiem tra -> Ghi -> Xac minh tren cung tap du lieu moi.
 Sau khi mot luot hoan tat, tool moi dem nguoc so giay da nhap va bat dau luot ke tiep.
-Auto chi dung khi dong ung dung.
+Nut Stop dung vong Auto va thoi gian dem nguoc. Neu mot luot dang thao tac database, tool cho luot do hoan tat
+an toan roi moi dung; sau do co the bam Auto de chay lai ma khong can dong ung dung.
 
 Nen chay `check` truoc. `check` va `verify` khong ghi du lieu nghiep vu nhung van co the tao/cap nhat schema `T_TRACKS_LOG`; chi `sync` va `all` ghi log va cap nhat watermark.
 
