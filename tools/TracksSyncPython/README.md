@@ -9,17 +9,18 @@ doi chieu voi `ATFM.T_DAY_FLIGHTS_GOINGON` va ghi ket qua vao `ATFM.T_TRACKS_LOG
 2. Chi xu ly cac dong co toa do nam trong hoac tren bien VVHN/VVHM.
 3. `flight_id_current` duoc cat tu dau chuoi den dau `-`; vi du `CES6380-2026-07-07` thanh `CES6380`.
 4. Ngay doi chieu lay tu `updated_at_utc` theo `dd-mm-yyyy`, so voi `FLIGHTDATE`.
-5. Chi ghi khi `CALLSIGN + DATE` match dung 1 dong trong `T_DAY_FLIGHTS_GOINGON`.
-6. `PERMTYPE = O/F` duoc phep thieu `FROM_AIRP` hoac `TO_AIRP`; `LD` va cac loai khac phai co du ca hai san bay.
-7. Neu nam VVHN hoac bien chung VVHN/VVHM thi `STATUS = 1`; neu nam VVHM thi `STATUS = 2`.
-8. Neu `CALLSIGN + DATE` da co trong `T_TRACKS_LOG`, tool cap nhat `LAT/LON` va `UPDATED_AT_UTC`; neu chua co thi chen day du du lieu chuyen bay va toa do.
-9. Sau moi lan sync thanh cong, tool ghi watermark `yyyy-mm-dd hh:mm:ss` de lan sau chi doc ban ghi moi hon.
+5. Neu khong tim thay `CALLSIGN + DATE` trong `T_DAY_FLIGHTS_GOINGON`, van ghi dong voi `PERMTYPE = OTHER` (chuyen bay khac), giu callsign, ngay, status, thoi gian cap nhat va toa do; thong tin chuyen bay de trong.
+6. Neu co nhieu dong cung `CALLSIGN + DATE`, tool dung gio cua `updated_at_utc` de chon dong co khoang `ETD-ETA` bao gom thoi diem do. Neu khong co dung mot khoang phu hop thi bo qua; khoang qua nua dem duoc ho tro.
+7. Moi dong thieu `FROM_AIRP` hoac `TO_AIRP` (ke ca `PERMTYPE = O/F`) van duoc ghi va gan `PERMTYPE = OTHER` (chuyen bay khac); dong day du thong tin giu nguyen `PERMTYPE` goc.
+8. Neu nam VVHN hoac bien chung VVHN/VVHM thi `STATUS = 1`; neu nam VVHM thi `STATUS = 2`.
+9. `TIME_IN` la thoi diem dau tien callsign cham FIR; `TIME_OUT` la thoi diem dau tien sau do cham FIR con lai (STATUS khac STATUS dau), neu khong chuyen FIR thi de trong. Neu `CALLSIGN + DATE` da co trong `T_TRACKS_LOG`, tool cap nhat toa do/thoi diem moi nhat va giu cac moc TIME_IN/TIME_OUT da ghi; neu dong cu la `OTHER` va lan sau tim thay chuyen bay day du, tool bo sung lai thong tin chuyen bay.
+10. Sau moi lan sync thanh cong, tool ghi watermark `yyyy-mm-dd hh:mm:ss` de lan sau chi doc ban ghi moi hon.
 
-Neu `T_DAY_FLIGHTS_GOINGON` co nhieu dong cung `FLIGHTNBR + FLIGHTDATE`, tool se bo qua dong do de tranh gan sai route.
+Neu `T_DAY_FLIGHTS_GOINGON` co nhieu dong cung `FLIGHTNBR + FLIGHTDATE`, tool chi bo qua khi khong chon duoc duy nhat theo khoang `ETD-ETA`.
 Bang log duoc bao ve bang unique index `CALLSIGN + DATE`. Trong mot luot `all`, verify kiem tra toan bo
 du lieu cua dong vua insert va chi kiem tra toa do cua dong da ton tai; dong thieu, dong thua va khoa trung
 van duoc thong ke rieng.
-Lan chay dau sau khi nang cap se tu them hai cot `LAT NUMBER`, `LON NUMBER`. Co the chay script
+Lan chay dau sau khi nang cap se tu them cac cot `LAT NUMBER`, `LON NUMBER`, `TIME_IN VARCHAR2(19)`, `TIME_OUT VARCHAR2(19)`. Co the chay script
 `Database/Oracle/20260723_T_TRACKS_LOG_add_lat_lon.sql` neu can nang cap schema rieng truoc khi mo tool.
 
 De dien toa do cho cac dong log cu, chay `sync --full` hoac `all --full` mot lan sau khi nang cap. Tool backfill
@@ -64,7 +65,7 @@ Che do Auto chay lien tuc theo thu tu Kiem tra -> Ghi -> Xac minh tren cung tap 
 Sau khi mot luot hoan tat, tool moi dem nguoc so giay da nhap va bat dau luot ke tiep.
 Auto chi dung khi dong ung dung.
 
-Nen chay `check` truoc. Chi `sync` moi ghi `T_TRACKS_LOG` va cap nhat watermark; `check` va `verify` khong ghi du lieu nghiep vu.
+Nen chay `check` truoc. `check` va `verify` khong ghi du lieu nghiep vu nhung van co the tao/cap nhat schema `T_TRACKS_LOG`; chi `sync` va `all` ghi log va cap nhat watermark.
 
 ## Cau hinh
 

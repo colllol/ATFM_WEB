@@ -5,6 +5,7 @@
     if (!page) return;
 
     var rows = [], currentTrend = [], pageIndex = 1;
+    var restoreSidebarAfterModal = false;
     function byId(id) { return document.getElementById(id); }
     function value(id) { return byId(id).value; }
     function number(value) { return Number(value || 0).toLocaleString('vi-VN'); }
@@ -34,7 +35,8 @@
             key: item.Key != null ? item.Key : item.key,
             label: item.Label != null ? item.Label : item.label,
             ld: item.Ld != null ? item.Ld : item.ld,
-            of: item.Of != null ? item.Of : item.of
+            of: item.Of != null ? item.Of : item.of,
+            other: item.Other != null ? item.Other : item.other
         };
     }
     function normalizeRow(row) {
@@ -51,19 +53,36 @@
             status: row.Status != null ? row.Status : row.status,
             statusText: row.StatusText != null ? row.StatusText : row.statusText,
             date: row.Date != null ? row.Date : row.date,
-            updatedAtUtc: row.UpdatedAtUtc != null ? row.UpdatedAtUtc : row.updatedAtUtc
+            updatedAtUtc: row.UpdatedAtUtc != null ? row.UpdatedAtUtc : row.updatedAtUtc,
+            timeIn: row.TimeIn != null ? row.TimeIn : row.timeIn,
+            timeOut: row.TimeOut != null ? row.TimeOut : row.timeOut,
+            isOther: row.IsOther != null ? row.IsOther : row.isOther
         };
     }
     function normalizeData(data) {
         data = data || {};
+        var normalizedRows = (data.Rows || data.rows || []).map(normalizeRow);
+        var normalizedTrend = (data.Trend || data.trend || []).map(normalizeTrend);
+        var otherByDate = {};
+        normalizedRows.forEach(function (row) {
+            if (!isOther(row)) return;
+            var match = String(row.date || '').match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+            if (!match) return;
+            var key = match[3] + '-' + match[2] + '-' + match[1];
+            otherByDate[key] = (otherByDate[key] || 0) + 1;
+        });
+        normalizedTrend.forEach(function (point) {
+            if (point.other == null) point.other = otherByDate[point.key] || 0;
+        });
         return {
             total: data.Total != null ? data.Total : data.total,
             ld: data.Ld != null ? data.Ld : data.ld,
             of: data.Of != null ? data.Of : data.of,
+            other: data.Other != null ? data.Other : data.other,
             operatorCount: data.OperatorCount != null ? data.OperatorCount : data.operatorCount,
             serverTime: data.ServerTime != null ? data.ServerTime : data.serverTime,
-            trend: (data.Trend || data.trend || []).map(normalizeTrend),
-            rows: (data.Rows || data.rows || []).map(normalizeRow)
+            trend: normalizedTrend,
+            rows: normalizedRows
         };
     }
     function iso(date) {
@@ -98,13 +117,60 @@
     }
     function renderKpis(data) {
         var total = Number(data.total || 0), ld = Number(data.ld || 0), of = Number(data.of || 0);
+        var other = data.other == null ? rows.filter(isOther).length : Number(data.other || 0);
         byId('adsbTotal').textContent = number(total);
         byId('adsbLd').textContent = number(ld);
         byId('adsbOf').textContent = number(of);
+        byId('adsbOther').textContent = number(other);
         byId('adsbOperCount').textContent = number(data.operatorCount);
         byId('adsbLdRate').textContent = (total ? ld * 100 / total : 0).toFixed(1) + '%';
         byId('adsbOfRate').textContent = (total ? of * 100 / total : 0).toFixed(1) + '%';
         byId('adsbUpdatedAt').textContent = data.serverTime || '--:--';
+    }
+    function isOther(row) {
+        return row && (row.isOther === true || Number(row.isOther) === 1 || String(row.permType || '').toUpperCase() === 'OTHER' || !String(row.fromAirp || '').trim() || !String(row.toAirp || '').trim() || !String(row.oper || '').trim());
+    }
+    function statusText(status) {
+        return Number(status) === 1 ? 'VVHN' : (Number(status) === 2 ? 'VVHM' : 'Không xác định');
+    }
+    function renderEndDay(data) {
+        var list = (data && (data.rows || data.Rows) || []).map(normalizeRow);
+        byId('adsbEndDayBody').innerHTML = list.map(function (row) {
+            return '<tr><td><strong>' + escapeHtml(row.callsign) + '</strong></td><td>' + escapeHtml(row.oper || '-') + '</td>' +
+                '<td><span class="adsb-perm ' + (isOther(row) ? 'other' : (row.permType === 'LD' ? 'ld' : 'of')) + '">' + escapeHtml(isOther(row) ? 'OTHER' : (row.permType || '-')) + '</span></td>' +
+                '<td>' + escapeHtml(row.fromAirp || '-') + '</td><td>' + escapeHtml(row.toAirp || '-') + '</td><td>' + escapeHtml(row.etd || '-') + '</td><td>' + escapeHtml(row.eta || '-') + '</td>' +
+                '<td>' + escapeHtml(statusText(row.status)) + '</td><td>' + escapeHtml(row.timeIn || '-') + '</td><td>' + escapeHtml(row.timeOut || '-') + '</td><td>' + escapeHtml(row.date || '-') + '</td></tr>';
+        }).join('');
+        if (!list.length) byId('adsbEndDayBody').innerHTML = '<tr><td colspan="11" class="adsb-no-data">Không có dữ liệu.</td></tr>';
+        byId('adsbEndDayInfo').textContent = number(list.length) + ' bản ghi · ' + (data && data.fromDate ? data.fromDate + ' đến ' + data.toDate : 'theo bộ lọc hiện tại');
+    }
+    function toggleSidebarForModal(opening) {
+        var workspace = document.querySelector('#main-container > .atfm-workspace');
+        var toggle = document.querySelector('#sidebar .atfm-sidebar-toggle');
+        if (!workspace || !toggle || window.innerWidth < 992) return;
+        if (opening) {
+            restoreSidebarAfterModal = !workspace.classList.contains('atfm-sidebar-collapsed');
+            if (restoreSidebarAfterModal) toggle.click();
+            return;
+        }
+        if (restoreSidebarAfterModal && workspace.classList.contains('atfm-sidebar-collapsed')) toggle.click();
+        restoreSidebarAfterModal = false;
+    }
+    function openEndDay() {
+        var modal = byId('adsbEndDayModal');
+        toggleSidebarForModal(true);
+        modal.hidden = false;
+        byId('adsbEndDayInfo').textContent = 'Đang tải dữ liệu...';
+        byId('adsbEndDayBody').innerHTML = '<tr><td colspan="11" class="adsb-no-data">Đang tải...</td></tr>';
+        post(page.dataset.enddayEndpoint, payload(true)).then(function (data) {
+            renderEndDay(data && data.d ? data.d : data);
+        }).catch(function (error) {
+            byId('adsbEndDayInfo').textContent = 'Không thể tải báo cáo: ' + (error.message || error);
+        });
+    }
+    function closeEndDay() {
+        byId('adsbEndDayModal').hidden = true;
+        toggleSidebarForModal(false);
     }
     function svgNode(name, attrs) {
         var node = document.createElementNS('http://www.w3.org/2000/svg', name);
@@ -117,7 +183,7 @@
         if (!points || !points.length) { host.innerHTML = '<div class="adsb-empty">Không có dữ liệu trong khoảng lọc.</div>'; return; }
         var width = Math.max(760, host.clientWidth || 900), height = 350, left = 54, right = 24, top = 24, bottom = 48;
         var plotW = width - left - right, plotH = height - top - bottom;
-        var max = Math.max(1, Math.max.apply(null, points.map(function (p) { return Math.max(Number(p.ld), Number(p.of)); })));
+        var max = Math.max(1, Math.max.apply(null, points.map(function (p) { return Math.max(Number(p.ld), Number(p.of), Number(p.other)); })));
         var svg = svgNode('svg', { viewBox: '0 0 ' + width + ' ' + height, role: 'img', 'aria-label': 'Biểu đồ LD và O/F theo ngày' });
         for (var i = 0; i <= 5; i++) {
             var y = top + plotH * i / 5, grid = svgNode('line', { x1: left, y1: y, x2: width - right, y2: y, class: 'adsb-grid' });
@@ -128,7 +194,7 @@
         function xAt(index) { return left + (points.length === 1 ? plotW / 2 : plotW * index / (points.length - 1)); }
         function yAt(v) { return top + plotH - Number(v || 0) * plotH / max; }
         function linePath(field) { return points.map(function (p, index) { return (index ? 'L' : 'M') + xAt(index).toFixed(1) + ',' + yAt(p[field]).toFixed(1); }).join(' '); }
-        ['ld', 'of'].forEach(function (field) {
+        ['ld', 'of', 'other'].forEach(function (field) {
             svg.appendChild(svgNode('path', { d: linePath(field), class: 'adsb-line ' + field }));
             points.forEach(function (point, index) {
                 var circle = svgNode('circle', { cx: xAt(index), cy: yAt(point[field]), r: 5, class: 'adsb-point ' + field, tabindex: '0' });
@@ -150,7 +216,7 @@
         byId('adsbTableBody').innerHTML = current.map(function (row) {
             var statusClass = Number(row.status) === 1 ? 's1' : (Number(row.status) === 2 ? 's2' : 'unknown');
             return '<tr><td>' + row.no + '</td><td><strong>' + escapeHtml(row.callsign) + '</strong></td><td>' + escapeHtml(row.oper || '-') + '</td>' +
-                '<td><span class="adsb-perm ' + (row.permType === 'LD' ? 'ld' : 'of') + '">' + escapeHtml(row.permType || '-') + '</span></td>' +
+                '<td><span class="adsb-perm ' + (isOther(row) ? 'other' : (row.permType === 'LD' ? 'ld' : 'of')) + '">' + escapeHtml(isOther(row) ? 'OTHER' : (row.permType || '-')) + '</span></td>' +
                 '<td>' + escapeHtml(row.fromAirp || '-') + '</td><td>' + escapeHtml(row.toAirp || '-') + '</td><td>' + escapeHtml(row.etd || '-') + '</td><td>' + escapeHtml(row.eta || '-') + '</td>' +
                 '<td><span class="adsb-status ' + statusClass + '">' + escapeHtml(row.statusText) + '</span></td><td>' + escapeHtml(row.date) + '</td><td>' + escapeHtml(row.updatedAtUtc || '-') + '</td></tr>';
         }).join('');
@@ -173,6 +239,10 @@
     function apply() { loadOperators(true).then(loadData).catch(showError); }
 
     byId('adsbApply').addEventListener('click', apply);
+    byId('adsbEndDay').addEventListener('click', openEndDay);
+    byId('adsbEndDayClose').addEventListener('click', closeEndDay);
+    byId('adsbEndDayModal').addEventListener('click', function (event) { if (event.target === this) closeEndDay(); });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeEndDay(); });
     byId('adsbPermType').addEventListener('change', function () { loadOperators(false).catch(showError); });
     byId('adsbPageSize').addEventListener('change', function () { pageIndex = 1; renderTable(); });
     byId('adsbPrev').addEventListener('click', function () { if (pageIndex > 1) { pageIndex--; renderTable(); } });

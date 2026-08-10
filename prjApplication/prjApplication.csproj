@@ -664,6 +664,7 @@
     <Content Include="App_Data\southeast-asia-basemap.geojson" />
     <Content Include="ReportNew\AdsBPerformanceReport.aspx" />
     <Content Include="ReportNew\AdsBPerformanceReport.css" />
+    <Content Include="ReportNew\AdsBPerformanceReportExtras.css" />
     <Content Include="ReportNew\AdsBPerformanceReport.js" />
     <Content Include="ReportNew\AnomalyWarning.aspx" />
     <Content Include="ReportNew\AnomalyWarning.css" />

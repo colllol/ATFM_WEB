@@ -70,7 +70,7 @@
             var sender = text(item,['sender','from','senderEmail']);
             var fileName = text(item,['attachmentName']);
             var rowClass = item._databaseState === 'found' ? 'email-row--has-data' : item._databaseState === 'missing' ? 'email-row--no-data' : item._databaseState === 'error' ? 'email-row--db-error' : 'email-row--checking';
-            var databaseTitle = item._databaseState === 'found' ? 'Có dữ liệu trong database' : item._databaseState === 'missing' ? 'Không có dữ liệu trong database' : item._databaseState === 'error' ? 'Không kiểm tra được database' : 'Đang kiểm tra database';
+            var databaseTitle = item._databaseState === 'found' ? 'Có dữ liệu trong database' : item._databaseState === 'missing' ? 'Không có dữ liệu trong database' : item._databaseState === 'error' ? 'Không kiểm tra được database' : item._databaseState === 'pending' ? 'Đang chờ worker xử lý' : 'Đang kiểm tra database';
             return '<tr class="' + rowClass + '" title="' + databaseTitle + '"><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(fileName) + '">' + esc(fileName) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + index + '" title="Xem chi tiết email"><i class="fa fa-eye"></i></button></td></tr>';
         }).join('') : '<tr><td colspan="7" class="email-empty-cell">Không có email phù hợp.</td></tr>';
         Array.prototype.forEach.call(document.querySelectorAll('.email-detail-button'), function (button) { button.onclick = function () { showDetail(filteredItems[parseInt(this.getAttribute('data-index'), 10)]); }; });
@@ -81,35 +81,57 @@
         $('emailReportDownload').disabled = !rows.length || checking;
         $('emailReportSend').disabled = !rows.length || checking;
     }
-    function inspectDatabase(item) {
-        var syncJobId = text(item, ['syncJobId']);
-        if (!syncJobId) { item._databaseState = 'missing'; return Promise.resolve(); }
-        if (databaseCache[syncJobId]) {
-            item._databaseState = databaseCache[syncJobId].state;
-            item._oper = databaseCache[syncJobId].oper;
-            item._targetPermId = databaseCache[syncJobId].targetPermId;
-            return Promise.resolve();
-        }
-        item._databaseState = 'checking';
+    function unwrapJobResult(payload) {
+        var result = payload && payload.d != null ? payload.d : payload;
+        if (typeof result === 'string') result = JSON.parse(result);
+        return result || {};
+    }
+    function applyDatabaseResult(item, syncJobId, result) {
+        var targetPermId = result.targetPermId || null;
+        var state = result.hasDatabaseData === false
+            ? (result.state || 'missing')
+            : targetPermId ? 'found' : (result.state || 'missing');
+        var cached = {
+            state: state,
+            oper: result.oper || '',
+            targetPermId: targetPermId,
+            editPage: result.editPage || (result.targetTable === 'NO' ? 'Edit_PermNo.aspx' : 'Edit_PermSC.aspx'),
+            targetTable: result.targetTable || '',
+            message: result.message || '',
+            permitImportStatus: result.permitImportStatus || '',
+            permitImportError: result.permitImportError || ''
+        };
+        databaseCache[syncJobId] = cached;
+        item._databaseState = cached.state;
+        item._oper = cached.oper;
+        item._targetPermId = cached.targetPermId;
+        item._editPage = cached.editPage;
+        item._databaseMessage = cached.message || cached.permitImportError;
+    }
+    function fetchDatabaseResult(syncJobId) {
         return fetch(jobEndpoint, {
             method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify({ syncJobId: syncJobId })
         }).then(function (response) {
             return response.json().catch(function () { return null; }).then(function (payload) {
                 if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || 'Không kiểm tra được database');
-                return payload;
+                return unwrapJobResult(payload);
             });
-        }).then(function (payload) {
-            var result = payload && payload.d != null ? payload.d : payload;
-            if (typeof result === 'string') result = JSON.parse(result);
-            if (!result || !result.targetPermId) throw new Error('Không tìm thấy dữ liệu');
-            databaseCache[syncJobId] = { state: 'found', oper: result.oper || '', targetPermId: result.targetPermId };
-            item._databaseState = 'found'; item._oper = result.oper || ''; item._targetPermId = result.targetPermId;
+        });
+    }
+    function inspectDatabase(item) {
+        var syncJobId = text(item, ['syncJobId']);
+        if (!syncJobId) { item._databaseState = 'missing'; return Promise.resolve(); }
+        if (databaseCache[syncJobId]) {
+            applyDatabaseResult(item, syncJobId, databaseCache[syncJobId]);
+            return Promise.resolve();
+        }
+        item._databaseState = 'checking';
+        return fetchDatabaseResult(syncJobId).then(function (result) {
+            applyDatabaseResult(item, syncJobId, result);
         }).catch(function (error) {
-            var missing = /targetPermId|không tìm thấy dữ liệu|không có dữ liệu số phép bay/i.test(error.message || '');
-            var state = missing ? 'missing' : 'error';
-            databaseCache[syncJobId] = { state: state, oper: '', targetPermId: null };
-            item._databaseState = state;
+            databaseCache[syncJobId] = { state: 'error', oper: '', targetPermId: null, message: error.message || 'Không kiểm tra được database' };
+            applyDatabaseResult(item, syncJobId, databaseCache[syncJobId]);
         });
     }
     function inspectItems(items) {
@@ -160,26 +182,28 @@
         }
 
         permissionMessage.textContent = 'Đang lấy số phép bay...';
-        fetch(jobEndpoint, {
-            method: 'POST',
-            headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify({ syncJobId: syncJobId })
-        }).then(function (response) {
-            return response.json().catch(function () { return null; }).then(function (payload) {
-                if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
-                return payload;
+        var cached = databaseCache[syncJobId];
+        var lookup = cached && cached.state === 'found'
+            ? Promise.resolve(cached)
+            : fetchDatabaseResult(syncJobId).then(function (result) {
+                applyDatabaseResult(item, syncJobId, result);
+                return databaseCache[syncJobId];
             });
-        }).then(function (payload) {
+        lookup.then(function (result) {
             if (requestId !== detailRequestId) return;
-            var result = payload && payload.d != null ? payload.d : payload;
-            if (typeof result === 'string') result = JSON.parse(result);
-            var targetPermId = result && result.targetPermId;
-            if (!targetPermId) throw new Error('API job không trả về targetPermId.');
+            if (!result || result.state !== 'found' || !result.targetPermId) {
+                permissionMessage.textContent = result && result.message
+                    ? result.message
+                    : 'Chưa có dữ liệu số phép bay trong database.';
+                permissionMessage.classList.add(result && result.state === 'pending' ? 'is-pending' : 'is-error');
+                return;
+            }
 
-            permissionLink.href = '../Permission/Edit_PermSC4Mail.aspx?Menu_ID=51&ID=' + encodeURIComponent(targetPermId);
+            var editPage = result.editPage === 'Edit_PermNo.aspx' ? 'Edit_PermNo.aspx' : 'Edit_PermSC4Mail.aspx';
+            permissionLink.href = '../Permission/' + editPage + '?Menu_ID=51&ID=' + encodeURIComponent(result.targetPermId);
             permissionLink.classList.remove('is-disabled');
             permissionLink.removeAttribute('aria-disabled');
-            permissionMessage.textContent = 'Số phép bay: ' + targetPermId;
+            permissionMessage.textContent = 'Số phép bay: ' + result.targetPermId + (result.targetTable === 'NO' ? ' (ngày đơn)' : '');
         }).catch(function (error) {
             if (requestId !== detailRequestId) return;
             permissionMessage.textContent = 'Không thể lấy số phép bay: ' + error.message;
@@ -197,7 +221,7 @@
     }
     function reportHtml(rows) {
         var body = rows.map(function (row, index) {
-            var state = row.HasDatabaseData ? row.Status + ' - CÓ DỮ LIỆU DB' : row.DatabaseState === 'error' ? '[?] KHÔNG KIỂM TRA ĐƯỢC DATABASE' : '[!] KHÔNG CÓ DỮ LIỆU TRONG DATABASE';
+            var state = row.HasDatabaseData ? row.Status + ' - CÓ DỮ LIỆU DB' : row.DatabaseState === 'pending' ? '[~] ĐANG CHỜ WORKER XỬ LÝ' : row.DatabaseState === 'error' ? '[?] KHÔNG KIỂM TRA ĐƯỢC DATABASE' : '[!] KHÔNG CÓ DỮ LIỆU TRONG DATABASE';
             return '<tr' + (row.HasDatabaseData ? '' : ' style="color:#b4232c;background:#fff0f1;font-weight:bold"') + '><td>' + (index + 1) + '</td><td>' + esc(row.Oper) + '</td><td>' + esc(row.FileName) + '</td><td>' + esc(state) + '</td></tr>';
         }).join('');
         return '<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #777;padding:7px}th{background:#dceef8}</style></head><body><h2>BÁO CÁO TRẠNG THÁI DỮ LIỆU EMAIL</h2><table><thead><tr><th>STT</th><th>OPER (Tên hãng)</th><th>Tên file</th><th>Trạng thái</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';

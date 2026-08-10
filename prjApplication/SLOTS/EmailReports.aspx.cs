@@ -89,6 +89,8 @@ namespace prjApplication.SLOTS
                 throw new ArgumentException("syncJobId không hợp lệ.");
 
             string endpoint = ConfigurationManager.AppSettings["APIEmailJobs"];
+            if (String.IsNullOrWhiteSpace(endpoint))
+                throw new ConfigurationErrorsException("Chưa cấu hình APIEmailJobs trong Web.config.");
             if (!endpoint.EndsWith("/", StringComparison.Ordinal))
                 endpoint += "/";
 
@@ -117,17 +119,53 @@ namespace prjApplication.SLOTS
                     !Int64.TryParse(Convert.ToString(rawTargetPermId), out targetPermId) ||
                     targetPermId <= 0)
                 {
-                    throw new InvalidOperationException("API job không trả về targetPermId hợp lệ.");
+                    string permitStatus = Convert.ToString(FindProperty(payload, "permitImportStatus"));
+                    string jobStatus = Convert.ToString(FindProperty(payload, "status"));
+                    string errorMessage = Convert.ToString(FindProperty(payload, "permitImportError"));
+                    string state = ResolveDatabaseState(permitStatus, jobStatus);
+                    string message = state == "error"
+                        ? ResolveDatabaseErrorMessage(permitStatus, errorMessage)
+                        : state == "pending"
+                            ? "Job đang chờ worker xử lý, chưa có số phép bay."
+                            : "Job chưa tạo dữ liệu số phép bay trong database.";
+                    return new
+                    {
+                        targetPermId = (long?)null,
+                        targetMasterId = ParseNullableLong(FindProperty(payload, "targetMasterId")),
+                        normalizedPermitId = Convert.ToString(FindProperty(payload, "normalizedPermitId")),
+                        hasDatabaseData = false,
+                        state = state,
+                        permitImportStatus = permitStatus,
+                        permitImportError = errorMessage,
+                        message = message,
+                        oper = String.Empty,
+                        targetTable = String.Empty,
+                        editPage = String.Empty
+                    };
                 }
 
                 PermMasterSc permission = new PermMasterScDAL().GetOneObject(targetPermId.ToString());
-                if (permission == null)
-                    throw new InvalidOperationException("Không tìm thấy dữ liệu số phép bay trong database.");
+                if (permission != null && permission.PERM_ID > 0)
+                    return BuildPermissionResult(targetPermId, "SC", "Edit_PermSC.aspx", permission.OPER_NAME, permission.OPER_ID);
 
-                string oper = !String.IsNullOrWhiteSpace(permission.OPER_NAME)
-                    ? permission.OPER_NAME
-                    : permission.OPER_ID;
-                return new { targetPermId = targetPermId, hasDatabaseData = true, oper = oper ?? String.Empty };
+                PermMasterNo permissionNo = new PermMasterNoDAL().GetOneObject(targetPermId.ToString());
+                if (permissionNo != null && permissionNo.PERM_ID > 0)
+                    return BuildPermissionResult(targetPermId, "NO", "Edit_PermNo.aspx", permissionNo.OPER_NAME, permissionNo.OPER_ID);
+
+                return new
+                {
+                    targetPermId = (long?)targetPermId,
+                    targetMasterId = ParseNullableLong(FindProperty(payload, "targetMasterId")),
+                    normalizedPermitId = Convert.ToString(FindProperty(payload, "normalizedPermitId")),
+                    hasDatabaseData = false,
+                    state = "missing",
+                    permitImportStatus = Convert.ToString(FindProperty(payload, "permitImportStatus")),
+                    permitImportError = Convert.ToString(FindProperty(payload, "permitImportError")),
+                    message = "Không tìm thấy dữ liệu số phép bay trong database.",
+                    oper = String.Empty,
+                    targetTable = String.Empty,
+                    editPage = String.Empty
+                };
             }
             catch (WebException ex)
             {
@@ -199,6 +237,8 @@ namespace prjApplication.SLOTS
                 bool hasData = row.HasDatabaseData;
                 string state = hasData
                     ? (String.IsNullOrWhiteSpace(row.Status) ? "CÓ DỮ LIỆU" : row.Status + " - CÓ DỮ LIỆU DB")
+                    : String.Equals(row.DatabaseState, "pending", StringComparison.OrdinalIgnoreCase)
+                        ? "[~] ĐANG CHỜ WORKER XỬ LÝ"
                     : String.Equals(row.DatabaseState, "error", StringComparison.OrdinalIgnoreCase)
                         ? "[?] KHÔNG KIỂM TRA ĐƯỢC DATABASE"
                         : "[!] KHÔNG CÓ DỮ LIỆU TRONG DATABASE";
@@ -262,6 +302,58 @@ namespace prjApplication.SLOTS
             }
 
             return null;
+        }
+
+        private static object BuildPermissionResult(long targetPermId,
+                                                    string targetTable,
+                                                    string editPage,
+                                                    string operName,
+                                                    string operId)
+        {
+            string oper = !String.IsNullOrWhiteSpace(operName) ? operName : operId;
+            return new
+            {
+                targetPermId = targetPermId,
+                hasDatabaseData = true,
+                state = "found",
+                targetTable = targetTable,
+                editPage = editPage,
+                oper = oper ?? String.Empty,
+                message = String.Empty
+            };
+        }
+
+        private static long? ParseNullableLong(object value)
+        {
+            long parsed;
+            return value != null && Int64.TryParse(Convert.ToString(value), out parsed) && parsed > 0
+                ? (long?)parsed
+                : null;
+        }
+
+        private static string ResolveDatabaseState(string permitStatus, string jobStatus)
+        {
+            string status = (String.IsNullOrWhiteSpace(permitStatus) ? jobStatus : permitStatus) ?? String.Empty;
+            status = status.Trim().ToUpperInvariant();
+            if (status == "PENDING" || status == "DOWNLOADED" || status == "RESERVED"
+                || status == "PROCESSING")
+                return "pending";
+            if (status == "FAILED" || status == "ERROR" || status == "DRY_RUN"
+                || status == "REVISION_REVIEW")
+                return "error";
+            return "missing";
+        }
+
+        private static string ResolveDatabaseErrorMessage(string permitStatus, string errorMessage)
+        {
+            if (!String.IsNullOrWhiteSpace(errorMessage))
+                return errorMessage;
+            string status = (permitStatus ?? String.Empty).Trim().ToUpperInvariant();
+            if (status == "DRY_RUN")
+                return "Worker đang ở chế độ không ghi database.";
+            if (status == "REVISION_REVIEW")
+                return "Phép bay đang chờ kiểm tra thủ công.";
+            return "Worker xử lý phép bay bị lỗi.";
         }
 
         private static string ReadErrorResponse(WebException exception)

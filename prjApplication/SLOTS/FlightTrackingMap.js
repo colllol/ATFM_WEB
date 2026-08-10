@@ -218,7 +218,8 @@
             Number(flight.heading || 0).toFixed(1) + ') scale(' + markerScale().toFixed(3) + ')');
     }
     function showPopup(flight, event) {
-        var permClass = markerClass(flight.permType) === 'ld' ? 'perm-ld' : 'perm-of';
+        var markerType = markerClass(flight.permType);
+        var permClass = markerType === 'ld' ? 'perm-ld' : (markerType === 'of' ? 'perm-of' : 'perm-other');
         popup.innerHTML = '<h3>' + escapeHtml(flight.callsign || flight.flightIdCurrent) + '</h3><dl>' +
             '<dt>Flight ID</dt><dd>' + escapeHtml(flight.flightIdCurrent) + '</dd>' +
             '<dt>OPER_ID</dt><dd>' + escapeHtml(flight.operId || 'Chưa đối chiếu') + '</dd>' +
@@ -233,7 +234,7 @@
     }
     function renderFlights(allFlights) {
         var flights = (allFlights || []).filter(insideFir);
-        var active = {}, ld = 0, of = 0;
+        var active = {}, ld = 0, of = 0, other = 0;
         flights.forEach(function (flight) {
             var key = text(flight.flightIdCurrent || flight.callsign);
             active[key] = true;
@@ -244,6 +245,7 @@
             positionMarker(node, flight);
             if (markerClass(flight.permType) === 'ld') ld++;
             if (markerClass(flight.permType) === 'of') of++;
+            if (markerClass(flight.permType) === 'other') other++;
         });
         Object.keys(markerNodes).forEach(function (key) {
             if (!active[key]) {
@@ -253,6 +255,7 @@
         });
         byId('trackTotal').textContent = flights.length;
         byId('trackLd').textContent = ld; byId('trackOf').textContent = of;
+        byId('trackOther').textContent = other;
         byId('trackEmpty').hidden = flights.length !== 0;
     }
     function refreshFlights(initial) {
