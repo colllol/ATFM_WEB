@@ -1,56 +1,69 @@
 # ATFM Flight Tracking API (Python)
 
-Chuong trinh doc `public.tracks` trong PostgreSQL va cap HTTP API cho
-`SLOTS/FlightTrackingMap.aspx`. API khong dung `X-API-Key`.
+Chương trình này chạy trên máy trung gian có thể truy cập PostgreSQL. Nó đọc bảng
+`public.tracks` và cung cấp HTTP API cho `SLOTS/FlightTrackingMap.aspx`. Máy IIS chỉ cần kết
+nối được tới cổng HTTP của máy trung gian, không cần cùng dải mạng với PostgreSQL và không cần
+cài Npgsql/PostgreSQL driver.
 
-## Cau hinh chung
+API không dùng `X-API-Key`. Chỉ nên mở cổng API cho đúng địa chỉ IP của máy IIS bằng Windows
+Firewall hoặc firewall mạng; không công khai trực tiếp ra Internet.
 
-Flight Tracking API va TracksSync dung chung mot file `TracksSync.local.json`. Thu tu tim file:
-
-1. Duong dan trong bien moi truong `TRACKS_CONFIG`.
-2. `TracksSync.local.json` nam cung thu muc voi EXE/source.
-3. `prjApplication/App_Data/TracksSync.local.json` khi chay trong project.
-
-File can co section `postgres` va `flight_tracking_api`. Xem mau tai
-`tools/TracksSyncPython/TracksSync.sample.json`.
-
-## Chay source
+## Cấu hình và chạy source
 
 ```powershell
-python -m pip install -r .\tools\TracksSyncPython\requirements.txt
-python .\tools\FlightTrackingApiPython\main.py --check
-python .\tools\FlightTrackingApiPython\main.py
+cd tools\FlightTrackingApiPython
+python -m pip install -r requirements.txt
+Copy-Item FlightTrackingApi.example.json FlightTrackingApi.local.json
+# Sửa PostgreSQL host/database/username/password trong FlightTrackingApi.local.json
+python main.py --check
+python main.py
 ```
 
-Co the truyen file cu the bang `--config C:\duong-dan\TracksSync.local.json`.
+Các endpoint:
 
-Endpoint:
+- `GET /health/live`: kiểm tra tiến trình đang chạy.
+- `GET /health/ready`: kiểm tra PostgreSQL có kết nối được hay không.
+- `GET /api/v1/tracks?date=yyyy-MM-dd`: lấy vị trí mới nhất của từng callsign.
 
-- `GET /health/live`: tien trinh API dang chay.
-- `GET /health/ready`: API ket noi duoc PostgreSQL.
-- `GET /api/v1/tracks?date=yyyy-MM-dd`: vi tri moi nhat cua tung callsign.
+Có thể dùng biến môi trường thay cho file JSON: `FLIGHT_API_PG_HOST`, `FLIGHT_API_PG_PORT`,
+`FLIGHT_API_PG_DATABASE`, `FLIGHT_API_PG_USERNAME`, `FLIGHT_API_PG_PASSWORD`,
+`FLIGHT_API_PG_SSLMODE`, `FLIGHT_API_HOST`, `FLIGHT_API_PORT`.
 
-## Build va trien khai
+## Build EXE để chuyển sang máy khác
 
-Build chung voi TracksSync:
-
-```powershell
-.\tools\build_tracks_sync.ps1 -InstallDependencies
-```
-
-Giai nen `tools\dist\ATFM-TracksSync-package.zip`, sua mot file
-`TracksSync.local.json`, sau do chay `ATFM-TracksSync.exe`. TracksSync se khoi dong API ngam, khong hien
-cua so console. API la tien trinh doc lap va khong bi dung khi dong TracksSync.
-
-Van co the build/chay rieng API:
+Trên máy Windows đã cài Python, chạy từ thư mục gốc project:
 
 ```powershell
 .\tools\build_flight_tracking_api.ps1 -InstallDependencies
+```
+
+Kết quả:
+
+- `tools\dist\ATFM-FlightTrackingApi.exe`: file chạy độc lập.
+- `tools\dist\ATFM-FlightTrackingApi-package.zip`: gói chuyển máy gồm EXE, file cấu hình
+  `FlightTrackingApi.local.json` có thể sửa trực tiếp và README.
+
+Trên máy đích, giải nén ZIP, sửa các giá trị trong `FlightTrackingApi.local.json` rồi chạy:
+
+```powershell
 .\ATFM-FlightTrackingApi.exe --check
 .\ATFM-FlightTrackingApi.exe
 ```
 
-Neu chua co config, `ATFM-FlightTrackingApi.exe --init-config` tao `TracksSync.local.json` canh EXE.
+Nếu chỉ sao chép riêng EXE mà chưa có file cấu hình, chạy
+`.\ATFM-FlightTrackingApi.exe --init-config` để tạo file mới cạnh EXE.
 
-Chi mo cong 5088 cho dia chi IP cua may IIS bang firewall; khong cong khai API truc tiep ra Internet.
-Trong `prjApplication/Web.config`, dat `FlightTrackingApiBaseUrl` thanh dia chi may chay API.
+PyInstaller đóng kèm Python và thư viện nên máy đích không cần cài Python. EXE build trên
+Windows dùng cho Windows; nếu máy trung gian chạy Linux thì build lại trên Linux.
+
+## Cấu hình ATFM Web
+
+Trong `prjApplication/Web.config`, đặt địa chỉ máy trung gian:
+
+```xml
+<add key="FlightTrackingApiBaseUrl" value="http://IP_MAY_TRUNG_GIAN:5088" />
+<add key="FlightTrackingApiTimeoutSeconds" value="10" />
+```
+
+Trang Web Forms gọi API ở phía server. Vì vậy firewall máy API phải cho phép IP của máy IIS,
+không phải IP trình duyệt người dùng.

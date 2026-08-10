@@ -5,12 +5,8 @@ import json
 import math
 import os
 import re
-import subprocess
 import sys
-import time
 import traceback
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -130,8 +126,6 @@ def load_config() -> Dict:
             "database": os.environ.get("TRACKS_PG_DATABASE", "postgres"),
             "username": os.environ.get("TRACKS_PG_USERNAME", "postgres"),
             "password": os.environ.get("TRACKS_PG_PASSWORD", ""),
-            "sslmode": os.environ.get("TRACKS_PG_SSLMODE", "prefer"),
-            "connect_timeout": int(os.environ.get("TRACKS_PG_CONNECT_TIMEOUT", "10")),
         },
         "oracle": {
             "host": os.environ.get("TRACKS_ORA_HOST", ""),
@@ -142,12 +136,6 @@ def load_config() -> Dict:
             "flight_table": os.environ.get("TRACKS_ORA_FLIGHT_TABLE", "T_DAY_FLIGHTS_GOINGON"),
         },
         "fir": {"geojson_path": os.environ.get("TRACKS_FIR_GEOJSON", DEFAULT_GEOJSON_PATH)},
-        "flight_tracking_api": {
-            "host": os.environ.get("FLIGHT_API_HOST", "0.0.0.0"),
-            "port": int(os.environ.get("FLIGHT_API_PORT", "5088")),
-            "threads": 8,
-            "max_lookback_days": 7,
-        },
         "watermark_path": os.environ.get("TRACKS_WATERMARK", ""),
     }
     config_source = "environment/default"
@@ -413,8 +401,6 @@ def pg_connect(cfg: Dict):
         dbname=pg.get("database"),
         user=pg.get("username") or pg.get("user"),
         password=pg.get("password"),
-        sslmode=pg.get("sslmode", "prefer"),
-        connect_timeout=int(pg.get("connect_timeout", 10)),
     )
 
 
@@ -458,128 +444,6 @@ def extract_data_source(text: str) -> str:
     if end < 0:
         end = len(text)
     return text[start:end].strip()
-
-
-def flight_api_base_url(cfg: Dict) -> str:
-    api = cfg.get("flight_tracking_api", {})
-    host = str(api.get("host") or "0.0.0.0").strip()
-    if host in ("0.0.0.0", "::", "[::]", "localhost"):
-        host = "127.0.0.1"
-    return "http://%s:%s" % (host, int(api.get("port", 5088)))
-
-
-def request_api_json(url: str, timeout: float = 3.0) -> Dict:
-    try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:
-            content = response.read().decode("utf-8")
-            return json.loads(content)
-    except urllib.error.HTTPError as exc:
-        try:
-            content = exc.read().decode("utf-8", errors="replace")
-        except Exception:
-            content = ""
-        raise RuntimeError("API tra HTTP %s: %s" % (exc.code, content[:300])) from exc
-    except (OSError, ValueError) as exc:
-        raise RuntimeError("Khong goi duoc %s: %s" % (url, exc)) from exc
-
-
-def flight_api_is_running(cfg: Dict, timeout: float = 1.5) -> bool:
-    try:
-        result = request_api_json(flight_api_base_url(cfg) + "/health/live", timeout=timeout)
-        return str(result.get("status", "")).lower() == "ok"
-    except Exception:
-        return False
-
-
-def flight_api_command(cfg: Dict) -> List[str]:
-    config_source = str(cfg.get("_config_source") or "")
-    config_args = ["--config", config_source] if config_source and Path(config_source).is_file() else []
-    if getattr(sys, "frozen", False):
-        executable = app_root() / "ATFM-FlightTrackingApi.exe"
-        if not executable.is_file():
-            raise RuntimeError("Khong tim thay ATFM-FlightTrackingApi.exe canh ATFM-TracksSync.exe.")
-        return [str(executable)] + config_args
-
-    script = project_root() / "tools" / "FlightTrackingApiPython" / "main.py"
-    if not script.is_file():
-        raise RuntimeError("Khong tim thay tools/FlightTrackingApiPython/main.py.")
-    return [sys.executable, str(script)] + config_args
-
-
-def start_flight_api_hidden(cfg: Dict, sink: Optional[MessageSink] = None, wait_seconds: float = 12.0) -> bool:
-    sink = sink or MessageSink()
-    base_url = flight_api_base_url(cfg)
-    if flight_api_is_running(cfg):
-        sink.write("Flight Tracking API da chay tai %s." % base_url)
-        return False
-
-    command = flight_api_command(cfg)
-    creation_flags = 0
-    startup_info = None
-    if os.name == "nt":
-        creation_flags = subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
-        startup_info = subprocess.STARTUPINFO()
-        startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startup_info.wShowWindow = 0
-
-    process = subprocess.Popen(
-        command,
-        cwd=str(app_root()),
-        env=os.environ.copy(),
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        close_fds=True,
-        creationflags=creation_flags,
-        startupinfo=startup_info,
-    )
-    deadline = time.monotonic() + wait_seconds
-    while time.monotonic() < deadline:
-        if flight_api_is_running(cfg, timeout=0.5):
-            sink.write("Da khoi dong ngam Flight Tracking API tai %s (PID %s)." % (base_url, process.pid))
-            return True
-        exit_code = process.poll()
-        if exit_code is not None:
-            raise RuntimeError("Flight Tracking API dung khi khoi dong (exit code %s)." % exit_code)
-        time.sleep(0.25)
-    raise RuntimeError("Flight Tracking API khong san sang sau %.0f giay." % wait_seconds)
-
-
-def test_configuration(sink: Optional[MessageSink] = None) -> None:
-    sink = sink or MessageSink()
-    cfg = load_config()
-    sink.write("========== TEST CAU HINH ==========")
-    sink.write("File cau hinh chung: %s" % cfg.get("_config_source", "environment/default"))
-
-    with pg_connect(cfg) as connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-    sink.write("[OK] PostgreSQL %s:%s/%s" % (
-        cfg["postgres"].get("host"),
-        cfg["postgres"].get("port", 5432),
-        cfg["postgres"].get("database"),
-    ))
-
-    with oracle_connect(cfg) as connection:
-        cursor = connection.cursor()
-        try:
-            cursor.execute("SELECT 1 FROM DUAL")
-            cursor.fetchone()
-        finally:
-            cursor.close()
-    sink.write("[OK] Oracle va thong tin dang nhap.")
-
-    geojson_path = cfg.get("fir", {}).get("geojson_path")
-    load_fir_polygons(geojson_path)
-    sink.write("[OK] GeoJSON FIR: %s" % geojson_path)
-
-    start_flight_api_hidden(cfg, sink=sink)
-    ready = request_api_json(flight_api_base_url(cfg) + "/health/ready", timeout=12)
-    if str(ready.get("status", "")).lower() != "ready":
-        raise RuntimeError("Flight Tracking API chua ready: %s" % ready)
-    sink.write("[OK] Flight Tracking API: %s" % flight_api_base_url(cfg))
-    sink.write("Tat ca cau hinh deu hop le.")
 
 
 def read_tracks(cfg: Dict, polygons: Dict, sink: MessageSink, full: bool = False) -> Tuple[List[TrackCandidate], Optional[datetime]]:
@@ -1292,10 +1156,7 @@ def run_gui() -> None:
         def worker():
             try:
                 sink.write("Đang chạy, vui lòng chờ...")
-                if mode == "config":
-                    test_configuration(sink=sink)
-                else:
-                    execute(mode, full=full, sink=sink)
+                execute(mode, full=full, sink=sink)
             except Exception:
                 sink.write(traceback.format_exc())
             finally:
@@ -1387,7 +1248,6 @@ def run_gui() -> None:
     bar.pack(fill="x", padx=18, pady=(0, 4))
     button_style = {"fg": "white", "padx": 16, "pady": 10, "font": ("Segoe UI", 9, "bold"), "relief": "flat", "cursor": "hand2"}
     manual_buttons = [
-        tk.Button(bar, text="Test cấu hình", command=lambda: start("config"), bg="#526f85", **button_style),
         tk.Button(bar, text="Kiểm tra đối chiếu", command=lambda: start("check"), bg="#2d8ac4", **button_style),
         tk.Button(bar, text="Ghi T_TRACKS_LOG", command=lambda: start("sync"), bg="#14966d", **button_style),
         tk.Button(bar, text="Xác minh kết quả", command=lambda: start("verify"), bg="#7059b8", **button_style),
@@ -1408,29 +1268,17 @@ def run_gui() -> None:
     log = scrolledtext.ScrolledText(root, bg="#102531", fg="#e8f7ff", insertbackground="white", font=("Consolas", 10))
     log.pack(fill="both", expand=True, padx=18, pady=12)
     sink = TkSink(log)
-
-    def start_api_on_open() -> None:
-        try:
-            cfg = load_config()
-            sink.write("Đang kiểm tra Flight Tracking API nền...")
-            start_flight_api_hidden(cfg, sink=sink)
-        except Exception:
-            sink.write("Không thể tự khởi động Flight Tracking API:\n%s" % traceback.format_exc())
-
-    threading.Thread(target=start_api_on_open, daemon=True).start()
     root.mainloop()
 
 
 def main() -> None:
     configure_console_encoding()
     parser = argparse.ArgumentParser(description="ATFM FIR Tracks Logger")
-    parser.add_argument("--mode", choices=["config", "check", "sync", "verify", "all", "gui"], default="gui")
+    parser.add_argument("--mode", choices=["check", "sync", "verify", "all", "gui"], default="gui")
     parser.add_argument("--full", action="store_true", help="Bo qua watermark va doc lai toan bo public.tracks.")
     args = parser.parse_args()
     if args.mode == "gui":
         run_gui()
-    elif args.mode == "config":
-        test_configuration()
     else:
         execute(args.mode, full=args.full)
 
