@@ -22,7 +22,8 @@ class TracksLoggerPanel(ttk.Frame):
 
     def __init__(self, parent: tk.Misc) -> None:
         super().__init__(parent, padding=14)
-        self.stop_event = threading.Event()
+        self.shutdown_event = threading.Event()
+        self.auto_stop_event = threading.Event()
         self.events: queue.Queue[tuple[str, object]] = queue.Queue()
         self.busy = False
         self.auto_running = False
@@ -54,6 +55,8 @@ class TracksLoggerPanel(ttk.Frame):
 
         self.auto_button = ttk.Button(controls, text="Auto", command=self._start_auto)
         self.auto_button.pack(side="left", padx=(5, 7), pady=3)
+        self.stop_button = ttk.Button(controls, text="Stop", command=self._stop_auto, state="disabled")
+        self.stop_button.pack(side="left", padx=(0, 7), pady=3)
         ttk.Label(controls, text="Chu kỳ (giây):").pack(side="left", padx=(3, 5))
         self.interval_value = tk.StringVar(value="10")
         self.interval_entry = ttk.Entry(controls, textvariable=self.interval_value, width=8, justify="center")
@@ -81,6 +84,7 @@ class TracksLoggerPanel(ttk.Frame):
         if not self.auto_running:
             self.auto_button.configure(state=state)
             self.interval_entry.configure(state=state)
+        self.stop_button.configure(state="normal" if self.auto_running else "disabled")
 
     def _append_log(self, text: str) -> None:
         self.log.insert("end", text + "\n")
@@ -123,10 +127,12 @@ class TracksLoggerPanel(ttk.Frame):
             self.interval_entry.focus_set()
             return
 
+        self.auto_stop_event.clear()
         self.busy = True
         self.auto_running = True
         self._set_controls(False)
         self.auto_button.configure(text="Auto đang chạy", state="disabled")
+        self.stop_button.configure(state="normal")
         self.interval_entry.configure(state="disabled")
         panel = self
 
@@ -136,24 +142,38 @@ class TracksLoggerPanel(ttk.Frame):
 
         def worker() -> None:
             iteration = 0
-            while not panel.stop_event.is_set():
-                iteration += 1
-                panel.events.put(("log", f"\n========== AUTO - LƯỢT {iteration} =========="))
-                panel.events.put(("status", f"Đang chạy lượt {iteration}..."))
-                try:
-                    execute("all", full=False, sink=QueueSink())
-                    panel.events.put(("log", f"Auto lượt {iteration} đã hoàn thành."))
-                except Exception:
-                    panel.events.put(("log", f"Auto lượt {iteration} gặp lỗi:\n{traceback.format_exc()}"))
+            try:
+                while not panel.shutdown_event.is_set() and not panel.auto_stop_event.is_set():
+                    iteration += 1
+                    panel.events.put(("log", f"\n========== AUTO - LƯỢT {iteration} =========="))
+                    panel.events.put(("status", f"Đang chạy lượt {iteration}..."))
+                    try:
+                        execute("all", full=False, sink=QueueSink())
+                        panel.events.put(("log", f"Auto lượt {iteration} đã hoàn thành."))
+                    except Exception:
+                        panel.events.put(("log", f"Auto lượt {iteration} gặp lỗi:\n{traceback.format_exc()}"))
 
-                for remaining in range(interval, 0, -1):
-                    if panel.stop_event.is_set():
-                        return
-                    panel.events.put(("status", f"Lượt {iteration} hoàn tất · chạy lại sau {remaining} giây"))
-                    if panel.stop_event.wait(1):
-                        return
+                    if panel.shutdown_event.is_set() or panel.auto_stop_event.is_set():
+                        break
+                    for remaining in range(interval, 0, -1):
+                        if panel.shutdown_event.is_set() or panel.auto_stop_event.is_set():
+                            break
+                        panel.events.put(("status", f"Lượt {iteration} hoàn tất · chạy lại sau {remaining} giây"))
+                        if panel.auto_stop_event.wait(1):
+                            break
+            finally:
+                if not panel.shutdown_event.is_set():
+                    panel.events.put(("auto_done", None))
 
         threading.Thread(target=worker, daemon=True, name="tracks-auto").start()
+
+    def _stop_auto(self) -> None:
+        if not self.auto_running or self.auto_stop_event.is_set():
+            return
+        self.auto_stop_event.set()
+        self.stop_button.configure(state="disabled")
+        self.status_value.set("Đang dừng Auto sau khi lượt hiện tại hoàn tất...")
+        self._append_log("Đã yêu cầu dừng Auto; lượt đang xử lý sẽ hoàn tất trước khi dừng.")
 
     def _poll_events(self) -> None:
         try:
@@ -169,13 +189,21 @@ class TracksLoggerPanel(ttk.Frame):
                     self.busy = False
                     self.status_value.set("Sẵn sàng")
                     self._set_controls(True)
+                elif event == "auto_done":
+                    self.auto_running = False
+                    self.busy = False
+                    self.auto_button.configure(text="Auto")
+                    self._set_controls(True)
+                    self.status_value.set("Auto đã dừng")
+                    self._append_log("Auto đã dừng.")
         except queue.Empty:
             pass
-        if not self.stop_event.is_set():
+        if not self.shutdown_event.is_set():
             self.after(100, self._poll_events)
 
     def shutdown(self) -> None:
-        self.stop_event.set()
+        self.shutdown_event.set()
+        self.auto_stop_event.set()
 
 
 class ToolShell(tk.Frame):

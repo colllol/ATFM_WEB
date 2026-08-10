@@ -23,6 +23,7 @@ exe = EXE(
     a.datas,
     [],
     name='ATFM-TracksSync-CLI',
+    icon='tools\\assets\\ATFM-Tools.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

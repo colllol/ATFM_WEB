@@ -10,6 +10,7 @@ Ung dung hop nhat hai tool trong mot cua so:
 - Hai panel co worker thread, trang thai, log va ket noi database rieng.
 - Thu gon panel chi an giao dien; tac vu dang chay van tiep tuc.
 - Dong ung dung se yeu cau Excel Importer dung o diem an toan tiep theo va dung vong Auto cua Tracks Logger.
+- Nut Stop cua FIR Tracks Logger dung vong Auto tai diem an toan va cho phep bam Auto de chay lai.
 - Cac module nghiep vu Excel Importer duoc giu nguyen tu tool goc; chi lop giao dien duoc chuyen thanh panel co the nhung.
 - Tracks Logger tai su dung truc tiep ham `execute` cua `tools/TracksSyncPython/main.py`.
 

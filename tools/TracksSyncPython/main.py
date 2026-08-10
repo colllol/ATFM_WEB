@@ -1112,7 +1112,8 @@ def run_gui() -> None:
     import tkinter as tk
     from tkinter import messagebox, scrolledtext
 
-    stop_event = threading.Event()
+    app_stop_event = threading.Event()
+    auto_stop_event = threading.Event()
     state = {"busy": False, "auto": False}
 
     class TkSink(MessageSink):
@@ -1120,7 +1121,7 @@ def run_gui() -> None:
             self.widget = widget
 
         def write(self, text: str) -> None:
-            if stop_event.is_set():
+            if app_stop_event.is_set():
                 return
             try:
                 self.widget.after(0, lambda: append_log(self.widget, text))
@@ -1138,6 +1139,7 @@ def run_gui() -> None:
         if not state["auto"]:
             auto_button.configure(state=value)
             interval_entry.configure(state=value)
+        stop_button.configure(state="normal" if state["auto"] else "disabled")
 
     def finish_manual() -> None:
         state["busy"] = False
@@ -1158,7 +1160,7 @@ def run_gui() -> None:
             except Exception:
                 sink.write(traceback.format_exc())
             finally:
-                if not stop_event.is_set():
+                if not app_stop_event.is_set():
                     root.after(0, finish_manual)
 
         threading.Thread(target=worker, daemon=True).start()
@@ -1178,37 +1180,60 @@ def run_gui() -> None:
             interval_entry.focus_set()
             return
 
+        auto_stop_event.clear()
         state["auto"] = True
         state["busy"] = True
         set_manual_controls(False)
         auto_button.configure(text="Auto đang chạy", state="disabled")
+        stop_button.configure(state="normal")
         interval_entry.configure(state="disabled")
 
         def auto_worker():
             iteration = 0
-            while not stop_event.is_set():
-                iteration += 1
-                sink.write("\n========== AUTO - LƯỢT %d ==========" % iteration)
-                root.after(0, lambda current=iteration: auto_status.set(f"Đang chạy lượt {current}..."))
-                try:
-                    execute("all", full=False, sink=sink)
-                    sink.write("Auto lượt %d đã hoàn thành." % iteration)
-                except Exception:
-                    sink.write("Auto lượt %d gặp lỗi:\n%s" % (iteration, traceback.format_exc()))
+            try:
+                while not app_stop_event.is_set() and not auto_stop_event.is_set():
+                    iteration += 1
+                    sink.write("\n========== AUTO - LƯỢT %d ==========" % iteration)
+                    root.after(0, lambda current=iteration: auto_status.set(f"Đang chạy lượt {current}..."))
+                    try:
+                        execute("all", full=False, sink=sink)
+                        sink.write("Auto lượt %d đã hoàn thành." % iteration)
+                    except Exception:
+                        sink.write("Auto lượt %d gặp lỗi:\n%s" % (iteration, traceback.format_exc()))
 
-                if stop_event.is_set():
-                    break
-                for remaining in range(interval, 0, -1):
-                    if stop_event.is_set():
+                    if app_stop_event.is_set() or auto_stop_event.is_set():
                         break
-                    root.after(0, lambda value=remaining, current=iteration: update_auto_countdown(value, current))
-                    if stop_event.wait(1):
-                        break
+                    for remaining in range(interval, 0, -1):
+                        if app_stop_event.is_set() or auto_stop_event.is_set():
+                            break
+                        root.after(0, lambda value=remaining, current=iteration: update_auto_countdown(value, current))
+                        if auto_stop_event.wait(1):
+                            break
+            finally:
+                if not app_stop_event.is_set():
+                    root.after(0, finish_auto)
 
         threading.Thread(target=auto_worker, daemon=True).start()
 
+    def stop_auto() -> None:
+        if not state["auto"] or auto_stop_event.is_set():
+            return
+        auto_stop_event.set()
+        stop_button.configure(state="disabled")
+        auto_status.set("Đang dừng Auto sau khi lượt hiện tại hoàn tất...")
+        sink.write("Đã yêu cầu dừng Auto; lượt đang xử lý sẽ hoàn tất trước khi dừng.")
+
+    def finish_auto() -> None:
+        state["auto"] = False
+        state["busy"] = False
+        auto_button.configure(text="Auto")
+        set_manual_controls(True)
+        auto_status.set("Auto đã dừng")
+        sink.write("Auto đã dừng.")
+
     def close_app() -> None:
-        stop_event.set()
+        app_stop_event.set()
+        auto_stop_event.set()
         root.destroy()
 
     root = tk.Tk()
@@ -1232,6 +1257,8 @@ def run_gui() -> None:
 
     auto_button = tk.Button(bar, text="Auto", command=start_auto, bg="#d9822b", **button_style)
     auto_button.pack(side="left", padx=(0, 8))
+    stop_button = tk.Button(bar, text="Stop", command=stop_auto, bg="#c74444", state="disabled", **button_style)
+    stop_button.pack(side="left", padx=(0, 8))
     tk.Label(bar, text="Chu kỳ (giây):", font=("Segoe UI", 9, "bold"), fg="#294c68").pack(side="left", padx=(5, 6))
     interval_value = tk.StringVar(value="10")
     interval_entry = tk.Entry(bar, textvariable=interval_value, width=7, justify="center", font=("Segoe UI", 10))
