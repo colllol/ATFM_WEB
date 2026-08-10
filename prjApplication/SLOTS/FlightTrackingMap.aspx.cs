@@ -4,16 +4,20 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web.Hosting;
+using System.Web.Script.Serialization;
 using System.Web.Services;
-using Npgsql;
 using Oracle.ManagedDataAccess.Client;
 
 namespace prjApplication.SLOTS
 {
     public partial class FlightTrackingMap : prjApplication.ReportNew.ReportPageBase
     {
+        private static readonly HttpClient TrackApiClient = new HttpClient();
+
         private sealed class TrackRow
         {
             public string FlightId { get; set; }
@@ -44,6 +48,21 @@ namespace prjApplication.SLOTS
             public string ToAirp { get; set; }
             public string Etd { get; set; }
             public string Eta { get; set; }
+        }
+
+        private sealed class TrackApiResponse
+        {
+            public List<TrackApiItem> flights { get; set; }
+        }
+
+        private sealed class TrackApiItem
+        {
+            public string flightIdCurrent { get; set; }
+            public string callsign { get; set; }
+            public string updatedAtUtc { get; set; }
+            public double latitude { get; set; }
+            public double longitude { get; set; }
+            public double heading { get; set; }
         }
 
         [WebMethod]
@@ -108,58 +127,75 @@ namespace prjApplication.SLOTS
 
         private static List<TrackRow> LoadTodayTracks(DateTime today)
         {
-            const string sql = @"
-                SELECT DISTINCT ON (normalized_callsign)
-                       flight_id_current,
-                       normalized_callsign,
-                       updated_at_timestamp,
-                       last_lat,
-                       last_lon,
-                       COALESCE(last_track_deg, 0)
-                FROM (
-                    SELECT flight_id_current,
-                           UPPER(TRIM(SPLIT_PART(COALESCE(flight_id_current, ''), '-', 1))) normalized_callsign,
-                           NULLIF(TRIM(updated_at_utc), '')::timestamp updated_at_timestamp,
-                           last_lat,
-                           last_lon,
-                           last_track_deg
-                    FROM public.tracks
-                    WHERE flight_id_current IS NOT NULL
-                      AND updated_at_utc IS NOT NULL
-                      AND last_lat IS NOT NULL
-                      AND last_lon IS NOT NULL
-                      AND NULLIF(TRIM(updated_at_utc), '')::timestamp >= @fromDate
-                      AND NULLIF(TRIM(updated_at_utc), '')::timestamp < @toDate
-                ) source
-                WHERE normalized_callsign <> ''
-                ORDER BY normalized_callsign, updated_at_timestamp DESC";
-
-            var rows = new List<TrackRow>();
-            string connectionString = ConfigurationManager.ConnectionStrings["TracksPostgres"].ConnectionString;
-            using (var connection = new NpgsqlConnection(connectionString))
-            using (var command = new NpgsqlCommand(sql, connection))
+            string baseUrl = RequireAppSetting("FlightTrackingApiBaseUrl").TrimEnd('/');
+            string apiKey = RequireAppSetting("FlightTrackingApiKey");
+            string endpoint = baseUrl + "/api/v1/tracks?date=" + today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            int timeoutSeconds;
+            if (!Int32.TryParse(ConfigurationManager.AppSettings["FlightTrackingApiTimeoutSeconds"], out timeoutSeconds)
+                || timeoutSeconds < 1 || timeoutSeconds > 120)
             {
-                command.CommandTimeout = 30;
-                command.Parameters.AddWithValue("fromDate", today);
-                command.Parameters.AddWithValue("toDate", today.AddDays(1));
-                connection.Open();
-                using (var reader = command.ExecuteReader())
+                timeoutSeconds = 10;
+            }
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, endpoint))
+            {
+                request.Headers.Add("X-API-Key", apiKey);
+                using (var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+                using (HttpResponseMessage response = TrackApiClient.SendAsync(request, cancellation.Token).GetAwaiter().GetResult())
                 {
-                    while (reader.Read())
+                    string content = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    if (!response.IsSuccessStatusCode)
                     {
+                        throw new InvalidOperationException(
+                            "Flight Tracking API trả về HTTP " + (int)response.StatusCode + ". " + LimitText(content, 300));
+                    }
+
+                    TrackApiResponse payload = new JavaScriptSerializer().Deserialize<TrackApiResponse>(content);
+                    if (payload == null || payload.flights == null) return new List<TrackRow>();
+
+                    var rows = new List<TrackRow>();
+                    foreach (TrackApiItem item in payload.flights)
+                    {
+                        DateTime updatedAt;
+                        if (item == null
+                            || String.IsNullOrWhiteSpace(item.callsign)
+                            || !DateTime.TryParseExact(
+                                item.updatedAtUtc,
+                                "yyyy-MM-dd'T'HH:mm:ss",
+                                CultureInfo.InvariantCulture,
+                                DateTimeStyles.None,
+                                out updatedAt))
+                        {
+                            continue;
+                        }
+
                         rows.Add(new TrackRow
                         {
-                            FlightId = Convert.ToString(reader[0]),
-                            Callsign = Convert.ToString(reader[1]),
-                            UpdatedAt = Convert.ToDateTime(reader[2], CultureInfo.InvariantCulture),
-                            Latitude = Convert.ToDouble(reader[3], CultureInfo.InvariantCulture),
-                            Longitude = Convert.ToDouble(reader[4], CultureInfo.InvariantCulture),
-                            Heading = reader.IsDBNull(5) ? 0 : Convert.ToDouble(reader[5], CultureInfo.InvariantCulture)
+                            FlightId = item.flightIdCurrent ?? String.Empty,
+                            Callsign = item.callsign,
+                            UpdatedAt = updatedAt,
+                            Latitude = item.latitude,
+                            Longitude = item.longitude,
+                            Heading = item.heading
                         });
                     }
+                    return rows;
                 }
             }
-            return rows;
+        }
+
+        private static string RequireAppSetting(string key)
+        {
+            string value = ConfigurationManager.AppSettings[key];
+            if (String.IsNullOrWhiteSpace(value))
+                throw new ConfigurationErrorsException("Thiếu appSettings/" + key + " trong Web.config.");
+            return value.Trim();
+        }
+
+        private static string LimitText(string value, int maximumLength)
+        {
+            string normalized = (value ?? String.Empty).Replace("\r", " ").Replace("\n", " ").Trim();
+            return normalized.Length <= maximumLength ? normalized : normalized.Substring(0, maximumLength) + "...";
         }
 
         private static Dictionary<string, FlightMeta> LoadFlightMetadata(DateTime today, IEnumerable<TrackRow> values)
