@@ -1,11 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+flasgger_datas, flasgger_binaries, flasgger_hiddenimports = collect_all("flasgger")
 
 a = Analysis(
     ["main.py"],
     pathex=[],
-    binaries=[],
-    datas=[("FlightTrackingApi.example.json", ".")],
-    hiddenimports=["psycopg_binary"],
+    binaries=flasgger_binaries,
+    datas=[("FlightTrackingApi.example.json", ".")] + flasgger_datas,
+    hiddenimports=["psycopg_binary"] + flasgger_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

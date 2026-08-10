@@ -10,7 +10,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import psycopg
-from flask import Flask, jsonify, request
+from flasgger import Swagger
+from flask import Flask, jsonify, redirect, request
 from waitress import serve
 
 
@@ -62,6 +63,73 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
     "api": {
         "max_lookback_days": 7,
+    },
+}
+
+SWAGGER_CONFIG = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "openapi",
+            "route": "/openapi.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/swagger-static",
+    "swagger_ui": True,
+    "specs_route": "/swagger/",
+}
+
+SWAGGER_TEMPLATE = {
+    "swagger": "2.0",
+    "info": {
+        "title": "ATFM Flight Tracking API",
+        "description": "API đọc vị trí chuyến bay mới nhất từ PostgreSQL public.tracks. Không yêu cầu X-API-Key.",
+        "version": "1.0.0",
+    },
+    "basePath": "/",
+    "schemes": ["http"],
+    "tags": [
+        {"name": "Health", "description": "Trạng thái tiến trình và kết nối PostgreSQL."},
+        {"name": "Flight Tracking", "description": "Dữ liệu vị trí chuyến bay."},
+    ],
+    "definitions": {
+        "HealthStatus": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {"status": {"type": "string", "example": "ok"}},
+        },
+        "ErrorResponse": {
+            "type": "object",
+            "required": ["error"],
+            "properties": {"error": {"type": "string"}},
+        },
+        "TrackPosition": {
+            "type": "object",
+            "required": ["flightIdCurrent", "callsign", "updatedAtUtc", "latitude", "longitude", "heading"],
+            "properties": {
+                "flightIdCurrent": {"type": "string", "example": "HVN123-20260810"},
+                "callsign": {"type": "string", "example": "HVN123"},
+                "updatedAtUtc": {"type": "string", "format": "date-time", "example": "2026-08-10T08:30:00"},
+                "latitude": {"type": "number", "format": "double", "example": 21.0285},
+                "longitude": {"type": "number", "format": "double", "example": 105.8542},
+                "heading": {"type": "number", "format": "double", "example": 180.0},
+            },
+        },
+        "TracksResponse": {
+            "type": "object",
+            "required": ["day", "serverTimeUtc", "count", "flights"],
+            "properties": {
+                "day": {"type": "string", "format": "date", "example": "2026-08-10"},
+                "serverTimeUtc": {"type": "string", "format": "date-time"},
+                "count": {"type": "integer", "example": 1},
+                "flights": {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/TrackPosition"},
+                },
+            },
+        },
     },
 }
 
@@ -185,13 +253,40 @@ def create_app(
 ) -> Flask:
     app = Flask(__name__)
     app.config["ATFM_FLIGHT_CONFIG"] = config
+    Swagger(app, config=SWAGGER_CONFIG, template=SWAGGER_TEMPLATE)
+
+    @app.get("/")
+    def index():
+        return redirect("/swagger/", code=302)
 
     @app.get("/health/live")
     def health_live():
+        """Kiểm tra tiến trình API đang chạy.
+        ---
+        tags: [Health]
+        responses:
+          200:
+            description: Tiến trình đang hoạt động.
+            schema:
+              $ref: '#/definitions/HealthStatus'
+        """
         return jsonify(status="ok")
 
     @app.get("/health/ready")
     def health_ready():
+        """Kiểm tra kết nối PostgreSQL.
+        ---
+        tags: [Health]
+        responses:
+          200:
+            description: PostgreSQL sẵn sàng.
+            schema:
+              $ref: '#/definitions/HealthStatus'
+          503:
+            description: PostgreSQL chưa sẵn sàng.
+            schema:
+              $ref: '#/definitions/HealthStatus'
+        """
         try:
             database_checker(config)
             return jsonify(status="ready")
@@ -201,6 +296,30 @@ def create_app(
 
     @app.get("/api/v1/tracks")
     def tracks():
+        """Lấy vị trí mới nhất của từng callsign trong ngày.
+        ---
+        tags: [Flight Tracking]
+        parameters:
+          - name: date
+            in: query
+            type: string
+            format: date
+            required: false
+            description: Ngày UTC theo định dạng yyyy-MM-dd; mặc định là hôm nay.
+        responses:
+          200:
+            description: Danh sách vị trí chuyến bay.
+            schema:
+              $ref: '#/definitions/TracksResponse'
+          400:
+            description: Ngày sai định dạng hoặc ngoài khoảng cho phép.
+            schema:
+              $ref: '#/definitions/ErrorResponse'
+          503:
+            description: PostgreSQL tạm thời chưa sẵn sàng.
+            schema:
+              $ref: '#/definitions/ErrorResponse'
+        """
         raw_date = (request.args.get("date") or "").strip()
         if raw_date:
             try:
