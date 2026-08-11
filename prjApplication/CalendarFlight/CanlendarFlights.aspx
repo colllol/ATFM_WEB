@@ -2404,8 +2404,8 @@
                 method: 'PUT',
                 url: urlApi
                     + 'api/ApiExtension/ExcuteReturnInt'
-                    + '?packageName=MAKE_FINISHED'
-                    + '&storeName=sp_CoppyBravoFlight',
+                    + '?packageName=BRAVO_EXPORT_PKG'
+                    + '&storeName=COPY_BRAVO_FLIGHT',
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 data: JSON.stringify({ P_DATE: flightDate }),
@@ -2426,7 +2426,8 @@
                 if (!data
                     || (data.Code != null && String(data.Code) !== '00')
                     || data.ListValue == null
-                    || String(data.ListValue) === '-1') {
+                    || String(data.ListValue) === '-1'
+                    || String(data.ListValue) === '-99') {
                     var message = data && data.Message
                         ? data.Message
                         : 'Move error!';
