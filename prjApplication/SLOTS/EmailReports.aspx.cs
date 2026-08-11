@@ -146,7 +146,7 @@ namespace prjApplication.SLOTS
 
                 PermMasterSc permission = new PermMasterScDAL().GetOneObject(targetPermId.ToString());
                 if (permission != null && permission.PERM_ID > 0)
-                    return BuildPermissionResult(targetPermId, "SC", "Edit_PermSC.aspx", permission.OPER_NAME, permission.OPER_ID);
+                    return BuildPermissionResult(targetPermId, "SC", "Edit_PermSC4Mail.aspx", permission.OPER_NAME, permission.OPER_ID);
 
                 PermMasterNo permissionNo = new PermMasterNoDAL().GetOneObject(targetPermId.ToString());
                 if (permissionNo != null && permissionNo.PERM_ID > 0)
