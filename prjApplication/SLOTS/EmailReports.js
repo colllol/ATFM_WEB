@@ -28,11 +28,18 @@
             name = typeof attachments[0] === 'string' ? attachments[0] : text(attachments[0], ['storedFileName']);
         return name;
     }
+    function storageFolder(item) {
+        var normalized = status(item).trim().toUpperCase();
+        if (normalized === 'SAVED' || normalized === 'SKIPPED') return 'processed';
+        if (normalized === 'FAILED' || normalized === 'ERROR') return 'error';
+        if (normalized === 'QUARANTINED') return 'quarantine';
+        return '';
+    }
     function downloadUrl(item) {
         var fileName = attachmentName(item);
         var itemDate = dateKey(date(item));
-        if (!fileName || !itemDate) return '';
-        var folder = status(item).trim().toLowerCase() === 'saved' ? 'processed' : 'error';
+        var folder = storageFolder(item);
+        if (!fileName || !itemDate || !folder) return '';
         var datePath = itemDate.replace(/-/g, '/');
         return 'http://172.29.79.49/vatm-storage/' + folder + '/' + datePath + '/' + encodeURIComponent(fileName);
     }
