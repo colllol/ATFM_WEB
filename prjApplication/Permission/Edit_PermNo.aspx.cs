@@ -8,6 +8,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Script.Serialization;
 using System.Web.UI;
@@ -17,6 +18,16 @@ namespace prjApplication.Permission
 {
     public partial class Edit_PermNo : PageBaseCallBack
     {
+        private const int PermNoLookupCacheMinutes = 60;
+        private static readonly object PermNoLookupCacheSync = new object();
+
+        private sealed class PermNoLookupData
+        {
+            public List<FpAuthor> Authors { get; set; }
+            public List<FlyPurpose> Purposes { get; set; }
+            public List<Aero> Airports { get; set; }
+            public List<CraftType> Crafts { get; set; }
+        }
         
         public string _phanCach = "::::";
         public string _ObjRender
@@ -43,7 +54,8 @@ namespace prjApplication.Permission
 
         public void ddl_Load()
         {
-            this.FillDropdownList(ddlAUTHOR_ID, new FpAuthorDAL().GetAllObject(), "AUTHOR_NAME", "AUTHOR_CODE");
+            var lookups = GetPermNoLookupData();
+            this.FillDropdownList(ddlAUTHOR_ID, lookups.Authors, "AUTHOR_NAME", "AUTHOR_CODE");
             //this.FillDropdownList(ddlOPER_ID, new OperDAL().GetAllObject(), "OPER_NAME", "OPER_ICAO");
 
             //this.FillDropdownList<FlyPurpose>(ddlPURPOSE_ID, new FlyPurposeDAL().GetAllObject(), "PURPOSE_NAME", "PURPOSE_CODE");
@@ -51,9 +63,9 @@ namespace prjApplication.Permission
             //this.FillDropdownList<Aero>(ddlFROM_AIRP, new AeroDAL().GetListAll(), "AE_NAME", "AE_ID");
 
             //ddlCRAFT_ID ddlPURPOSE_ID  ddlTO_AIRP  ddlFROM_AIRP  
-            var s_Purpose = new FlyPurposeDAL().GetAllObject();
-            var s_Aero = new AeroDAL().GetListAll();
-            var s_Craft = new CraftTypeDAL().GetAllCraftType();
+            var s_Purpose = lookups.Purposes;
+            var s_Aero = lookups.Airports;
+            var s_Craft = lookups.Crafts;
             foreach (var item in s_Purpose)
             {
                 ListItem li = new ListItem();
@@ -85,6 +97,61 @@ namespace prjApplication.Permission
             ddlFROM_AIRP.DataBind();
             ddlTO_AIRP.DataBind();
             ddlCRAFT_ID.DataBind();
+        }
+
+        private static PermNoLookupData GetPermNoLookupData()
+        {
+            const string cacheKey = "ATFM.PERMNO.LOOKUPS";
+            var cached = HttpRuntime.Cache[cacheKey] as PermNoLookupData;
+            if (cached != null)
+                return cached;
+
+            lock (PermNoLookupCacheSync)
+            {
+                cached = HttpRuntime.Cache[cacheKey] as PermNoLookupData;
+                if (cached != null)
+                    return cached;
+
+                List<FpAuthor> authors = null;
+                List<FlyPurpose> purposes = null;
+                List<Aero> airports = null;
+                List<CraftType> crafts = null;
+
+                // Bốn API danh mục độc lập; tải song song để giảm thời gian mở trang lần đầu.
+                Parallel.Invoke(
+                    () => authors = new FpAuthorDAL().GetAllObject(),
+                    () => purposes = new FlyPurposeDAL().GetAllObject(),
+                    () => airports = new AeroDAL().GetListAll(),
+                    () => crafts = new CraftTypeDAL().GetAllCraftType());
+
+                cached = new PermNoLookupData
+                {
+                    Authors = authors ?? new List<FpAuthor>(),
+                    Purposes = purposes ?? new List<FlyPurpose>(),
+                    Airports = (airports ?? new List<Aero>())
+                        .Where(item => item != null && !string.IsNullOrWhiteSpace(item.AE_CODE))
+                        .GroupBy(item => item.AE_CODE.Trim(), StringComparer.OrdinalIgnoreCase)
+                        .Select(group => group
+                            .OrderByDescending(item =>
+                                !string.IsNullOrWhiteSpace(item.AE_IATA)
+                                && !string.Equals(
+                                    item.AE_CODE.Trim(),
+                                    item.AE_IATA.Trim(),
+                                    StringComparison.OrdinalIgnoreCase))
+                            .First())
+                        .OrderBy(item => item.AE_CODE)
+                        .ToList(),
+                    Crafts = crafts ?? new List<CraftType>()
+                };
+
+                HttpRuntime.Cache.Insert(
+                    cacheKey,
+                    cached,
+                    null,
+                    DateTime.UtcNow.AddMinutes(PermNoLookupCacheMinutes),
+                    System.Web.Caching.Cache.NoSlidingExpiration);
+                return cached;
+            }
         }
 
         public override string GetCallbackResult()

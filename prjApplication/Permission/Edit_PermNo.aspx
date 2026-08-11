@@ -1128,6 +1128,14 @@
         function GetListFilePerm(permid) {
             GetArgWithPostBack(permid + '_____GetListFilePerm', 'GetListFilePerm');
         }
+        var permNoAttachmentListLoaded = false;
+        function loadPermNoAttachmentsOnce() {
+            var permId = $('#perm_id').html().trim();
+            if (permNoAttachmentListLoaded || permId === '' || permId === '0') return;
+
+            permNoAttachmentListLoaded = true;
+            GetListFilePerm(permId);
+        }
         function deleteFile(id) {
             var cf = confirm('Do you want delete?');
             if (cf)
@@ -1140,9 +1148,6 @@
             GetArgWithPostBack($('#perm_id').html().trim() + "_____uploadComplete", "uploadComplete");
             //else return;
         }
-        $(document).ready(function () {
-            GetListFilePerm($('#perm_id').html().trim());
-        });
     </script>
     <script>
         function prelodingUploadFile() {
@@ -1395,6 +1400,27 @@
             };
         }
 
+        function bindPermNoDetailLazyInputs() {
+            var $table = $('#tblSource');
+            $table.off('.permNoDetailInput');
+            $table.on('mouseover.permNoDetailInput', 'input[data-control="_updateAll"]', function () {
+                onmouseoverInput(this.id);
+            });
+            $table.on('mouseout.permNoDetailInput', 'input[data-control="_updateAll"]', function () {
+                onmouseoutInput(this.id);
+            });
+            $table.on('focusin.permNoDetailInput', 'input[data-control="_updateAll"]', function () {
+                var $input = $(this);
+                if ($input.attr('data-permno-plugin-ready') === '1') return;
+
+                $input.attr('data-permno-plugin-ready', '1');
+                if (this.id.indexOf('txtDAYSFLIGHT') === -1)
+                    $input.ValidateTip();
+                else
+                    $input.multiDate();
+            });
+        }
+
         function LoadDataAjax(ignoreCurrentFilters) {
             if ($('#perm_id').html().trim() == '') return;
             if ($('#perm_id').html().trim() != '') {
@@ -1422,22 +1448,16 @@
                     unPreLoadingData();
                     reloadCheckValid();
                     $('#tblSource').paging({
+                        pageSize: parseInt($('#tblSource').attr('data-pageSize'), 10) || 1000,
                         onClickButton: 'LoadDataAjax'
                     });
-                    $('#tblSource input[data-control="_updateAll"]').each(function (a, b) {
-                        $(b).mouseover(function () {
-                            onmouseoverInput(b.id)
-                        });
-                        $(b).mouseout(function () {
-                            onmouseoutInput(b.id)
-                        });
-                        if ($(b).prop('id').indexOf('txtDAYSFLIGHT') == -1)
-                            $(b).ValidateTip();
-                        else $(b).multiDate();
-                    })
+                    bindPermNoDetailLazyInputs();
+                    loadPermNoAttachmentsOnce();
                 },
             }).always(function (data) {
-                if (data.ListValue == null) {
+                if (!data || !$.isArray(data.ListValue) || data.ListValue.length === 0) {
+                    $('#tblSource tbody tr').remove();
+                    $('#tblSource').attr('data-total', 0);
                     unPreLoadingData();
                     return;
                 }
