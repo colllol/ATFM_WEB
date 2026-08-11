@@ -1221,6 +1221,7 @@
     <Content Include="Permission\View_PermSC.aspx" />
     <Content Include="Permission\View_PermNo.aspx" />
     <Content Include="Permission\Edit_PermNo.aspx" />
+    <Content Include="Permission\Edit_PermNO4Mail.aspx" />
     <Content Include="Permission\Edit_PermSC.aspx" />
     <Content Include="Permission\Edit_PermSC4Mail.aspx" />
     <Content Include="Permission\SearchExtension.aspx" />

@@ -95,7 +95,7 @@
             state: state,
             oper: result.oper || '',
             targetPermId: targetPermId,
-            editPage: result.editPage || (result.targetTable === 'NO' ? 'Edit_PermNo.aspx' : 'Edit_PermSC.aspx'),
+            editPage: result.editPage || (result.targetTable === 'NO' ? 'Edit_PermNO4Mail.aspx' : 'Edit_PermSC4Mail.aspx'),
             targetTable: result.targetTable || '',
             message: result.message || '',
             permitImportStatus: result.permitImportStatus || '',
@@ -199,7 +199,9 @@
                 return;
             }
 
-            var editPage = result.editPage === 'Edit_PermNo.aspx' ? 'Edit_PermNo.aspx' : 'Edit_PermSC4Mail.aspx';
+            var editPage = result.targetTable === 'NO'
+                ? 'Edit_PermNO4Mail.aspx'
+                : 'Edit_PermSC4Mail.aspx';
             permissionLink.href = '../Permission/' + editPage + '?Menu_ID=51&ID=' + encodeURIComponent(result.targetPermId);
             permissionLink.classList.remove('is-disabled');
             permissionLink.removeAttribute('aria-disabled');

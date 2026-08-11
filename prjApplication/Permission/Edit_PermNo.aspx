@@ -326,6 +326,8 @@
     <div id="divPermDetail">
     <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()">
         Update all</button> 
+    <button type="button" id="btnAcceptedPermNo" class="btn btn-sm btn-success" style="display:none;"
+        onclick="btnAcceptedPermNo_Onclick()">Accepted</button>
     <button type="button" id="btnGenMess" class="btn btn-sm btn-primary"  onclick="btnGenMessage()">Export Mess Cancel</button>  
     <a  href="<%= Page.ResolveUrl("~/Permission/ListPermissionNo.aspx?Menu_ID=" + Page.Request["Menu_ID"].ToString()) %>"
             class="btn btn-sm btn-primary">
@@ -506,17 +508,29 @@
     </script>
     <script>
         var qEdit = '<%= _Role.R_Edit %>';
+        var qPublish = '<%= _Role.R_Pub %>';
+        var isPermNoApprovalMode = /\/Edit_PermNO4Mail\.aspx$/i.test(window.location.pathname);
         var phanCach = '<%= _phanCach%>';
-        var IdSelect = $('#perm_id');
-        if (IdSelect == 0) {
+        var IdSelect = $.trim($('#perm_id').html());
+        if (IdSelect === '' || IdSelect === '0') {
             $('#btnUpdatePermMaster').hide();
+            $('#btnAcceptedPermNo').hide();
         }
         else {
             if (qEdit != 'True') {
                 document.getElementById("btnUpdatePermMaster").disabled = true;
                 document.getElementById("btnUpdateList").disabled = true;
             }
+        }
 
+        if (isPermNoApprovalMode) {
+            $('#btnAcceptedPermNo').show();
+            $('#btnGenMess').hide();
+            if (qPublish != 'True') {
+                document.getElementById("btnAcceptedPermNo").disabled = true;
+            }
+        } else {
+            $('#btnAcceptedPermNo').hide();
         }
         var _objRef;
         var _objRender = JSON.parse('<%= _ObjRender%>');
@@ -705,6 +719,68 @@
                 ax = sAlias + ax;
             }
             return ax;
+        }
+
+        function btnAcceptedPermNo_Onclick() {
+            var permId = parseInt($.trim($('#perm_id').html()), 10);
+            if (isNaN(permId) || permId <= 0) {
+                alert('Permission ID is required.');
+                return;
+            }
+
+            if (!confirm('Do you want to accept this permission and render schedule flights?')) {
+                return;
+            }
+
+            var $button = $('#btnAcceptedPermNo');
+            $.ajax({
+                method: 'PUT',
+                url: urlApi
+                    + 'api/ApiExtension/ExcuteReturnInt'
+                    + '?packageName=PERM_NO_APPROVAL_PKG'
+                    + '&storeName=ACCEPT_PERM_NO',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({ P_ID: permId }),
+                beforeSend: function () {
+                    $button.prop('disabled', true);
+                    loadingData();
+                }
+            }).done(function (data) {
+                var rawResult = data == null
+                    ? null
+                    : (data.Value != null ? data.Value : data.ListValue);
+                var result = parseInt(rawResult, 10);
+
+                if (data != null
+                    && String(data.Code || '00') !== '-99'
+                    && result === 1) {
+                    alert('Accepted successfully.');
+                    LoadDataAjax(true);
+                    return;
+                }
+
+                if (result === -2) {
+                    alert('No valid permission detail was found.');
+                } else if (result === -3) {
+                    alert('No schedule flight was generated.');
+                } else {
+                    alert((data && data.Message) || 'Accepted error.');
+                }
+            }).fail(function (xhr, textStatus, errorThrown) {
+                console.error('[PERM_NO_APPROVAL_PKG.ACCEPT_PERM_NO] Request failed:', {
+                    status: xhr.status,
+                    textStatus: textStatus,
+                    error: errorThrown,
+                    responseText: xhr.responseText
+                });
+                alert('Accepted error: ' + (xhr.responseText || errorThrown || textStatus));
+            }).always(function () {
+                if (qPublish == 'True') {
+                    $button.prop('disabled', false);
+                }
+                unLoadingData('loaddingData');
+            });
         }
 
         function btnGenMessage() {
