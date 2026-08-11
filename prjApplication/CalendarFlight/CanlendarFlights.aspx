@@ -2391,26 +2391,64 @@
             isSearch = false;
             return _obj;
         }
-		function ExportBravo()
-        {
-			//var _date =  $('#txtFLIGHTDATE').val() == '' ? new Date().format('yyyy-mm-dd') : $('#txtFLIGHTDATE').val().replace(/\//gi, '-').replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1');
-           
-			//alert(_date);
-			
-            var result = confirm("Do you want move data to Bravo?");
-            if (result) {
-                var $request = $.ajax({
-                    async: false,
-                    method: "PUT",
-                    url:  urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=MAKE_FINISHED&storeName=sp_CoppyBravoFlight",
-                    data: JSON.stringify({ P_DATE: $('#txtFLIGHTDATE').val()}),
-                }).always(function (data) {
-                    if (data.ListValue == null || data.ListValue == -1) {
-                        alert('Move error!');
-                    } else alert('Move success!');
-                })
-            }
-			
+		function ExportBravo() {
+            var $button = $('#btnExport801');
+            if ($button.prop('disabled')) return;
+
+            if (!confirm('Do you want move data to Bravo?')) return;
+
+            var flightDate = $('#txtFLIGHTDATE').val();
+            var startedAt = Date.now();
+
+            $.ajax({
+                method: 'PUT',
+                url: urlApi
+                    + 'api/ApiExtension/ExcuteReturnInt'
+                    + '?packageName=MAKE_FINISHED'
+                    + '&storeName=sp_CoppyBravoFlight',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                data: JSON.stringify({ P_DATE: flightDate }),
+                beforeSend: function () {
+                    $button.prop('disabled', true);
+                    preloadImgAfterButton('btnExport801', 'loadingExportBravo');
+                    console.info('[ExportBravo] Sending request', {
+                        flightDate: flightDate
+                    });
+                }
+            }).done(function (data) {
+                var elapsedMs = Date.now() - startedAt;
+                console.info('[ExportBravo] Completed', {
+                    elapsedMs: elapsedMs,
+                    response: data
+                });
+
+                if (!data
+                    || (data.Code != null && String(data.Code) !== '00')
+                    || data.ListValue == null
+                    || String(data.ListValue) === '-1') {
+                    var message = data && data.Message
+                        ? data.Message
+                        : 'Move error!';
+                    alert(message + ' (' + elapsedMs + ' ms)');
+                    return;
+                }
+
+                alert('Move success! (' + elapsedMs + ' ms)');
+            }).fail(function (xhr, textStatus, errorThrown) {
+                var elapsedMs = Date.now() - startedAt;
+                console.error('[ExportBravo] Request failed', {
+                    elapsedMs: elapsedMs,
+                    status: xhr.status,
+                    textStatus: textStatus,
+                    error: errorThrown,
+                    response: xhr.responseJSON || xhr.responseText
+                });
+                alert('Move error! HTTP ' + xhr.status + ' (' + elapsedMs + ' ms)');
+            }).always(function () {
+                $button.prop('disabled', false);
+                unLoadingData('loadingExportBravo');
+            });
         }
         function LoadDataGrid_Export() {
             var $request = $.ajax({
