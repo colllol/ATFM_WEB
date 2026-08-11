@@ -194,3 +194,5 @@ Không commit `bin`, `obj`, `.vs`, `packages`, file upload, file backup, credent
 - Review `git diff --cached` trước mỗi lần push.
 
 Thực hiện lấy dữ liệu về từ [colllol/ATFM_WEB.git](https://github.com/colllol/ATFM_WEB.git) nhánh agent/initial-atfm-import
+
+Thực hiện Publish vào thư mục E:\2026\QLB\TrienKhai\ATFM_WEB\prjApplication\bin\Release\PublishOutput
