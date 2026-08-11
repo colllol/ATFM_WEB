@@ -238,7 +238,7 @@
                             <tr>
                                 <td> 
                                      <label for="txtPERMNBR" style="font-size:12px;">Number</label><br />
-                                    <input id="txtPERMNBR" maxlength="5" data-minlenght="1" data-control="update" type="text"
+                                    <input id="txtPERMNBR" maxlength="8" data-minlenght="1" data-control="update" type="text"
                             class="wid_80px" style="height:25px;" />
                                 </td>
                                 <td> <label for="txtPERMTYPE" style="font-size:12px;">P Type</label><br />
@@ -748,11 +748,9 @@
             return typ + ' ' + LPAD(nbr, 5, '0') + '/' + ses + '/' + au + '/' + ye.replace(/-/g,'/').split('/')[2];
         }
         function LPAD(nbr, iStart, sAlias) {
-            var ax = nbr;
-            if (nbr.length < iStart) {
-                ax = LPAD(sAlias + nbr, iStart, sAlias);
-            } else {
-                return ax.substring(0, iStart);
+            var ax = (nbr == null ? '' : nbr.toString()).trim();
+            while (ax.length < iStart) {
+                ax = sAlias + ax;
             }
             return ax;
         }
