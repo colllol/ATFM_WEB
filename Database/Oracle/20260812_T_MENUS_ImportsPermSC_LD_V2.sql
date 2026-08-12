@@ -30,8 +30,8 @@ BEGIN
            AND ROWNUM = 1;
 
         UPDATE T_MENUS
-           SET MENUNAME = 'Import Permission SC V2',
-               MENUDESC = 'Import SC co xem truoc, kiem tra loi va chon tung dong',
+           SET MENUNAME = 'Cancel Permission SC V2',
+               MENUDESC = 'Huy chuyen SC co xem truoc, kiem tra loi va chon tung dong',
                PARRENTID = v_parent_id,
                ISDISPLAY = 1,
                DATEMODIFY = SYSDATE,
@@ -48,8 +48,8 @@ BEGIN
             )
             VALUES
             (
-                NULL, 'Import Permission SC V2',
-                'Import SC co xem truoc, kiem tra loi va chon tung dong',
+                NULL, 'Cancel Permission SC V2',
+                'Huy chuyen SC co xem truoc, kiem tra loi va chon tung dong',
                 99, v_parent_id, SYSDATE, SYSDATE,
                 'Tool/ImportsPermSC_LD_V2.aspx', NULL,
                 v_admin_id, v_admin_id, 1, 0, 0

@@ -33,19 +33,10 @@ namespace prjApplication.Tool
                     try
                     {
                         ValidateRow(row);
-                        string procedure = string.Equals(request.Format, "ALL_OPER", StringComparison.OrdinalIgnoreCase)
-                            ? "PERMSC_IMP_INSERT_ALL_OPER"
-                            : "PERMSC_IMP_INSERT";
-
-                        object response;
-                        if (procedure == "PERMSC_IMP_INSERT_ALL_OPER")
-                        {
-                            response = api.GetPostValueApiExtension("PERM_IMP_PKG", procedure, BuildAllOperPayload(request, row));
-                        }
-                        else
-                        {
-                            response = api.GetPostValueApiExtension("PERM_IMP_PKG", procedure, BuildPayload(request, row));
-                        }
+                        object response = api.GetPostValueApiExtension(
+                            "PERM_IMP_PKG",
+                            "PERMSC_IMP_INSERT_ALL_OPER",
+                            BuildAllOperPayload(request, row));
 
                         int code;
                         if (!Int32.TryParse(Convert.ToString(response, CultureInfo.InvariantCulture), out code) || code <= 0)
@@ -60,7 +51,7 @@ namespace prjApplication.Tool
                     }
                 }
 
-                result.RequiresReview = string.Equals(request.Action, "HuyChuyen", StringComparison.OrdinalIgnoreCase);
+                result.RequiresReview = true;
                 result.Success = result.Failed == 0 && result.Imported > 0;
                 result.Message = result.RequiresReview
                     ? "Đã nhập các dòng hủy được chọn vào vùng chờ. Chưa tự động hủy chuyến; cần đối chiếu danh sách phép trước khi áp dụng."
@@ -75,20 +66,6 @@ namespace prjApplication.Tool
             return result;
         }
 
-        private static object BuildPayload(ImportRequest request, ImportRow row)
-        {
-            return new
-            {
-                P_CALLSIGN = Clean(row.Callsign), P_FROMDATE = OracleDate(row.FromDate), P_TODATE = OracleDate(row.ToDate),
-                P_DAILY = Clean(row.Daily), P_CRAFT = NormalizeCraft(row.Craft), P_FROM_AIRP = Clean(row.FromAirp),
-                P_TO_AIRP = Clean(row.ToAirp), P_ETD = Clean(row.Etd), P_ETA = Clean(row.Eta), P_VIA = Clean(row.Via),
-                P_REMARK = Clean(row.Remark), P_PERMTYPE = "LD", P_PERMNBR = Clean(request.PermNbr),
-                P_FLIGHTTYPE = Clean(request.FlightType), P_SEASON = Clean(request.Season), P_OPER = Clean(request.Oper),
-                P_AUTHOR = Clean(request.Author), P_PERMDATE = OracleDate(request.PermDate), P_VERSION = Clean(request.Version),
-                P_PURPOSE = Clean(request.Purpose), P_ACTION = Clean(request.Action)
-            };
-        }
-
         private static object BuildAllOperPayload(ImportRequest request, ImportRow row)
         {
             return new
@@ -99,7 +76,7 @@ namespace prjApplication.Tool
                 P_REMARK = Clean(row.Remark), P_PERMTYPE = "LD", P_FLIGHTTYPE = Clean(request.FlightType),
                 P_PERMNBR = Clean(request.PermNbr), P_SEASON = Clean(request.Season), P_AUTHOR = Clean(request.Author),
                 P_PERMDATE = OracleDate(request.PermDate), P_PURPOSE = Clean(request.Purpose), P_VERSION = Clean(request.Version),
-                P_REGISTRATION = Clean(request.Registration), P_ACTION = Clean(request.Action)
+                P_REGISTRATION = Clean(request.Registration), P_ACTION = "HuyChuyen"
             };
         }
 
@@ -108,10 +85,6 @@ namespace prjApplication.Tool
             if (request == null) throw new ArgumentException("Không nhận được dữ liệu import.");
             if (String.IsNullOrWhiteSpace(request.PermNbr) || request.PermNbr.Trim().Length > 8)
                 throw new ArgumentException("Number bắt buộc và tối đa 8 ký tự.");
-            bool derivesOper = String.Equals(request.Format, "ALL_OPER", StringComparison.OrdinalIgnoreCase);
-            if (!derivesOper && (String.IsNullOrWhiteSpace(request.Oper) ||
-                String.Equals(request.Oper.Trim(), "ALL_OPER", StringComparison.OrdinalIgnoreCase)))
-                throw new ArgumentException("Hãng khai thác bắt buộc với format " + request.Format + ".");
             OracleDate(request.PermDate);
             if (request.Rows == null || !request.Rows.Any(x => x != null && x.Selected))
                 throw new ArgumentException("Chưa chọn dòng dữ liệu hợp lệ.");
@@ -148,7 +121,7 @@ namespace prjApplication.Tool
 
         public class ImportRequest
         {
-            public string Action { get; set; } public string Format { get; set; } public string Oper { get; set; }
+            public string Action { get; set; } public string Format { get; set; }
             public string PermNbr { get; set; } public string PermDate { get; set; } public string Author { get; set; }
             public string Version { get; set; } public string Season { get; set; } public string Purpose { get; set; }
             public string FlightType { get; set; } public string Registration { get; set; }

@@ -1,4 +1,4 @@
-<%@ Page Title="Import Permission SC V2" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master"
+<%@ Page Title="Cancel Permission SC V2" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master"
     AutoEventWireup="true" CodeBehind="ImportsPermSC_LD_V2.aspx.cs"
     Inherits="prjApplication.Tool.ImportsPermSC_LD_V2" %>
 
@@ -9,8 +9,8 @@
     <section class="impv2" data-page-method-url="ImportsPermSC_LD_V2.aspx/">
         <header class="impv2__header">
             <div>
-                <h2>IMPORT PERMISSION SC V2</h2>
-                <p>Phân tích, kiểm tra và xem trước dữ liệu trước khi ghi nhận.</p>
+                <h2>HỦY CHUYẾN PERMISSION SC V2</h2>
+                <p>Phân tích, kiểm tra và xem trước danh sách chuyến bay cần hủy trước khi ghi nhận.</p>
             </div>
             <span class="impv2__legacy">Chức năng cũ vẫn được giữ nguyên</span>
         </header>
@@ -26,13 +26,6 @@
         <section class="impv2__panel">
             <h3>1. Thông tin import</h3>
             <div class="impv2__form-grid">
-                <label>Thao tác
-                    <select id="impAction">
-                        <option value="TangChuyen">TĂNG CHUYẾN</option>
-                        <option value="HuyChuyen">HỦY CHUYẾN</option>
-                        <option value="ThayDoi">THAY ĐỔI</option>
-                    </select>
-                </label>
                 <label class="impv2__format-field">Format
                     <select id="impFormat">
                         <option value="AUTO">TỰ NHẬN DIỆN</option>
@@ -41,19 +34,6 @@
                         <option value="ALL_OPER">TAB/SPACE CHUNG</option>
                     </select>
                     <button id="btnViewFormat" type="button" class="impv2__format-help">? XEM FORMAT CHUẨN</button>
-                </label>
-                <label>Hãng khai thác
-                    <select id="impOper">
-                        <option value="">-- CHỌN HÃNG --</option>
-                        <option value="HVN">HVN</option>
-                        <option value="PIC">PIC</option>
-                        <option value="VJC">VJC</option>
-                        <option value="VFC">VFC</option>
-                        <option value="ABW">ABW</option>
-                        <option value="BAV">BAV</option>
-
-                    </select>
-                    <small id="impOperHint">Bắt buộc với format đang chọn.</small>
                 </label>
                 <label>Number
                     <input id="impPermNbr" maxlength="8" autocomplete="off" />
@@ -139,15 +119,12 @@
                     <tbody></tbody>
                 </table>
             </div>
-            <div class="impv2__confirm-box" id="cancelConfirmBox" hidden>
+            <div class="impv2__confirm-box" id="cancelConfirmBox">
                 <strong>Cảnh báo HỦY CHUYẾN</strong>
-                <span>Chỉ các dòng được chọn mới được đưa vào staging. Hãy kiểm tra kỹ kết quả đối chiếu trước khi thực hiện lệnh hủy.</span>
-                <label>Nhập <b>HUY CHUYEN</b> để xác nhận
-                    <input id="cancelConfirmText" autocomplete="off" />
-                </label>
+                <span>Thao tác mặc định là HỦY CHUYẾN. Chỉ các dòng được chọn mới được đưa vào staging; hãng khai thác được tự xác định từ Callsign bằng GetOper.</span>
             </div>
             <div class="impv2__primary-actions">
-                <button id="btnImportSelected" type="button">IMPORT CÁC DÒNG ĐÃ CHỌN</button>
+                <button id="btnImportSelected" type="button">ĐƯA CÁC DÒNG ĐÃ CHỌN VÀO DANH SÁCH HỦY</button>
             </div>
         </section>
 
@@ -184,5 +161,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-4") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-5") %>"></script>
 </asp:Content>
