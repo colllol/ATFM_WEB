@@ -1,3 +1,106 @@
 .impv2__loading[hidden] {
     display: none !important;
 }
+
+.impv2__format-field {
+    position: relative;
+}
+
+.impv2 .impv2__format-help {
+    min-height: 0;
+    align-self: flex-start;
+    padding: 2px 0;
+    background: transparent;
+    color: #12659a;
+    font-size: 11px;
+}
+
+.impv2__guide[hidden] {
+    display: none !important;
+}
+
+.impv2__guide {
+    position: fixed;
+    z-index: 10020;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(12, 39, 58, .55);
+}
+
+.impv2__guide-card {
+    width: min(900px, 96vw);
+    max-height: 90vh;
+    overflow: auto;
+    padding: 20px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, .3);
+}
+
+.impv2__guide-header,
+.impv2__guide-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.impv2__guide-header h3 {
+    margin-bottom: 3px;
+}
+
+.impv2__guide-header > button {
+    min-width: 38px;
+    padding: 3px 10px;
+    font-size: 24px;
+}
+
+.impv2__guide-note {
+    margin: 12px 0;
+    padding: 10px;
+    border-left: 4px solid #2787c4;
+    background: #edf7fc;
+}
+
+.impv2__guide-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.impv2__guide-columns span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 9px;
+    border: 1px solid #bad3e3;
+    border-radius: 5px;
+    background: #f5fafc;
+}
+
+.impv2__guide-columns b {
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: #2787c4;
+    color: #fff;
+}
+
+.impv2__guide-card pre {
+    max-height: none;
+    user-select: all;
+}
+
+.impv2__guide-card li {
+    margin: 6px 0;
+}
+
+.impv2__guide-actions {
+    justify-content: flex-end;
+    margin-top: 15px;
+}

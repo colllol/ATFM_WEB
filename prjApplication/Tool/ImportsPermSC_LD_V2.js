@@ -3,6 +3,29 @@
 
     var rows = [];
     var activeFilter = 'ALL';
+    var formatGuides = {
+        STANDARD: {
+            name: 'CHUẨN ATFM',
+            description: 'Dùng khi mỗi dòng đã có đầy đủ loại tàu bay và lịch bay.',
+            columns: ['CALLSIGN', 'FROM DATE', 'TO DATE', 'DAILY', 'CRAFT', 'FROM', 'ETD', 'TO', 'ETA', 'VIA (tùy chọn)'],
+            example: 'HVN123 12-AUG-26 30-SEP-26 1234567 A321 VVNB 0830 VVTS 1035 R474',
+            rules: ['Ngày chấp nhận DD-MMM-YY, DD-MM-YYYY hoặc DD/MM/YYYY.', 'DAILY dùng 1234567; thứ Hai là 1, Chủ nhật là 7.', 'ETD/ETA dùng HHmm hoặc HH:mm; ETA qua ngày có thể thêm dấu +.']
+        },
+        HVN: {
+            name: 'HVN LEGACY',
+            description: 'Dùng cho dữ liệu lịch bay HVN theo thứ tự cột của chức năng cũ.',
+            columns: ['CALLSIGN', 'FROM DATE', 'TO DATE', 'DAILY', 'CRAFT', 'FROM', 'ETD', 'TO', 'ETA', 'VIA (tùy chọn)'],
+            example: 'VN714 12-AUG-26 30-SEP-26 1234567 321 VVNB 0730 VVDN 0855 W1',
+            rules: ['Craft 319/320/321/787 được chuẩn hóa thành A319/A320/A321/B787.', 'Nếu VIA bỏ trống, hệ thống lấy VIA/Route mặc định.', 'Một dòng tiêu đề ĐƯỜNG BAY sẽ được bỏ qua.']
+        },
+        ALL_OPER: {
+            name: 'TAB/SPACE CHUNG',
+            description: 'Dùng cho nhiều hãng; Craft lấy từ ô Craft mặc định thay vì lấy trong từng dòng.',
+            columns: ['CALLSIGN', 'FROM DATE', 'TO DATE', 'DAILY', 'FROM', 'ETD', 'TO', 'ETA', 'REMARK (tùy chọn)', 'VIA (tùy chọn)'],
+            example: 'VJC101 12-AUG-26 30-SEP-26 1234567 VVTS 0600 VVNB 0810 NORMAL R474',
+            rules: ['Phải nhập Craft mặc định nếu dữ liệu nguồn không có Craft.', 'Remark/VIA không được chứa khoảng trắng nếu nhập trực tiếp trong dòng.', 'Có thể khai báo VIA/Route mặc định ở khu vực dữ liệu nguồn.']
+        }
+    };
 
     function value(id) { return $.trim($('#' + id).val() || ''); }
     function upper(text) { return $.trim(text || '').toUpperCase(); }
@@ -10,6 +33,33 @@
     function setLoading(show) { $('#impv2Loading').prop('hidden', !show); }
     function message(text, type) {
         $('#impv2Message').text(text || '').attr('class', 'impv2__message ' + (type ? 'is-' + type : '')).prop('hidden', !text);
+    }
+    function currentFormatGuide() {
+        var selected = value('impFormat');
+        return selected === 'AUTO' ? {
+            name: 'TỰ NHẬN DIỆN',
+            description: 'Hệ thống nhận diện HVN khi thấy dòng ĐƯỜNG BAY hoặc callsign VN; trường hợp còn lại dùng CHUẨN ATFM.',
+            columns: formatGuides.STANDARD.columns,
+            example: formatGuides.STANDARD.example,
+            rules: ['Nếu kết quả preview lệch cột, hãy chọn trực tiếp CHUẨN ATFM, HVN LEGACY hoặc TAB/SPACE CHUNG.', 'Luôn kiểm tra Preview trước khi Import.', 'Dòng lỗi sẽ tự bỏ chọn và không được gửi lên server.']
+        } : formatGuides[selected];
+    }
+    function showFormatGuide() {
+        var guide = currentFormatGuide(), columns = '';
+        guide.columns.forEach(function (column, index) {
+            columns += '<span><b>' + (index + 1) + '</b>' + html(column) + '</span>';
+        });
+        $('#formatGuideName').text(guide.name);
+        $('#formatGuideDescription').text(guide.description);
+        $('#formatGuideColumns').html(columns);
+        $('#formatGuideExample').text(guide.example);
+        $('#formatGuideRules').html(guide.rules.map(function (rule) { return '<li>' + html(rule) + '</li>'; }).join(''));
+        $('#formatGuide').prop('hidden', false).attr('aria-hidden', 'false');
+        $('#btnCloseFormat').focus();
+    }
+    function hideFormatGuide() {
+        $('#formatGuide').prop('hidden', true).attr('aria-hidden', 'true');
+        $('#btnViewFormat').focus();
     }
     function today() {
         var d = new Date(), m = String(d.getMonth() + 1), day = String(d.getDate());
@@ -186,6 +236,18 @@
         setLoading(false);
         $('#impPermDate').val(today());
         $('#btnAnalyze').on('click', parse);
+        $('#btnViewFormat').on('click', showFormatGuide);
+        $('#btnCloseFormat,#btnCloseFormatBottom').on('click', hideFormatGuide);
+        $('#formatGuide').on('click', function (event) { if (event.target === this) hideFormatGuide(); });
+        $(document).on('keydown', function (event) { if (event.key === 'Escape' && !$('#formatGuide').prop('hidden')) hideFormatGuide(); });
+        $('#btnCopyFormat').on('click', function () {
+            var sample = $('#formatGuideExample').text();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(sample).then(function () { message('Đã sao chép dòng format mẫu.', 'success'); });
+            } else {
+                window.prompt('Sao chép dòng mẫu:', sample);
+            }
+        });
         $('#btnImportSelected').on('click', importSelected);
         $('#btnClearSource').on('click', function () { $('#impSource').val('').focus(); rows = []; $('#previewPanel,#resultPanel').prop('hidden', true); });
         $('#impFile').on('change', function () { var file = this.files && this.files[0], reader; if (!file) return; reader = new FileReader(); reader.onload = function (e) { $('#impSource').val(e.target.result); }; reader.readAsText(file, 'UTF-8'); });

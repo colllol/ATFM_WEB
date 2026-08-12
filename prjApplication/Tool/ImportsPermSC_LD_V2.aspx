@@ -4,7 +4,7 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.css?v=20260812-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260812-2") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260812-3") %>" />
 
     <section class="impv2" data-page-method-url="ImportsPermSC_LD_V2.aspx/">
         <header class="impv2__header">
@@ -33,23 +33,25 @@
                         <option value="ThayDoi">THAY ĐỔI</option>
                     </select>
                 </label>
-                <label>Format
+                <label class="impv2__format-field">Format
                     <select id="impFormat">
                         <option value="AUTO">TỰ NHẬN DIỆN</option>
                         <option value="STANDARD">CHUẨN ATFM</option>
                         <option value="HVN">HVN LEGACY</option>
                         <option value="ALL_OPER">TAB/SPACE CHUNG</option>
                     </select>
+                    <button id="btnViewFormat" type="button" class="impv2__format-help">? XEM FORMAT CHUẨN</button>
                 </label>
                 <label>Hãng khai thác
                     <select id="impOper">
+                        <option value="ALL_OPER">ALL OPER</option>
                         <option value="HVN">HVN</option>
                         <option value="PIC">PIC</option>
                         <option value="VJC">VJC</option>
                         <option value="VFC">VFC</option>
                         <option value="ABW">ABW</option>
                         <option value="BAV">BAV</option>
-                        <option value="ALL_OPER">ALL OPER</option>
+
                     </select>
                 </label>
                 <label>Number
@@ -153,10 +155,33 @@
             <pre id="importResult"></pre>
         </section>
 
+        <div id="formatGuide" class="impv2__guide" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="formatGuideTitle">
+            <div class="impv2__guide-card">
+                <div class="impv2__guide-header">
+                    <div>
+                        <h3 id="formatGuideTitle">FORMAT DỮ LIỆU CHUẨN</h3>
+                        <span id="formatGuideName"></span>
+                    </div>
+                    <button id="btnCloseFormat" type="button" aria-label="Đóng">×</button>
+                </div>
+                <p id="formatGuideDescription"></p>
+                <div class="impv2__guide-note"><b>Quy ước chung:</b> phân cách cột bằng Tab hoặc khoảng trắng; mỗi chuyến bay nằm trên một dòng.</div>
+                <h4>Thứ tự cột</h4>
+                <div id="formatGuideColumns" class="impv2__guide-columns"></div>
+                <h4>Dòng mẫu có thể sao chép</h4>
+                <pre id="formatGuideExample"></pre>
+                <ul id="formatGuideRules"></ul>
+                <div class="impv2__guide-actions">
+                    <button id="btnCopyFormat" type="button">SAO CHÉP DÒNG MẪU</button>
+                    <button id="btnCloseFormatBottom" type="button" class="is-muted">ĐÓNG</button>
+                </div>
+            </div>
+        </div>
+
         <div id="impv2Loading" class="impv2__loading" hidden>
             <div class="impv2__spinner"></div><span>Đang xử lý dữ liệu...</span>
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-2") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-3") %>"></script>
 </asp:Content>
