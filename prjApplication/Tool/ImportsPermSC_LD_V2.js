@@ -101,7 +101,7 @@
         if (/CALL ?SIGN|FLIGHT (NUMBER|NBR)/.test(s)) return 'callsign';
         if (/EFFECTIVE FROM|BEGIN DATE|FROM DATE/.test(s)) return 'fromDate';
         if (/EFFECTIVE TO|END DATE|TO DATE/.test(s)) return 'toDate';
-        if (/DAYS? OF SERVICE|DAYS? OF OPERATION|DAILY|DAY DATE/.test(s)) return 'daily';
+        if (/DAY(?: S|S)? OF SERVICE|DAY(?: S|S)? OF OPERATION|DAILY|DAY DATE/.test(s)) return 'daily';
         if (/DEPARTURE (AIRPORT|AERODROME)|FROM AIRP/.test(s)) return 'fromAirp';
         if (/ARRIVAL (AIRPORT|AERODROME)|TO AIRP/.test(s)) return 'toAirp';
         if (/^ETD/.test(s)) return 'etd';
