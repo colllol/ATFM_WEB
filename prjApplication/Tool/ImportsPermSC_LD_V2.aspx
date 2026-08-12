@@ -44,7 +44,7 @@
                 </label>
                 <label>Hãng khai thác
                     <select id="impOper">
-                        <option value="ALL_OPER">ALL OPER</option>
+                        <option value="">-- CHỌN HÃNG --</option>
                         <option value="HVN">HVN</option>
                         <option value="PIC">PIC</option>
                         <option value="VJC">VJC</option>
@@ -53,6 +53,7 @@
                         <option value="BAV">BAV</option>
 
                     </select>
+                    <small id="impOperHint">Bắt buộc với format đang chọn.</small>
                 </label>
                 <label>Number
                     <input id="impPermNbr" maxlength="8" autocomplete="off" />
@@ -183,5 +184,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-3") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-4") %>"></script>
 </asp:Content>

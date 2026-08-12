@@ -61,6 +61,13 @@
         $('#formatGuide').prop('hidden', true).attr('aria-hidden', 'true');
         $('#btnViewFormat').focus();
     }
+    function syncOperAvailability() {
+        var autoOper = value('impFormat') === 'ALL_OPER';
+        $('#impOper').prop('disabled', autoOper).val(autoOper ? '' : value('impOper'));
+        $('#impOperHint')
+            .text(autoOper ? 'Tự xác định từ Callsign bằng GetOper.' : 'Bắt buộc với format đang chọn.')
+            .toggleClass('is-auto', autoOper);
+    }
     function today() {
         var d = new Date(), m = String(d.getMonth() + 1), day = String(d.getDate());
         return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
@@ -214,6 +221,7 @@
         var payload = requestPayload();
         if (!/^[A-Z0-9]{1,8}$/i.test(payload.permNbr)) return message('Number bắt buộc, tối đa 8 ký tự chữ/số.', 'error');
         if (!payload.permDate) return message('Ngày cấp phép bắt buộc.', 'error');
+        if (payload.format !== 'ALL_OPER' && !payload.oper) return message('Hãy chọn Hãng khai thác cho format ' + payload.format + '.', 'error');
         if (!payload.rows.length) return message('Chưa chọn dòng hợp lệ để import.', 'error');
         if (payload.action === 'HuyChuyen' && upper(value('cancelConfirmText')) !== 'HUY CHUYEN') return message('Phải nhập đúng HUY CHUYEN trước khi gửi dữ liệu hủy.', 'error');
         if (!window.confirm('Xác nhận import ' + payload.rows.length + ' dòng ' + payload.action + '?')) return;
@@ -234,9 +242,11 @@
 
     $(function () {
         setLoading(false);
+        syncOperAvailability();
         $('#impPermDate').val(today());
         $('#btnAnalyze').on('click', parse);
         $('#btnViewFormat').on('click', showFormatGuide);
+        $('#impFormat').on('change', syncOperAvailability);
         $('#btnCloseFormat,#btnCloseFormatBottom').on('click', hideFormatGuide);
         $('#formatGuide').on('click', function (event) { if (event.target === this) hideFormatGuide(); });
         $(document).on('keydown', function (event) { if (event.key === 'Escape' && !$('#formatGuide').prop('hidden')) hideFormatGuide(); });

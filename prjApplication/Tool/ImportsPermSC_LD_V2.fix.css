@@ -6,6 +6,23 @@
     position: relative;
 }
 
+.impv2 label small {
+    min-height: 14px;
+    color: #7b4f00;
+    font-size: 10px;
+    font-weight: normal;
+}
+
+.impv2 label small.is-auto {
+    color: #16703b;
+}
+
+.impv2 select:disabled {
+    background: #edf3f7;
+    color: #708290;
+    cursor: not-allowed;
+}
+
 .impv2 .impv2__format-help {
     min-height: 0;
     align-self: flex-start;

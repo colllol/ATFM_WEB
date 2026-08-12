@@ -108,6 +108,10 @@ namespace prjApplication.Tool
             if (request == null) throw new ArgumentException("Không nhận được dữ liệu import.");
             if (String.IsNullOrWhiteSpace(request.PermNbr) || request.PermNbr.Trim().Length > 8)
                 throw new ArgumentException("Number bắt buộc và tối đa 8 ký tự.");
+            bool derivesOper = String.Equals(request.Format, "ALL_OPER", StringComparison.OrdinalIgnoreCase);
+            if (!derivesOper && (String.IsNullOrWhiteSpace(request.Oper) ||
+                String.Equals(request.Oper.Trim(), "ALL_OPER", StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException("Hãng khai thác bắt buộc với format " + request.Format + ".");
             OracleDate(request.PermDate);
             if (request.Rows == null || !request.Rows.Any(x => x != null && x.Selected))
                 throw new ArgumentException("Chưa chọn dòng dữ liệu hợp lệ.");
