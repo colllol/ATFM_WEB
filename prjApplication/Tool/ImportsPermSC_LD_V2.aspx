@@ -85,11 +85,10 @@
         <section class="impv2__panel">
             <div class="impv2__panel-title">
                 <h3>2. Dữ liệu nguồn</h3>
-                <div class="impv2__source-actions">
+                <div class="impv2__source-actions" style="display:none" aria-hidden="true">
                     <label class="impv2__file-button">CHỌN FILE TXT/CSV
                         <input id="impFile" type="file" accept=".txt,.csv,.tsv" hidden />
                     </label>
-                    <button id="btnClearSource" type="button" class="is-muted">XÓA NỘI DUNG</button>
                 </div>
             </div>
             <div class="impv2__source-grid">
@@ -105,6 +104,7 @@
             </label>
             <div class="impv2__primary-actions">
                 <button id="btnAnalyze" type="button">PHÂN TÍCH &amp; KIỂM TRA</button>
+                <button id="btnClearSource" type="button" class="is-muted">XÓA NỘI DUNG</button>
             </div>
         </section>
 
