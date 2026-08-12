@@ -25,6 +25,7 @@ INTEGRATION_SOURCES = [
     ("5.6", "FR-INT-004", "Kết nối trực tiếp AMHS để gửi/nhận điện văn", "SRS_ATFM_AMHS_004.docx"),
     ("5.7", "FR-INT-005", "Chuẩn hóa API chia sẻ dữ liệu", "SRS_ATFM_API_Gateway_005.docx"),
 ]
+ALT002_SOURCE = ROOT / "TaiLieu" / "SRS_Live_Fire_Message.docx"
 
 
 SECTIONS = [
@@ -214,6 +215,62 @@ def add_integration_source(doc, section_number, requirement_id, title, filename)
     doc.add_heading(f"{section_number}.1. Liên kết kiểm thử và truy vết", level=3)
     table(doc, ["Yêu cầu tổng thể", "Yêu cầu chi tiết", "Nguồn bằng chứng"], [
         (requirement_id, "Các FR/BR/NFR trong đặc tả nguồn", "Test case, log, ảnh màn hình, API/DB và biên bản nghiệm thu"),
+    ])
+
+
+def add_alt002_specification(doc):
+    if not ALT002_SOURCE.exists():
+        raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-ALT-002: {ALT002_SOURCE}")
+    source = Document(ALT002_SOURCE)
+    doc.add_heading(
+        "6.3. Đặc tả chi tiết FR-ALT-002 – Quản lý thông tin KHB quân sự và sử dụng vùng trời",
+        level=2,
+    )
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mã yêu cầu tổng thể", "FR-ALT-002"),
+        ("Tên yêu cầu", "Quản lý thông tin KHB quân sự và sử dụng vùng trời"),
+        ("Tài liệu nguồn", "SRS_Live_Fire_Message.docx"),
+        ("Phạm vi quy trình", "Live Fire Message; Daily Statistic; KHB quân sự; QS Message; báo cáo khai thác"),
+        ("Trạng thái", "Đã tích hợp đặc tả hiện trạng"),
+    ])
+    doc.add_paragraph(
+        "Đặc tả này hợp nhất các quy trình nghiệp vụ có liên quan đến hoạt động bay quân sự "
+        "và sử dụng vùng trời: lập/phê duyệt điện văn bắn đạn thật, thống kê chuyến bay hoàn "
+        "thành, quản lý KHB quân sự, tạo QS Message, phát điện văn và cung cấp dữ liệu chỉ xem "
+        "cho người khai thác."
+    )
+
+    skipped_cover_lines = 0
+    source_heading_seen = False
+    for block in iter_blocks(source):
+        if isinstance(block, Paragraph):
+            text = block.text.strip()
+            if not text:
+                continue
+            style = block.style.name if block.style else "Normal"
+            if not source_heading_seen and not style.startswith("Heading"):
+                skipped_cover_lines += 1
+                if skipped_cover_lines <= 3:
+                    continue
+            if style.startswith("Heading"):
+                source_heading_seen = True
+                doc.add_heading(clean_source_heading(text), level=3)
+            elif style.startswith("List Bullet"):
+                doc.add_paragraph(text, style="List Bullet")
+            elif style.startswith("List Number"):
+                doc.add_paragraph(text, style="List Number")
+            else:
+                doc.add_paragraph(text)
+        else:
+            rows = [[cell.text.strip() for cell in row.cells] for row in block.rows]
+            if rows:
+                table(doc, rows[0], rows[1:])
+
+    doc.add_heading("6.3.1. Liên kết kiểm thử và truy vết FR-ALT-002", level=3)
+    table(doc, ["Nhóm nghiệp vụ", "Yêu cầu/test case nguồn", "Bằng chứng dự kiến"], [
+        ("Live Fire Message", "FR-LF, BR-LF, NFR-LF, TC-LF", "Ảnh màn hình, API/package log, dữ liệu trạng thái"),
+        ("Daily Statistic", "FR-DS, BR-DS, NFR-DS, TC-DS", "Danh sách trước/sau Accepted, export và audit"),
+        ("KHB quân sự", "FR-MIL, BR-MIL, NFR-MIL, TC-MIL", "KHB nguồn, QS Message, trạng thái phát và Military Report"),
     ])
 
 
@@ -421,6 +478,9 @@ def build():
             for args in INTEGRATION_SOURCES:
                 add_integration_source(doc, *args)
             next_section = 8
+        elif chapter == 6:
+            add_alt002_specification(doc)
+            next_section = 4
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
