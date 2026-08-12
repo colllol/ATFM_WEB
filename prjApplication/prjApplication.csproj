@@ -1634,6 +1634,7 @@
     <Content Include="Tool\ImportsPermSC_LD.aspx" />
     <Content Include="Tool\ImportsPermSC_LD_V2.aspx" />
     <Content Include="Tool\ImportsPermSC_LD_V2.css" />
+    <Content Include="Tool\ImportsPermSC_LD_V2.fix.css" />
     <Content Include="Tool\ImportsPermSC_LD_V2.js" />
     <Content Include="Until\FlashFileUpload.swf" />
     <Content Include="Until\ViewImages.aspx" />

@@ -183,6 +183,7 @@
     }
 
     $(function () {
+        setLoading(false);
         $('#impPermDate').val(today());
         $('#btnAnalyze').on('click', parse);
         $('#btnImportSelected').on('click', importSelected);
