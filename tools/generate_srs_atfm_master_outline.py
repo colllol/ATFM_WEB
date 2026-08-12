@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from docx import Document
@@ -9,7 +10,11 @@ from docx.shared import Cm, Pt
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "TaiLieu" / "SRS_ATFM_WEB_Khung_Suon.docx"
+OUTPUT = Path(os.environ.get(
+    "SRS_ATFM_MASTER_OUTPUT",
+    ROOT / "TaiLieu" / "SRS_ATFM_WEB_Khung_Suon.docx",
+))
+AEROSYNC_SOURCE = ROOT / "TaiLieu" / "SRS_VATM_AeroSync_Hien_Tai.docx"
 
 
 SECTIONS = [
@@ -126,6 +131,108 @@ def placeholder(doc, text="[Sẽ đặc tả tại bước tiếp theo]"):
     paragraph.runs[0].font.color.rgb = None
 
 
+def source_rows(source, table_index):
+    source_table = source.tables[table_index - 1]
+    return [[cell.text.strip() for cell in row.cells] for row in source_table.rows]
+
+
+def source_table(doc, source, table_index):
+    rows = source_rows(source, table_index)
+    table(doc, rows[0], rows[1:])
+
+
+def add_aerosync_specification(doc):
+    if not AEROSYNC_SOURCE.exists():
+        raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-INT-001: {AEROSYNC_SOURCE}")
+    source = Document(AEROSYNC_SOURCE)
+
+    doc.add_heading("5.3. Đặc tả chi tiết FR-INT-001 – VATM AeroSync", level=2)
+    doc.add_paragraph(
+        "VATM AeroSync tự động phát hiện tệp từ email hoặc thư mục Incoming, kiểm tra và "
+        "chuẩn hóa dữ liệu, đồng bộ giấy phép bay phù hợp vào Oracle ATFM, lưu dấu vết "
+        "xử lý và cung cấp giao diện giám sát cho người vận hành. Nội dung dưới đây được "
+        "chuẩn hóa từ tài liệu SRS_VATM_AeroSync_Hien_Tai.docx."
+    )
+
+    doc.add_heading("5.3.1. Thông tin đặc tả", level=3)
+    source_table(doc, source, 1)
+    doc.add_heading("5.3.2. Phạm vi", level=3)
+    doc.add_paragraph("Trong phạm vi:")
+    for item in [
+        "Quét định kỳ hộp thư IMAP và thư mục Incoming; giới hạn số lượng tệp mỗi chu kỳ.",
+        "Kiểm tra trùng nội dung bằng SHA-256, tạo công việc và phân phối qua RabbitMQ.",
+        "Nhận dạng giấy phép Word theo profile YAML; trích xuất, chuẩn hóa và kiểm tra dữ liệu.",
+        "Ghi giấy phép vào Oracle ATFM bằng giao dịch master/detail và cơ chế chống ghi trùng.",
+        "Lưu trữ tệp theo kết quả, ghi audit, cảnh báo và giám sát qua REST API/WinUI.",
+        "Tra cứu báo cáo email, resend attachment và retry/replay theo các chốt an toàn.",
+    ]:
+        doc.add_paragraph(item, style="List Bullet")
+    doc.add_paragraph("Ngoài phạm vi/giới hạn hiện tại:")
+    source_table(doc, source, 2)
+
+    doc.add_heading("5.3.3. Tác nhân và trách nhiệm", level=3)
+    source_table(doc, source, 3)
+    doc.add_paragraph(
+        "Các vai trò trên là vai trò nghiệp vụ. Phiên bản hiện tại chưa áp đặt RBAC theo "
+        "từng người dùng; môi trường triển khai phải kiểm soát quyền mở UI và truy cập API."
+    )
+
+    doc.add_heading("5.3.4. Kiến trúc và luồng xử lý", level=3)
+    doc.add_paragraph("Thành phần hệ thống:")
+    source_table(doc, source, 4)
+    doc.add_paragraph("Luồng xử lý chính:")
+    source_table(doc, source, 5)
+    doc.add_paragraph("Giao diện REST chính:")
+    source_table(doc, source, 6)
+
+    doc.add_heading("5.3.5. Trạng thái xử lý", level=3)
+    doc.add_paragraph("Trạng thái công việc đồng bộ:")
+    source_table(doc, source, 7)
+    doc.add_paragraph("Trạng thái import giấy phép:")
+    source_table(doc, source, 8)
+    doc.add_paragraph("Trạng thái email, file, archive và acknowledgement:")
+    source_table(doc, source, 9)
+
+    doc.add_heading("5.3.6. Yêu cầu chức năng chi tiết", level=3)
+    groups = [
+        (10, "Tiếp nhận và tạo công việc"),
+        (11, "Kiểm định, nhận dạng và chuẩn hóa"),
+        (12, "Đồng bộ Oracle ATFM"),
+        (13, "Lưu trữ, audit và phản hồi email"),
+        (14, "Giám sát, cấu hình và báo cáo"),
+        (15, "Retry, resend và test replay"),
+    ]
+    for index, title in groups:
+        doc.add_paragraph(title).runs[0].bold = True
+        source_table(doc, source, index)
+
+    doc.add_heading("5.3.7. Yêu cầu dữ liệu", level=3)
+    doc.add_paragraph("Dữ liệu theo dõi và dữ liệu mục tiêu:")
+    source_table(doc, source, 16)
+    doc.add_paragraph("Dữ liệu giấy phép Word:")
+    source_table(doc, source, 17)
+    doc.add_paragraph(
+        "Danh mục hiện trạng có 127 profile YAML. Đây không phải giới hạn thiết kế; profile "
+        "mới phải có regression test và mapping tham chiếu cần thiết."
+    )
+
+    doc.add_heading("5.3.8. Quy tắc nghiệp vụ", level=3)
+    source_table(doc, source, 18)
+    doc.add_heading("5.3.9. Yêu cầu phi chức năng", level=3)
+    source_table(doc, source, 19)
+
+    doc.add_heading("5.3.10. Tiêu chí kiểm thử và truy vết", level=3)
+    table(doc, ["Nhóm yêu cầu", "Phạm vi kiểm thử", "Bằng chứng dự kiến"], [
+        ("FR-AS-01…FR-AS-09", "Quét nguồn, checkpoint, SHA-256, tạo job và publish queue", "Job/File/Email metadata; log RabbitMQ"),
+        ("FR-AS-10…FR-AS-19", "Validate, profile recognition, parse, normalize và quarantine", "Chi tiết job; lỗi theo dòng; file archive"),
+        ("FR-AS-20…FR-AS-27", "Redis lock, dry-run, giao dịch Oracle, duplicate và revision", "PermitImport; audit; dữ liệu master/detail"),
+        ("FR-AS-28…FR-AS-32", "Archive, audit, acknowledgement và retention", "Cây thư mục; audit; trạng thái email"),
+        ("FR-AS-33…FR-AS-39", "REST API, cấu hình, dashboard, báo cáo và OpenAPI", "Response API; ảnh UI; OpenAPI"),
+        ("FR-AS-40…FR-AS-45", "Retry, resend cleanup và test replay", "Audit; trạng thái reset; kết quả replay"),
+        ("NFR-AS-01…NFR-AS-16", "Hiệu năng, an toàn, idempotency, bảo mật và quan sát", "Kết quả đo; cấu hình; log; biên bản"),
+    ])
+
+
 def build():
     doc = Document()
     section = doc.sections[0]
@@ -233,9 +340,14 @@ def build():
         for index, item in enumerate(items, 1):
             function_rows.append((f"FR-{prefix}-{index:03d}", item, "Chờ đặc tả", "Chờ xây dựng"))
         table(doc, ["Mã yêu cầu", "Tên yêu cầu", "Nội dung", "Tiêu chí nghiệm thu"], function_rows)
-        doc.add_heading(f"{chapter}.3. Quy tắc nghiệp vụ", level=2)
+        if chapter == 5:
+            add_aerosync_specification(doc)
+            next_section = 4
+        else:
+            next_section = 3
+        doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
         placeholder(doc)
-        doc.add_heading(f"{chapter}.4. Luồng xử lý và ngoại lệ", level=2)
+        doc.add_heading(f"{chapter}.{next_section + 1}. Luồng xử lý và ngoại lệ chung", level=2)
         placeholder(doc)
         chapter += 1
 
