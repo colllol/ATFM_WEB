@@ -283,6 +283,7 @@
             action: 'HuyChuyen', format: value('impFormat'), permNbr: value('impPermNbr'),
             permDate: value('impPermDate'), author: value('ddlAuthorV2'), version: value('impVersion'), season: value('impSeason'),
             purpose: value('ddlPurposeV2'), flightType: value('impFlightType'), registration: value('impRegistration'),
+            allowExistingPermit: false,
             rows: rows.filter(function (x) { return x.selected && x.status !== 'ERROR'; })
         };
     }
@@ -291,7 +292,31 @@
         if (!/^[A-Z0-9]{1,8}$/i.test(payload.permNbr)) return message('Number bắt buộc, tối đa 8 ký tự chữ/số.', 'error');
         if (!payload.permDate) return message('Ngày cấp phép bắt buộc.', 'error');
         if (!payload.rows.length) return message('Chưa chọn dòng hợp lệ để import.', 'error');
-        if (!window.confirm('Xác nhận import ' + payload.rows.length + ' dòng ' + payload.action + '?')) return;
+        setLoading(true); message('');
+        $.ajax({
+            type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/CheckPermitNumber',
+            contentType: 'application/json; charset=utf-8', dataType: 'json',
+            data: JSON.stringify({ request: payload })
+        }).done(function (response) {
+            var check = response.d || {};
+            if (!check.Success) {
+                setLoading(false);
+                $('#resultPanel').prop('hidden', false);
+                showResult('Không thể kiểm tra số phép: ' + (check.Message || 'Lỗi không xác định.'), 'error');
+                return;
+            }
+            if (check.Exists && !window.confirm(check.Message)) { setLoading(false); return; }
+            payload.allowExistingPermit = !!check.Exists;
+            if (!window.confirm('Xác nhận đưa ' + payload.rows.length + ' dòng vào danh sách HỦY CHUYẾN?')) { setLoading(false); return; }
+            performImport(payload);
+        }).fail(function (xhr) {
+            setLoading(false);
+            $('#resultPanel').prop('hidden', false);
+            showResult('Không thể kiểm tra số phép: ' + (xhr.responseText || xhr.statusText), 'error');
+        });
+    }
+
+    function performImport(payload) {
         setLoading(true); message('');
         $.ajax({
             type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/ImportRows', contentType: 'application/json; charset=utf-8', dataType: 'json',

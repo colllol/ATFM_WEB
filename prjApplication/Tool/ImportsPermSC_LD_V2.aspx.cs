@@ -19,6 +19,34 @@ namespace prjApplication.Tool
         }
 
         [WebMethod(EnableSession = true)]
+        public static PermitCheckResult CheckPermitNumber(ImportRequest request)
+        {
+            var result = new PermitCheckResult();
+            try
+            {
+                ValidateRequestHeader(request);
+                DataTable table = FindExistingPermits(new clsResuftAPI(), request);
+                result.Success = true;
+                result.Exists = table != null && table.Rows.Count > 0;
+                if (result.Exists)
+                {
+                    result.PermitNumbers = table.AsEnumerable()
+                        .Select(row => Cell(row, "PERMNBR_ID"))
+                        .Where(value => !String.IsNullOrWhiteSpace(value)).Distinct().ToList();
+                    result.Message = "Số phép đã tồn tại: " + String.Join(", ", result.PermitNumbers.ToArray())
+                        + ". Bạn có muốn tiếp tục đưa dữ liệu vào danh sách hủy không?";
+                }
+                else result.Message = "Chưa có số phép này.";
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        [WebMethod(EnableSession = true)]
         public static ImportResult ImportRows(ImportRequest request)
         {
             var result = new ImportResult();
@@ -26,6 +54,9 @@ namespace prjApplication.Tool
             {
                 ValidateRequest(request);
                 var api = new clsResuftAPI();
+                DataTable existingPermits = FindExistingPermits(api, request);
+                if (existingPermits != null && existingPermits.Rows.Count > 0 && !request.AllowExistingPermit)
+                    throw new InvalidOperationException("Số phép đã tồn tại. Cần xác nhận trước khi tiếp tục.");
                 var selectedRows = request.Rows.Where(x => x != null && x.Selected).ToList();
                 result.Total = selectedRows.Count;
 
@@ -44,6 +75,7 @@ namespace prjApplication.Tool
                             throw new InvalidOperationException("Procedure trả về " + Convert.ToString(response, CultureInfo.InvariantCulture));
 
                         result.Imported++;
+                        row.StagingId = code;
                         result.ImportedRows.Add(row);
                     }
                     catch (Exception ex)
@@ -93,11 +125,20 @@ namespace prjApplication.Tool
         private static void CheckExistingPermissions(clsResuftAPI api, IList<ImportRow> selectedRows, ImportResult result)
         {
             DataTable table = api.GetTableApiExtension("PERM_IMP_PKG", "GetPhepBayCoHuyChuyen", null);
+            if (table == null) throw new InvalidOperationException("Không nhận được kết quả kiểm tra phép từ API.");
             foreach (ImportRow source in selectedRows)
             {
+                var staging = new PermScImpDAL().GetOnePermScIMP(source.StagingId);
+                if (staging == null)
+                {
+                    result.Errors.Add("Dòng " + source.SourceLine + " - " + source.Callsign
+                        + ": không đọc được bản ghi staging ID " + source.StagingId + ".");
+                    continue;
+                }
                 DataRow matched = table.AsEnumerable().FirstOrDefault(row =>
-                    Same(row, "CALLSIGN", source.Callsign) && Same(row, "FROM_AIRP", source.FromAirp) &&
-                    Same(row, "TO_AIRP", source.ToAirp) && SameTime(row, "ETD", source.Etd) && SameTime(row, "ETA", source.Eta));
+                    Same(row, "CALLSIGN", staging.CALLSIGN) && Same(row, "FROM_AIRP", staging.FROM_AIRP) &&
+                    Same(row, "TO_AIRP", staging.TO_AIRP) && SameTime(row, "ETD", staging.ETD) &&
+                    SameTime(row, "ETA", staging.ETA) && Same(row, "THAMCHIEU", staging.PERMNBR));
                 if (matched == null)
                 {
                     result.Errors.Add("Dòng " + source.SourceLine + " - " + source.Callsign
@@ -108,6 +149,15 @@ namespace prjApplication.Tool
             }
             result.Success = result.Failed == 0 && result.Imported == result.Total
                 && result.CancelledFlights.Count == selectedRows.Count;
+        }
+
+        private static DataTable FindExistingPermits(clsResuftAPI api, ImportRequest request)
+        {
+            return api.GetTableApiExtension("PERM_PKG", "validFlightNbr", new
+            {
+                P_AUTHOR = Clean(request.Author), P_FLIGHT_TYPE = "SC",
+                P_FLIGHTNBR = Clean(request.PermNbr), P_PERMTYPE = "LD"
+            });
         }
 
         private static bool Same(DataRow row, string column, string value)
@@ -164,12 +214,17 @@ namespace prjApplication.Tool
 
         private static void ValidateRequest(ImportRequest request)
         {
+            ValidateRequestHeader(request);
+            if (request.Rows == null || !request.Rows.Any(x => x != null && x.Selected))
+                throw new ArgumentException("Chưa chọn dòng dữ liệu hợp lệ.");
+        }
+
+        private static void ValidateRequestHeader(ImportRequest request)
+        {
             if (request == null) throw new ArgumentException("Không nhận được dữ liệu import.");
             if (String.IsNullOrWhiteSpace(request.PermNbr) || request.PermNbr.Trim().Length > 8)
                 throw new ArgumentException("Number bắt buộc và tối đa 8 ký tự.");
             OracleDate(request.PermDate);
-            if (request.Rows == null || !request.Rows.Any(x => x != null && x.Selected))
-                throw new ArgumentException("Chưa chọn dòng dữ liệu hợp lệ.");
         }
 
         private static void ValidateRow(ImportRow row)
@@ -207,6 +262,7 @@ namespace prjApplication.Tool
             public string PermNbr { get; set; } public string PermDate { get; set; } public string Author { get; set; }
             public string Version { get; set; } public string Season { get; set; } public string Purpose { get; set; }
             public string FlightType { get; set; } public string Registration { get; set; }
+            public bool AllowExistingPermit { get; set; }
             public List<ImportRow> Rows { get; set; }
         }
 
@@ -217,6 +273,7 @@ namespace prjApplication.Tool
             public string Craft { get; set; } public string FromAirp { get; set; } public string ToAirp { get; set; }
             public string Etd { get; set; } public string Eta { get; set; } public string Via { get; set; }
             public string Remark { get; set; }
+            public int StagingId { get; set; }
         }
 
         public class ImportResult
@@ -235,6 +292,13 @@ namespace prjApplication.Tool
         }
 
         public class ApplyResult { public bool Success { get; set; } public string Message { get; set; } }
+
+        public class PermitCheckResult
+        {
+            public PermitCheckResult() { PermitNumbers = new List<string>(); }
+            public bool Success { get; set; } public bool Exists { get; set; }
+            public string Message { get; set; } public List<string> PermitNumbers { get; set; }
+        }
 
         public class CancellationRow
         {
