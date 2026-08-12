@@ -1,6 +1,7 @@
 using prjBusinessLogic;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Web.Services;
@@ -43,6 +44,7 @@ namespace prjApplication.Tool
                             throw new InvalidOperationException("Procedure trả về " + Convert.ToString(response, CultureInfo.InvariantCulture));
 
                         result.Imported++;
+                        result.ImportedRows.Add(row);
                     }
                     catch (Exception ex)
                     {
@@ -51,11 +53,13 @@ namespace prjApplication.Tool
                     }
                 }
 
-                result.RequiresReview = true;
-                result.Success = result.Failed == 0 && result.Imported > 0;
-                result.Message = result.RequiresReview
-                    ? "Đã nhập các dòng hủy được chọn vào vùng chờ. Chưa tự động hủy chuyến; cần đối chiếu danh sách phép trước khi áp dụng."
-                    : "Đã xử lý " + result.Imported + "/" + result.Total + " dòng được chọn.";
+                if (result.Failed == 0 && result.Imported > 0)
+                    CheckExistingPermissions(api, selectedRows, result);
+
+                result.RequiresReview = result.Success;
+                result.Message = result.Success
+                    ? "Kiểm tra thành công: " + result.Imported + " dòng đã được đưa vào danh sách hủy và đều tìm thấy phép tương ứng."
+                    : "Kiểm tra không thành công. Vui lòng sửa dữ liệu lỗi tại bước 2 trước khi tiếp tục.";
             }
             catch (Exception ex)
             {
@@ -64,6 +68,84 @@ namespace prjApplication.Tool
                 result.Errors.Add(ex.Message);
             }
             return result;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public static ApplyResult ApplyCancellation()
+        {
+            var result = new ApplyResult();
+            try
+            {
+                object value = new clsResuftAPI().GetValueApiExtension("PERM_IMP_PKG", "impToPerm_Huy", null);
+                int code;
+                result.Success = Int32.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out code) && code == 1;
+                result.Message = result.Success ? "Hủy chuyến thành công. Quy trình đã hoàn tất."
+                    : "Hủy chuyến không thành công. Mã trả về: " + Convert.ToString(value, CultureInfo.InvariantCulture);
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        private static void CheckExistingPermissions(clsResuftAPI api, IList<ImportRow> selectedRows, ImportResult result)
+        {
+            DataTable table = api.GetTableApiExtension("PERM_IMP_PKG", "GetPhepBayCoHuyChuyen", null);
+            foreach (ImportRow source in selectedRows)
+            {
+                DataRow matched = table.AsEnumerable().FirstOrDefault(row =>
+                    Same(row, "CALLSIGN", source.Callsign) && Same(row, "FROM_AIRP", source.FromAirp) &&
+                    Same(row, "TO_AIRP", source.ToAirp) && SameTime(row, "ETD", source.Etd) && SameTime(row, "ETA", source.Eta));
+                if (matched == null)
+                {
+                    result.Errors.Add("Dòng " + source.SourceLine + " - " + source.Callsign
+                        + ": không tìm thấy chuyến bay/phép SC tương ứng để hủy.");
+                    continue;
+                }
+                result.CancelledFlights.Add(ToCancellationRow(matched));
+            }
+            result.Success = result.Failed == 0 && result.Imported == result.Total
+                && result.CancelledFlights.Count == selectedRows.Count;
+        }
+
+        private static bool Same(DataRow row, string column, string value)
+        {
+            return String.Equals(Cell(row, column), Clean(value), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool SameTime(DataRow row, string column, string value)
+        {
+            return Cell(row, column).Replace(":", "").PadLeft(4, '0') == Clean(value).Replace(":", "").PadLeft(4, '0');
+        }
+
+        private static string Cell(DataRow row, string column)
+        {
+            return row.Table.Columns.Contains(column) && row[column] != DBNull.Value
+                ? Convert.ToString(row[column], CultureInfo.InvariantCulture).Trim().ToUpperInvariant() : "";
+        }
+
+        private static string DateCell(DataRow row, string column)
+        {
+            if (!row.Table.Columns.Contains(column) || row[column] == DBNull.Value) return "";
+            DateTime date;
+            return DateTime.TryParse(Convert.ToString(row[column], CultureInfo.InvariantCulture), out date)
+                ? date.ToString("dd-MM-yyyy") : Convert.ToString(row[column], CultureInfo.InvariantCulture);
+        }
+
+        private static CancellationRow ToCancellationRow(DataRow row)
+        {
+            return new CancellationRow
+            {
+                Callsign = Cell(row, "CALLSIGN"), PermNbr = Cell(row, "PERMNBR_ID"),
+                FromDate = DateCell(row, "FROMDATE"), ToDate = DateCell(row, "TODATE"),
+                FromAirp = Cell(row, "FROM_AIRP"), ToAirp = Cell(row, "TO_AIRP"), Daily = Cell(row, "DAILY_PHEP"),
+                Etd = Cell(row, "ETD"), Eta = Cell(row, "ETA"), Oper = Cell(row, "OPER"),
+                PermType = Cell(row, "PERMTYPE"), Remark = Cell(row, "REMARK"), Purpose = Cell(row, "PURPOSE"),
+                CancelDaily = Cell(row, "DAILY"), CancelFromDate = DateCell(row, "HUY_FROMDATE"),
+                CancelToDate = DateCell(row, "HUY_TODATE")
+            };
         }
 
         private static object BuildAllOperPayload(ImportRequest request, ImportRow row)
@@ -139,10 +221,31 @@ namespace prjApplication.Tool
 
         public class ImportResult
         {
-            public ImportResult() { Errors = new List<string>(); }
+            public ImportResult()
+            {
+                Errors = new List<string>();
+                ImportedRows = new List<ImportRow>();
+                CancelledFlights = new List<CancellationRow>();
+            }
             public bool Success { get; set; } public bool RequiresReview { get; set; }
             public int Total { get; set; } public int Imported { get; set; } public int Failed { get; set; }
             public string Message { get; set; } public List<string> Errors { get; set; }
+            public List<ImportRow> ImportedRows { get; set; }
+            public List<CancellationRow> CancelledFlights { get; set; }
+        }
+
+        public class ApplyResult { public bool Success { get; set; } public string Message { get; set; } }
+
+        public class CancellationRow
+        {
+            public string Callsign { get; set; } public string PermNbr { get; set; }
+            public string FromDate { get; set; } public string ToDate { get; set; }
+            public string FromAirp { get; set; } public string ToAirp { get; set; }
+            public string Daily { get; set; } public string Etd { get; set; } public string Eta { get; set; }
+            public string Oper { get; set; } public string PermType { get; set; }
+            public string Remark { get; set; } public string Purpose { get; set; }
+            public string CancelDaily { get; set; } public string CancelFromDate { get; set; }
+            public string CancelToDate { get; set; }
         }
     }
 }

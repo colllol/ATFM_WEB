@@ -299,11 +299,60 @@
         }).done(function (response) {
             var result = response.d || {};
             $('#resultPanel').prop('hidden', false);
-            $('#importResult').text(JSON.stringify(result, null, 2));
-            $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="3"]').addClass('is-active');
-            message(result.Success ? 'Import hoàn tất. Hãy kiểm tra kết quả chi tiết.' : 'Import có lỗi, chưa thực hiện lệnh HỦY CHUYẾN tự động.', result.Success ? 'success' : 'error');
+            showResult(result.Message, result.Success ? 'success' : 'error', result.Errors);
+            if (result.Success) {
+                renderConfirmation(result);
+                $('#btnApplyCancellation').prop('disabled', false);
+                $('#confirmPanel').prop('hidden', false);
+                $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="3"]').addClass('is-active');
+            } else {
+                $('#confirmPanel').prop('hidden', true);
+                $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="2"]').addClass('is-active');
+            }
         }).fail(function (xhr) {
-            message('Không thể import: ' + (xhr.responseText || xhr.statusText), 'error');
+            $('#resultPanel').prop('hidden', false);
+            showResult('Không thể kiểm tra dữ liệu: ' + (xhr.responseText || xhr.statusText), 'error');
+        }).always(function () { setLoading(false); });
+    }
+
+    function showResult(text, type, errors) {
+        var detail = (errors || []).join('\n');
+        $('#importResult').removeClass('is-success is-error').addClass(type === 'success' ? 'is-success' : 'is-error')
+            .text((text || '') + (detail ? '\n' + detail : ''));
+    }
+
+    function renderConfirmation(result) {
+        var imported = '', cancelled = '';
+        (result.ImportedRows || []).forEach(function (x, i) {
+            imported += '<tr><td>' + (i + 1) + '</td><td>' + html(x.Callsign) + '</td><td>' + html(x.FromDate)
+                + '</td><td>' + html(x.ToDate) + '</td><td>' + html(x.Daily) + '</td><td>' + html(x.Craft)
+                + '</td><td>' + html(x.FromAirp) + '</td><td>' + html(x.ToAirp) + '</td><td>' + html(x.Etd)
+                + '</td><td>' + html(x.Eta) + '</td><td>' + html(x.Via) + '</td><td>' + html(x.Remark) + '</td></tr>';
+        });
+        (result.CancelledFlights || []).forEach(function (x, i) {
+            cancelled += '<tr><td>' + (i + 1) + '</td><td>' + html(x.Callsign) + '</td><td>' + html(x.PermNbr)
+                + '</td><td>' + html(x.FromDate) + '</td><td>' + html(x.ToDate) + '</td><td>' + html(x.FromAirp)
+                + '</td><td>' + html(x.ToAirp) + '</td><td>' + html(x.Daily) + '</td><td>' + html(x.Etd)
+                + '</td><td>' + html(x.Eta) + '</td><td>' + html(x.Oper) + '</td><td>' + html(x.PermType)
+                + '</td><td>' + html(x.Remark) + '</td><td>' + html(x.Purpose) + '</td><td>' + html(x.CancelDaily)
+                + '</td><td>' + html(x.CancelFromDate) + '</td><td>' + html(x.CancelToDate) + '</td></tr>';
+        });
+        $('#importedTable tbody').html(imported);
+        $('#cancelledTable tbody').html(cancelled);
+    }
+
+    function applyCancellation() {
+        if (!window.confirm('Xác nhận thực hiện HỦY CHUYẾN cho danh sách đã kiểm tra?')) return;
+        setLoading(true);
+        $.ajax({
+            type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/ApplyCancellation',
+            contentType: 'application/json; charset=utf-8', dataType: 'json', data: '{}'
+        }).done(function (response) {
+            var result = response.d || {};
+            showResult(result.Message, result.Success ? 'success' : 'error');
+            if (result.Success) $('#btnApplyCancellation').prop('disabled', true);
+        }).fail(function (xhr) {
+            showResult('Không thể thực hiện hủy chuyến: ' + (xhr.responseText || xhr.statusText), 'error');
         }).always(function () { setLoading(false); });
     }
 
@@ -324,16 +373,17 @@
             }
         });
         $('#btnImportSelected').on('click', importSelected);
+        $('#btnApplyCancellation').on('click', applyCancellation);
         $('#impSource').on('paste', function (event) {
             var tableText = tableTextFromClipboard(event);
             if (!tableText) return;
             event.preventDefault();
             $(this).val(tableText);
             rows = [];
-            $('#previewPanel,#resultPanel').prop('hidden', true);
+            $('#previewPanel,#resultPanel,#confirmPanel').prop('hidden', true);
             message('Đã nhận bảng Word/Excel và giữ nguyên từng ô. Bấm PHÂN TÍCH & KIỂM TRA để xem kết quả.', 'success');
         });
-        $('#btnClearSource').on('click', function () { $('#impSource').val('').focus(); rows = []; $('#previewPanel,#resultPanel').prop('hidden', true); });
+        $('#btnClearSource').on('click', function () { $('#impSource').val('').focus(); rows = []; $('#previewPanel,#resultPanel,#confirmPanel').prop('hidden', true); });
         $('#impFile').on('change', function () { var file = this.files && this.files[0], reader; if (!file) return; reader = new FileReader(); reader.onload = function (e) { $('#impSource').val(e.target.result); }; reader.readAsText(file, 'UTF-8'); });
         $('[data-status-filter]').on('click', function () { activeFilter = $(this).data('status-filter'); $('[data-status-filter]').removeClass('is-active'); $(this).addClass('is-active'); render(); });
         $('#previewSearch').on('input', render);

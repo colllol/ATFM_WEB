@@ -4,7 +4,7 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.css?v=20260812-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260812-3") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260812-4") %>" />
 
     <section class="impv2" data-page-method-url="ImportsPermSC_LD_V2.aspx/">
         <header class="impv2__header">
@@ -131,7 +131,23 @@
 
         <section id="resultPanel" class="impv2__panel" hidden>
             <h3>Kết quả xử lý</h3>
-            <pre id="importResult"></pre>
+            <div id="importResult" class="impv2__result-text"></div>
+        </section>
+
+        <section id="confirmPanel" class="impv2__panel" hidden>
+            <h3>3. Xác nhận xử lý</h3>
+            <h4>DANH SÁCH CHUYẾN ĐÃ IMPORT THÀNH CÔNG</h4>
+            <div class="impv2__table-wrap"><table id="importedTable"><thead><tr>
+                <th>NO</th><th>CALLSIGN</th><th>FROM DATE</th><th>TO DATE</th><th>DAILY</th>
+                <th>CRAFT</th><th>FROM</th><th>TO</th><th>ETD</th><th>ETA</th><th>VIA</th><th>REMARK</th>
+            </tr></thead><tbody></tbody></table></div>
+            <h4>DANH SÁCH CHUYẾN BAY BỊ HỦY</h4>
+            <div class="impv2__table-wrap"><table id="cancelledTable"><thead><tr>
+                <th>NO</th><th>CALLSIGN</th><th>PERM</th><th>BEGIN</th><th>END</th><th>FROM</th><th>TO</th>
+                <th>DAILY</th><th>ETD</th><th>ETA</th><th>OPER</th><th>TYPE</th><th>REMARK</th><th>PURPOSE</th>
+                <th>HỦY</th><th>BEGIN HỦY</th><th>END HỦY</th>
+            </tr></thead><tbody></tbody></table></div>
+            <div class="impv2__primary-actions"><button id="btnApplyCancellation" type="button">XÁC NHẬN HỦY CHUYẾN</button></div>
         </section>
 
         <div id="formatGuide" class="impv2__guide" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="formatGuideTitle">
@@ -162,5 +178,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-6") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-7") %>"></script>
 </asp:Content>
