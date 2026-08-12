@@ -28,10 +28,10 @@
             <div class="impv2__form-grid">
                 <label class="impv2__format-field">Format
                     <select id="impFormat">
-                        <option value="AUTO">TỰ NHẬN DIỆN</option>
-                        <option value="STANDARD">CHUẨN ATFM</option>
-                        <option value="HVN">HVN LEGACY</option>
-                        <option value="ALL_OPER">TAB/SPACE CHUNG</option>
+                        <option value="AUTO">TỰ NHẬN DIỆN — KHUYÊN DÙNG</option>
+                        <option value="WITH_CRAFT">MẪU HỦY CÓ LOẠI TÀU BAY</option>
+                        <option value="WITHOUT_CRAFT">MẪU HỦY KHÔNG CÓ LOẠI TÀU BAY</option>
+                        <option value="NORMALIZED">DỮ LIỆU ĐÃ CHUẨN HÓA ATFM</option>
                     </select>
                     <button id="btnViewFormat" type="button" class="impv2__format-help">? XEM FORMAT CHUẨN</button>
                 </label>
@@ -75,8 +75,9 @@
                 </div>
             </div>
             <div class="impv2__source-grid">
-                <label>Nội dung chuyến bay
-                    <textarea id="impSource" spellcheck="false" placeholder="Dán dữ liệu chuyến bay vào đây..."></textarea>
+                <label>Dán bảng lịch bay từ Word/Excel
+                    <textarea id="impSource" spellcheck="false" placeholder="Sao chép cả dòng tiêu đề và các dòng chuyến bay tại mục Schedules, sau đó dán vào đây bằng Ctrl+V."></textarea>
+                    <small>Khuyến nghị chỉ sao chép bảng Schedules; không cần phần Carrier, Applicant hoặc Note.</small>
                 </label>
                 <label>VIA/Route mặc định
                     <textarea id="impDefaultVia" spellcheck="false" placeholder="Route mặc định hoặc bảng route theo chặng"></textarea>
@@ -143,7 +144,7 @@
                     <button id="btnCloseFormat" type="button" aria-label="Đóng">×</button>
                 </div>
                 <p id="formatGuideDescription"></p>
-                <div class="impv2__guide-note"><b>Quy ước chung:</b> phân cách cột bằng Tab hoặc khoảng trắng; mỗi chuyến bay nằm trên một dòng.</div>
+                <div class="impv2__guide-note"><b>Khuyến nghị:</b> sao chép nguyên bảng Schedules từ Word/Excel, gồm dòng tiêu đề và toàn bộ các dòng chuyến bay. Hệ thống giữ từng ô và tự ánh xạ theo tên cột.</div>
                 <h4>Thứ tự cột</h4>
                 <div id="formatGuideColumns" class="impv2__guide-columns"></div>
                 <h4>Dòng mẫu có thể sao chép</h4>
@@ -161,5 +162,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-5") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260812-6") %>"></script>
 </asp:Content>

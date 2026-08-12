@@ -94,8 +94,8 @@ namespace prjApplication.Tool
         {
             if (String.IsNullOrWhiteSpace(row.Callsign)) throw new ArgumentException("Thiếu callsign");
             OracleDate(row.FromDate); OracleDate(row.ToDate);
-            if (String.IsNullOrWhiteSpace(row.FromAirp) || row.FromAirp.Trim().Length != 4) throw new ArgumentException("FROM không hợp lệ");
-            if (String.IsNullOrWhiteSpace(row.ToAirp) || row.ToAirp.Trim().Length != 4) throw new ArgumentException("TO không hợp lệ");
+            if (String.IsNullOrWhiteSpace(row.FromAirp) || row.FromAirp.Trim().Length < 3 || row.FromAirp.Trim().Length > 4) throw new ArgumentException("FROM không hợp lệ");
+            if (String.IsNullOrWhiteSpace(row.ToAirp) || row.ToAirp.Trim().Length < 3 || row.ToAirp.Trim().Length > 4) throw new ArgumentException("TO không hợp lệ");
             if (String.IsNullOrWhiteSpace(row.Etd) || String.IsNullOrWhiteSpace(row.Eta)) throw new ArgumentException("ETD/ETA không hợp lệ");
         }
 

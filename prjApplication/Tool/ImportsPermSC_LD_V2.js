@@ -4,26 +4,26 @@
     var rows = [];
     var activeFilter = 'ALL';
     var formatGuides = {
-        STANDARD: {
-            name: 'CHUẨN ATFM',
-            description: 'Dùng khi mỗi dòng đã có đầy đủ loại tàu bay và lịch bay.',
+        WITH_CRAFT: {
+            name: 'MẪU HỦY CÓ LOẠI TÀU BAY',
+            description: 'Bảng Schedules có cột Aircraft Type.',
             columns: ['CALLSIGN', 'FROM DATE', 'TO DATE', 'DAILY', 'CRAFT', 'FROM', 'ETD', 'TO', 'ETA', 'VIA (tùy chọn)'],
             example: 'HVN123 12-AUG-26 30-SEP-26 1234567 A321 VVNB 0830 VVTS 1035 R474',
-            rules: ['Ngày chấp nhận DD-MMM-YY, DD-MM-YYYY hoặc DD/MM/YYYY.', 'DAILY dùng 1234567; thứ Hai là 1, Chủ nhật là 7.', 'ETD/ETA dùng HHmm hoặc HH:mm; ETA qua ngày có thể thêm dấu +.']
+            rules: ['Có thể dán cả dòng tiêu đề từ Word/Excel.', 'Aircraft có thể để trống đối với chuyến hủy.', 'Ngày, DAILY và giờ sẽ được chuẩn hóa tự động.']
         },
-        HVN: {
-            name: 'HVN LEGACY',
-            description: 'Dùng cho dữ liệu lịch bay HVN theo thứ tự cột của chức năng cũ.',
+        WITHOUT_CRAFT: {
+            name: 'MẪU HỦY KHÔNG CÓ LOẠI TÀU BAY',
+            description: 'Bảng Schedules kết thúc ở cột ETA, không có Aircraft Type.',
+            columns: ['CALLSIGN', 'FROM DATE', 'TO DATE', 'DAILY', 'FROM', 'ETD', 'TO', 'ETA'],
+            example: 'MMA-711 29 Mar 26 24 Oct 26 Daily VYYY 0210 ZGGG 0515',
+            rules: ['Callsign có dấu gạch sẽ tự bỏ dấu gạch.', 'Sân bay chấp nhận IATA 3 ký tự hoặc ICAO 4 ký tự.', 'Craft không bắt buộc đối với đối chiếu hủy chuyến.']
+        },
+        NORMALIZED: {
+            name: 'DỮ LIỆU ĐÃ CHUẨN HÓA ATFM',
+            description: 'Dữ liệu không có tiêu đề và đã đúng thứ tự cột ATFM.',
             columns: ['CALLSIGN', 'FROM DATE', 'TO DATE', 'DAILY', 'CRAFT', 'FROM', 'ETD', 'TO', 'ETA', 'VIA (tùy chọn)'],
-            example: 'VN714 12-AUG-26 30-SEP-26 1234567 321 VVNB 0730 VVDN 0855 W1',
-            rules: ['Craft 319/320/321/787 được chuẩn hóa thành A319/A320/A321/B787.', 'Nếu VIA bỏ trống, hệ thống lấy VIA/Route mặc định.', 'Một dòng tiêu đề ĐƯỜNG BAY sẽ được bỏ qua.']
-        },
-        ALL_OPER: {
-            name: 'TAB/SPACE CHUNG',
-            description: 'Dùng cho nhiều hãng; Craft lấy từ ô Craft mặc định thay vì lấy trong từng dòng.',
-            columns: ['CALLSIGN', 'FROM DATE', 'TO DATE', 'DAILY', 'FROM', 'ETD', 'TO', 'ETA', 'REMARK (tùy chọn)', 'VIA (tùy chọn)'],
-            example: 'VJC101 12-AUG-26 30-SEP-26 1234567 VVTS 0600 VVNB 0810 NORMAL R474',
-            rules: ['Phải nhập Craft mặc định nếu dữ liệu nguồn không có Craft.', 'Remark/VIA không được chứa khoảng trắng nếu nhập trực tiếp trong dòng.', 'Có thể khai báo VIA/Route mặc định ở khu vực dữ liệu nguồn.']
+            example: 'HVN123 12-AUG-26 30-SEP-26 1234567 A321 VVNB 0830 VVTS 1035 R474',
+            rules: ['Mỗi chuyến bay một dòng.', 'Các cột phân cách bằng Tab hoặc khoảng trắng.', 'Nên dùng Tự nhận diện nếu dán trực tiếp từ Word/Excel.']
         }
     };
 
@@ -38,10 +38,10 @@
         var selected = value('impFormat');
         return selected === 'AUTO' ? {
             name: 'TỰ NHẬN DIỆN',
-            description: 'Hệ thống nhận diện HVN khi thấy dòng ĐƯỜNG BAY hoặc callsign VN; trường hợp còn lại dùng CHUẨN ATFM.',
-            columns: formatGuides.STANDARD.columns,
-            example: formatGuides.STANDARD.example,
-            rules: ['Nếu kết quả preview lệch cột, hãy chọn trực tiếp CHUẨN ATFM, HVN LEGACY hoặc TAB/SPACE CHUNG.', 'Luôn kiểm tra Preview trước khi Import.', 'Dòng lỗi sẽ tự bỏ chọn và không được gửi lên server.']
+            description: 'Hệ thống tìm dòng tiêu đề, ánh xạ cột theo tên và tự nhận diện bảng có hoặc không có Aircraft Type.',
+            columns: formatGuides.WITH_CRAFT.columns,
+            example: formatGuides.WITH_CRAFT.example,
+            rules: ['Khuyến nghị sao chép cả dòng tiêu đề và các dòng chuyến bay.', 'Có thể dán từ Word hoặc Excel.', 'Luôn kiểm tra Preview trước khi đưa vào danh sách hủy.']
         } : formatGuides[selected];
     }
     function showFormatGuide() {
@@ -67,18 +67,19 @@
     }
     function normalizeDate(text) {
         var months = { JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06', JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12' };
-        var s = upper(text).replace(/[.\/]/g, '-'), m, year;
+        var s = upper(text).replace(/[.\/]/g, '-').replace(/\s+/g, '-').replace(/-+/g, '-'), m, year;
         if ((m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/))) return m[3] + '-' + m[2] + '-' + m[1];
+        if ((m = s.match(/^(\d{2})-(\d{2})-(\d{2})$/))) return '20' + m[3] + '-' + m[2] + '-' + m[1];
         if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/))) return s;
-        if ((m = s.match(/^(\d{2})-([A-Z]{3})-(\d{2}|\d{4})$/)) && months[m[2]]) {
+        if ((m = s.match(/^(\d{1,2})-?([A-Z]{3})-?(\d{2}|\d{4})$/)) && months[m[2]]) {
             year = m[3].length === 2 ? (+m[3] >= 70 ? '19' : '20') + m[3] : m[3];
-            return year + '-' + months[m[2]] + '-' + m[1];
+            return year + '-' + months[m[2]] + '-' + ('0' + m[1]).slice(-2);
         }
         return '';
     }
     function normalizeTime(text) {
-        var s = upper(text).replace(/:/g, ''), plus = /\+$/.test(s);
-        s = s.replace(/\+/g, '');
+        var s = upper(text).replace(/\s+/g, '').replace(/:/g, ''), plus = /\+(?:1)?$/.test(s);
+        s = s.replace(/\+(?:1)?$/g, '');
         if (!/^\d{3,4}$/.test(s)) return '';
         while (s.length < 4) s = '0' + s;
         if (+s.substr(0, 2) > 23 || +s.substr(2, 2) > 59) return '';
@@ -89,10 +90,59 @@
         return s.split('').filter(function (v, i, a) { return a.indexOf(v) === i; }).sort().join('');
     }
     function tokenize(line) { return $.trim(line).split(/[\t ]+/).filter(Boolean); }
-    function detectedFormat(lines) {
-        var sample = lines.slice(0, 10).join('\n').toUpperCase();
-        if (/\bĐƯỜNG BAY\b|\bDUONG BAY\b/.test(sample) || /\bVN\d+\b/.test(sample)) return 'HVN';
-        return 'STANDARD';
+    function tabCells(line) { return line.split('\t').map(function (x) { return $.trim(x); }); }
+    function fold(text) {
+        var s = upper(text);
+        if (s.normalize) s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return s.replace(/Đ/g, 'D').replace(/[^A-Z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    function headerKey(text) {
+        var s = fold(text);
+        if (/CALL ?SIGN|FLIGHT (NUMBER|NBR)/.test(s)) return 'callsign';
+        if (/EFFECTIVE FROM|BEGIN DATE|FROM DATE/.test(s)) return 'fromDate';
+        if (/EFFECTIVE TO|END DATE|TO DATE/.test(s)) return 'toDate';
+        if (/DAYS? OF SERVICE|DAYS? OF OPERATION|DAILY|DAY DATE/.test(s)) return 'daily';
+        if (/DEPARTURE (AIRPORT|AERODROME)|FROM AIRP/.test(s)) return 'fromAirp';
+        if (/ARRIVAL (AIRPORT|AERODROME)|TO AIRP/.test(s)) return 'toAirp';
+        if (/^ETD/.test(s)) return 'etd';
+        if (/^ETA/.test(s)) return 'eta';
+        if (/AIRCRAFT TYPE|CRAFT TYPE|^CRAFT$/.test(s)) return 'craft';
+        if (/^VIA$|ROUTE/.test(s)) return 'via';
+        if (/REMARK|NOTE/.test(s)) return 'remark';
+        return '';
+    }
+    function headerMap(cells) {
+        var map = {};
+        cells.forEach(function (cell, index) { var key = headerKey(cell); if (key && map[key] == null) map[key] = index; });
+        return map.callsign != null && map.fromDate != null && map.toDate != null && map.etd != null && map.eta != null ? map : null;
+    }
+    function isSectionEnd(line) {
+        return /^(3\.|TYPE OF SERVICES|REASON OF CANCELLATION|REF TO PERMIT|APPLICANT|NOTE|RGDS)/.test(fold(line));
+    }
+    function formatName(format) {
+        return { AUTO: 'TỰ NHẬN DIỆN', WITH_CRAFT: 'MẪU CÓ LOẠI TÀU BAY', WITHOUT_CRAFT: 'MẪU KHÔNG CÓ LOẠI TÀU BAY', NORMALIZED: 'DỮ LIỆU CHUẨN HÓA ATFM' }[format] || format;
+    }
+    function tableTextFromClipboard(event) {
+        var clipboard = event.originalEvent && event.originalEvent.clipboardData;
+        var rawHtml = clipboard ? clipboard.getData('text/html') : '';
+        var container, tables, best = null, bestScore = -1;
+        if (!rawHtml || !/<table[\s>]/i.test(rawHtml)) return '';
+        container = document.createElement('div'); container.innerHTML = rawHtml;
+        tables = container.querySelectorAll('table');
+        Array.prototype.forEach.call(tables, function (table) {
+            var text = fold(table.textContent || ''), score = 0;
+            if (/FLIGHT (NUMBER|NBR)/.test(text)) score += 4;
+            if (/EFFECTIVE FROM/.test(text)) score += 3;
+            if (/ETD/.test(text) && /ETA/.test(text)) score += 2;
+            score += table.rows ? Math.min(table.rows.length, 20) / 100 : 0;
+            if (score > bestScore) { bestScore = score; best = table; }
+        });
+        if (!best || bestScore < 4) return '';
+        return Array.prototype.map.call(best.rows, function (tr) {
+            return Array.prototype.map.call(tr.cells, function (cell) {
+                return (cell.innerText || cell.textContent || '').replace(/\s+/g, ' ').trim();
+            }).join('\t');
+        }).filter(function (line) { return $.trim(line); }).join('\n');
     }
     function routeFor(from, to) {
         var routeText = value('impDefaultVia'), result = routeText;
@@ -108,21 +158,17 @@
     }
     function makeRow(lineNo, source, d, format) {
         var row = { sourceLine: lineNo, sourceText: source, selected: true, status: 'VALID', errors: [], warnings: [] };
-        if (format === 'ALL_OPER') {
+        if (format === 'WITHOUT_CRAFT') {
             row.callsign = d[0]; row.fromDate = d[1]; row.toDate = d[2]; row.daily = d[3];
             row.craft = value('impDefaultCraft'); row.fromAirp = d[4]; row.etd = d[5]; row.toAirp = d[6]; row.eta = d[7];
             row.remark = d.length > 8 ? d[8] : '';
-            row.via = d.length > 9 ? d[9] : '';
-        } else if (format === 'HVN') {
-            row.callsign = d[0]; row.fromDate = d[1]; row.toDate = d[2]; row.daily = d[3];
-            row.craft = d[4]; row.fromAirp = d[5]; row.etd = d[6]; row.toAirp = d[7]; row.eta = d[8];
             row.via = d.length > 9 ? d[9] : '';
         } else {
             row.callsign = d[0]; row.fromDate = d[1]; row.toDate = d[2]; row.daily = d[3];
             row.craft = d[4]; row.fromAirp = d[5]; row.etd = d[6]; row.toAirp = d[7]; row.eta = d[8];
             row.via = d.length > 9 ? d[9] : '';
         }
-        row.callsign = upper(row.callsign);
+        row.callsign = upper(row.callsign).replace(/[^A-Z0-9]/g, '');
         row.fromDate = normalizeDate(row.fromDate);
         row.toDate = normalizeDate(row.toDate);
         row.daily = normalizeDaily(row.daily);
@@ -142,35 +188,66 @@
         if (!row.toDate) row.errors.push('Đến ngày không hợp lệ');
         if (row.fromDate && row.toDate && row.fromDate > row.toDate) row.errors.push('Từ ngày lớn hơn Đến ngày');
         if (!row.daily) row.errors.push('Daily không hợp lệ');
-        if (!/^[A-Z]{4}$/.test(row.fromAirp)) row.errors.push('Sân bay đi không hợp lệ');
-        if (!/^[A-Z]{4}$/.test(row.toAirp)) row.errors.push('Sân bay đến không hợp lệ');
+        if (!/^[A-Z]{3,4}$/.test(row.fromAirp)) row.errors.push('Sân bay đi không hợp lệ');
+        if (!/^[A-Z]{3,4}$/.test(row.toAirp)) row.errors.push('Sân bay đến không hợp lệ');
         if (!row.etd) row.errors.push('ETD không hợp lệ');
         if (!row.eta) row.errors.push('ETA không hợp lệ');
-        if (!row.craft) row.warnings.push('Thiếu loại tàu bay');
-        if (!row.via) row.warnings.push('Thiếu VIA');
         row.status = row.errors.length ? 'ERROR' : (row.warnings.length ? 'WARNING' : 'VALID');
         if (row.status === 'ERROR') row.selected = false;
     }
+    function rowFromHeader(lineNo, source, cells, map) {
+        function cell(key) { return map[key] == null ? '' : (cells[map[key]] || ''); }
+        return makeNormalizedRow(lineNo, source, {
+            callsign: cell('callsign'), fromDate: cell('fromDate'), toDate: cell('toDate'), daily: cell('daily'),
+            craft: cell('craft'), fromAirp: cell('fromAirp'), etd: cell('etd'), toAirp: cell('toAirp'), eta: cell('eta'),
+            via: cell('via'), remark: cell('remark')
+        });
+    }
+    function makeNormalizedRow(lineNo, source, data) {
+        var row = $.extend({ sourceLine: lineNo, sourceText: source, selected: true, status: 'VALID', errors: [], warnings: [] }, data);
+        row.callsign = upper(row.callsign).replace(/[^A-Z0-9]/g, '');
+        row.fromDate = normalizeDate(row.fromDate); row.toDate = normalizeDate(row.toDate);
+        row.daily = normalizeDaily(row.daily); row.craft = upper(row.craft || value('impDefaultCraft'));
+        row.fromAirp = upper(row.fromAirp); row.toAirp = upper(row.toAirp);
+        row.etd = normalizeTime(row.etd); row.eta = normalizeTime(row.eta);
+        row.via = upper(row.via || routeFor(row.fromAirp, row.toAirp));
+        row.remark = upper(row.remark || value('impDefaultRemark'));
+        validate(row); return row;
+    }
     function parse() {
-        var source = $('#impSource').val() || '', sourceLines = source.split(/\r?\n/), nonEmpty = sourceLines.filter(function (x) { return $.trim(x); });
-        var format = value('impFormat');
-        if (format === 'AUTO') format = detectedFormat(nonEmpty);
+        var source = $('#impSource').val() || '', sourceLines = source.split(/\r?\n/), format = value('impFormat');
+        var map = null, headerIndex = -1, detected = format;
         rows = [];
+        sourceLines.some(function (line, index) {
+            var candidate = headerMap(tabCells(line));
+            if (candidate) { map = candidate; headerIndex = index; return true; }
+            return false;
+        });
+        if (map) detected = map.craft == null ? 'WITHOUT_CRAFT' : 'WITH_CRAFT';
+        if (format !== 'AUTO') detected = format;
         sourceLines.forEach(function (line, index) {
             var clean = $.trim(line), d;
-            if (!clean || /^#/.test(clean) || /ĐƯỜNG BAY|DUONG BAY/i.test(clean)) return;
-            d = tokenize(clean);
-            if (d.length < 9) {
-                rows.push({ sourceLine: index + 1, sourceText: clean, selected: false, status: 'ERROR', callsign: d[0] || '', errors: ['Thiếu cột: yêu cầu tối thiểu 9 trường'], warnings: [] });
+            if (!clean || /^#/.test(clean) || index === headerIndex || (headerIndex >= 0 && index < headerIndex)) return;
+            if (headerIndex >= 0 && isSectionEnd(clean)) return;
+            if (map && headerIndex >= 0) {
+                d = tabCells(line);
+                if (!d[map.callsign]) return;
+                rows.push(rowFromHeader(index + 1, clean, d, map));
                 return;
             }
-            rows.push(makeRow(index + 1, clean, d, format));
+            d = tokenize(clean);
+            if (detected === 'AUTO') detected = /^[A-Z]{3,4}$/i.test(d[4] || '') ? 'WITHOUT_CRAFT' : 'WITH_CRAFT';
+            if (d.length < (detected === 'WITHOUT_CRAFT' ? 8 : 9)) {
+                rows.push({ sourceLine: index + 1, sourceText: clean, selected: false, status: 'ERROR', callsign: d[0] || '', errors: ['Thiếu cột theo format đã chọn'], warnings: [] });
+                return;
+            }
+            rows.push(makeRow(index + 1, clean, d, detected));
         });
         markDuplicates();
         render();
         $('#previewPanel').prop('hidden', false);
         $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="2"]').addClass('is-active');
-        message('Đã nhận diện format ' + format + '. Hãy kiểm tra các dòng cảnh báo/lỗi trước khi import.', 'success');
+        message('Đã nhận diện ' + formatName(detected) + ', đọc ' + rows.length + ' dòng. Hãy kiểm tra Preview trước khi tiếp tục.', 'success');
     }
     function markDuplicates() {
         var seen = {};
@@ -247,6 +324,15 @@
             }
         });
         $('#btnImportSelected').on('click', importSelected);
+        $('#impSource').on('paste', function (event) {
+            var tableText = tableTextFromClipboard(event);
+            if (!tableText) return;
+            event.preventDefault();
+            $(this).val(tableText);
+            rows = [];
+            $('#previewPanel,#resultPanel').prop('hidden', true);
+            message('Đã nhận bảng Word/Excel và giữ nguyên từng ô. Bấm PHÂN TÍCH & KIỂM TRA để xem kết quả.', 'success');
+        });
         $('#btnClearSource').on('click', function () { $('#impSource').val('').focus(); rows = []; $('#previewPanel,#resultPanel').prop('hidden', true); });
         $('#impFile').on('change', function () { var file = this.files && this.files[0], reader; if (!file) return; reader = new FileReader(); reader.onload = function (e) { $('#impSource').val(e.target.result); }; reader.readAsText(file, 'UTF-8'); });
         $('[data-status-filter]').on('click', function () { activeFilter = $(this).data('status-filter'); $('[data-status-filter]').removeClass('is-active'); $(this).addClass('is-active'); render(); });
