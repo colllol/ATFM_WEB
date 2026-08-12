@@ -260,6 +260,127 @@ def build_document():
         ("NFR-LF-06", "Lưu nội dung đã duyệt", "TC-LF-18"),
     ])
 
+    document.add_page_break()
+    document.add_heading("PHẦN II. DAILY STATISTIC VÀ PHÊ DUYỆT DAILY STATISTIC", level=1)
+
+    document.add_heading("11. Thông tin chung và phạm vi", level=1)
+    add_table(document, ["Nội dung", "Giá trị"], [
+        ("Tính năng nguồn", "Export Flight Finished"),
+        ("Màn hình nguồn", "/Day_Flights/DaylyFlight.aspx?Menu_ID=89"),
+        ("Tính năng thống kê", "Daily Statistic"),
+        ("Màn hình thống kê", "/FinishFlights/ListFinishedFlights.aspx?Menu_ID=71"),
+        ("Tính năng tra cứu đã duyệt", "Daily Statistic Accept"),
+        ("Màn hình đã duyệt", "/FinishFlights/ListFinishedFlightAccepts.aspx?Menu_ID=905"),
+        ("Gói dữ liệu chính", "FINISHED_STATUS_PKG; CANCELED_STATUS_PKG; MAKE_FINISHED"),
+    ])
+    document.add_paragraph(
+        "Quy trình tiếp nhận các chuyến bay đã hoàn thành từ danh sách chuyến bay ngày, "
+        "cho phép kiểm tra và hiệu chỉnh dữ liệu thống kê, xác nhận theo lô, sau đó tra cứu "
+        "riêng dữ liệu đã được xác nhận. Phạm vi bao gồm chuyến bay hoàn thành và "
+        "danh sách chuyến bay hủy có cùng cơ chế Accepted."
+    )
+
+    document.add_heading("12. Vai trò và luồng xử lý", level=1)
+    add_table(document, ["Vai trò", "Trách nhiệm"], [
+        ("Người khai thác chuyến bay ngày", "Kiểm tra danh sách và thực hiện Export Flight Finished."),
+        ("Người lập thống kê", "Tra cứu dữ liệu chưa Accepted, bổ sung, sửa, xóa, xuất Excel và gửi Accepted."),
+        ("Người kiểm tra/khai thác", "Tra cứu và xuất dữ liệu đã Accepted tại màn hình Daily Statistic Accept."),
+    ])
+    document.add_paragraph(
+        "Luồng chính: DaylyFlight → Export Flight Finished → Daily Statistic (chưa Accepted) "
+        "→ kiểm tra/hiệu chỉnh → Accepted → Daily Statistic Accept (đã Accepted)."
+    )
+    add_table(document, ["Trạng thái", "Giá trị", "Màn hình hiển thị"], [
+        ("Chưa Accepted", "ISACCEPTED = 0", "Daily Statistic - Menu_ID=71"),
+        ("Đã Accepted", "ISACCEPTED = 1", "Daily Statistic Accept - Menu_ID=905"),
+    ])
+
+    document.add_heading("13. Chức năng Export Flight Finished", level=1)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-DS-01", "Người dùng chọn Export Flight Finished từ màn hình DaylyFlight; hệ thống yêu cầu xác nhận trước khi xử lý."),
+        ("FR-DS-02", "Hệ thống thực hiện bước MAKE_FINISHED để chuyển các chuyến đủ điều kiện sang kho dữ liệu chuyến bay hoàn thành."),
+        ("FR-DS-03", "Sau khi chuyển thành công, hệ thống tải lại dữ liệu liên quan và phản ánh kết quả trên Daily Statistic."),
+        ("FR-DS-04", "Nếu có lỗi ở bước tạo dữ liệu hoàn thành hoặc lấy dữ liệu export, hệ thống dừng quy trình và thông báo lỗi."),
+    ])
+    document.add_paragraph(
+        "Dữ liệu được chuyển phải giữ được các thông tin nhận dạng và khai thác chính "
+        "như số phép, hãng khai thác, callsign, đăng ký, loại tàu bay, mục đích, "
+        "sân bay đi/đến, ngày bay, ETD/ETA, ATD/ATA, đường bay và ghi chú."
+    )
+
+    document.add_heading("14. Chức năng Daily Statistic", level=1)
+    document.add_heading("14.1. Tra cứu", level=2)
+    document.add_paragraph(
+        "Màn hình mặc định truy vấn dữ liệu chưa Accepted (P_ISACCEPTED = 0). "
+        "Bộ lọc gồm: số phép, đăng ký, sân bay đi/đến, mục đích, hãng khai thác, "
+        "loại phép, loại tàu bay, callsign, VIA/FPL VIA, remark, ETD/ETA, ATD/ATA, "
+        "khoảng ngày, khung giờ, FIR và các nhóm loại chuyến bay. Danh sách hỗ trợ phân trang."
+    )
+    document.add_heading("14.2. Quản lý dữ liệu", level=2)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-DS-05", "Hiển thị tổng số bản ghi và danh sách chuyến bay hoàn thành theo bộ lọc."),
+        ("FR-DS-06", "Cho phép thêm, sửa, lưu hoặc xóa dữ liệu theo quyền được cấp; các dòng đang sửa phải được lưu trước khi Accepted."),
+        ("FR-DS-07", "Cho phép xuất Excel theo bộ lọc và các cột người dùng lựa chọn; dữ liệu export không bị giới hạn bởi trang hiện tại."),
+        ("FR-DS-08", "Hỗ trợ các danh sách nghiệp vụ: Hoàn thành, Cancel, bay quá nội, quốc tế về và chốt số liệu theo cấu hình màn hình."),
+    ])
+    document.add_heading("14.3. Accepted dữ liệu", level=2)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-DS-09", "Nút Accepted chỉ áp dụng cho danh sách Hoàn thành hoặc Cancel tương ứng."),
+        ("FR-DS-10", "Hệ thống lấy các ID hợp lệ đang hiển thị trong kết quả, loại trùng và yêu cầu người dùng xác nhận số lượng."),
+        ("FR-DS-11", "Danh sách ID được chia thành nhiều lô để không vượt giới hạn dữ liệu yêu cầu; mỗi lô gửi kèm tài khoản thực hiện."),
+        ("FR-DS-12", "FINISHED_STATUS_PKG.ACCEPT_FINISHED_FLIGHTS xử lý chuyến hoàn thành; CANCELED_STATUS_PKG.ACCEPT_CANCELED_FLIGHTS xử lý chuyến hủy."),
+        ("FR-DS-13", "Sau khi thành công, ISACCEPTED chuyển từ 0 sang 1, danh sách chưa Accepted được tải lại và thông báo tổng số bản ghi đã xử lý."),
+        ("FR-DS-14", "Nếu một lô lỗi, dừng các lô còn lại và thông báo số bản ghi đã cập nhật trước khi lỗi."),
+    ])
+
+    document.add_heading("15. Chức năng Daily Statistic Accept", level=1)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-DS-15", "Màn hình chỉ truy vấn dữ liệu đã Accepted (P_ISACCEPTED = 1) cho danh sách Hoàn thành và Cancel."),
+        ("FR-DS-16", "Cho phép tra cứu theo cùng nhóm tiêu chí nghiệp vụ của Daily Statistic và hiển thị tổng số bản ghi."),
+        ("FR-DS-17", "Cho phép phân trang và xuất Excel toàn bộ kết quả đã Accepted theo bộ lọc."),
+        ("FR-DS-18", "Màn hình đã Accepted không hiển thị thao tác Accepted lần nữa; dữ liệu phải tách biệt với danh sách chưa Accepted."),
+    ])
+
+    document.add_heading("16. Quy tắc nghiệp vụ và phi chức năng", level=1)
+    add_table(document, ["Mã", "Quy tắc/yêu cầu"], [
+        ("BR-DS-01", "Chỉ các chuyến đủ điều kiện kết thúc mới được chuyển sang dữ liệu Finished."),
+        ("BR-DS-02", "Bản ghi ISACCEPTED = 0 thuộc Daily Statistic; ISACCEPTED = 1 thuộc Daily Statistic Accept."),
+        ("BR-DS-03", "Không Accepted khi còn dòng đã sửa nhưng chưa lưu."),
+        ("BR-DS-04", "Accepted chỉ xử lý các ID hợp lệ đang hiển thị trong kết quả người dùng đã xác nhận."),
+        ("BR-DS-05", "Phải ghi tài khoản thực hiện Accepted và nhật ký hành động tại cơ sở dữ liệu."),
+        ("BR-DS-06", "Không tự động Accepted bản ghi mới khi danh sách thay đổi sau lúc hiển thị."),
+        ("NFR-DS-01", "Kiểm tra đăng nhập, quyền menu và quyền thao tác ở cả giao diện và máy chủ."),
+        ("NFR-DS-02", "Phân trang danh sách; export dùng truy vấn riêng để lấy đủ kết quả."),
+        ("NFR-DS-03", "Khi API/Oracle lỗi, không báo thành công sai và phải cho phép người dùng thử lại."),
+        ("NFR-DS-04", "Thao tác lô phải thông báo chính xác tổng số bản ghi thành công trước khi gặp lỗi."),
+    ])
+
+    document.add_heading("17. Tiêu chí nghiệm thu và truy vết", level=1)
+    daily_tests = [
+        ("TC-DS-01", "Export Flight Finished sau khi xác nhận", "Dữ liệu đủ điều kiện xuất hiện tại Daily Statistic"),
+        ("TC-DS-02", "Hủy xác nhận Export Flight Finished", "Không chuyển dữ liệu"),
+        ("TC-DS-03", "MAKE_FINISHED hoặc API lỗi", "Dừng xử lý và hiển thị lỗi"),
+        ("TC-DS-04", "Tra cứu Daily Statistic", "Chỉ trả bản ghi ISACCEPTED = 0 phù hợp bộ lọc"),
+        ("TC-DS-05", "Thêm/sửa/lưu dữ liệu hợp lệ", "Dữ liệu cập nhật và danh sách hiển thị đúng"),
+        ("TC-DS-06", "Accepted khi còn dòng chưa lưu", "Hệ thống từ chối và yêu cầu lưu trước"),
+        ("TC-DS-07", "Accepted danh sách rỗng", "Hệ thống không gửi yêu cầu"),
+        ("TC-DS-08", "Accepted nhiều chuyến hoàn thành", "Chia lô, cập nhật ISACCEPTED = 1 và báo đúng số lượng"),
+        ("TC-DS-09", "Accepted nhiều chuyến hủy", "Gọi đúng CANCELED_STATUS_PKG và cập nhật thành công"),
+        ("TC-DS-10", "Một lô Accepted bị lỗi", "Dừng lô sau và báo số bản ghi đã thành công"),
+        ("TC-DS-11", "Tra cứu Daily Statistic Accept", "Chỉ trả bản ghi ISACCEPTED = 1"),
+        ("TC-DS-12", "Bản ghi Accepted thành công", "Biến mất khỏi danh sách chưa duyệt và xuất hiện tại danh sách đã duyệt"),
+        ("TC-DS-13", "Export Excel theo bộ lọc", "File có đủ bản ghi và đúng các cột đã chọn"),
+        ("TC-DS-14", "Người không có quyền thao tác", "Giao diện/máy chủ từ chối yêu cầu"),
+    ]
+    add_table(document, ["Mã kiểm thử", "Nội dung", "Kết quả mong đợi"], daily_tests)
+    add_table(document, ["Mã yêu cầu", "Nội dung", "Kiểm thử"], [
+        ("FR-DS-01…FR-DS-04", "Export Flight Finished", "TC-DS-01…TC-DS-03"),
+        ("FR-DS-05…FR-DS-08", "Tra cứu, hiệu chỉnh và export Daily Statistic", "TC-DS-04, TC-DS-05, TC-DS-13"),
+        ("FR-DS-09…FR-DS-14", "Accepted dữ liệu", "TC-DS-06…TC-DS-10, TC-DS-12"),
+        ("FR-DS-15…FR-DS-18", "Daily Statistic Accept", "TC-DS-11…TC-DS-13"),
+        ("NFR-DS-01", "Phân quyền", "TC-DS-14"),
+    ])
+
     for item in document.sections:
         footer = item.footer.paragraphs[0]
         footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
