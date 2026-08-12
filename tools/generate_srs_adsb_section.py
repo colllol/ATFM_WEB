@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Append the ADS-B reporting and tracking section to the current AeroSync SRS."""
+"""Create a standalone ADS-B SRS using the current AeroSync SRS as template."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Cm
+from docx.shared import Cm, Pt
 
 
 def add_bullets(document: Document, items: list[str]) -> None:
@@ -42,18 +42,68 @@ def add_picture(document: Document, image_path: Path, caption: str) -> None:
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 
-def build(input_path: Path, output_path: Path, report_image: Path, map_image: Path) -> None:
-    document = Document(str(input_path))
+def clear_document_body(document: Document) -> None:
+    """Remove template content while preserving styles, section, headers and footer."""
+    body = document._element.body
+    for child in list(body):
+        if not child.tag.endswith("}sectPr"):
+            body.remove(child)
+
+
+def add_cover(document: Document) -> None:
+    title = document.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.space_before = Pt(130)
+    run = title.add_run("TÀI LIỆU ĐẶC TẢ YÊU CẦU PHẦN MỀM")
+    run.bold = True
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(20)
+
+    subtitle = document.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = subtitle.add_run("PHÂN HỆ BÁO CÁO VÀ GIÁM SÁT ADS-B")
+    run.bold = True
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(18)
+
+    info = document.add_paragraph()
+    info.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    info.paragraph_format.space_before = Pt(48)
+    info.add_run(
+        "Phạm vi: Báo cáo hiệu suất, bản đồ theo dõi chuyến bay ADS-B\n"
+        "Mô-đun: Web, Flight Tracking API và TracksSync/T_TRACKS_LOG\n"
+        "Phiên bản tài liệu: 1.0\n"
+        "Ngày cập nhật: 12/08/2026"
+    )
     document.add_page_break()
 
-    document.add_heading("10. Báo cáo ADS-B và giám sát chuyến bay", level=1)
+
+def build(input_path: Path, output_path: Path, report_image: Path, map_image: Path) -> None:
+    document = Document(str(input_path))
+    clear_document_body(document)
+    add_cover(document)
+
+    document.add_heading("1. Thông tin chung", level=1)
+    add_table(
+        document,
+        ["Nội dung", "Giá trị"],
+        [
+            ["Tên tài liệu", "Đặc tả yêu cầu phân hệ Báo cáo và giám sát ADS-B"],
+            ["Mã tài liệu", "SRS-ADSB-001"],
+            ["Hệ thống", "VATM ATFM Web / AeroSync"],
+            ["Phiên bản", "1.0"],
+            ["Ngày cập nhật", "12/08/2026"],
+            ["Phạm vi", "AdsBPerformanceReport, FlightTrackingMap, Flight Tracking API và TracksSync/T_TRACKS_LOG"],
+        ],
+        [5.0, 11.2],
+    )
     document.add_paragraph(
-        "Phần này mô tả nhóm chức năng khai thác dữ liệu giám sát ADS-B của hệ thống VATM AeroSync, "
+        "Tài liệu mô tả nhóm chức năng khai thác dữ liệu giám sát ADS-B của hệ thống VATM, "
         "bao gồm báo cáo hiệu suất lịch sử, bản đồ theo dõi gần thời gian thực, dịch vụ Flight Tracking API "
         "và công cụ đồng bộ dữ liệu vào bảng Oracle T_TRACKS_LOG."
     )
 
-    document.add_heading("10.1. Phạm vi và kiến trúc tổng thể", level=2)
+    document.add_heading("2. Phạm vi và kiến trúc tổng thể", level=1)
     document.add_paragraph(
         "Giải pháp tách việc truy cập PostgreSQL ADS-B khỏi IIS. Flight Tracking API chỉ đọc dữ liệu vị trí "
         "để phục vụ bản đồ; TracksSync thực hiện phân vùng FIR, đối chiếu kế hoạch bay và ghi lịch sử vào Oracle. "
@@ -75,7 +125,7 @@ def build(input_path: Path, output_path: Path, report_image: Path, map_image: Pa
         "PostgreSQL public.tracks → TracksSync → Oracle T_TRACKS_LOG → AdsBPerformanceReport.aspx."
     )
 
-    document.add_heading("10.2. Báo cáo hiệu suất ADS-B (AdsBPerformanceReport.aspx)", level=2)
+    document.add_heading("3. Báo cáo hiệu suất ADS-B (AdsBPerformanceReport.aspx)", level=1)
     document.add_paragraph(
         "Trang báo cáo cho phép người dùng nghiệp vụ ATFM theo dõi lưu lượng LD, O/F và các chuyến chưa xác định "
         "đầy đủ thông tin dựa trên dữ liệu TRACKS_LOG. Người dùng phải đăng nhập; quyền menu được kiểm tra khi URL có Menu_ID."
@@ -110,7 +160,7 @@ def build(input_path: Path, output_path: Path, report_image: Path, map_image: Pa
         "STATUS=1 hiển thị VVHN, STATUS=2 hiển thị VVHM; giá trị khác hiển thị Không xác định."
     )
 
-    document.add_heading("10.3. Bản đồ theo dõi chuyến bay ADS-B (FlightTrackingMap.aspx)", level=2)
+    document.add_heading("4. Bản đồ theo dõi chuyến bay ADS-B (FlightTrackingMap.aspx)", level=1)
     document.add_paragraph(
         "Trang bản đồ hiển thị gần thời gian thực vị trí chuyến bay trong FIR Hà Nội và FIR Hồ Chí Minh. "
         "Bản đồ sử dụng dữ liệu nền GeoJSON offline, không phụ thuộc dịch vụ bản đồ Internet."
@@ -141,7 +191,7 @@ def build(input_path: Path, output_path: Path, report_image: Path, map_image: Pa
         ],
     )
 
-    document.add_heading("10.4. Tool Flight Tracking API", level=2)
+    document.add_heading("5. Tool Flight Tracking API", level=1)
     document.add_paragraph(
         "Flight Tracking API là ứng dụng Python độc lập sử dụng Flask, Waitress, psycopg và Flasgger. Tool chạy trên máy "
         "có quyền truy cập PostgreSQL, giúp IIS không cần cài driver hoặc lưu thông tin đăng nhập PostgreSQL."
@@ -176,7 +226,7 @@ def build(input_path: Path, output_path: Path, report_image: Path, map_image: Pa
         ],
     )
 
-    document.add_heading("10.5. Tool đồng bộ và ghi dữ liệu T_TRACKS_LOG", level=2)
+    document.add_heading("6. Tool đồng bộ và ghi dữ liệu T_TRACKS_LOG", level=1)
     document.add_paragraph(
         "TracksSync đọc dữ liệu tăng dần từ PostgreSQL public.tracks theo watermark, phân vùng FIR bằng GeoJSON, "
         "đối chiếu kế hoạch bay Oracle và MERGE dữ liệu vào T_TRACKS_LOG theo khóa CALLSIGN + DATE. Tool cung cấp GUI, CLI và chế độ Auto."
@@ -219,7 +269,7 @@ def build(input_path: Path, output_path: Path, report_image: Path, map_image: Pa
         ],
     )
 
-    document.add_heading("10.6. Yêu cầu chức năng tổng hợp", level=2)
+    document.add_heading("7. Yêu cầu chức năng tổng hợp", level=1)
     add_table(
         document,
         ["Mã", "Yêu cầu", "Mức độ"],
@@ -236,7 +286,7 @@ def build(input_path: Path, output_path: Path, report_image: Path, map_image: Pa
         [3.0, 10.7, 2.5],
     )
 
-    document.add_heading("10.7. Yêu cầu phi chức năng, bảo mật và vận hành", level=2)
+    document.add_heading("8. Yêu cầu phi chức năng, bảo mật và vận hành", level=1)
     add_bullets(
         document,
         [
@@ -250,7 +300,7 @@ def build(input_path: Path, output_path: Path, report_image: Path, map_image: Pa
         ],
     )
 
-    document.add_heading("10.8. Tiêu chí nghiệm thu", level=2)
+    document.add_heading("9. Tiêu chí nghiệm thu", level=1)
     add_bullets(
         document,
         [
