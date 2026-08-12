@@ -31,7 +31,10 @@
     function storageFolder(item) {
         var normalized = status(item).trim().toUpperCase();
         if (normalized === 'SAVED' || normalized === 'SKIPPED') return 'processed';
-        if (normalized === 'FAILED' || normalized === 'ERROR') return 'error';
+        if (normalized === 'FAILED' || normalized === 'ERROR') {
+            var errorMessage = text(item, ['errorMessage']).trim();
+            return errorMessage === 'File Word chưa có format YAML phù hợp' ? 'error-format' : 'error';
+        }
         if (normalized === 'QUARANTINED') return 'quarantine';
         return '';
     }
