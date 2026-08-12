@@ -1,12 +1,16 @@
 import os
+import re
 from pathlib import Path
 
 from docx import Document
+from docx.document import Document as DocumentObject
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +19,12 @@ OUTPUT = Path(os.environ.get(
     ROOT / "TaiLieu" / "SRS_ATFM_WEB_Khung_Suon.docx",
 ))
 AEROSYNC_SOURCE = ROOT / "TaiLieu" / "SRS_VATM_AeroSync_Hien_Tai.docx"
+INTEGRATION_SOURCES = [
+    ("5.4", "FR-INT-002", "Thu thập và xử lý dữ liệu ADS-B cho khai thác O/F", "SRS_VATM_ADS-B.docx"),
+    ("5.5", "FR-INT-003", "Tích hợp lọc SLOT vào hệ thống SLB", "SRS_VATM_SLOT.docx"),
+    ("5.6", "FR-INT-004", "Kết nối trực tiếp AMHS để gửi/nhận điện văn", "SRS_ATFM_AMHS_004.docx"),
+    ("5.7", "FR-INT-005", "Chuẩn hóa API chia sẻ dữ liệu", "SRS_ATFM_API_Gateway_005.docx"),
+]
 
 
 SECTIONS = [
@@ -139,6 +149,72 @@ def source_rows(source, table_index):
 def source_table(doc, source, table_index):
     rows = source_rows(source, table_index)
     table(doc, rows[0], rows[1:])
+
+
+def iter_blocks(document):
+    parent = document.element.body
+    for child in parent.iterchildren():
+        if child.tag == qn("w:p"):
+            yield Paragraph(child, document)
+        elif child.tag == qn("w:tbl"):
+            yield Table(child, document)
+
+
+def clean_source_heading(text):
+    return re.sub(r"^\d+(?:\.\d+)*\.\s*", "", text.strip())
+
+
+def add_integration_source(doc, section_number, requirement_id, title, filename):
+    path = ROOT / "TaiLieu" / filename
+    if not path.exists():
+        raise FileNotFoundError(f"Thiếu tài liệu nguồn {requirement_id}: {path}")
+    source = Document(path)
+    doc.add_heading(f"{section_number}. Đặc tả chi tiết {requirement_id} – {title}", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mã yêu cầu tổng thể", requirement_id),
+        ("Tên yêu cầu", title),
+        ("Tài liệu nguồn", filename),
+        ("Trạng thái", "Đã tích hợp đặc tả hiện trạng"),
+    ])
+
+    skipped_cover_lines = 0
+    source_heading_seen = False
+    for block in iter_blocks(source):
+        if isinstance(block, Paragraph):
+            text = block.text.strip()
+            if not text:
+                continue
+            style = block.style.name if block.style else "Normal"
+            if not source_heading_seen and not style.startswith("Heading"):
+                skipped_cover_lines += 1
+                if skipped_cover_lines <= 3:
+                    continue
+            if style.startswith("Heading"):
+                source_heading_seen = True
+                level_match = re.search(r"(\d+)$", style)
+                source_level = int(level_match.group(1)) if level_match else 1
+                target_level = 3 if source_level == 1 else 3
+                doc.add_heading(clean_source_heading(text), level=target_level)
+            elif style.startswith("List Bullet"):
+                doc.add_paragraph(text, style="List Bullet")
+            elif style.startswith("List Number"):
+                doc.add_paragraph(text, style="List Number")
+            elif style == "Caption":
+                paragraph = doc.add_paragraph(text)
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if paragraph.runs:
+                    paragraph.runs[0].italic = True
+            else:
+                doc.add_paragraph(text)
+        else:
+            rows = [[cell.text.strip() for cell in row.cells] for row in block.rows]
+            if rows:
+                table(doc, rows[0], rows[1:])
+
+    doc.add_heading(f"{section_number}.1. Liên kết kiểm thử và truy vết", level=3)
+    table(doc, ["Yêu cầu tổng thể", "Yêu cầu chi tiết", "Nguồn bằng chứng"], [
+        (requirement_id, "Các FR/BR/NFR trong đặc tả nguồn", "Test case, log, ảnh màn hình, API/DB và biên bản nghiệm thu"),
+    ])
 
 
 def add_aerosync_specification(doc):
@@ -342,7 +418,9 @@ def build():
         table(doc, ["Mã yêu cầu", "Tên yêu cầu", "Nội dung", "Tiêu chí nghiệm thu"], function_rows)
         if chapter == 5:
             add_aerosync_specification(doc)
-            next_section = 4
+            for args in INTEGRATION_SOURCES:
+                add_integration_source(doc, *args)
+            next_section = 8
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
