@@ -223,7 +223,7 @@ def add_alt002_specification(doc):
         raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-ALT-002: {ALT002_SOURCE}")
     source = Document(ALT002_SOURCE)
     doc.add_heading(
-        "6.3. Đặc tả chi tiết FR-ALT-002 – Quản lý thông tin KHB quân sự và sử dụng vùng trời",
+        "6.4. Đặc tả chi tiết FR-ALT-002 – Quản lý thông tin KHB quân sự và sử dụng vùng trời",
         level=2,
     )
     table(doc, ["Thuộc tính", "Nội dung"], [
@@ -266,11 +266,152 @@ def add_alt002_specification(doc):
             if rows:
                 table(doc, rows[0], rows[1:])
 
-    doc.add_heading("6.3.1. Liên kết kiểm thử và truy vết FR-ALT-002", level=3)
+    doc.add_heading("6.4.1. Liên kết kiểm thử và truy vết FR-ALT-002", level=3)
     table(doc, ["Nhóm nghiệp vụ", "Yêu cầu/test case nguồn", "Bằng chứng dự kiến"], [
         ("Live Fire Message", "FR-LF, BR-LF, NFR-LF, TC-LF", "Ảnh màn hình, API/package log, dữ liệu trạng thái"),
         ("Daily Statistic", "FR-DS, BR-DS, NFR-DS, TC-DS", "Danh sách trước/sau Accepted, export và audit"),
         ("KHB quân sự", "FR-MIL, BR-MIL, NFR-MIL, TC-MIL", "KHB nguồn, QS Message, trạng thái phát và Military Report"),
+    ])
+
+
+def add_alt001_specification(doc):
+    doc.add_heading(
+        "6.3. Đặc tả chi tiết FR-ALT-001 – Hệ thống cảnh báo thông minh đa kịch bản",
+        level=2,
+    )
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mã yêu cầu", "FR-ALT-001"),
+        ("Tên chức năng", "Hệ thống cảnh báo/thông báo cập nhật liên tục"),
+        ("Điểm truy cập chính", "/Common/ChartReport.aspx"),
+        ("Thành phần giao diện", "Ô thông báo trên ATFM_New.Master; trang /SLOTS/Notifications.aspx"),
+        ("API nội bộ", "/Handlers/Notification.ashx"),
+        ("Dữ liệu", "T_NOTIFICATION; T_NOTIFICATION_TARGET; T_NOTIFICATION_READ"),
+        ("Gói Oracle", "NOTIFICATION_PKG"),
+        ("Chu kỳ cập nhật giao diện", "30 giây và cập nhật theo sự kiện"),
+    ])
+    doc.add_paragraph(
+        "Chức năng cung cấp thông báo gần thời gian thực cho người dùng đã đăng nhập. Ô "
+        "thông báo nằm trên master page nên xuất hiện tại ChartReport và các trang dùng "
+        "ATFM_New.Master. Hệ thống hợp nhất thông báo nội bộ và thông báo đồng bộ từ báo cáo "
+        "email, phân phối theo toàn hệ thống hoặc từng người dùng, đồng thời quản lý trạng thái "
+        "đã đọc độc lập cho mỗi tài khoản."
+    )
+
+    doc.add_heading("6.3.1. Tác nhân và thành phần", level=3)
+    table(doc, ["Tác nhân/thành phần", "Trách nhiệm"], [
+        ("Người dùng ATFM", "Xem badge, mở danh sách, đánh dấu đã đọc và xem toàn bộ thông báo."),
+        ("Hệ thống nghiệp vụ", "Tạo thông báo chung hoặc chỉ định danh sách người nhận."),
+        ("API Email", "Cung cấp email và trạng thái attachment để chuyển thành thông báo."),
+        ("ATFM_New.Master", "Tải/cập nhật danh sách, badge và xử lý thao tác đọc."),
+        ("Notification.ashx", "Xác thực phiên, đồng bộ email, gọi package và trả JSON."),
+        ("NOTIFICATION_PKG", "Lọc theo người dùng, phân trang, ghi trạng thái đọc và tạo thông báo."),
+        ("Oracle", "Lưu nội dung, đối tượng nhận và trạng thái đọc theo người dùng."),
+    ])
+
+    doc.add_heading("6.3.2. Luồng xử lý", level=3)
+    table(doc, ["Bước", "Xử lý"], [
+        ("1", "Người dùng đăng nhập và mở ChartReport hoặc trang dùng ATFM_New.Master."),
+        ("2", "Giao diện gọi GET Notification.ashx để lấy thông báo chưa đọc và tổng số chưa đọc."),
+        ("3", "Handler thử đồng bộ thông báo email nếu lần thử gần nhất đã cách ít nhất 15 giây."),
+        ("4", "NOTIFICATION_PKG.GET_STATE lọc thông báo chung/cá nhân và loại thông báo người dùng đã đọc."),
+        ("5", "Giao diện hiển thị tối đa 50 thông báo gần nhất và badge tổng số chưa đọc."),
+        ("6", "Mỗi 30 giây hệ thống tải lại nếu trang đang hiển thị; request chồng được xếp chờ một lượt."),
+        ("7", "Người dùng có thể đánh dấu một thông báo hoặc toàn bộ thông báo là đã đọc."),
+        ("8", "Trang Xem tất cả cung cấp bộ lọc trạng thái, phân trang 100 dòng và tải lại thủ công."),
+    ])
+
+    doc.add_heading("6.3.3. Trạng thái và dữ liệu", level=3)
+    table(doc, ["Đối tượng", "Trạng thái/thuộc tính", "Ý nghĩa"], [
+        ("Thông báo", "TARGET_TYPE = 0", "Thông báo chung cho mọi người dùng."),
+        ("Thông báo", "TARGET_TYPE = 1", "Chỉ hiển thị cho người dùng có trong T_NOTIFICATION_TARGET."),
+        ("Người dùng/thông báo", "Chưa có T_NOTIFICATION_READ", "Thông báo chưa đọc."),
+        ("Người dùng/thông báo", "Có T_NOTIFICATION_READ", "Thông báo đã đọc bởi người dùng đó."),
+        ("Nguồn email", "SOURCE_TYPE = EMAIL_API", "Thông báo được đồng bộ từ API Email."),
+        ("Khóa nguồn email", "SOURCE_KEY SHA-256", "Chống tạo trùng theo Message-ID hoặc ID báo cáo."),
+    ])
+    table(doc, ["Trường", "Yêu cầu"], [
+        ("TITLE", "Bắt buộc, NVARCHAR2, tối đa 250 ký tự."),
+        ("CONTENT", "Bắt buộc, NVARCHAR2, tối đa 2.000 ký tự."),
+        ("DATETIME", "Thời điểm phát sinh/nhận thông báo; dùng sắp xếp mới nhất trước."),
+        ("TARGET_TYPE", "Chỉ nhận 0 hoặc 1."),
+        ("SOURCE_TYPE/SOURCE_KEY", "Nhận diện nguồn và bảo đảm idempotency khi đồng bộ ngoài."),
+        ("NOTIFICATION_ID/USER_ID", "Khóa phân phối cá nhân và trạng thái đọc."),
+    ])
+
+    doc.add_heading("6.3.4. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("FR-NOTI-01", "Chỉ người dùng có identity và ATFM_CURRENT_USER hợp lệ, khớp tên đăng nhập, mới được gọi API thông báo."),
+        ("FR-NOTI-02", "Khi tải trang, hệ thống phải tự động lấy trạng thái thông báo mà không cần người dùng thao tác."),
+        ("FR-NOTI-03", "Hệ thống phải tự cập nhật thông báo mỗi 30 giây và khi nhận sự kiện atfm:notifications-changed."),
+        ("FR-NOTI-04", "Không khởi tạo request cập nhật mới khi request trước đang chạy; phải thực hiện một lượt chờ sau khi request hiện tại kết thúc."),
+        ("FR-NOTI-05", "Khi tab/trang bị ẩn, lượt cập nhật định kỳ không bắt buộc tải dữ liệu; thao tác mở popup phải tải cưỡng bức."),
+        ("FR-NOTI-06", "Badge phải hiển thị tổng số chưa đọc, hiển thị 99+ khi tổng lớn hơn 99 và ẩn trạng thái nhấn mạnh khi bằng 0."),
+        ("FR-NOTI-07", "Popup phải hiển thị tối đa 50 thông báo chưa đọc gần nhất gồm tiêu đề, nội dung và thời điểm."),
+        ("FR-NOTI-08", "Nội dung động phải được gán bằng textContent để không thực thi HTML/script từ dữ liệu."),
+        ("FR-NOTI-09", "Người dùng được đánh dấu từng thông báo là đã đọc; thông báo phải được loại khỏi popup và giảm badge."),
+        ("FR-NOTI-10", "Người dùng được đánh dấu tất cả thông báo của mình là đã đọc; không ảnh hưởng trạng thái của người dùng khác."),
+        ("FR-NOTI-11", "Trang Xem tất cả phải lọc Tất cả/Chưa đọc/Đã đọc, phân trang 100 dòng và hiển thị tổng số."),
+        ("FR-NOTI-12", "Hệ thống phải hỗ trợ tạo thông báo chung hoặc thông báo cho danh sách user ID hợp lệ."),
+        ("FR-NOTI-13", "Thông báo cá nhân chỉ được trả cho người dùng thuộc danh sách đích."),
+        ("FR-NOTI-14", "Khi GET state/list, handler phải thử đồng bộ nguồn Email API với thời gian tối thiểu 15 giây giữa hai lần thử trong cùng tiến trình."),
+        ("FR-NOTI-15", "Các dòng attachment của cùng email phải được gộp theo Message-ID và chọn dòng có thông tin xử lý hữu ích nhất."),
+        ("FR-NOTI-16", "Đồng bộ email phải MERGE theo SOURCE_TYPE/SOURCE_KEY để cập nhật nội dung mà không tạo bản ghi trùng."),
+        ("FR-NOTI-17", "Thông báo email phải gồm người gửi, attachment, thời gian, trạng thái xử lý, trạng thái xác nhận và lỗi."),
+        ("FR-NOTI-18", "Lỗi Email API không được làm gián đoạn việc trả các thông báo nội bộ đang có."),
+        ("FR-NOTI-19", "API phải trả lỗi 401 cho phiên không hợp lệ, 403 cho POST không phải XMLHttpRequest, 405 cho phương thức sai và 400 cho tham số/thao tác sai."),
+        ("FR-NOTI-20", "Khi tải lần đầu thất bại, giao diện phải báo Không thể tải thông báo; lỗi các lần sau không được xóa dữ liệu đã hiển thị thành công."),
+    ])
+
+    doc.add_heading("6.3.5. Quy tắc nghiệp vụ", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-NOTI-01", "Trạng thái đọc được quản lý riêng theo cặp thông báo–người dùng."),
+        ("BR-NOTI-02", "Thông báo chung áp dụng cho mọi người; thông báo cá nhân phải có ít nhất một user ID hợp lệ."),
+        ("BR-NOTI-03", "Người dùng không được đánh dấu đọc thông báo không thuộc phạm vi nhận của mình."),
+        ("BR-NOTI-04", "TITLE và CONTENT là bắt buộc khi tạo thông báo."),
+        ("BR-NOTI-05", "Danh sách và popup sắp xếp thông báo mới nhất trước theo DATETIME và ID."),
+        ("BR-NOTI-06", "Một email chỉ sinh một thông báo logic; Message-ID được ưu tiên làm identity nguồn."),
+        ("BR-NOTI-07", "Nếu email không có Message-ID, dùng ID báo cáo để tạo identity ổn định."),
+        ("BR-NOTI-08", "Đánh dấu đã đọc không xóa thông báo gốc và không làm mất lịch sử của người dùng khác."),
+    ])
+
+    doc.add_heading("6.3.6. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-NOTI-01", "Chu kỳ polling mặc định 30 giây; đồng bộ Email API không thường xuyên hơn 15 giây mỗi tiến trình."),
+        ("NFR-NOTI-02", "Email API timeout đọc/kết nối 5 giây; Oracle command timeout 10–15 giây tùy thao tác."),
+        ("NFR-NOTI-03", "Request nền không được kích hoạt lớp loading toàn trang hoặc làm gián đoạn thao tác dashboard."),
+        ("NFR-NOTI-04", "API phải đặt NoCache/NoStore để tránh trả trạng thái thông báo cũ."),
+        ("NFR-NOTI-05", "Tất cả câu lệnh Oracle phải bind parameter; đồng bộ email phải dùng transaction và rollback khi lỗi."),
+        ("NFR-NOTI-06", "Nội dung hiển thị phải chống XSS; lỗi máy chủ không được trả chi tiết nhạy cảm cho trình duyệt."),
+        ("NFR-NOTI-07", "Chỉ hoạt động trong phiên đã xác thực; POST thay đổi trạng thái phải có header X-Requested-With."),
+        ("NFR-NOTI-08", "Giao diện popup phải hỗ trợ bàn phím/Escape, aria-label và trạng thái disabled rõ ràng."),
+        ("NFR-NOTI-09", "Lỗi đồng bộ nguồn ngoài phải được Trace Warning; lỗi xử lý chính phải Trace Error để giám sát."),
+        ("NFR-NOTI-10", "Index phải hỗ trợ truy vấn theo thời gian, target và user để polling không làm suy giảm hiệu năng."),
+    ])
+
+    doc.add_heading("6.3.7. Tiêu chí nghiệm thu và truy vết", level=3)
+    tests = [
+        ("TC-NOTI-01", "Mở ChartReport bằng phiên hợp lệ", "Badge và danh sách được tải tự động"),
+        ("TC-NOTI-02", "Chờ trên 30 giây sau khi tạo thông báo", "Thông báo mới xuất hiện không cần reload trang"),
+        ("TC-NOTI-03", "Polling khi request trước chưa xong", "Không chạy chồng; chỉ tải lại một lượt chờ"),
+        ("TC-NOTI-04", "Có trên 99 thông báo chưa đọc", "Badge hiển thị 99+ và aria-label chứa số thực"),
+        ("TC-NOTI-05", "Đánh dấu một thông báo đã đọc", "Dòng biến mất, badge giảm một và DB ghi theo user"),
+        ("TC-NOTI-06", "Đánh dấu tất cả đã đọc", "Badge về 0, popup rỗng; user khác không bị ảnh hưởng"),
+        ("TC-NOTI-07", "Thông báo cá nhân", "Chỉ người nhận được chỉ định nhìn thấy"),
+        ("TC-NOTI-08", "Nội dung chứa thẻ script/HTML", "Chỉ hiển thị dạng văn bản, không thực thi"),
+        ("TC-NOTI-09", "Email API trả nhiều attachment cùng Message-ID", "Chỉ tạo một thông báo email"),
+        ("TC-NOTI-10", "Đồng bộ lại cùng email", "Không tạo trùng; nội dung được MERGE khi thay đổi"),
+        ("TC-NOTI-11", "Email API lỗi/timeout", "Thông báo nội bộ vẫn tải được"),
+        ("TC-NOTI-12", "Phiên không hợp lệ gọi handler", "HTTP 401"),
+        ("TC-NOTI-13", "POST không có X-Requested-With", "HTTP 403"),
+        ("TC-NOTI-14", "Trang Xem tất cả lọc và phân trang", "Đúng trạng thái, tổng số và 100 dòng/trang"),
+        ("TC-NOTI-15", "Oracle lỗi khi đồng bộ email", "Transaction rollback, không có dữ liệu dở dang"),
+    ]
+    table(doc, ["Mã kiểm thử", "Nội dung", "Kết quả mong đợi"], tests)
+    table(doc, ["Nhóm yêu cầu", "Kiểm thử"], [
+        ("FR-NOTI-01…FR-NOTI-08", "TC-NOTI-01…TC-NOTI-04, TC-NOTI-08, TC-NOTI-12"),
+        ("FR-NOTI-09…FR-NOTI-13", "TC-NOTI-05…TC-NOTI-07, TC-NOTI-13…TC-NOTI-14"),
+        ("FR-NOTI-14…FR-NOTI-20", "TC-NOTI-09…TC-NOTI-11, TC-NOTI-15"),
+        ("NFR-NOTI-01…NFR-NOTI-10", "TC-NOTI-02…TC-NOTI-04, TC-NOTI-08, TC-NOTI-11…TC-NOTI-15"),
     ])
 
 
@@ -479,8 +620,9 @@ def build():
                 add_integration_source(doc, *args)
             next_section = 8
         elif chapter == 6:
+            add_alt001_specification(doc)
             add_alt002_specification(doc)
-            next_section = 4
+            next_section = 5
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
