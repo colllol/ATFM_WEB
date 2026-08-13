@@ -706,6 +706,83 @@ def add_opt006_010_specification(doc):
     ])
 
 
+def add_rpt001_specification(doc):
+    doc.add_heading("8.3. FR-RPT-001 – Biểu đồ thông tin tổng quan khai thác bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/FlightOperationOverview.aspx?Menu_ID=908 – Thông tin tổng quan khai thác bay."),
+        ("Mục tiêu", "Tổng hợp trực quan chuyến hoàn thành và chuyến delay theo thời gian, sân bay và trạng thái; cho phép truy xuống danh sách chi tiết."),
+        ("Nguồn hiện tại", "Ngày hiện tại dùng T_DAY_FLIGHTS_GOINGON; khoảng lịch sử dùng T_FINISHED_FLIGHTS, thông qua quy tắc SQL dùng chung với FlightStatusRate."),
+        ("Đối tượng sử dụng", "Người khai thác, cán bộ trực và người lập/kiểm tra báo cáo có quyền truy cập Menu_ID=908."),
+        ("Tính chất", "Báo cáo chỉ đọc; tương tác biểu đồ không sửa dữ liệu khai thác nguồn."),
+    ])
+
+    doc.add_heading("8.3.1. Bộ lọc và quy tắc nguồn dữ liệu", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.01", "Màn hình phải cung cấp bộ lọc Từ ngày, Đến ngày và Sân bay; mặc định từ ngày đầu tháng hiện tại đến ngày hiện tại và Tất cả sân bay."),
+        ("FR-RPT-001.02", "Ngày nhập phải theo định dạng hợp lệ, Từ ngày không lớn hơn Đến ngày và Đến ngày không vượt quá ngày hiện tại."),
+        ("FR-RPT-001.03", "Nếu cả Từ ngày và Đến ngày đều là ngày hiện tại, hệ thống phải lấy nguồn T_DAY_FLIGHTS_GOINGON; các khoảng còn lại phải dùng T_FINISHED_FLIGHTS theo quy tắc lịch sử."),
+        ("FR-RPT-001.04", "Bộ lọc sân bay phải có Tất cả sân bay và danh mục mã/tên sân bay; khi chọn một sân bay, dữ liệu phải gồm chuyến có sân bay đó ở FROM hoặc TO."),
+        ("FR-RPT-001.05", "Truy vấn phải dùng tham số bind, điều kiện ngày từ >= from và < to+1, timeout tối đa 120 giây; lỗi tải phải được thông báo mà không hiển thị dữ liệu cũ như kết quả mới."),
+    ])
+
+    doc.add_heading("8.3.2. Chỉ số tổng quan và quy tắc trạng thái", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.06", "Hệ thống phải hiển thị bốn KPI: Tổng chuyến bay, Chuyến hoàn thành, Chuyến Delay và Số sân bay khai thác."),
+        ("FR-RPT-001.07", "Tổng chuyến bay phải bằng số Hoàn thành cộng số Delay trong tập dữ liệu phù hợp bộ lọc; các trạng thái khác không được âm thầm cộng vào tổng này."),
+        ("FR-RPT-001.08", "FINISHED được tính là Hoàn thành; mọi trạng thái bắt đầu bằng DELAY được tính là Delay và phải giữ nhãn khoảng delay khi hiển thị chi tiết."),
+        ("FR-RPT-001.09", "KPI Hoàn thành và Delay phải hiển thị số lượng và tỷ lệ phần trăm trên Tổng chuyến, làm tròn một chữ số thập phân; tổng bằng 0 phải hiển thị 0%, không phát sinh lỗi chia."),
+        ("FR-RPT-001.10", "Số sân bay khai thác phải đếm số sân bay Việt Nam có ít nhất một lượt cất hoặc hạ cánh trong tập dữ liệu; mã sân bay Việt Nam hiện được nhận diện bằng tiền tố VV."),
+        ("FR-RPT-001.11", "Giao diện phải chỉ rõ nguồn dữ liệu đang sử dụng để người kiểm định phân biệt báo cáo ngày hiện tại và lịch sử."),
+    ])
+
+    doc.add_heading("8.3.3. Biểu đồ và tương tác drill-down", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.12", "Biểu đồ tròn phải thể hiện cơ cấu Hoàn thành/Delay bằng số lượng và tỷ lệ, có màu/nhãn phân biệt và tổng ở tâm."),
+        ("FR-RPT-001.13", "Biểu đồ cột phải thể hiện số lượt cất cánh và hạ cánh theo từng sân bay Việt Nam, sắp xếp theo tổng lượt giảm dần rồi theo mã sân bay."),
+        ("FR-RPT-001.14", "Nhấn một cột cất cánh/hạ cánh phải cập nhật biểu đồ trạng thái và danh sách chi tiết theo đúng sân bay và chiều chuyển động; nhấn lại phải bỏ lựa chọn."),
+        ("FR-RPT-001.15", "Nhấn phân đoạn/thẻ Hoàn thành hoặc Delay phải lọc danh sách chi tiết theo trạng thái; nhấn lại trạng thái đang chọn phải bỏ lọc."),
+        ("FR-RPT-001.16", "Khi kết hợp sân bay/chiều chuyển động và trạng thái, danh sách phải thỏa đồng thời các lựa chọn; số ở biểu đồ và tiêu đề danh sách phải đối soát được."),
+        ("FR-RPT-001.17", "Biểu đồ phải có trạng thái Không có dữ liệu rõ ràng, không vẽ cột hoặc tỷ lệ gây hiểu nhầm khi tập kết quả rỗng."),
+    ])
+
+    doc.add_heading("8.3.4. Danh sách chi tiết và export", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.18", "Danh sách chi tiết phải gồm STT, CALLSIGN, OPER, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP, ATDDAY, ATADAY, EOBTDAY và TRẠNG THÁI."),
+        ("FR-RPT-001.19", "Danh sách phải hỗ trợ chọn 25, 50, 100, 200, 500 hoặc 1000 dòng/trang, nút Trước/Sau và hiển thị trang hiện tại, tổng trang, tổng dòng sau drill-down."),
+        ("FR-RPT-001.20", "Export Excel phải xuất toàn bộ tập chi tiết đang được lọc bởi ngày, sân bay, cột cất/hạ cánh và trạng thái, không chỉ trang đang xem."),
+        ("FR-RPT-001.21", "Tên file phải chứa FlightOperationOverview và khoảng ngày; file phải giữ cùng cột, nhãn trạng thái và số dòng như tập chi tiết trên màn hình."),
+        ("FR-RPT-001.22", "Khi không có dữ liệu, nút export phải từ chối thao tác với thông báo rõ; nội dung xuất phải được encode an toàn để không thực thi công thức ngoài ý muốn."),
+    ])
+
+    doc.add_heading("8.3.5. Yêu cầu phi chức năng và ngoại lệ", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-RPT-001.01", "Báo cáo phải hiển thị trạng thái đang tải và vô hiệu hóa nút Áp dụng trong thời gian request, tránh gửi chồng."),
+        ("NFR-RPT-001.02", "KPI, biểu đồ và danh sách phải được dựng từ cùng một snapshot/kết quả request để tránh lệch số liệu trong một lần xem."),
+        ("NFR-RPT-001.03", "Mọi nội dung dữ liệu đưa vào HTML phải được encode; người dùng không có quyền Menu_ID=908 không được truy cập dữ liệu báo cáo."),
+        ("NFR-RPT-001.04", "Báo cáo phải hoạt động trên độ phân giải desktop khai thác và hỗ trợ cuộn ngang biểu đồ/danh sách khi số sân bay hoặc cột vượt vùng hiển thị."),
+        ("NFR-RPT-001.05", "Phải ghi log lỗi truy vấn gồm thời điểm, bộ lọc và mã lỗi nhưng không ghi chuỗi kết nối hoặc thông tin bí mật."),
+    ])
+
+    doc.add_heading("8.3.6. Tiêu chí kiểm thử và nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-RPT-001-01", "Ngày hiện tại, tất cả sân bay", "Dùng T_DAY_FLIGHTS_GOINGON; KPI tổng = Finished + Delay"),
+        ("TC-RPT-001-02", "Khoảng ngày lịch sử", "Dùng T_FINISHED_FLIGHTS và gồm trọn ngày kết thúc"),
+        ("TC-RPT-001-03", "Chọn một sân bay", "Chỉ chuyến có FROM hoặc TO là sân bay chọn; KPI/biểu đồ/danh sách khớp"),
+        ("TC-RPT-001-04", "Nhấn cột cất cánh và trạng thái Delay", "Drill-down chỉ chứa chuyến đi từ sân bay chọn và có trạng thái DELAY*"),
+        ("TC-RPT-001-05", "Nhấn cột hạ cánh và Hoàn thành", "Drill-down chỉ chứa chuyến đến sân bay chọn và FINISHED"),
+        ("TC-RPT-001-06", "Đổi số dòng/trang và chuyển trang", "STT, tổng dòng, trang và dữ liệu nhất quán"),
+        ("TC-RPT-001-07", "Export sau drill-down", "Excel chứa toàn bộ tập đang lọc, không chỉ trang hiện tại"),
+        ("TC-RPT-001-08", "Không có dữ liệu", "KPI bằng 0, biểu đồ/danh sách có thông báo và không export"),
+        ("TC-RPT-001-09", "Ngày sai, từ ngày > đến ngày hoặc đến ngày tương lai", "Yêu cầu bị từ chối với thông báo phù hợp"),
+        ("TC-RPT-001-10", "Đối soát trực tiếp Oracle", "Số Finished, Delay, cất/hạ cánh và chi tiết khớp truy vấn nguồn"),
+    ])
+
+    doc.add_heading("8.3.7. Ma trận truy vết FR-RPT-001", level=3)
+    table(doc, ["Yêu cầu", "Thành phần", "Nguồn dữ liệu/bằng chứng"], [
+        ("FR-RPT-001", "FlightOperationOverview.aspx/.js/.aspx.cs; ReportControls; FlightStatusRate SQL", "T_DAY_FLIGHTS_GOINGON, T_FINISHED_FLIGHTS; ảnh KPI/biểu đồ; Excel; log; TC-RPT-001-*"),
+    ])
+
+
 def add_alt002_specification(doc):
     if not ALT002_SOURCE.exists():
         raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-ALT-002: {ALT002_SOURCE}")
@@ -1121,6 +1198,9 @@ def build():
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
             next_section = 26
+        elif chapter == 8:
+            add_rpt001_specification(doc)
+            next_section = 4
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
