@@ -95,7 +95,7 @@
 }
 
 .impv2__cancelled-card {
-    width: min(1000px, calc(100vw - 32px));
+    width: min(1150px, calc(100vw - 32px));
     padding: 16px;
 }
 
