@@ -38,7 +38,7 @@
 
 .impv2__guide {
     position: fixed;
-    z-index: 10020;
+    z-index: 99999;
     inset: 0;
     display: flex;
     align-items: center;
@@ -95,11 +95,58 @@
 }
 
 .impv2__cancelled-card {
-    width: min(1280px, 96vw);
+    width: min(1000px, calc(100vw - 32px));
+    padding: 16px;
 }
 
 #cancelledTable {
-    min-width: 1100px;
+    width: 100%;
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+.impv2.impv2__guide {
+    max-width: none;
+    margin: 0;
+}
+
+#cancelledTable th,
+#cancelledTable td {
+    padding: 5px 4px;
+}
+
+#cancelledTable th:nth-child(1),
+#cancelledTable td:nth-child(1) {
+    width: 36px;
+}
+
+#cancelledTable th:nth-child(2),
+#cancelledTable td:nth-child(2) {
+    width: 78px;
+}
+
+#cancelledTable th:nth-child(3),
+#cancelledTable td:nth-child(3) {
+    width: 155px;
+}
+
+#cancelledTable th:nth-child(11),
+#cancelledTable td:nth-child(11) {
+    width: 135px;
+}
+
+#cancelledTable th:nth-child(12),
+#cancelledTable td:nth-child(12) {
+    width: 65px;
+}
+
+#cancelledTable th:last-child,
+#cancelledTable td:last-child {
+    width: 52px;
+    min-width: 52px;
+    max-width: 52px;
+    text-align: center;
+    white-space: normal;
 }
 
 .impv2 button.is-danger {

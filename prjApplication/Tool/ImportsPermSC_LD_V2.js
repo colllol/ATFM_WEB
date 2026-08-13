@@ -74,7 +74,10 @@
     }
     function showCancelledFlights() {
         if (!$('#cancelledTable tbody tr').length) return;
-        $('#cancelledFlightsDialog').prop('hidden', false).attr('aria-hidden', 'false');
+        var $dialog = $('#cancelledFlightsDialog');
+        if (!$dialog.parent().is('body')) $dialog.appendTo(document.body);
+        $dialog.find('.impv2__table-wrap').scrollLeft(0);
+        $dialog.prop('hidden', false).attr('aria-hidden', 'false');
         $('#btnCloseCancelledFlights').focus();
     }
     function hideCancelledFlights() {
@@ -394,8 +397,7 @@
         });
         (result.CancelledFlights || []).forEach(function (x, i) {
             cancelled += '<tr><td>' + (i + 1) + '</td><td>' + html(x.Callsign) + '</td><td>' + html(x.PermNbr)
-                + '</td><td>' + html(x.FromDate) + '</td><td>' + html(x.ToDate) + '</td><td>' + html(x.FromAirp)
-                + '</td><td>' + html(x.ToAirp) + '</td><td>' + html(x.Daily) + '</td><td>' + html(x.Etd)
+                + '</td><td>' + html(x.FromAirp) + '</td><td>' + html(x.ToAirp) + '</td><td>' + html(x.Daily) + '</td><td>' + html(x.Etd)
                 + '</td><td>' + html(x.Eta) + '</td><td>' + html(x.Oper) + '</td><td>' + html(x.PermType)
                 + '</td><td>' + html(x.Remark) + '</td><td>' + html(x.Purpose) + '</td><td>' + html(x.CancelDaily)
                 + '</td></tr>';
