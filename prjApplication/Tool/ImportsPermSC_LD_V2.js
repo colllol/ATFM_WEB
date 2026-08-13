@@ -3,6 +3,8 @@
 
     var rows = [];
     var activeFilter = 'ALL';
+    var pendingStagingIds = [];
+    var cancellationRequestRunning = false;
     var formatGuides = {
         WITH_CRAFT: {
             name: 'MẪU HỦY CÓ LOẠI TÀU BAY',
@@ -31,6 +33,14 @@
     function upper(text) { return $.trim(text || '').toUpperCase(); }
     function html(text) { return $('<div/>').text(text == null ? '' : text).html(); }
     function setLoading(show) { $('#impv2Loading').prop('hidden', !show); }
+    function setCancellationProcessing(processing) {
+        cancellationRequestRunning = processing;
+        $('#btnApplyCancellation,#btnDeleteCancellation').prop('disabled', processing);
+        $('#impv2Loading span').text(processing
+            ? 'Đang xác nhận hủy chuyến, vui lòng không đóng trang...'
+            : 'Đang xử lý dữ liệu...');
+        setLoading(processing);
+    }
     function message(text, type) {
         $('#impv2Message').text(text || '').attr('class', 'impv2__message ' + (type ? 'is-' + type : '')).prop('hidden', !text);
     }
@@ -348,6 +358,11 @@
 
     function renderConfirmation(result) {
         var imported = '', cancelled = '';
+        pendingStagingIds = (result.ImportedRows || []).map(function (x) {
+            return +x.StagingId;
+        }).filter(function (id, index, list) {
+            return id > 0 && list.indexOf(id) === index;
+        });
         (result.ImportedRows || []).forEach(function (x, i) {
             imported += '<tr><td>' + (i + 1) + '</td><td>' + html(x.Callsign) + '</td><td>' + html(x.FromDate)
                 + '</td><td>' + html(x.ToDate) + '</td><td>' + html(x.Daily) + '</td><td>' + html(x.Craft)
@@ -367,18 +382,29 @@
     }
 
     function applyCancellation() {
+        if (cancellationRequestRunning) return;
+        if (!pendingStagingIds.length) {
+            showResult('Không có dữ liệu staging để xác nhận hủy chuyến.', 'error');
+            return;
+        }
         if (!window.confirm('Xác nhận thực hiện HỦY CHUYẾN cho danh sách đã kiểm tra?')) return;
-        setLoading(true);
+        var succeeded = false;
+        setCancellationProcessing(true);
         $.ajax({
             type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/ApplyCancellation',
-            contentType: 'application/json; charset=utf-8', dataType: 'json', data: '{}'
+            contentType: 'application/json; charset=utf-8', dataType: 'json',
+            data: JSON.stringify({ stagingIds: pendingStagingIds })
         }).done(function (response) {
             var result = response.d || {};
             showResult(result.Message, result.Success ? 'success' : 'error');
-            if (result.Success) $('#btnApplyCancellation').prop('disabled', true);
+            succeeded = !!result.Success;
+            if (succeeded) pendingStagingIds = [];
         }).fail(function (xhr) {
             showResult('Không thể thực hiện hủy chuyến: ' + (xhr.responseText || xhr.statusText), 'error');
-        }).always(function () { setLoading(false); });
+        }).always(function () {
+            setCancellationProcessing(false);
+            if (succeeded) $('#btnApplyCancellation,#btnDeleteCancellation').prop('disabled', true);
+        });
     }
 
     function deleteCancellation() {
@@ -391,6 +417,7 @@
             var result = response.d || {};
             showResult(result.Message, result.Success ? 'success' : 'error');
             if (result.Success) {
+                pendingStagingIds = [];
                 $('#importedTable tbody,#cancelledTable tbody').empty();
                 $('#confirmPanel').prop('hidden', true);
                 $('#btnApplyCancellation,#btnDeleteCancellation').prop('disabled', false);

@@ -103,12 +103,27 @@ namespace prjApplication.Tool
         }
 
         [WebMethod(EnableSession = true)]
-        public static ApplyResult ApplyCancellation()
+        public static ApplyResult ApplyCancellation(long[] stagingIds)
         {
             var result = new ApplyResult();
             try
             {
-                object value = new clsResuftAPI().GetValueApiExtension("PERM_IMP_PKG", "impToPerm_Huy", null);
+                if (stagingIds == null || stagingIds.Length == 0)
+                    throw new ArgumentException("Không có staging ID để xác nhận hủy chuyến.");
+
+                string stagingIdList = String.Join(",", stagingIds
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .Select(id => id.ToString(CultureInfo.InvariantCulture))
+                    .ToArray());
+
+                if (String.IsNullOrWhiteSpace(stagingIdList))
+                    throw new ArgumentException("Danh sách staging ID không hợp lệ.");
+
+                object value = new clsResuftAPI().GetValueApiExtension(
+                    "PERM_IMP_V2_PKG",
+                    "APPLY_CANCELLATIONS",
+                    new { P_STAGING_IDS = stagingIdList });
                 int code;
                 result.Success = Int32.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out code) && code == 1;
                 result.Message = result.Success ? "Hủy chuyến thành công. Quy trình đã hoàn tất."
