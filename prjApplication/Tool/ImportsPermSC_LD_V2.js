@@ -143,6 +143,71 @@
         cells.forEach(function (cell, index) { var key = headerKey(cell); if (key && map[key] == null) map[key] = index; });
         return map.callsign != null && map.fromDate != null && map.toDate != null && map.etd != null && map.eta != null ? map : null;
     }
+    function isHeaderFragment(line) {
+        var s = fold(line);
+        return /FLIGHT (NUMBER|NBR)|CALL ?SIGN|EFFECTIVE (FROM|TO)|BEGIN DATE|END DATE|DAY(?: S)? OF SERVICE|DEPARTURE (AIRPORT|AERODROME)|ARRIVAL (AIRPORT|AERODROME)|AIRCRAFT TYPE|CRAFT TYPE|(^| )ETD( |$)|(^| )ETA( |$)/.test(s);
+    }
+    function isAirportCell(text) { return /^[A-Z]{3,4}$/.test(upper(text)); }
+    function isCraftCell(text) {
+        var s = upper(text).replace(/[^A-Z0-9]/g, '');
+        return /^[A-Z0-9]{2,6}$/.test(s) && !isAirportCell(s);
+    }
+    function normalizedClipboardRow(cells, hasCraftHeader) {
+        var clean = cells.map(function (cell) { return $.trim(cell || '').replace(/\s+/g, ' '); });
+        var callsign = upper(clean[0]).replace(/[^A-Z0-9]/g, '');
+        var commonValid = /^[A-Z0-9]{2,10}$/.test(callsign)
+            && !!normalizeDate(clean[1]) && !!normalizeDate(clean[2]) && !!normalizeDaily(clean[3]);
+        if (!commonValid) return null;
+
+        // Mau: CALLSIGN, FROM DATE, TO DATE, DAILY, CRAFT, FROM, ETD, TO, ETA.
+        if (clean.length >= 9 && isAirportCell(clean[5]) && normalizeTime(clean[6])
+                && isAirportCell(clean[7]) && normalizeTime(clean[8])) {
+            return { format: 'WITH_CRAFT', cells: clean.slice(0) };
+        }
+
+        // Mau Word thuong dat Aircraft Type o cuoi bang. Dua CRAFT ve vi tri
+        // chuan de parser khong nham no voi VIA/Remark.
+        if (clean.length >= 9 && isAirportCell(clean[4]) && normalizeTime(clean[5])
+                && isAirportCell(clean[6]) && normalizeTime(clean[7])
+                && hasCraftHeader && isCraftCell(clean[8])) {
+            return {
+                format: 'WITH_CRAFT',
+                cells: clean.slice(0, 4).concat([clean[8], clean[4], clean[5], clean[6], clean[7]]).concat(clean.slice(9))
+            };
+        }
+
+        // Mau khong co loai tau bay.
+        if (clean.length >= 8 && isAirportCell(clean[4]) && normalizeTime(clean[5])
+                && isAirportCell(clean[6]) && normalizeTime(clean[7])) {
+            return { format: 'WITHOUT_CRAFT', cells: clean.slice(0) };
+        }
+        return null;
+    }
+    function canonicalClipboardText(sourceRows, headerText) {
+        var completeHeader = sourceRows.some(function (cells) { return !!headerMap(cells); });
+        var hasCraftHeader = /AIRCRAFT TYPE|CRAFT TYPE/.test(fold(headerText || ''));
+        var normalizedRows;
+        if (completeHeader) {
+            return sourceRows.map(function (cells) { return cells.join('\t'); })
+                .filter(function (line) { return $.trim(line); }).join('\n');
+        }
+        normalizedRows = sourceRows.map(function (cells) {
+            return normalizedClipboardRow(cells, hasCraftHeader);
+        }).filter(Boolean);
+        if (!normalizedRows.length) return '';
+
+        var format = normalizedRows.some(function (row) { return row.format === 'WITH_CRAFT'; })
+            ? 'WITH_CRAFT' : 'WITHOUT_CRAFT';
+        var header = format === 'WITH_CRAFT'
+            ? ['Flight number', 'Effective from', 'Effective to', 'Days of services', 'Aircraft Type', 'Departure Airport', 'ETD', 'Arrival Airport', 'ETA']
+            : ['Flight number', 'Effective from', 'Effective to', 'Days of services', 'Departure Airport', 'ETD', 'Arrival Airport', 'ETA'];
+        return [header.join('\t')].concat(normalizedRows.map(function (row) {
+            if (format === 'WITH_CRAFT' && row.format === 'WITHOUT_CRAFT') {
+                return row.cells.slice(0, 4).concat([''], row.cells.slice(4)).join('\t');
+            }
+            return row.cells.join('\t');
+        })).join('\n');
+    }
     function isSectionEnd(line) {
         return /^(3\.|TYPE OF SERVICES|REASON OF CANCELLATION|REF TO PERMIT|APPLICANT|NOTE|RGDS)/.test(fold(line));
     }
@@ -165,11 +230,21 @@
             if (score > bestScore) { bestScore = score; best = table; }
         });
         if (!best || bestScore < 4) return '';
-        return Array.prototype.map.call(best.rows, function (tr) {
+        var sourceRows = Array.prototype.map.call(best.rows, function (tr) {
             return Array.prototype.map.call(tr.cells, function (cell) {
                 return (cell.innerText || cell.textContent || '').replace(/\s+/g, ' ').trim();
-            }).join('\t');
-        }).filter(function (line) { return $.trim(line); }).join('\n');
+            });
+        }).filter(function (cells) { return cells.some(function (cell) { return $.trim(cell); }); });
+        return canonicalClipboardText(sourceRows, best.textContent || '');
+    }
+    function tableTextFromPlainClipboard(event) {
+        var clipboard = event.originalEvent && event.originalEvent.clipboardData;
+        var rawText = clipboard ? clipboard.getData('text/plain') : '';
+        var sourceRows;
+        if (!rawText || rawText.indexOf('\t') < 0) return '';
+        sourceRows = rawText.split(/\r?\n/).filter(function (line) { return $.trim(line); })
+            .map(function (line) { return tabCells(line); });
+        return canonicalClipboardText(sourceRows, rawText);
     }
     function routeFor(from, to) {
         var routeText = value('impDefaultVia'), result = routeText;
@@ -254,7 +329,8 @@
         if (format !== 'AUTO') detected = format;
         sourceLines.forEach(function (line, index) {
             var clean = $.trim(line), d;
-            if (!clean || /^#/.test(clean) || index === headerIndex || (headerIndex >= 0 && index < headerIndex)) return;
+            if (!clean || /^#/.test(clean) || isHeaderFragment(clean)
+                    || index === headerIndex || (headerIndex >= 0 && index < headerIndex)) return;
             if (headerIndex >= 0 && isSectionEnd(clean)) return;
             if (map && headerIndex >= 0) {
                 d = tabCells(line);
@@ -585,7 +661,7 @@
             $('#pendingTable tbody .pending-row-check').prop('checked', this.checked);
         });
         $('#impSource').on('paste', function (event) {
-            var tableText = tableTextFromClipboard(event);
+            var tableText = tableTextFromClipboard(event) || tableTextFromPlainClipboard(event);
             if (!tableText) return;
             event.preventDefault();
             $(this).val(tableText);
