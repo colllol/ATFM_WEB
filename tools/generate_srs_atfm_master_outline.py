@@ -469,7 +469,45 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-010-04", "Hai ứng viên cùng số hiệu ở ngày liền kề", "Không tự ghép; chuyển xử lý thủ công"),
     ])
 
-    doc.add_heading("7.14. Ma trận truy vết FR-OPT-005…FR-OPT-010", level=2)
+    doc.add_heading("7.14. FR-OPT-011 – Thống kê theo khung giờ, chặng và đường bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình triển khai", "Permission/SearchPermissionAdv.aspx?Menu_ID=988 – mở rộng chức năng Search Permission Adv hiện hữu."),
+        ("Loại thay đổi", "Bổ sung chế độ thống kê/báo cáo trên cùng tập chi tiết phép SC và NO đã thỏa điều kiện tìm kiếm."),
+        ("Mục tiêu", "Tổng hợp số chuyến theo khung giờ, chặng FROM–TO và đường bay có VIA để phục vụ phân tích, báo cáo và đối soát."),
+        ("Nguyên tắc dữ liệu", "Thống kê ở cấp chi tiết chuyến bay, không đếm số phép thay cho số chuyến; kết quả phải truy ngược được về danh sách chi tiết."),
+    ])
+    table(doc, ["Khái niệm", "Quy ước đề xuất"], [
+        ("Khung giờ", "Khoảng thời gian do người dùng chọn hoặc nhóm giờ cấu hình; phải chỉ rõ sử dụng ETD, ETA hoặc cả hai."),
+        ("Chặng", "Cặp sân bay có hướng FROM_AIRP → TO_AIRP sau khi chuẩn hóa mã sân bay."),
+        ("Đường bay", "Chặng FROM–TO kết hợp chuỗi VIA đã chuẩn hóa; VIA rỗng được ghi nhận là bay thẳng."),
+        ("Đơn vị thống kê", "Một dòng chi tiết chuyến bay trong phép SC/NO; SOURCE_TYPE và định danh chi tiết phải được giữ để chống đếm trùng."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-011.01", "Sau khi Search thành công, người dùng phải chuyển được giữa chế độ Danh sách và Thống kê mà không nhập lại tiêu chí."),
+        ("FR-OPT-011.02", "Chế độ Thống kê phải sử dụng đúng khoảng PERMDATE, bộ lọc ETD/ETA, FROM, TO, VIA, bộ lọc cột và loại chuyến bay đang áp dụng trên Menu 988."),
+        ("FR-OPT-011.03", "Người dùng phải chọn cơ sở thời gian ETD hoặc ETA và khung giờ báo cáo; hệ thống phải kiểm tra định dạng HH:mm và hỗ trợ đầy đủ biên đầu/cuối theo quy ước đã công bố."),
+        ("FR-OPT-011.04", "Hệ thống phải tổng hợp số chuyến theo từng khung giờ và hiển thị tổng cộng; một chuyến chỉ được tính một lần trong một nhóm của cơ sở thời gian đã chọn."),
+        ("FR-OPT-011.05", "Hệ thống phải tổng hợp số chuyến theo chặng có hướng FROM→TO; chiều ngược lại là một chặng khác, trừ khi người dùng chọn chế độ gộp hai chiều."),
+        ("FR-OPT-011.06", "Hệ thống phải tổng hợp số chuyến theo đường bay FROM–VIA–TO; chuỗi VIA phải được chuẩn hóa khoảng trắng/chữ hoa nhưng không làm thay đổi thứ tự các điểm bay."),
+        ("FR-OPT-011.07", "Mỗi dòng thống kê phải cho phép drill-down về đúng các chi tiết chuyến bay cấu thành, giữ SOURCE_TYPE SC/NO, PERM_ID và DETAIL_ID/FLIGHT_PK để truy vết."),
+        ("FR-OPT-011.08", "Kết quả phải hỗ trợ tách hoặc đối chiếu theo SC/NO và Quốc nội/Quốc tế/Chưa xác định khi các tiêu chí này được chọn."),
+        ("FR-OPT-011.09", "Tổng số chuyến của các nhóm không giao nhau phải bằng tổng số chi tiết phù hợp; bản ghi trùng kỹ thuật hoặc được trả lại do hợp nhất không được đếm hai lần."),
+        ("FR-OPT-011.10", "Các bản ghi thiếu/sai ETD, ETA, FROM, TO hoặc VIA phải được đưa vào nhóm Không xác định tương ứng, không được âm thầm loại khỏi tổng chung."),
+        ("FR-OPT-011.11", "Người dùng phải export được bảng thống kê đang xem và danh sách chi tiết đối soát; file phải ghi tiêu chí, thời điểm tạo, đơn vị thống kê và tổng cộng."),
+        ("FR-OPT-011.12", "Truy vấn thống kê phải thực hiện tại máy chủ/Oracle bằng tham số bind, có giới hạn thời gian và không tải toàn bộ dữ liệu không cần thiết về trình duyệt để cộng thủ công."),
+        ("FR-OPT-011.13", "Giao diện phải thông báo rõ khi không có dữ liệu, khi một nhóm Không xác định có số liệu hoặc khi kết quả bị lỗi; không hiển thị số 0 như một kết quả thành công giả."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-011-01", "Thống kê ETD theo các khung giờ liên tiếp", "Mỗi chuyến thuộc đúng một khung; tổng nhóm bằng tổng chi tiết hợp lệ"),
+        ("TC-OPT-011-02", "Hai chiều VVNB→VVTS và VVTS→VVNB", "Tách hai chặng khi có hướng; gộp đúng khi chọn hai chiều"),
+        ("TC-OPT-011-03", "Cùng FROM/TO nhưng VIA khác nhau", "Tạo các nhóm đường bay riêng, giữ đúng thứ tự VIA"),
+        ("TC-OPT-011-04", "Tập dữ liệu có cả SC/NO và Quốc nội/Quốc tế", "Số liệu theo nhóm và tổng chung đối soát đúng"),
+        ("TC-OPT-011-05", "Thiếu ETD hoặc sân bay/VIA không chuẩn hóa được", "Đưa vào nhóm Không xác định và vẫn tính trong tổng chung"),
+        ("TC-OPT-011-06", "Drill-down một dòng thống kê", "Danh sách chi tiết đúng bằng tập bản ghi tạo nên số liệu"),
+        ("TC-OPT-011-07", "Export thống kê sau khi dùng nhiều bộ lọc", "Excel giữ đúng tiêu chí, số nhóm, tổng và chi tiết đối soát"),
+    ])
+
+    doc.add_heading("7.15. Ma trận truy vết FR-OPT-005…FR-OPT-011", level=2)
     table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
         ("FR-OPT-005", "SearchPermissionAdv.aspx/.js/.cs, Export.ashx và Oracle SC/NO", "Ảnh màn hình, kết quả DB/Excel và TC-OPT-005-*"),
         ("FR-OPT-006", "Search Permission Adv, danh mục sân bay và dữ liệu chi tiết SC/NO", "Bộ dữ liệu Quốc nội/Quốc tế/Chưa xác định và TC-OPT-006-*"),
@@ -477,6 +515,7 @@ def add_opt006_010_specification(doc):
         ("FR-OPT-008", "Màn hình/DAL/API cập nhật chuyến bay", "Ảnh màn hình, DB trước/sau, phân quyền và TC-OPT-008-*"),
         ("FR-OPT-009", "T_ACTIONHISTORY và giao diện lịch sử", "Log theo định danh chuyến bay, phân quyền và TC-OPT-009-*"),
         ("FR-OPT-010", "Bộ phân tích/đồng bộ điện văn và dữ liệu chuyến bay", "Dữ liệu liên ngày, log ghép/chống trùng và TC-OPT-010-*"),
+        ("FR-OPT-011", "Search Permission Adv, truy vấn thống kê, drill-down và Excel", "Đối soát tổng hợp–chi tiết, file báo cáo và TC-OPT-011-*"),
     ])
 
 
@@ -894,7 +933,7 @@ def build():
         elif chapter == 7:
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
-            next_section = 15
+            next_section = 16
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
