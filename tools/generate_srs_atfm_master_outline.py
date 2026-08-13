@@ -336,26 +336,62 @@ def add_opt001_003_specification(doc):
 
 
 def add_opt006_010_specification(doc):
-    doc.add_heading("7.8. FR-OPT-006 – Phân loại chuyến bay Quốc nội/Quốc tế tự động", level=2)
+    doc.add_heading("7.8. FR-OPT-005 – Tìm kiếm nâng cao phục vụ báo cáo", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
-        ("Loại thay đổi", "Bổ sung thuộc tính phân loại và tự động xác định trên dữ liệu chuyến bay hiện hữu."),
-        ("Mục tiêu", "Thống nhất cách lọc, thống kê và xuất dữ liệu Quốc nội/Quốc tế, giảm phân loại thủ công."),
-        ("Nguyên tắc", "Phân loại theo quốc gia của sân bay đi/đến sau khi chuẩn hóa mã sân bay; không suy đoán khi thiếu danh mục."),
+        ("Màn hình triển khai", "Permission/SearchPermissionAdv.aspx?Menu_ID=988 – Search Permission Adv."),
+        ("Loại thay đổi", "Bổ sung màn hình tra cứu hợp nhất dữ liệu phép SC và NO, xem chi tiết chuyến bay và export phục vụ báo cáo."),
+        ("Nguồn dữ liệu", "T_PERMMASTER_SC/T_PERMDETAIL_SC và T_PERMMASTER_NO/T_PERMDETAIL_NO cùng các danh mục tác giả, loại tàu bay liên quan."),
+        ("Phạm vi", "Tra cứu chỉ đọc theo ngày cấp phép PERMDATE; không thay đổi dữ liệu phép bay tại màn hình này."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-005.01", "Hệ thống phải bắt buộc nhập Từ ngày cấp phép và Đến ngày cấp phép; Từ ngày không được lớn hơn Đến ngày."),
+        ("FR-OPT-005.02", "Kết quả phải hợp nhất phép SC và NO có PERMDATE trong khoảng chọn, bao gồm trọn ngày kết thúc, đồng thời giữ SOURCE_TYPE để phân biệt nguồn."),
+        ("FR-OPT-005.03", "Người dùng được lọc tùy chọn theo khoảng giờ ETD/ETA định dạng HH:mm, FROM, TO và VIA; khi dùng nhiều điều kiện, chi tiết chuyến bay phải thỏa đồng thời các điều kiện tương ứng."),
+        ("FR-OPT-005.04", "Điều kiện giờ phải nhận bản ghi khi ETD hoặc ETA nằm trong khoảng; giờ bắt đầu không được lớn hơn giờ kết thúc."),
+        ("FR-OPT-005.05", "Danh sách phép phải hiển thị PERMNBR, AUTHOR, PTYPE, FTYPE, NUMBER, VERSION, DATE, OPER và tổng số chi tiết phù hợp; mặc định sắp xếp theo PERMNBR và loại nguồn."),
+        ("FR-OPT-005.06", "Hệ thống phải hỗ trợ lọc nhanh không phân biệt hoa thường trên các cột PERMNBR, AUTHOR, PTYPE, FTYPE, NUMBER, VERSION, DATE và OPER; tổng số phép/chuyến bay phải cập nhật theo kết quả lọc."),
+        ("FR-OPT-005.07", "Danh sách phải phân trang 100 phép/trang và hiển thị Tổng số phép, Tổng số chuyến bay; bộ lọc cột không làm mất tập kết quả tìm kiếm gốc."),
+        ("FR-OPT-005.08", "Người dùng phải xem được chi tiết phép bằng popup hoặc mở rộng ngay dưới dòng; SC hiển thị BEGIN/END DATE, NO không bắt buộc hai cột này."),
+        ("FR-OPT-005.09", "Chi tiết phải gồm CALLSIGN, REGISTRATION, FROM, TO, ETD, ETA, ngày/thứ khai thác, CRAFT, PURPOSE, MTOW, VIA, REMARK, STATUS và LAST USER/LAST MODIFY."),
+        ("FR-OPT-005.10", "Nút Export Excel chỉ được bật sau khi Search có dữ liệu; file phải áp dụng cả bộ lọc tìm kiếm và bộ lọc cột đang có, xuất đầy đủ chi tiết SC/NO chứ không chỉ trang hiện tại."),
+        ("FR-OPT-005.11", "File export phải chứa tiêu chí báo cáo, phân biệt LOẠI PHÉP SC/NO, dùng tên có khoảng ngày và bảo toàn định dạng text của số phép, giờ, mã sân bay."),
+        ("FR-OPT-005.12", "Truy vấn phải bind tham số, không ghép trực tiếp dữ liệu người dùng vào SQL; lỗi tìm kiếm/export phải trả thông báo rõ và không lộ chuỗi kết nối/thông tin nhạy cảm."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-005-01", "Tìm một khoảng PERMDATE có cả SC và NO", "Trả đủ hai nguồn, tổng phép/chuyến bay chính xác"),
+        ("TC-OPT-005-02", "Lọc ETD/ETA, FROM, TO, VIA", "Chỉ phép có ít nhất một chi tiết phù hợp được hiển thị"),
+        ("TC-OPT-005-03", "Lọc nhanh nhiều cột và chuyển trang", "Kết quả/tổng/phân trang nhất quán"),
+        ("TC-OPT-005-04", "Mở chi tiết SC và NO", "Đúng cấu trúc cột và đúng dữ liệu của PERM_ID/SOURCE_TYPE"),
+        ("TC-OPT-005-05", "Export sau khi áp dụng bộ lọc", "Excel chứa toàn bộ dòng phù hợp, đúng tiêu chí và không chỉ 100 dòng trang hiện tại"),
+        ("TC-OPT-005-06", "Ngày/giờ không hợp lệ hoặc không có dữ liệu", "Chặn yêu cầu hoặc thông báo phù hợp; không cho export sai"),
+    ])
+
+    doc.add_heading("7.9. FR-OPT-006 – Phân loại chuyến bay Quốc nội/Quốc tế tự động", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình triển khai", "Mở rộng SearchPermissionAdv.aspx?Menu_ID=988 và SearchPermissionAdvExport.ashx."),
+        ("Loại thay đổi", "Bổ sung phân loại ở cấp chi tiết chuyến bay trong phép SC/NO và đưa kết quả vào tìm kiếm, tổng hợp, chi tiết và Excel."),
+        ("Mục tiêu", "Báo cáo số chuyến Quốc nội/Quốc tế thống nhất từ chính dữ liệu FROM/TO của phép bay."),
+        ("Nguyên tắc", "Phân loại theo quốc gia của sân bay đi/đến sau chuẩn hóa mã; FTYPE và SOURCE_TYPE SC/NO không được dùng thay cho loại Quốc nội/Quốc tế."),
     ])
     table(doc, ["Mã chi tiết", "Yêu cầu"], [
         ("FR-OPT-006.01", "Hệ thống phải xác định Quốc nội khi cả sân bay đi và sân bay đến thuộc Việt Nam; xác định Quốc tế khi ít nhất một đầu thuộc quốc gia khác."),
-        ("FR-OPT-006.02", "Việc phân loại phải sử dụng danh mục sân bay/quốc gia dùng chung và hỗ trợ mã ICAO/IATA sau bước chuẩn hóa."),
+        ("FR-OPT-006.02", "Việc phân loại phải dùng danh mục sân bay/quốc gia dùng chung, hỗ trợ mã ICAO/IATA sau chuẩn hóa và áp dụng cùng một quy tắc cho chi tiết SC và NO."),
         ("FR-OPT-006.03", "Thiếu hoặc không nhận diện được một đầu sân bay phải trả trạng thái Chưa xác định, không mặc định Quốc nội hoặc Quốc tế."),
-        ("FR-OPT-006.04", "Trạng thái phải được tính lại khi sân bay đi/đến hoặc danh mục sân bay thay đổi và được dùng thống nhất khi hiển thị, tìm kiếm, thống kê, export."),
-        ("FR-OPT-006.05", "Dữ liệu lịch sử cần được phân loại lại bằng tác vụ có kiểm soát; kết quả phải ghi số lượng theo từng trạng thái và lỗi."),
+        ("FR-OPT-006.04", "Search Permission Adv phải bổ sung tiêu chí Loại chuyến bay gồm Tất cả, Quốc nội, Quốc tế, Chưa xác định; tiêu chí phải lọc ở cấp chi tiết trước khi tính số chuyến của mỗi phép."),
+        ("FR-OPT-006.05", "Popup/dòng chi tiết phải hiển thị cột LOẠI CHUYẾN BAY cho từng chuyến; phần tổng hợp phải hiển thị số Quốc nội, Quốc tế và Chưa xác định trong tập kết quả."),
+        ("FR-OPT-006.06", "Excel phải bổ sung cột FLIGHT SCOPE/LOẠI CHUYẾN BAY và áp dụng đúng tiêu chí loại chuyến đang chọn; dữ liệu Excel phải khớp chi tiết trên màn hình."),
+        ("FR-OPT-006.07", "Trạng thái phải được tính lại khi FROM, TO hoặc danh mục sân bay thay đổi; nếu lưu trường dẫn xuất thì phải có tác vụ phân loại lại dữ liệu lịch sử và log kết quả."),
+        ("FR-OPT-006.08", "Việc bổ sung phân loại không được làm thay đổi SOURCE_TYPE, FTYPE, dữ liệu gốc FROM/TO hoặc phá vỡ tìm kiếm/export SC và NO hiện hữu."),
     ])
     table(doc, ["Mã kiểm thử", "Dữ liệu", "Kết quả"], [
         ("TC-OPT-006-01", "VVNB–VVTS", "Quốc nội"),
         ("TC-OPT-006-02", "VVNB–WSSS", "Quốc tế"),
         ("TC-OPT-006-03", "Sân bay không có trong danh mục", "Chưa xác định, có lý do"),
+        ("TC-OPT-006-04", "Lọc Quốc tế trên tập SC và NO", "Chỉ chi tiết Quốc tế được tính/hiển thị; tổng số khớp"),
+        ("TC-OPT-006-05", "Export theo từng loại", "Cột loại và số dòng Excel khớp màn hình"),
     ])
 
-    doc.add_heading("7.9. FR-OPT-007 – Export dữ liệu tách ba loại file ALL, LD, OF", level=2)
+    doc.add_heading("7.10. FR-OPT-007 – Export dữ liệu tách ba loại file ALL, LD, OF", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Loại thay đổi", "Mở rộng chức năng export hiện hữu để tạo bộ ba đầu ra độc lập."),
         ("Quy ước", "ALL: toàn bộ dữ liệu hợp lệ; LD: chuyến bay hạ cánh/đến; OF: chuyến bay bay qua."),
@@ -374,7 +410,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-007-03", "Lỗi khi tạo một file bắt buộc", "Không báo hoàn tất toàn bộ; log chỉ rõ file lỗi"),
     ])
 
-    doc.add_heading("7.10. FR-OPT-008 – Chức năng Edit info chuyến bay", level=2)
+    doc.add_heading("7.11. FR-OPT-008 – Chức năng Edit info chuyến bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Loại thay đổi", "Bổ sung/sửa màn hình cập nhật thông tin trên bản ghi chuyến bay hiện hữu."),
         ("Mục tiêu", "Cho phép hiệu chỉnh dữ liệu sai hoặc thiếu mà vẫn kiểm soát quyền, tính hợp lệ và truy vết."),
@@ -393,7 +429,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-008-03", "Bản ghi đã được người khác cập nhật", "Cảnh báo xung đột, yêu cầu tải lại"),
     ])
 
-    doc.add_heading("7.11. FR-OPT-009 – Hiển thị lịch sử thao tác chuyến bay", level=2)
+    doc.add_heading("7.12. FR-OPT-009 – Hiển thị lịch sử thao tác chuyến bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Loại thay đổi", "Bổ sung giao diện khai thác nhật ký T_ACTIONHISTORY/lịch sử chuyên biệt theo chuyến bay."),
         ("Mục tiêu", "Truy vết đầy đủ ai đã làm gì, khi nào và dữ liệu thay đổi ra sao."),
@@ -412,7 +448,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-009-03", "Người dùng khai thác thử sửa/xóa log", "Không được phép"),
     ])
 
-    doc.add_heading("7.12. FR-OPT-010 – Đồng bộ dữ liệu điện văn liên ngày", level=2)
+    doc.add_heading("7.13. FR-OPT-010 – Đồng bộ dữ liệu điện văn liên ngày", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Loại thay đổi", "Sửa cơ chế liên kết điện văn và chuyến bay khi ngày điện văn khác ngày khai thác thực tế."),
         ("Mục tiêu", "Không bỏ sót hoặc nhân đôi FPL/CHG/DLA/CNL và các điện văn liên quan tại thời điểm qua ngày."),
@@ -433,9 +469,10 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-010-04", "Hai ứng viên cùng số hiệu ở ngày liền kề", "Không tự ghép; chuyển xử lý thủ công"),
     ])
 
-    doc.add_heading("7.13. Ma trận truy vết FR-OPT-006…FR-OPT-010", level=2)
+    doc.add_heading("7.14. Ma trận truy vết FR-OPT-005…FR-OPT-010", level=2)
     table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
-        ("FR-OPT-006", "Danh mục sân bay, dữ liệu chuyến bay, bộ lọc/báo cáo", "Bộ dữ liệu nội địa/quốc tế/không xác định và TC-OPT-006-*"),
+        ("FR-OPT-005", "SearchPermissionAdv.aspx/.js/.cs, Export.ashx và Oracle SC/NO", "Ảnh màn hình, kết quả DB/Excel và TC-OPT-005-*"),
+        ("FR-OPT-006", "Search Permission Adv, danh mục sân bay và dữ liệu chi tiết SC/NO", "Bộ dữ liệu Quốc nội/Quốc tế/Chưa xác định và TC-OPT-006-*"),
         ("FR-OPT-007", "Luồng export và kho tệp", "Ba file mẫu, đối soát số dòng/checksum, log và TC-OPT-007-*"),
         ("FR-OPT-008", "Màn hình/DAL/API cập nhật chuyến bay", "Ảnh màn hình, DB trước/sau, phân quyền và TC-OPT-008-*"),
         ("FR-OPT-009", "T_ACTIONHISTORY và giao diện lịch sử", "Log theo định danh chuyến bay, phân quyền và TC-OPT-009-*"),
@@ -857,7 +894,7 @@ def build():
         elif chapter == 7:
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
-            next_section = 14
+            next_section = 15
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
