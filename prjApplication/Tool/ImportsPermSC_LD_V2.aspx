@@ -145,7 +145,7 @@
             <div class="impv2__table-wrap"><table id="cancelledTable"><thead><tr>
                 <th>NO</th><th>CALLSIGN</th><th>PERM</th><th>BEGIN</th><th>END</th><th>FROM</th><th>TO</th>
                 <th>DAILY</th><th>ETD</th><th>ETA</th><th>OPER</th><th>TYPE</th><th>REMARK</th><th>PURPOSE</th>
-                <th>HỦY</th><th>BEGIN HỦY</th><th>END HỦY</th>
+                <th>HỦY</th>
             </tr></thead><tbody></tbody></table></div>
             <div class="impv2__primary-actions">
                 <button id="btnDeleteCancellation" type="button" class="is-danger">DELETE HỦY CHUYẾN</button>
@@ -181,5 +181,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-2") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-3") %>"></script>
 </asp:Content>

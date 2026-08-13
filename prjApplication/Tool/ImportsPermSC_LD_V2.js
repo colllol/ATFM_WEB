@@ -360,7 +360,7 @@
                 + '</td><td>' + html(x.ToAirp) + '</td><td>' + html(x.Daily) + '</td><td>' + html(x.Etd)
                 + '</td><td>' + html(x.Eta) + '</td><td>' + html(x.Oper) + '</td><td>' + html(x.PermType)
                 + '</td><td>' + html(x.Remark) + '</td><td>' + html(x.Purpose) + '</td><td>' + html(x.CancelDaily)
-                + '</td><td>' + html(x.CancelFromDate) + '</td><td>' + html(x.CancelToDate) + '</td></tr>';
+                + '</td></tr>';
         });
         $('#importedTable tbody').html(imported);
         $('#cancelledTable tbody').html(cancelled);
