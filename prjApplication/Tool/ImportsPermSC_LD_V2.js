@@ -353,7 +353,14 @@
     }
 
     function showResult(text, type, errors) {
-        var detail = (errors || []).join('\n');
+        var uniqueErrors = [];
+        (errors || []).forEach(function (error) {
+            error = $.trim(error || '');
+            if (error && error !== $.trim(text || '') && uniqueErrors.indexOf(error) < 0) {
+                uniqueErrors.push(error);
+            }
+        });
+        var detail = uniqueErrors.join('\n');
         $('#importResult').removeClass('is-success is-error').addClass(type === 'success' ? 'is-success' : 'is-error')
             .text((text || '') + (detail ? '\n' + detail : ''));
     }

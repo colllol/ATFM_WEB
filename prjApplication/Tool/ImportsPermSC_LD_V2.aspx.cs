@@ -1,11 +1,11 @@
 using prjBusinessLogic;
+using prjComponents;
 using prjInfo;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Web;
 using System.Web.Services;
 
 namespace prjApplication.Tool
@@ -400,11 +400,7 @@ namespace prjApplication.Tool
 
         private static string CurrentUserName()
         {
-            HttpContext context = HttpContext.Current;
-            T_Users user = context == null || context.Session == null
-                ? null
-                : context.Session[global::prjApplication.Login.CurrentUserSessionKey]
-                    as T_Users;
+            T_Users user = MenuCache.ResolveCurrentUser(new UserDAL());
             if (user == null || String.IsNullOrWhiteSpace(user.UserName))
                 throw new UnauthorizedAccessException(
                     "Phien dang nhap da het han. Vui long dang nhap lai.");
