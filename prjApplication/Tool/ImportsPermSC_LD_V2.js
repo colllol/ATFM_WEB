@@ -389,6 +389,7 @@
         }
         if (!window.confirm('Xác nhận thực hiện HỦY CHUYẾN cho danh sách đã kiểm tra?')) return;
         var succeeded = false;
+        var successMessage = '';
         setCancellationProcessing(true);
         $.ajax({
             type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/ApplyCancellation',
@@ -398,12 +399,18 @@
             var result = response.d || {};
             showResult(result.Message, result.Success ? 'success' : 'error');
             succeeded = !!result.Success;
-            if (succeeded) pendingStagingIds = [];
+            if (succeeded) {
+                pendingStagingIds = [];
+                successMessage = result.Message || 'Hủy chuyến thành công. Quy trình đã hoàn tất.';
+            }
         }).fail(function (xhr) {
             showResult('Không thể thực hiện hủy chuyến: ' + (xhr.responseText || xhr.statusText), 'error');
         }).always(function () {
             setCancellationProcessing(false);
-            if (succeeded) $('#btnApplyCancellation,#btnDeleteCancellation').prop('disabled', true);
+            if (succeeded) {
+                window.alert(successMessage);
+                window.location.reload();
+            }
         });
     }
 
