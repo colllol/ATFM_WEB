@@ -10,6 +10,10 @@
 --   20260813_T_PERMSC_CANCEL_V2.sql
 --   20260812_T_MENUS_ImportsPermSC_LD_V2.sql
 --   20260813_PERM_IMP_V2_PKG_apply_cancellation.sql
+--
+-- Luu y: script nay chi trien khai DATABASE. Sau khi SQL thanh cong, can
+-- publish/copy ban web moi (ASPX/DLL/JS/CSS) len IIS; thay doi giao dien
+-- nhu kich thuoc popup khong the trien khai bang SQL.
 -- ============================================================================
 
 SET SERVEROUTPUT ON SIZE UNLIMITED
@@ -48,6 +52,13 @@ DECLARE
         END IF;
     END;
 BEGIN
+    IF UPPER(USER) <> 'ATFM' THEN
+        RAISE_APPLICATION_ERROR(
+            -20850,
+            'Sai schema. Phai ket noi bang schema ATFM; schema hien tai=' || USER
+        );
+    END IF;
+
     require_table('T_PERMMASTER_SC');
     require_table('T_PERMDETAIL_SC');
     require_table('T_SCHEDULE_DAYFLIGHTS');
@@ -168,7 +179,13 @@ SELECT INDEX_NAME, STATUS FROM USER_INDEXES
 
 PROMPT DEPLOY CANCEL PERMISSION SC V2 HOAN TAT
 PROMPT T_PERMSC_IMP VA PERM_IMP_PKG CU KHONG BI THAY DOI.
-PROMPT Sau do publish/copy cac file web ImportsPermSC_LD_V2 len IIS.
+PROMPT Sau do publish/copy cac thanh phan web sau len IIS:
+PROMPT - Tool/ImportsPermSC_LD_V2.aspx
+PROMPT - Tool/ImportsPermSC_LD_V2.js
+PROMPT - Tool/ImportsPermSC_LD_V2.css
+PROMPT - Tool/ImportsPermSC_LD_V2.fix.css
+PROMPT - bin/prjApplication.dll (chua code-behind da bien dich)
+PROMPT Thay doi width/padding popup la thay doi web, khong can chay lai SQL.
 
 SPOOL OFF
 EXIT SUCCESS
