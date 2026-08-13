@@ -11,7 +11,7 @@ from docx.shared import Cm, Inches, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE_DIR = Path(r"C:\Users\Admin\Pictures\Saved Pictures")
-OUTPUT = ROOT / "TaiLieu" / "BAO_CAO_HE_THONG_REPORT_NEW.docx"
+OUTPUT = ROOT / "TaiLieu" / "BAO_CAO_HE_THONG_REPORT_NEW_NGHIEP_VU.docx"
 
 BLUE = "1F4E78"
 LIGHT_BLUE = "D9EAF7"
@@ -171,7 +171,7 @@ def add_cover(document):
     title = document.add_paragraph()
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title.paragraph_format.first_line_indent = Cm(0)
-    run = title.add_run("BÁO CÁO CHI TIẾT\nHỆ THỐNG REPORT NEW")
+    run = title.add_run("BÁO CÁO CHI TIẾT NGHIỆP VỤ\nHỆ THỐNG REPORT NEW")
     run.bold = True
     run.font.name = "Times New Roman"
     run.font.size = Pt(22)
@@ -408,7 +408,114 @@ def build_document():
         ],
     )
 
-    document.add_heading("5. Các vấn đề ưu tiên", level=1)
+    document.add_heading("5. Phân tích nghiệp vụ theo mã nguồn", level=1)
+    add_body(document, "Chương này mô tả quy tắc xử lý được đọc trực tiếp từ JavaScript, WebMethod và code-behind trong repository. FlightStatusRate, AnomalyWarning và ChartReportAirport gọi WebMethod nội bộ. Các trang Overview, Trend, Military, Civil và AirportTakeoffLanding gọi API ngoài qua reportApiBase; do repository không có controller của API này, code-behind cùng tên chỉ được xem là thuật toán tham chiếu cho đến khi đối chiếu bản triển khai backend.")
+
+    document.add_heading("5.1. Nghiệp vụ phân loại trạng thái chuyến bay", level=2)
+    add_body(document, "Phạm vi đầu vào của thuật toán gồm chuyến có PERMTYPE bằng LD, hoặc O/F có ít nhất một đầu sân bay mang tiền tố VV. Chuyến phải có OPER_ID và nằm trong khoảng ngày. Hãng bay và sân bay được chuẩn hóa bằng cách bỏ khoảng trắng, chuyển chữ hoa; giá trị rỗng hoặc ALL được hiểu là không lọc.")
+    add_body(document, "Nếu Từ ngày và Đến ngày đều là ngày hệ thống, nguồn chính là T_DAY_FLIGHTS_GOINGON. Các kỳ còn lại dùng T_FINISHED_FLIGHTS. Do bảng lịch sử không lưu EOBT, hệ thống tìm lại kế hoạch bay theo ngày bay và registration từ T_DAY_FLIGHTS_GOINGON, T_DAY_FLIGHTS_GOINGON032024 và T_T_DAY_FLIGHTS_GOINGON; sau đó ưu tiên bản ghi trùng callsign và hành trình, rồi trùng callsign, rồi trùng hành trình.")
+    add_body(document, "Thời gian kế hoạch ưu tiên EOBTDATE, sau đó EOBT. Chuỗi thời gian được chấp nhận ở dạng DDHHMM hoặc HHMM. Với DDHHMM, ngày chỉ hợp lệ khi bằng ngày bay, ngày liền trước hoặc ngày liền sau. Số phút delay được làm tròn từ hiệu ATD trừ EOBT và chỉ được tính khi ATD nằm trong cửa sổ từ EOBT trừ 6 giờ đến EOBT cộng 24 giờ.")
+    add_table(
+        document,
+        ["Thứ tự", "Trạng thái", "Điều kiện nghiệp vụ"],
+        [
+            ["1", "DELAY_60_PLUS", "Khởi hành từ sân bay VV, có sân bay đến, có ATD và trễ từ 60 phút"],
+            ["2", "DELAY_30_59", "Cùng điều kiện trên, trễ từ 30 đến 59 phút"],
+            ["3", "DELAY_15_29", "Cùng điều kiện trên, trễ từ 15 đến 29 phút"],
+            ["4", "FINISHED", "Nội địa có đủ FROM/TO/ATD/ATA; quốc tế có đủ dữ liệu thực tế theo chiều đến hoặc đi Việt Nam"],
+            ["5", "CANCEL", "Quốc tế thiếu dữ liệu bắt buộc theo chiều khai thác; nội địa thiếu dữ liệu; hoặc không khớp quy tắc khác"],
+            ["6", "WAIT", "Chỉ ngày hiện tại: nội địa khởi hành Việt Nam, có đích và giờ kế hoạch nhưng chưa có ATD"],
+        ],
+        [1.4, 3.7, 11.2],
+    )
+    add_body(document, "Quy tắc delay được xét trước Finished. Vì vậy chuyến đã có đủ dữ liệu hoàn tất nhưng ATD trễ từ 15 phút vẫn thuộc nhóm Delay; chuyến trễ dưới 15 phút được xếp Finished nếu đủ điều kiện hoàn tất. Server trả bốn nhóm loại trừ nhau, còn frontend gom mọi trạng thái DELAY_* thành một nhóm Delay.")
+    add_bullet(document, "Khoảng ngày của FlightStatusRate và các luồng dùng đúng code này có dạng nửa mở [Từ ngày, Đến ngày + 1), vì vậy bao gồm đầy đủ ngày kết thúc.")
+    add_bullet(document, "Nhánh bổ sung T_DAY_FLIGHTS_CANCEL cho kỳ lịch sử không áp dụng bộ lọc hãng và sân bay. Đây là sai lệch nghiệp vụ mức cao vì KPI, donut, bảng và Excel có thể chứa chuyến hủy ngoài phạm vi đã chọn.")
+    add_bullet(document, "Excel của FlightStatusRate xuất toàn bộ tập kết quả tải từ server, không chỉ trạng thái đang được người dùng chọn trên donut.")
+
+    document.add_heading("5.2. Nghiệp vụ tổng quan khai thác", level=2)
+    add_body(document, "FlightOperationOverview chỉ giữ Finished và Delay; Cancel và Wait không tham gia. Tổng chuyến bằng Finished cộng Delay. Mỗi chuyến có FROM_AIRP bắt đầu VV cộng một lượt cất cánh cho sân bay đi; TO_AIRP bắt đầu VV cộng một lượt hạ cánh cho sân bay đến. Vì một chuyến nội địa tạo hai movement nhưng chỉ là một chuyến, tổng cất cánh cộng tổng hạ cánh không được kỳ vọng bằng KPI tổng chuyến.")
+    add_bullet(document, "Số sân bay khai thác là số mã VV có ít nhất một movement, không phải tổng số sân bay trong danh mục.")
+    add_bullet(document, "Danh sách sân bay được xếp theo tổng cất + hạ cánh giảm dần, sau đó theo mã sân bay.")
+    add_bullet(document, "Bấm cột cất/hạ cánh lọc bảng và Excel theo đúng chiều movement; nhưng donut lại lấy cả chuyến đi lẫn đến sân bay đó. Do đó donut có thể không khớp bảng chi tiết.")
+    add_bullet(document, "Khoảng nhiều ngày có chứa hôm nay nhưng không chỉ riêng hôm nay dùng nguồn lịch sử; chuyến đang khai thác trong ngày có thể chưa xuất hiện.")
+
+    document.add_heading("5.3. Nghiệp vụ phân tích xu hướng", level=2)
+    add_body(document, "Xu hướng chỉ tính Finished và Delay. Kỳ so sánh được tạo bằng cách lùi chính xác Từ ngày và Đến ngày một năm. Dữ liệu được gom theo khóa yyyy-MM-dd ở chế độ ngày hoặc yyyy-MM ở chế độ tháng; các mốc không có dữ liệu vẫn được điền 0 để chuỗi thời gian liên tục.")
+    add_table(
+        document,
+        ["Chỉ số", "Công thức"],
+        [
+            ["Tổng kỳ hiện tại", "Finished hiện tại + Delay hiện tại"],
+            ["Tổng cùng kỳ", "Finished cùng kỳ + Delay cùng kỳ"],
+            ["Chênh lệch", "Tổng hiện tại - Tổng cùng kỳ"],
+            ["Tỷ lệ thay đổi", "Chênh lệch x 100 / Tổng cùng kỳ, làm tròn 1 chữ số"],
+            ["Ngoại lệ nền 0", "Hai kỳ cùng 0 thì 0%; kỳ trước 0 và kỳ này dương thì code quy ước 100%"],
+        ],
+        [5.1, 11.2],
+    )
+    add_bullet(document, "Chế độ ngày hỗ trợ tối đa 367 ngày tính cả hai đầu; Dashboard tự chuyển sang tháng khi khoảng chọn lớn hơn 62 ngày.")
+    add_bullet(document, "Quy ước tăng 100% từ nền 0 chưa chuẩn về thống kê; nên hiển thị N/A hoặc không xác định.")
+    add_bullet(document, "Kỳ có ngày 29/02 có thể ánh xạ trùng 28/02 khi lùi một năm, làm tổng điểm biểu đồ cùng kỳ không khớp KPI.")
+
+    document.add_heading("5.4. Nghiệp vụ cảnh báo delay", level=2)
+    add_body(document, "AnomalyWarning chỉ truy vấn các chuyến trong ngày Oracle hiện tại từ T_DAY_FLIGHTS_GOINGON, có cả ETD và ATD. ETD phải là bốn chữ số HHmm; ATD phải là sáu chữ số ddHHmm. Ngày trong ATD chỉ được phép là ngày bay, ngày trước hoặc ngày sau, qua đó hỗ trợ chuyến bay qua nửa đêm.")
+    add_body(document, "DelayMinutes bằng ATD timestamp trừ ETD timestamp. Dưới 15 phút hoặc cất sớm không tạo cảnh báo; 15-29 phút là mức 1; 30-59 phút là mức 2; từ 60 phút là mức 3. Danh sách được xếp theo mức giảm dần, số phút chậm giảm dần và callsign tăng dần.")
+    add_bullet(document, "Bản ghi giờ sai định dạng bị loại âm thầm, không có KPI dữ liệu lỗi. Tổng cảnh báo vì vậy có thể thấp hơn số bản ghi nguồn cần kiểm tra.")
+    add_bullet(document, "Tên trang là cảnh báo dữ liệu bất thường nhưng thuật toán hiện chỉ phát hiện chậm khởi hành.")
+
+    document.add_heading("5.5. Nghiệp vụ chuyến bay quân sự", level=2)
+    add_body(document, "Frontend gửi fromDate, toDate, airport và purpose tới api/MilitaryFlightReport/GetData. Client chỉ kiểm tra ngày không rỗng và Từ ngày không lớn hơn Đến ngày. Khi đổi ngày, lựa chọn sân bay và mục đích được đặt lại ALL. Danh mục sân bay/mục đích được cập nhật từ response của API.")
+    add_bullet(document, "Bảng tải toàn bộ data.flights rồi phân trang client với cỡ 25/50/100/200/500; Excel xuất toàn bộ kết quả, không chỉ trang hiện tại.")
+    add_bullet(document, "Repository không có source controller/query. Chưa thể xác nhận tiêu chí quân sự, ý nghĩa P_TYPE/PURPOSE, quy tắc biên ngày, loại trùng, xử lý null hoặc tên bảng T_FINISHFLIGHTS_MILITARY.")
+    add_bullet(document, "Nhánh Excel chuẩn có STT; nhánh dự phòng khi ReportControls không tải thành công không có STT, dẫn đến đầu ra không hoàn toàn nhất quán.")
+
+    document.add_heading("5.6. Nghiệp vụ tổng hợp dân dụng", level=2)
+    add_body(document, "Frontend gửi FromDate, ToDate, Airport, Oper=ALL và CurrentDay=false tới api/CivilFlightSummary/GetData. Kỳ mặc định là 30 ngày gần nhất. Giao diện hiển thị trực tiếp Total, Domestic, International, OnTimePercent, Airports và Flights từ backend.")
+    add_bullet(document, "Tỷ lệ nội địa = Domestic x 100 / Total; tỷ lệ quốc tế = International x 100 / Total; khi Total bằng 0 thì tỷ lệ bằng 0. OTP được hiển thị nguyên trạng từ API.")
+    add_bullet(document, "Bảng lưu lượng chỉ lấy 12 phần tử đầu response và không tự sắp xếp; nhãn lưu lượng cao nhất chỉ đúng nếu backend đã sắp giảm dần.")
+    add_bullet(document, "Không có validation ngày, phân trang hay xuất Excel phía client. Nút Áp dụng không khóa khi tải nên response cũ có thể về sau và ghi đè response mới.")
+    add_bullet(document, "Repository không có source API nên chưa thể xác nhận quy tắc nội địa/quốc tế, ngưỡng OTP, đơn vị đếm chuyến, cách tính movement và nguồn Oracle.")
+
+    document.add_heading("5.7. Nghiệp vụ cất/hạ cánh toàn quốc", level=2)
+    add_body(document, "Thuật toán tham chiếu chỉ giữ Finished và Delay. Một chuyến có sân bay đi VV cộng một lượt cất cánh; sân bay đến VV cộng một lượt hạ cánh. Sân bay khai thác là số mã có movement. Sân bay lưu lượng cao nhất được chọn theo departures + arrivals giảm dần, nếu hòa thì theo mã tăng dần.")
+    add_bullet(document, "Chi tiết chỉ chấp nhận mã sân bay VV và movement departure hoặc arrival. page tối thiểu 1; pageSize bị giới hạn từ 25 đến 500.")
+    add_bullet(document, "Lỗi cận ngày: SQL dùng FLIGHTDATE < toDate nhưng code truyền nguyên ngày kết thúc. Chọn cùng một ngày tạo khoảng rỗng; chọn 01-03 chỉ lấy ngày 01 và 02.")
+    add_bullet(document, "Phân trang vẫn đọc toàn bộ result set Oracle mỗi lần chuyển trang. Nếu yêu cầu trang vượt cuối, metadata page bị chặn nhưng rows có thể rỗng do offset đã tính theo trang cũ.")
+
+    document.add_heading("5.8. Nghiệp vụ so sánh hoạt động sân bay", level=2)
+    add_body(document, "Trang tải danh sách chuyến thô từ WebMethod rồi tổng hợp tại trình duyệt. Với một sân bay, hệ thống so cùng sân bay tại chính xác ngày 1 và ngày 2. Với từ hai đến năm sân bay, hệ thống không tạo hai kỳ mà cộng từng sân bay trong toàn khoảng từ ngày nhỏ hơn đến ngày lớn hơn.")
+    add_bullet(document, "Một bản ghi được tính một chuyến liên quan nếu sân bay là đầu đi hoặc đầu đến; không tách cất cánh và hạ cánh. Nếu FROM và TO cùng mã, bản ghi vẫn chỉ cộng một lần.")
+    add_bullet(document, "Total tăng cho mọi bản ghi, còn Finished/Cancel/Delay/Wait chỉ tăng khi trạng thái được nhận diện. Trạng thái lạ có thể làm Total lớn hơn tổng bốn nhóm.")
+    add_bullet(document, "Không chặn chọn trùng sân bay hoặc hai ngày giống nhau; khi đó các chuỗi có thể hoàn toàn trùng lặp.")
+    add_bullet(document, "Lỗi cận ngày lịch sử giống AirportTakeoffLanding: ngày kết thúc bị loại. Riêng đúng hôm nay mới truyền toDate + 1 và có dữ liệu hiện hành.")
+
+    document.add_heading("5.9. Nghiệp vụ Dashboard điều hành", level=2)
+    add_body(document, "Mỗi lần Áp dụng, Dashboard chạy song song ba request: trạng thái chuyến bay, tổng quan khai thác và xu hướng. Cùng bộ lọc sân bay/ngày được dùng; hãng luôn là ALL. Xu hướng theo ngày khi kỳ không quá 62 ngày, ngược lại theo tháng. Cơ chế jQuery.when yêu cầu cả ba request thành công; một request lỗi làm toàn Dashboard chuyển sang trạng thái lỗi.")
+    add_bullet(document, "KPI tổng và bốn trạng thái lấy từ FlightStatusRate. Cần chú ý bằng Cancel + Wait.")
+    add_bullet(document, "Biểu đồ cất/hạ cánh lấy từ Overview và chỉ tính Finished + Delay. Biểu đồ xu hướng cũng chỉ tính Finished + Delay và so với cùng kỳ năm trước.")
+    add_bullet(document, "Click cụm sân bay chỉ lọc donut tại client; không đổi KPI, biểu đồ cột hoặc trend. Click trạng thái chỉ nhấn mạnh donut; không phải lọc chéo toàn Dashboard.")
+    add_bullet(document, "Dashboard thừa hưởng lỗi chuyến hủy lịch sử không tuân bộ lọc sân bay/hãng từ FlightStatusRate.")
+
+    document.add_heading("5.10. Ma trận luồng dữ liệu", level=2)
+    add_table(
+        document,
+        ["Trang", "Endpoint frontend", "Nguồn/quy tắc có thể xác nhận"],
+        [
+            ["FlightStatusRate", "WebMethod cùng trang", "Oracle và toàn bộ quy tắc phân loại có source"],
+            ["FlightOperationOverview", "API reportApiBase", "Có code-behind tham chiếu; cần đối chiếu controller triển khai"],
+            ["FlightTrendAnalysis", "API reportApiBase", "Có code-behind tham chiếu; cần đối chiếu controller triển khai"],
+            ["AnomalyWarning", "WebMethod cùng trang", "Oracle và công thức cảnh báo có source"],
+            ["MilitaryFlightReport", "API reportApiBase", "Chỉ xác nhận payload/UI; backend ngoài repo"],
+            ["CivilFlightSummary", "API reportApiBase", "Chỉ xác nhận payload/UI; backend ngoài repo"],
+            ["AirportTakeoffLanding", "API reportApiBase", "Có code-behind tham chiếu; cần đối chiếu controller triển khai"],
+            ["ChartReportAirport", "WebMethod cùng trang", "Oracle + tổng hợp client có source"],
+            ["ChartReport", "Ba WebMethod/API phối hợp", "Tổng hợp từ Status, Overview và Trend"],
+        ],
+        [4.5, 4.2, 7.6],
+    )
+
+    document.add_heading("6. Các vấn đề ưu tiên", level=1)
     add_table(
         document,
         ["Mức", "Nội dung", "Ảnh hưởng", "Khuyến nghị"],
@@ -422,7 +529,7 @@ def build_document():
         [1.5, 5.2, 4.7, 5.0],
     )
 
-    document.add_heading("6. Kịch bản nghiệm thu đề xuất", level=1)
+    document.add_heading("7. Kịch bản nghiệm thu đề xuất", level=1)
     for item in [
         "Chọn một ngày chắc chắn có dữ liệu và đối chiếu tổng KPI với số dòng chi tiết sau khi lọc từng trạng thái.",
         "Kiểm tra ngày đầu, ngày cuối và trường hợp Từ ngày bằng Đến ngày trên tất cả báo cáo.",
@@ -434,7 +541,7 @@ def build_document():
     ]:
         add_bullet(document, item)
 
-    document.add_heading("7. Tệp mã nguồn đã đối chiếu", level=1)
+    document.add_heading("8. Tệp mã nguồn đã đối chiếu", level=1)
     source_rows = [
         ("FlightStatusRate", "prjApplication/ReportNew/FlightStatusRate.js; FlightStatusRate.aspx.cs"),
         ("FlightOperationOverview", "prjApplication/ReportNew/FlightOperationOverview.js; FlightOperationOverview.aspx.cs"),
@@ -448,7 +555,7 @@ def build_document():
     ]
     add_table(document, ["Trang", "Tệp đối chiếu"], source_rows, [5.0, 11.5])
 
-    document.add_heading("8. Kết luận", level=1)
+    document.add_heading("9. Kết luận", level=1)
     add_body(document, "Chín trang đã hình thành một bộ báo cáo điều hành tương đối đầy đủ, bao phủ trạng thái chuyến bay, khai thác sân bay, xu hướng, cảnh báo delay, chuyến quân sự, chuyến dân dụng và so sánh sân bay. Giao diện nhất quán, dễ quét và có các tương tác phù hợp với nghiệp vụ.")
     add_body(document, "Dữ liệu ảnh xác nhận các báo cáo lịch sử có thể trả kết quả, nổi bật là một chuyến hoàn thành trong tổng quan khai thác và hai chuyến dân dụng với OTP 100%. Các màn hình ngày 13/08/2026 chủ yếu không có dữ liệu. Trước khi đưa vào nghiệm thu chính thức, cần ưu tiên kiểm tra quy ước ngày kết thúc, bộ lọc chuyến hủy lịch sử và khả năng chịu lỗi của Dashboard.")
 
