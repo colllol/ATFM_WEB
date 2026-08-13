@@ -558,6 +558,153 @@ def add_opt006_010_specification(doc):
         ("FR-OPT-012", "Bộ đối chiếu phép/KHB ngày; T_NOTIFICATION/NOTIFICATION_PKG; Notification.ashx; ATFM_New.Master; trang Notifications", "Dữ liệu mẫu khớp/không khớp, ảnh chuông và badge, trạng thái theo user, audit, log polling và TC-OPT-012-*"),
     ])
 
+    doc.add_heading("7.18. FR-OPT-014 – Tối ưu hiệu năng ExportBravo dưới 3 phút", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Chức năng hiện hữu", "ExportBravo tại CalendarFlight/CanlendarFlights.aspx; dữ liệu đích T_DAY_FLIGHTS_BRAVO."),
+        ("Mục tiêu SLA", "Hoàn thành dưới 180 giây cho một ngày khai thác ở tải nghiệm thu; mục tiêu nội bộ nên ≤150 giây để có biên an toàn."),
+        ("Hướng tối ưu", "Xử lý theo tập qua BRAVO_EXPORT_PKG.COPY_BRAVO_FLIGHT, tránh gọi sao chép/message/billing theo từng dòng và sử dụng index FLIGHTDATE."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-014.01", "Người có quyền phải khởi chạy ExportBravo theo ngày bay và nhận trạng thái đang chạy, thành công hoặc thất bại mà không phải thao tác lại nhiều lần."),
+        ("FR-OPT-014.02", "Luồng export phải xóa/thay dữ liệu đích đúng ngày rồi chèn theo tập trong một giao dịch được kiểm soát; không thực hiện truy vấn phụ lặp cho từng chuyến."),
+        ("FR-OPT-014.03", "Chỉ xuất dữ liệu hợp lệ thuộc ngày chọn, loại trừ NoPerm/NOPERM và bản hủy theo quy tắc hiện hành; số dòng nguồn–đích phải đối soát được."),
+        ("FR-OPT-014.04", "Trong bộ dữ liệu nghiệm thu đại diện mức tải cao điểm, thời gian từ lúc xác nhận đến khi dữ liệu Bravo sẵn sàng phải nhỏ hơn 180 giây ở ít nhất 3 lần chạy liên tiếp."),
+        ("FR-OPT-014.05", "Hệ thống phải chống chạy đồng thời cùng ngày; chạy lại sau thành công phải idempotent, không nhân đôi dữ liệu."),
+        ("FR-OPT-014.06", "Nếu lỗi, giao dịch phải rollback hoặc để dữ liệu ở trạng thái nhất quán; không báo thành công một phần."),
+        ("FR-OPT-014.07", "Phải ghi ngày export, người dùng, thời gian bắt đầu/kết thúc, số dòng, kết quả và lỗi; truy vấn phải có execution plan/index phù hợp."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-014-01", "Ba lần export ngày tải cao điểm", "Mỗi lần <180 giây, số dòng đúng"),
+        ("TC-OPT-014-02", "Chạy lại cùng ngày", "Không trùng; dữ liệu đích nhất quán"),
+        ("TC-OPT-014-03", "Lỗi giữa quá trình", "Rollback/không có dữ liệu nửa chừng; log rõ lỗi"),
+        ("TC-OPT-014-04", "Hai yêu cầu đồng thời cùng ngày", "Một yêu cầu được xử lý, yêu cầu còn lại bị chặn/thông báo"),
+    ])
+
+    doc.add_heading("7.19. FR-OPT-015 – Chức năng F8 ép dòng trong Calendar Accepted", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Chức năng hiện hữu", "Calendar/Calendar Accepted; hành vi F8 trong CanlendarFlights.aspx dùng dòng và ô đang chọn."),
+        ("Mục tiêu", "Cho phép sao chép/ép nhanh giá trị hoặc dòng kế hoạch đã Accepted để hiệu chỉnh có kiểm soát, không làm mất bản gốc."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-015.01", "Hệ thống phải nhận phím F8 bằng key/code/keyCode 119 và chặn hành vi mặc định của trình duyệt khi con trỏ đang ở bảng Calendar Accepted."),
+        ("FR-OPT-015.02", "F8 chỉ tác động trên dòng/ô đang được chọn; nếu không có lựa chọn hợp lệ phải thông báo và không thay đổi dữ liệu."),
+        ("FR-OPT-015.03", "Dòng được ép/sao chép phải kế thừa các trường được phép từ dòng nguồn, có định danh tạm mới và được đánh dấu là thêm mới/cần lưu; không sao chép khóa DB, trạng thái duyệt hoặc audit."),
+        ("FR-OPT-015.04", "Các trường ngày bay, STT và trường phụ thuộc phải được tính/nhập lại theo quy tắc; dữ liệu bắt buộc phải validate trước khi lưu."),
+        ("FR-OPT-015.05", "F8 không được tự động ghi DB; người dùng phải xác nhận lưu và có quyền chỉnh sửa Calendar Accepted."),
+        ("FR-OPT-015.06", "Lưu phải chống trùng chuyến bay và ghi lịch sử dòng nguồn, dòng mới, người dùng, thời gian và giá trị thay đổi."),
+        ("FR-OPT-015.07", "Hủy hoặc tải lại trước khi lưu phải loại bỏ dòng tạm mà không ảnh hưởng dòng Accepted nguồn."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-015-01", "F8 tại dòng hợp lệ", "Tạo dòng tạm đúng trường cho phép, focus chuyển hợp lý"),
+        ("TC-OPT-015-02", "F8 không chọn dòng/ngoài bảng", "Không thay đổi dữ liệu"),
+        ("TC-OPT-015-03", "Lưu dòng trùng hoặc thiếu trường", "Bị chặn và nêu rõ lỗi"),
+        ("TC-OPT-015-04", "Hủy dòng tạm", "Dòng nguồn giữ nguyên; không có bản ghi DB mới"),
+    ])
+
+    doc.add_heading("7.20. FR-OPT-016 – Tối ưu Gen KHB ngày hôm sau ra AFTN dưới 3 phút", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu SLA", "Sinh đầy đủ KHB ngày D+1 thành điện văn/đầu ra AFTN dưới 180 giây ở tải nghiệm thu."),
+        ("Phạm vi", "Chọn dữ liệu KHB đã đủ điều kiện, phân nhóm/đánh part, dựng nội dung và lưu hàng chờ gửi; không đồng nhất thời gian chờ mạng AMHS/AFTN bên ngoài với thời gian sinh."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-016.01", "Hệ thống phải tự xác định ngày D+1 theo ngày nghiệp vụ/múi giờ cấu hình và chỉ lấy KHB đã duyệt, còn hiệu lực."),
+        ("FR-OPT-016.02", "Việc lấy dữ liệu, phân nhóm HVN/LD/OF hoặc nhóm cấu hình và dựng message phải xử lý theo tập, tránh truy vấn/call lặp từng dòng."),
+        ("FR-OPT-016.03", "Nội dung, địa chỉ nhận, header, part number, thứ tự chuyến và giới hạn kích thước điện văn phải tuân theo mẫu AFTN hiện hành."),
+        ("FR-OPT-016.04", "Với bộ dữ liệu ngày cao điểm, từ lúc xác nhận đến khi toàn bộ message sẵn sàng trong hàng chờ gửi phải <180 giây qua 3 lần chạy liên tiếp."),
+        ("FR-OPT-016.05", "Chạy lại cùng ngày phải có lựa chọn thay thế bản chưa gửi hoặc giữ phiên bản; không tạo message trùng ngoài ý muốn."),
+        ("FR-OPT-016.06", "Nếu phát hiện dữ liệu thiếu/sai, hệ thống phải chỉ rõ chuyến lỗi; chính sách dừng toàn bộ hay bỏ qua phải cấu hình và thể hiện trong kết quả."),
+        ("FR-OPT-016.07", "Phải ghi thời gian, ngày KHB, số chuyến, số part/message, người tạo, checksum/phiên bản và lỗi; hỗ trợ rollback bản sinh chưa phát."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-016-01", "Ba lần sinh ngày D+1 tải cao điểm", "Mỗi lần <180 giây, đủ chuyến/part"),
+        ("TC-OPT-016-02", "Chạy lại khi message chưa gửi", "Không trùng; phiên bản/thay thế đúng chính sách"),
+        ("TC-OPT-016-03", "Một chuyến thiếu dữ liệu bắt buộc", "Nêu đúng lỗi và xử lý đúng chính sách"),
+        ("TC-OPT-016-04", "Đối soát message với KHB duyệt", "Số chuyến, nhóm, thứ tự và nội dung khớp"),
+    ])
+
+    doc.add_heading("7.21. FR-OPT-017 – Mở rộng phạm vi tra cứu INBOX trên 7 ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Receive_LogFile/Inbox.aspx?Menu_ID=47; MESSAGE_PKG.GetInboxBySearchLogFile."),
+        ("Mục tiêu", "Cho phép người dùng chủ động tra cứu khoảng ngày lớn hơn 7 ngày mà vẫn phân trang, ổn định và an toàn."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-017.01", "Hệ thống phải cho nhập Từ ngày/Đến ngày, bao gồm trọn ngày kết thúc và cho phép khoảng lớn hơn 7 ngày trong giới hạn cấu hình INBOX_SEARCH_MAX_DAYS."),
+        ("FR-OPT-017.02", "Từ ngày không được lớn hơn Đến ngày; vượt giới hạn cấu hình phải bị chặn với thông báo rõ, không tự cắt khoảng ngày."),
+        ("FR-OPT-017.03", "Tra cứu phải kết hợp được số điện văn, origin và content; dùng bind parameter và điều kiện ngày dạng >= from, < to+1 để tận dụng index."),
+        ("FR-OPT-017.04", "Kết quả phải phân trang ổn định, trả tổng bản ghi và không tải toàn bộ dữ liệu dài ngày về trình duyệt."),
+        ("FR-OPT-017.05", "Hệ thống phải chống gửi request trùng khi lượt trước đang chạy và hiển thị trạng thái tải/lỗi phù hợp."),
+        ("FR-OPT-017.06", "Điện văn trong thời hạn lưu phải xem được nội dung/chi tiết theo quyền; yêu cầu này không tự thay đổi chính sách retention của FR-OPT-001."),
+        ("FR-OPT-017.07", "Phải kiểm thử hiệu năng với khoảng 8, 30 và giới hạn tối đa ngày; log thời gian, số dòng quét/trả về và timeout."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-017-01", "Tra cứu 8 và 30 ngày", "Trả đúng dữ liệu/tổng/phân trang"),
+        ("TC-OPT-017-02", "Khoảng vượt giới hạn", "Bị chặn rõ ràng"),
+        ("TC-OPT-017-03", "Ngày kết thúc có điện văn 23:59", "Điện văn được trả về"),
+        ("TC-OPT-017-04", "Nhấn Search liên tục", "Chỉ một request hoạt động, không trùng kết quả"),
+    ])
+
+    doc.add_heading("7.22. FR-OPT-018 – Tự động cập nhật khi sửa KHB đã build", level=2)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-018.01", "Khi KHB đã build bị sửa trường ảnh hưởng đầu ra, hệ thống phải phát hiện thay đổi và đánh dấu bản build hiện tại là cần cập nhật."),
+        ("FR-OPT-018.02", "Các trường ảnh hưởng tối thiểu gồm CALLSIGN, ngày, FROM/TO, ETD/ETA, craft, purpose, VIA, remark và trạng thái hủy/duyệt."),
+        ("FR-OPT-018.03", "Nếu đầu ra chưa phát, hệ thống phải tự build lại/thay thế theo cấu hình; nếu đã phát, phải tạo phiên bản sửa đổi và yêu cầu quyền/xác nhận phù hợp."),
+        ("FR-OPT-018.04", "Cập nhật phải theo tập thay đổi, idempotent và không làm mất KHB gốc hoặc bản build trước; mọi phiên bản phải truy vết được."),
+        ("FR-OPT-018.05", "Nếu build lại lỗi, dữ liệu sửa vẫn được lưu theo giao dịch nghiệp vụ nhưng trạng thái đồng bộ phải là Lỗi/Chờ xử lý, không báo đầu ra đã cập nhật."),
+        ("FR-OPT-018.06", "Giao diện phải hiển thị trạng thái Đồng bộ/Chờ build/Lỗi/Đã cập nhật và thời điểm phiên bản mới nhất."),
+        ("FR-OPT-018.07", "Phải ghi người sửa, dữ liệu trước/sau, build bị ảnh hưởng, phiên bản mới và kết quả phát."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-018-01", "Sửa KHB đã build nhưng chưa phát", "Tự thay bản build, không trùng"),
+        ("TC-OPT-018-02", "Sửa bản đã phát", "Tạo phiên bản sửa đổi đúng quy trình"),
+        ("TC-OPT-018-03", "Build lại lỗi", "Hiển thị Lỗi/Chờ xử lý; không báo đồng bộ"),
+        ("TC-OPT-018-04", "Sửa trường không ảnh hưởng", "Không build lại không cần thiết"),
+    ])
+
+    doc.add_heading("7.23. FR-OPT-019 – Cảnh báo chuyến bay cấp sai ngày bay so với thực tế", level=2)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-019.01", "Hệ thống phải so sánh ngày được cấp trong phép/KHB với ngày bay thực tế xác định từ điện văn, FPL và mốc thời gian khai thác đã chuẩn hóa."),
+        ("FR-OPT-019.02", "Quy tắc phải xử lý chuyến qua đêm, ETA có dấu +, cửa sổ 120 giờ và đổi ngày/tháng/năm trước khi kết luận sai ngày."),
+        ("FR-OPT-019.03", "Khi chênh ngày ngoài quy tắc cho phép, hệ thống phải tạo cảnh báo nêu CALLSIGN, ngày cấp, ngày thực tế, FROM–TO và nguồn xác định."),
+        ("FR-OPT-019.04", "Cảnh báo phải hiển thị tại dòng chuyến bay và/hoặc chuông runtime theo phạm vi người nhận, chống trùng theo chuyến–ngày–loại cảnh báo."),
+        ("FR-OPT-019.05", "Thiếu hoặc mâu thuẫn nguồn thời gian phải trả Chưa xác định, không tự sửa ngày hoặc kết luận sai."),
+        ("FR-OPT-019.06", "Người có quyền được xác nhận ngoại lệ hoặc sửa dữ liệu; hệ thống phải tính lại và đóng cảnh báo khi hai ngày phù hợp."),
+        ("FR-OPT-019.07", "Phải lưu nguồn bằng chứng, quy tắc, ngày trước/sau, người xử lý và thời điểm."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-019-01", "Ngày cấp trùng ngày thực tế", "Không cảnh báo"),
+        ("TC-OPT-019-02", "Sai một ngày không thuộc trường hợp qua đêm", "Cảnh báo đúng nội dung"),
+        ("TC-OPT-019-03", "Chuyến qua đêm/ETA+ hợp lệ", "Không cảnh báo sai"),
+        ("TC-OPT-019-04", "Sửa ngày về phù hợp", "Đóng cảnh báo và có audit"),
+    ])
+
+    doc.add_heading("7.24. FR-OPT-020 – Bổ sung trường Mục đích chuyến bay trong KHB ngày", level=2)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-020.01", "KHB ngày phải có trường PURPOSE/Mục đích chuyến bay tại màn hình thêm, sửa, xem, duyệt và danh sách phù hợp."),
+        ("FR-OPT-020.02", "Giá trị phải chọn/đối chiếu từ danh mục M_FLY_PURPOSE theo PURPOSE_CODE; không lưu tên tự do khi quy trình yêu cầu mã chuẩn."),
+        ("FR-OPT-020.03", "Quy định bắt buộc/tùy chọn phải theo loại chuyến bay; giá trị không hợp lệ phải bị chặn trước khi lưu/duyệt."),
+        ("FR-OPT-020.04", "PURPOSE phải được truyền nhất quán qua API/package, lưu vào KHB ngày và giữ khi Accepted, finish, đổi ngày hoặc đồng bộ."),
+        ("FR-OPT-020.05", "Trường phải có trong tìm kiếm/lọc, lịch sử trước–sau, export Bravo, báo cáo và điện văn/đầu ra nơi mẫu nghiệp vụ yêu cầu."),
+        ("FR-OPT-020.06", "Dữ liệu cũ chưa có PURPOSE phải hiển thị Chưa xác định/để trống theo chính sách; không tự gán sai. Backfill nếu có phải có mapping và báo cáo đối soát."),
+        ("FR-OPT-020.07", "Thay đổi PURPOSE trên KHB đã build phải kích hoạt cơ chế FR-OPT-018 và được audit đầy đủ."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-020-01", "Tạo/sửa với PURPOSE hợp lệ", "Lưu, hiển thị và truy xuất đúng mã"),
+        ("TC-OPT-020-02", "PURPOSE không có trong danh mục", "Bị chặn"),
+        ("TC-OPT-020-03", "KHB đi qua Accepted/finish/export", "PURPOSE không bị mất hoặc đổi"),
+        ("TC-OPT-020-04", "Sửa PURPOSE của KHB đã build", "Build được đánh dấu/cập nhật theo FR-OPT-018"),
+    ])
+
+    doc.add_heading("7.25. Truy vết FR-OPT-014…FR-OPT-020", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-014", "CanlendarFlights, BRAVO_EXPORT_PKG, T_DAY_FLIGHTS_BRAVO", "Log 3 lượt <180 giây, execution plan, đối soát nguồn–đích"),
+        ("FR-OPT-015", "Calendar Accepted và xử lý phím F8", "Video/ảnh thao tác, DB trước–sau, audit và TC-OPT-015-*"),
+        ("FR-OPT-016", "P_FLY/MESSAGE_PKG, T_PLAN_MESSAGE, hàng chờ AFTN", "Log 3 lượt <180 giây, đối soát KHB–message"),
+        ("FR-OPT-017", "Inbox.aspx, GetInboxBySearchLogFile", "Kết quả 8/30/max ngày, plan/index và phân trang"),
+        ("FR-OPT-018", "KHB ngày, build/version/message", "Lịch sử sửa, trạng thái build và phiên bản trước/sau"),
+        ("FR-OPT-019", "Bộ đối chiếu ngày và Notification", "Dữ liệu ngày đúng/sai/qua đêm, cảnh báo và audit"),
+        ("FR-OPT-020", "M_FLY_PURPOSE, KHB ngày, API/package/export", "Danh mục, DB, màn hình, file/điện văn và lịch sử"),
+    ])
+
 
 def add_alt002_specification(doc):
     if not ALT002_SOURCE.exists():
@@ -973,7 +1120,7 @@ def build():
         elif chapter == 7:
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
-            next_section = 18
+            next_section = 26
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
