@@ -101,7 +101,7 @@
 
 #cancelledTable {
     width: 100%;
-    min-width: 900px;
+    min-width: 1100px;
     table-layout: fixed;
 }
 
@@ -130,13 +130,21 @@
     width: 155px;
 }
 
-#cancelledTable th:nth-child(11),
-#cancelledTable td:nth-child(11) {
+#cancelledTable th:nth-child(4),
+#cancelledTable td:nth-child(4),
+#cancelledTable th:nth-child(5),
+#cancelledTable td:nth-child(5) {
+    width: 95px;
+    white-space: nowrap;
+}
+
+#cancelledTable th:nth-child(13),
+#cancelledTable td:nth-child(13) {
     width: 135px;
 }
 
-#cancelledTable th:nth-child(12),
-#cancelledTable td:nth-child(12) {
+#cancelledTable th:nth-child(14),
+#cancelledTable td:nth-child(14) {
     width: 65px;
 }
 

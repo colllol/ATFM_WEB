@@ -4,7 +4,7 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.css?v=20260812-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260813-7") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260813-8") %>" />
 
     <section class="impv2" data-page-method-url="ImportsPermSC_LD_V2.aspx/">
         <header class="impv2__header">
@@ -193,7 +193,7 @@
                     <button id="btnCloseCancelledFlights" type="button" aria-label="Đóng">×</button>
                 </div>
                 <div class="impv2__table-wrap"><table id="cancelledTable"><thead><tr>
-                    <th>NO</th><th>CALLSIGN</th><th>PERM</th><th>FROM</th><th>TO</th>
+                    <th>NO</th><th>CALLSIGN</th><th>PERM</th><th>BEGIN</th><th>END</th><th>FROM</th><th>TO</th>
                     <th>DAILY</th><th>ETD</th><th>ETA</th><th>OPER</th><th>TYPE</th><th>REMARK</th><th>PURPOSE</th>
                     <th>HỦY</th>
                 </tr></thead><tbody></tbody></table></div>
@@ -231,5 +231,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-10") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-11") %>"></script>
 </asp:Content>
