@@ -76,6 +76,10 @@
         var d = new Date(), m = String(d.getMonth() + 1), day = String(d.getDate());
         return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
     }
+    function setSeasonBySystemDate() {
+        var month = new Date().getMonth() + 1;
+        $('#impSeason').val(month >= 3 && month <= 10 ? 'S' : 'W');
+    }
     function normalizeDate(text) {
         var months = { JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06', JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12' };
         var s = upper(text).replace(/[.\/]/g, '-').replace(/\s+/g, '-').replace(/-+/g, '-'), m, year;
@@ -338,7 +342,8 @@
             showResult(result.Message, result.Success ? 'success' : 'error', result.Errors);
             if (result.Success) {
                 renderConfirmation(result);
-                searchPending(true);
+                pendingRows = [];
+                $('#pendingPanel').prop('hidden', true);
                 $('#btnApplyCancellation').prop('disabled', false);
                 $('#confirmPanel').prop('hidden', false);
                 $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="3"]').addClass('is-active');
@@ -419,7 +424,7 @@
         $('#pendingCheckAll').prop('checked', false);
     }
 
-    function searchPending(silent) {
+    function searchPending(silent, initialLoad) {
         if (!silent) setLoading(true);
         return $.ajax({
             type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/SearchPending',
@@ -433,14 +438,17 @@
             if (!result.Success) {
                 pendingRows = [];
                 renderPending();
+                if (initialLoad) $('#pendingPanel').prop('hidden', true);
                 if (!silent) showResult(result.Message || 'Khong the tai danh sach cho xu ly.', 'error');
                 return;
             }
             pendingRows = result.Rows || [];
             renderPending();
+            if (initialLoad) $('#pendingPanel').prop('hidden', pendingRows.length === 0);
         }).fail(function (xhr) {
             pendingRows = [];
             renderPending();
+            if (initialLoad) $('#pendingPanel').prop('hidden', true);
             if (!silent) showResult('Khong the tai danh sach cho xu ly: ' + (xhr.responseText || xhr.statusText), 'error');
         }).always(function () { if (!silent) setLoading(false); });
     }
@@ -532,6 +540,7 @@
     $(function () {
         setLoading(false);
         $('#impPermDate').val(today());
+        setSeasonBySystemDate();
         $('#btnAnalyze').on('click', parse);
         $('#btnViewFormat').on('click', showFormatGuide);
         $('#btnCloseFormat,#btnCloseFormatBottom').on('click', hideFormatGuide);
@@ -569,6 +578,6 @@
         $('#previewSearch').on('input', render);
         $('#previewTable').on('change', '.preview-row-check', function () { rows[+$(this).closest('tr').data('row-index')].selected = this.checked; });
         $('#previewCheckAll').on('change', function () { var checked = this.checked; rows.forEach(function (x) { if (x.status !== 'ERROR') x.selected = checked; }); render(); });
-        searchPending(true);
+        searchPending(true, true);
     });
 }(jQuery));

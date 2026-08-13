@@ -134,7 +134,7 @@
             <div id="importResult" class="impv2__result-text"></div>
         </section>
 
-        <section id="pendingPanel" class="impv2__panel impv2__pending">
+        <section id="pendingPanel" class="impv2__panel impv2__pending" hidden>
             <div class="impv2__panel-title">
                 <h3>DANH S&Aacute;CH H&#7910;Y CHUY&#7870;N &#272;ANG CH&#7900; X&Aacute;C NH&#7852;N</h3>
                 <span id="pendingCount" class="impv2__pending-count">0 d&ograve;ng</span>
@@ -215,5 +215,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-7") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-8") %>"></script>
 </asp:Content>
