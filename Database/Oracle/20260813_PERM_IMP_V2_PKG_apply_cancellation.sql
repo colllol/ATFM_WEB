@@ -153,6 +153,39 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
         RETURN v_oper;
     END resolve_oper;
 
+    FUNCTION clean_time
+    (
+        P_VALUE IN VARCHAR2,
+        P_FIELD IN VARCHAR2
+    ) RETURN VARCHAR2 IS
+        v_value    VARCHAR2(20);
+        v_base     VARCHAR2(4);
+        v_next_day BOOLEAN;
+    BEGIN
+        v_value := UPPER(REPLACE(REPLACE(TRIM(P_VALUE), ':', ''), ' ', ''));
+        v_value := REGEXP_REPLACE(v_value, '\+1$', '+');
+        v_next_day := REGEXP_LIKE(v_value, '\+$');
+        v_base := REGEXP_REPLACE(v_value, '\+$', '');
+
+        IF NOT REGEXP_LIKE(v_base, '^[0-9]{3,4}$') THEN
+            RAISE_APPLICATION_ERROR(
+                -20825,
+                P_FIELD || ' khong hop le; yeu cau HH24MI, co the kem + hoac +1'
+            );
+        END IF;
+
+        v_base := LPAD(v_base, 4, '0');
+        IF TO_NUMBER(SUBSTR(v_base, 1, 2)) > 23
+           OR TO_NUMBER(SUBSTR(v_base, 3, 2)) > 59 THEN
+            RAISE_APPLICATION_ERROR(
+                -20825,
+                P_FIELD || ' khong hop le; yeu cau HH24MI, co the kem + hoac +1'
+            );
+        END IF;
+
+        RETURN v_base || CASE WHEN v_next_day THEN '+' ELSE NULL END;
+    END clean_time;
+
     PROCEDURE INSERT_CANCELLATION
     (
         P_CALLSIGN        IN VARCHAR2,
@@ -185,6 +218,11 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
         v_perm_date DATE;
         v_user      VARCHAR2(100);
         v_oper      VARCHAR2(10);
+        v_callsign  VARCHAR2(30);
+        v_from_airp VARCHAR2(4);
+        v_to_airp   VARCHAR2(4);
+        v_etd       VARCHAR2(5);
+        v_eta       VARCHAR2(5);
         v_error_code NUMBER;
         v_error_msg  VARCHAR2(1000);
     BEGIN
@@ -194,7 +232,12 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
         v_perm_date := CASE WHEN TRIM(P_PERMDATE) IS NULL THEN NULL
                             ELSE TO_DATE(TRIM(P_PERMDATE), 'FXDD-MM-YYYY') END;
         v_user := clean_user(P_CREATED_BY);
-        v_oper := resolve_oper(P_CALLSIGN);
+        v_callsign := UPPER(TRIM(PERM_IMP_PKG.GetCallSign_ICAO(P_CALLSIGN)));
+        v_from_airp := UPPER(TRIM(PERM_IMP_PKG.Getaero(P_FROM_AIRP)));
+        v_to_airp := UPPER(TRIM(PERM_IMP_PKG.Getaero(P_TO_AIRP)));
+        v_etd := clean_time(P_ETD, 'ETD');
+        v_eta := clean_time(P_ETA, 'ETA');
+        v_oper := resolve_oper(v_callsign);
 
         IF v_to_date < v_from_date THEN
             RAISE_APPLICATION_ERROR(-20823, 'Den ngay nho hon Tu ngay');
@@ -215,10 +258,10 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
         VALUES
         (
             v_id, TRIM(P_IMPORT_BATCH_ID),
-            REGEXP_REPLACE(UPPER(TRIM(P_CALLSIGN)), '[^A-Z0-9]', ''),
+            v_callsign,
             v_from_date, v_to_date, TRIM(P_DAILY), UPPER(TRIM(P_CRAFT)),
-            UPPER(TRIM(P_FROM_AIRP)), UPPER(TRIM(P_TO_AIRP)),
-            TRIM(P_ETD), TRIM(P_ETA), UPPER(TRIM(P_VIA)),
+            v_from_airp, v_to_airp,
+            v_etd, v_eta, UPPER(TRIM(P_VIA)),
             NVL(UPPER(TRIM(P_PERMTYPE)), 'LD'), UPPER(TRIM(P_FLIGHTTYPE)),
             TRIM(P_REMARK), v_perm_date, UPPER(TRIM(P_AUTHOR)),
             v_oper, UPPER(TRIM(P_SEASON)),
