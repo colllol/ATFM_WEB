@@ -288,7 +288,7 @@
                 runat="server" CssClass="btn btn-sm btn-primary btn-bold" />
             <asp:Button ID="btnXoaThayDoi" Text="Delete thay doi" OnClick="btnXoaThayDoi_Click"
                 runat="server" CssClass="btn btn-sm btn-primary btn-bold" />
-            <asp:GridView ID="grdHuyChuyen" runat="server" AutoGenerateColumns="false">
+            <asp:GridView ID="grdHuyChuyen" Width="100%" runat="server" AutoGenerateColumns="false">
                 <Columns>
                     <asp:TemplateField>
                         <ItemTemplate>

@@ -148,7 +148,7 @@
                 <th>HỦY</th>
             </tr></thead><tbody></tbody></table></div>
             <div class="impv2__primary-actions">
-                <button id="btnDeleteCancellation" type="button" class="is-danger">DELETE HỦY CHUYẾN</button>
+                <button id="btnDeleteCancellation" type="button" class="is-danger">XÓA CHUYẾN HỦY</button>
                 <button id="btnApplyCancellation" type="button">XÁC NHẬN HỦY CHUYẾN</button>
             </div>
         </section>
