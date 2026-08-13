@@ -4,7 +4,7 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.css?v=20260812-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260813-5") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260813-6") %>" />
 
     <section class="impv2" data-page-method-url="ImportsPermSC_LD_V2.aspx/">
         <header class="impv2__header">
@@ -175,17 +175,33 @@
                 <th>NO</th><th>CALLSIGN</th><th>FROM DATE</th><th>TO DATE</th><th>DAILY</th>
                 <th>CRAFT</th><th>FROM</th><th>TO</th><th>ETD</th><th>ETA</th><th>VIA</th><th>REMARK</th>
             </tr></thead><tbody></tbody></table></div>
-            <h4>DANH SÁCH CHUYẾN BAY BỊ HỦY</h4>
-            <div class="impv2__table-wrap"><table id="cancelledTable"><thead><tr>
-                <th>NO</th><th>CALLSIGN</th><th>PERM</th><th>BEGIN</th><th>END</th><th>FROM</th><th>TO</th>
-                <th>DAILY</th><th>ETD</th><th>ETA</th><th>OPER</th><th>TYPE</th><th>REMARK</th><th>PURPOSE</th>
-                <th>HỦY</th>
-            </tr></thead><tbody></tbody></table></div>
             <div class="impv2__primary-actions">
                 <button id="btnDeleteCancellation" type="button" class="is-danger">XÓA CHUYẾN HỦY</button>
+                <button id="btnViewCancelledFlights" type="button">XEM DANH SÁCH CHUYẾN BAY BỊ HỦY</button>
                 <button id="btnApplyCancellation" type="button">XÁC NHẬN HỦY CHUYẾN</button>
             </div>
         </section>
+
+        <div id="cancelledFlightsDialog" class="impv2__guide" hidden aria-hidden="true"
+            role="dialog" aria-modal="true" aria-labelledby="cancelledFlightsTitle">
+            <div class="impv2__guide-card impv2__cancelled-card">
+                <div class="impv2__guide-header">
+                    <div>
+                        <h3 id="cancelledFlightsTitle">DANH SÁCH CHUYẾN BAY BỊ HỦY</h3>
+                        <span>Tổng số: <b id="cancelledFlightCount">0</b></span>
+                    </div>
+                    <button id="btnCloseCancelledFlights" type="button" aria-label="Đóng">×</button>
+                </div>
+                <div class="impv2__table-wrap"><table id="cancelledTable"><thead><tr>
+                    <th>NO</th><th>CALLSIGN</th><th>PERM</th><th>BEGIN</th><th>END</th><th>FROM</th><th>TO</th>
+                    <th>DAILY</th><th>ETD</th><th>ETA</th><th>OPER</th><th>TYPE</th><th>REMARK</th><th>PURPOSE</th>
+                    <th>HỦY</th>
+                </tr></thead><tbody></tbody></table></div>
+                <div class="impv2__guide-actions">
+                    <button id="btnCloseCancelledFlightsBottom" type="button" class="is-muted">ĐÓNG</button>
+                </div>
+            </div>
+        </div>
 
         <div id="formatGuide" class="impv2__guide" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="formatGuideTitle">
             <div class="impv2__guide-card">
@@ -215,5 +231,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-8") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-9") %>"></script>
 </asp:Content>

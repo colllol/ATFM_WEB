@@ -72,6 +72,15 @@
         $('#formatGuide').prop('hidden', true).attr('aria-hidden', 'true');
         $('#btnViewFormat').focus();
     }
+    function showCancelledFlights() {
+        if (!$('#cancelledTable tbody tr').length) return;
+        $('#cancelledFlightsDialog').prop('hidden', false).attr('aria-hidden', 'false');
+        $('#btnCloseCancelledFlights').focus();
+    }
+    function hideCancelledFlights() {
+        $('#btnViewCancelledFlights').focus();
+        $('#cancelledFlightsDialog').prop('hidden', true).attr('aria-hidden', 'true');
+    }
     function today() {
         var d = new Date(), m = String(d.getMonth() + 1), day = String(d.getDate());
         return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
@@ -393,6 +402,8 @@
         });
         $('#importedTable tbody').html(imported);
         $('#cancelledTable tbody').html(cancelled);
+        $('#cancelledFlightCount').text((result.CancelledFlights || []).length);
+        $('#btnViewCancelledFlights').prop('disabled', !(result.CancelledFlights || []).length);
     }
 
     function selectedPendingIds() {
@@ -545,7 +556,14 @@
         $('#btnViewFormat').on('click', showFormatGuide);
         $('#btnCloseFormat,#btnCloseFormatBottom').on('click', hideFormatGuide);
         $('#formatGuide').on('click', function (event) { if (event.target === this) hideFormatGuide(); });
-        $(document).on('keydown', function (event) { if (event.key === 'Escape' && !$('#formatGuide').prop('hidden')) hideFormatGuide(); });
+        $('#btnViewCancelledFlights').on('click', showCancelledFlights);
+        $('#btnCloseCancelledFlights,#btnCloseCancelledFlightsBottom').on('click', hideCancelledFlights);
+        $('#cancelledFlightsDialog').on('click', function (event) { if (event.target === this) hideCancelledFlights(); });
+        $(document).on('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            if (!$('#cancelledFlightsDialog').prop('hidden')) hideCancelledFlights();
+            else if (!$('#formatGuide').prop('hidden')) hideFormatGuide();
+        });
         $('#btnCopyFormat').on('click', function () {
             var sample = $('#formatGuideExample').text();
             if (navigator.clipboard && navigator.clipboard.writeText) {
