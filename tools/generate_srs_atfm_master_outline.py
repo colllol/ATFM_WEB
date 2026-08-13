@@ -241,6 +241,100 @@ def add_ai_nl2sql_specification(doc):
     )
 
 
+def add_opt001_003_specification(doc):
+    doc.add_heading("7.3. Đặc tả nhóm sửa đổi, bổ sung chức năng hiện hữu", level=2)
+    doc.add_paragraph(
+        "FR-OPT-001, FR-OPT-002 và FR-OPT-003 là yêu cầu nâng cấp trên luồng INBOX/FPL hiện hữu, "
+        "không tạo phân hệ nghiệp vụ độc lập. Việc triển khai phải bảo toàn dữ liệu, URL, phân quyền "
+        "và các thao tác đang sử dụng; thay đổi cơ sở dữ liệu phải có phương án sao lưu và rollback."
+    )
+    table(doc, ["Mã", "Loại thay đổi", "Chức năng hiện hữu bị tác động", "Kết quả mong đợi"], [
+        ("FR-OPT-001", "Mở rộng chính sách lưu giữ", "Tiếp nhận, lưu trữ và khai thác điện văn INBOX", "Điện văn được giữ đủ thời hạn cấu hình và vẫn truy xuất được"),
+        ("FR-OPT-002", "Bổ sung cảnh báo nghiệp vụ", "Phân tích/đối chiếu điện văn FPL với KHB ngày", "Nhận diện và cảnh báo NOPERM có giải thích"),
+        ("FR-OPT-003", "Sửa quy tắc thời gian", "Ghép nối và hiển thị FPL", "Xử lý đúng cửa sổ 120 giờ, kể cả khác ngày"),
+    ])
+
+    doc.add_heading("7.4. FR-OPT-001 – Mở rộng thời gian lưu trữ điện văn INBOX", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Ngăn điện văn bị loại bỏ sớm và bảo đảm tra cứu, đối soát, kiểm tra sau khai thác."),
+        ("Phạm vi sửa đổi", "Dữ liệu điện văn, tệp/log nguồn và bản ghi liên kết cần cho việc tái hiện nội dung INBOX."),
+        ("Không bao gồm", "Không đồng nghĩa tự động mở toàn bộ khoảng ngày trên giao diện; phạm vi tìm kiếm được quản lý bởi yêu cầu tra cứu riêng."),
+        ("Tham số cần phê duyệt", "INBOX_RETENTION_DAYS – số ngày lưu tối thiểu; giá trị production do đơn vị nghiệp vụ phê duyệt."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-001.01", "Hệ thống phải lưu điện văn INBOX và dữ liệu liên quan tối thiểu bằng INBOX_RETENTION_DAYS tính từ thời điểm nhận."),
+        ("FR-OPT-001.02", "Thời hạn lưu phải cấu hình được mà không sửa mã nguồn và chỉ người có quyền quản trị mới được thay đổi."),
+        ("FR-OPT-001.03", "Tác vụ dọn dữ liệu không được xóa bản ghi còn trong thời hạn lưu hoặc làm mất liên kết giữa điện văn, nội dung và log nguồn."),
+        ("FR-OPT-001.04", "Điện văn còn thời hạn phải xem được nội dung và thông tin nhận bằng chức năng INBOX hiện hữu theo đúng phân quyền."),
+        ("FR-OPT-001.05", "Khi dọn dữ liệu hết hạn, hệ thống phải ghi nhật ký số lượng, khoảng thời gian, người/tác vụ thực hiện và kết quả."),
+        ("FR-OPT-001.06", "Nâng cấp không được xóa dữ liệu lịch sử hiện có; trước thay đổi cấu trúc/chính sách phải có sao lưu và phương án rollback."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-001-01", "Điện văn có tuổi nhỏ hơn hoặc bằng thời hạn cấu hình", "Không bị dọn và xem được tại INBOX"),
+        ("TC-OPT-001-02", "Điện văn quá hạn và chạy tác vụ dọn", "Được xử lý theo chính sách, có log đầy đủ, không tạo bản ghi mồ côi"),
+        ("TC-OPT-001-03", "Thay đổi thời hạn bởi tài khoản không có quyền", "Bị từ chối và có dấu vết an toàn"),
+        ("TC-OPT-001-04", "Nâng cấp trên dữ liệu lịch sử", "Không mất dữ liệu; có thể rollback theo phương án đã duyệt"),
+    ])
+
+    doc.add_heading("7.5. FR-OPT-002 – Cảnh báo NOPERM cho điện văn không có trong KHB ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Cảnh báo người khai thác khi điện văn chuyến bay không tìm thấy KHB ngày/phép bay phù hợp."),
+        ("Nguồn vào", "Điện văn đã phân tích và dữ liệu KHB ngày/phép bay có hiệu lực."),
+        ("Kết quả", "Trạng thái NOPERM hiển thị nổi bật nhưng không tự thay thế quyết định nghiệp vụ của người khai thác."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-002.01", "Sau khi phân tích điện văn, hệ thống phải đối chiếu chuyến bay với KHB ngày/phép bay theo số hiệu, ngày bay, sân bay đi/đến và điều kiện hiệu lực áp dụng."),
+        ("FR-OPT-002.02", "Chỉ gắn NOPERM khi không có bản ghi phù hợp sau khi đã chuẩn hóa số hiệu, ngày giờ và mã sân bay."),
+        ("FR-OPT-002.03", "Cảnh báo phải hiển thị rõ tại danh sách/chi tiết liên quan và cung cấp lý do không khớp để người dùng kiểm tra."),
+        ("FR-OPT-002.04", "Hệ thống phải tính lại trạng thái khi điện văn, KHB ngày hoặc phép bay liên quan được thêm/sửa/duyệt."),
+        ("FR-OPT-002.05", "Không được cảnh báo NOPERM nếu tồn tại ít nhất một bản ghi phù hợp và còn hiệu lực; không dùng dữ liệu nháp/chưa duyệt nếu quy trình không cho phép."),
+        ("FR-OPT-002.06", "Việc xác nhận hoặc xử lý cảnh báo phải tuân theo phân quyền và được ghi nhật ký người dùng, thời gian, trạng thái trước/sau."),
+        ("FR-OPT-002.07", "Lỗi dịch vụ đối chiếu hoặc thiếu dữ liệu bắt buộc phải hiển thị là 'Chưa xác định', không được kết luận NOPERM sai."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-002-01", "Điện văn khớp KHB ngày còn hiệu lực", "Không có cảnh báo NOPERM"),
+        ("TC-OPT-002-02", "Không có KHB ngày/phép bay phù hợp", "Hiển thị NOPERM và lý do đối chiếu"),
+        ("TC-OPT-002-03", "Bổ sung/duyệt KHB phù hợp sau khi đã cảnh báo", "Trạng thái được tính lại và bỏ cảnh báo"),
+        ("TC-OPT-002-04", "Dịch vụ/dữ liệu đối chiếu lỗi", "Hiển thị Chưa xác định, không gắn NOPERM"),
+    ])
+
+    doc.add_heading("7.6. FR-OPT-003 – Áp dụng quy tắc 120 giờ ICAO cho hiển thị FPL", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Ghép nối và hiển thị FPL theo mốc thời gian khai thác thay vì chỉ theo ngày lịch, hỗ trợ FPL được nộp trước tối đa 120 giờ."),
+        ("Mốc so sánh", "Thời điểm nhận/nộp FPL và EOBT hoặc thời điểm dự kiến khởi hành tương đương sau khi chuẩn hóa múi giờ."),
+        ("Cửa sổ", "120 giờ; nên quản lý bằng tham số cấu hình nhưng giá trị nghiệp vụ mặc định là 120."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-003.01", "Hệ thống phải cho phép ghép nối và hiển thị FPL khi EOBT nằm trong cửa sổ từ thời điểm nộp/nhận đến không quá 120 giờ sau đó."),
+        ("FR-OPT-003.02", "Việc đối chiếu không được giới hạn bằng điều kiện cùng ngày; phải xử lý đúng trường hợp FPL và chuyến bay cách nhau nhiều ngày trong cửa sổ."),
+        ("FR-OPT-003.03", "Các mốc thời gian phải được chuẩn hóa về cùng múi giờ trước khi tính chênh lệch và phải xử lý chính xác qua thời điểm đổi ngày/tháng/năm."),
+        ("FR-OPT-003.04", "FPL vượt quá cửa sổ 120 giờ không được tự động gắn với chuyến bay; hệ thống phải ghi/hiển thị nguyên nhân loại trừ khi cần kiểm tra."),
+        ("FR-OPT-003.05", "Tại đúng biên 120 giờ, FPL được coi là hợp lệ; lớn hơn 120 giờ là không hợp lệ theo quy tắc này."),
+        ("FR-OPT-003.06", "Nếu thiếu hoặc sai định dạng mốc thời gian bắt buộc, hệ thống phải đưa về trạng thái Chưa xác định để xử lý thủ công, không tự suy đoán."),
+        ("FR-OPT-003.07", "Thay đổi phải tương thích với các loại điện văn cập nhật/hủy liên quan và không làm nhân đôi bản ghi FPL đang hiển thị."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-003-01", "EOBT cách thời điểm nhận 119 giờ 59 phút", "FPL được ghép nối/hiển thị"),
+        ("TC-OPT-003-02", "EOBT cách đúng 120 giờ", "FPL được ghép nối/hiển thị"),
+        ("TC-OPT-003-03", "EOBT cách 120 giờ 01 phút", "Không tự động ghép; có lý do loại trừ"),
+        ("TC-OPT-003-04", "Khoảng thời gian đi qua ngày/tháng/năm", "Chênh lệch được tính đúng sau chuẩn hóa"),
+        ("TC-OPT-003-05", "Thiếu EOBT hoặc thời điểm nhận", "Trạng thái Chưa xác định, không ghép sai"),
+    ])
+
+    doc.add_heading("7.7. Quy tắc chung và truy vết kiểm định", level=2)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-001", "Mọi giá trị thời hạn/cửa sổ phải dùng thời gian máy chủ hoặc thời gian nghiệp vụ đã chuẩn hóa, không phụ thuộc đồng hồ trình duyệt."),
+        ("BR-OPT-002", "Trạng thái cảnh báo là kết quả hỗ trợ khai thác; thao tác xác nhận/sửa dữ liệu phải theo quyền hiện hành."),
+        ("BR-OPT-003", "Không được làm thay đổi nội dung điện văn gốc; dữ liệu chuẩn hóa và kết quả đối chiếu phải truy vết được về nguồn."),
+        ("BR-OPT-004", "Các thay đổi phải có log, giám sát lỗi và kịch bản rollback trước khi triển khai production."),
+    ])
+    table(doc, ["Yêu cầu", "Thiết kế/thành phần", "Bằng chứng nghiệm thu"], [
+        ("FR-OPT-001", "Kho điện văn, tác vụ retention, INBOX", "Cấu hình, log dọn dữ liệu, truy vấn DB, ảnh màn hình và TC-OPT-001-*"),
+        ("FR-OPT-002", "Bộ phân tích/đối chiếu KHB ngày, giao diện cảnh báo", "Dữ liệu mẫu khớp/không khớp, log tính lại, ảnh và TC-OPT-002-*"),
+        ("FR-OPT-003", "Bộ ghép FPL và xử lý thời gian", "Bộ dữ liệu biên 120 giờ, log đối chiếu, ảnh và TC-OPT-003-*"),
+    ])
+
+
 def add_alt002_specification(doc):
     if not ALT002_SOURCE.exists():
         raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-ALT-002: {ALT002_SOURCE}")
@@ -652,6 +746,9 @@ def build():
         elif chapter == 9:
             add_ai_nl2sql_specification(doc)
             next_section = 5
+        elif chapter == 7:
+            add_opt001_003_specification(doc)
+            next_section = 8
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
