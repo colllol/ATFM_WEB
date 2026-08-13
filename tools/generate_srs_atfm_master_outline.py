@@ -335,6 +335,114 @@ def add_opt001_003_specification(doc):
     ])
 
 
+def add_opt006_010_specification(doc):
+    doc.add_heading("7.8. FR-OPT-006 – Phân loại chuyến bay Quốc nội/Quốc tế tự động", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Bổ sung thuộc tính phân loại và tự động xác định trên dữ liệu chuyến bay hiện hữu."),
+        ("Mục tiêu", "Thống nhất cách lọc, thống kê và xuất dữ liệu Quốc nội/Quốc tế, giảm phân loại thủ công."),
+        ("Nguyên tắc", "Phân loại theo quốc gia của sân bay đi/đến sau khi chuẩn hóa mã sân bay; không suy đoán khi thiếu danh mục."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-006.01", "Hệ thống phải xác định Quốc nội khi cả sân bay đi và sân bay đến thuộc Việt Nam; xác định Quốc tế khi ít nhất một đầu thuộc quốc gia khác."),
+        ("FR-OPT-006.02", "Việc phân loại phải sử dụng danh mục sân bay/quốc gia dùng chung và hỗ trợ mã ICAO/IATA sau bước chuẩn hóa."),
+        ("FR-OPT-006.03", "Thiếu hoặc không nhận diện được một đầu sân bay phải trả trạng thái Chưa xác định, không mặc định Quốc nội hoặc Quốc tế."),
+        ("FR-OPT-006.04", "Trạng thái phải được tính lại khi sân bay đi/đến hoặc danh mục sân bay thay đổi và được dùng thống nhất khi hiển thị, tìm kiếm, thống kê, export."),
+        ("FR-OPT-006.05", "Dữ liệu lịch sử cần được phân loại lại bằng tác vụ có kiểm soát; kết quả phải ghi số lượng theo từng trạng thái và lỗi."),
+    ])
+    table(doc, ["Mã kiểm thử", "Dữ liệu", "Kết quả"], [
+        ("TC-OPT-006-01", "VVNB–VVTS", "Quốc nội"),
+        ("TC-OPT-006-02", "VVNB–WSSS", "Quốc tế"),
+        ("TC-OPT-006-03", "Sân bay không có trong danh mục", "Chưa xác định, có lý do"),
+    ])
+
+    doc.add_heading("7.9. FR-OPT-007 – Export dữ liệu tách ba loại file ALL, LD, OF", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Mở rộng chức năng export hiện hữu để tạo bộ ba đầu ra độc lập."),
+        ("Quy ước", "ALL: toàn bộ dữ liệu hợp lệ; LD: chuyến bay hạ cánh/đến; OF: chuyến bay bay qua."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-007.01", "Người dùng có quyền export phải chọn được ngày/khoảng dữ liệu và tạo ba file ALL, LD, OF trong một lần thao tác."),
+        ("FR-OPT-007.02", "ALL phải chứa hợp của các nhóm dữ liệu thuộc phạm vi export và không nhân đôi cùng một bản ghi nghiệp vụ."),
+        ("FR-OPT-007.03", "LD và OF phải được tách theo quy tắc loại hình bay đã phê duyệt; một bản ghi không được xuất sai nhóm."),
+        ("FR-OPT-007.04", "Ba file phải dùng cùng phiên bản dữ liệu, cùng thời điểm chốt, cấu trúc cột/định dạng ngày giờ thống nhất và tên file nhận diện được loại, ngày, lần tạo."),
+        ("FR-OPT-007.05", "Hệ thống phải hiển thị số bản ghi từng file, cảnh báo file rỗng và chỉ thông báo thành công khi các file bắt buộc được tạo đầy đủ."),
+        ("FR-OPT-007.06", "Mỗi lần export phải ghi người thực hiện, tham số, thời gian, số dòng, tên/checksum file và lỗi nếu có; việc tải file tuân theo phân quyền."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-007-01", "Dữ liệu có cả LD và OF", "Sinh đủ ALL, LD, OF; số liệu đối soát đúng"),
+        ("TC-OPT-007-02", "Một nhóm không có dữ liệu", "Cảnh báo rõ file rỗng, không làm sai hai file còn lại"),
+        ("TC-OPT-007-03", "Lỗi khi tạo một file bắt buộc", "Không báo hoàn tất toàn bộ; log chỉ rõ file lỗi"),
+    ])
+
+    doc.add_heading("7.10. FR-OPT-008 – Chức năng Edit info chuyến bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Bổ sung/sửa màn hình cập nhật thông tin trên bản ghi chuyến bay hiện hữu."),
+        ("Mục tiêu", "Cho phép hiệu chỉnh dữ liệu sai hoặc thiếu mà vẫn kiểm soát quyền, tính hợp lệ và truy vết."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-008.01", "Chỉ người có quyền Edit mới được mở chế độ sửa và lưu; trường chỉ đọc/khóa theo trạng thái nghiệp vụ không được thay đổi."),
+        ("FR-OPT-008.02", "Hệ thống phải hiển thị dữ liệu mới nhất và kiểm tra bản ghi chưa bị người khác thay đổi trước khi lưu."),
+        ("FR-OPT-008.03", "Các trường số hiệu, ngày bay, sân bay, giờ, loại tàu bay, đăng ký và trường nghiệp vụ liên quan phải được kiểm tra bắt buộc, định dạng, danh mục và quan hệ logic."),
+        ("FR-OPT-008.04", "Khi thay đổi trường khóa đối chiếu, hệ thống phải yêu cầu xác nhận và tính lại các dữ liệu dẫn xuất như phân loại, cảnh báo, ghép điện văn."),
+        ("FR-OPT-008.05", "Lưu phải có tính nguyên tử; nếu một bước kiểm tra/cập nhật thất bại thì không được lưu một phần."),
+        ("FR-OPT-008.06", "Mỗi thay đổi phải ghi giá trị trước/sau, người sửa, thời gian và lý do; nội dung điện văn nguồn không bị sửa trực tiếp."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-008-01", "Sửa hợp lệ bởi người có quyền", "Lưu thành công và có lịch sử trước/sau"),
+        ("TC-OPT-008-02", "Dữ liệu sai định dạng hoặc tài khoản không có quyền", "Từ chối, không thay đổi dữ liệu"),
+        ("TC-OPT-008-03", "Bản ghi đã được người khác cập nhật", "Cảnh báo xung đột, yêu cầu tải lại"),
+    ])
+
+    doc.add_heading("7.11. FR-OPT-009 – Hiển thị lịch sử thao tác chuyến bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Bổ sung giao diện khai thác nhật ký T_ACTIONHISTORY/lịch sử chuyên biệt theo chuyến bay."),
+        ("Mục tiêu", "Truy vết đầy đủ ai đã làm gì, khi nào và dữ liệu thay đổi ra sao."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-009.01", "Từ danh sách/chi tiết chuyến bay, người có quyền phải mở được lịch sử đúng bản ghi bằng định danh ổn định, không chỉ dựa vào số hiệu."),
+        ("FR-OPT-009.02", "Lịch sử phải hiển thị thời gian, người dùng, thao tác, nguồn/màn hình, trạng thái kết quả, giá trị trước/sau hoặc mô tả thay đổi."),
+        ("FR-OPT-009.03", "Các thao tác thêm, sửa, đổi ngày, duyệt, hủy, export/finish và xử lý liên quan phải được ghi nhận theo phạm vi áp dụng."),
+        ("FR-OPT-009.04", "Danh sách phải sắp xếp mới nhất trước, hỗ trợ phân trang/lọc và dùng thời gian máy chủ thống nhất."),
+        ("FR-OPT-009.05", "Nhật ký là dữ liệu chỉ đọc đối với người khai thác, không cho sửa/xóa qua giao diện và phải bảo vệ thông tin nhạy cảm."),
+        ("FR-OPT-009.06", "Lỗi ghi lịch sử phải được giám sát; thao tác nghiệp vụ quan trọng không được báo hoàn tất nếu chính sách bắt buộc audit chưa được đáp ứng."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-009-01", "Thêm, sửa và đổi ngày chuyến bay", "Có đủ sự kiện đúng thứ tự và giá trị trước/sau"),
+        ("TC-OPT-009-02", "Hai chuyến cùng số hiệu khác ngày", "Lịch sử không bị trộn"),
+        ("TC-OPT-009-03", "Người dùng khai thác thử sửa/xóa log", "Không được phép"),
+    ])
+
+    doc.add_heading("7.12. FR-OPT-010 – Đồng bộ dữ liệu điện văn liên ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Sửa cơ chế liên kết điện văn và chuyến bay khi ngày điện văn khác ngày khai thác thực tế."),
+        ("Mục tiêu", "Không bỏ sót hoặc nhân đôi FPL/CHG/DLA/CNL và các điện văn liên quan tại thời điểm qua ngày."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-010.01", "Hệ thống phải xác định chuyến bay mục tiêu bằng số hiệu, sân bay, thời gian và quan hệ điện văn trong cửa sổ liên ngày được cấu hình."),
+        ("FR-OPT-010.02", "Điện văn nhận trước/sau thời điểm đổi ngày phải được liên kết với đúng ngày bay thực tế sau khi chuẩn hóa UTC/giờ nghiệp vụ."),
+        ("FR-OPT-010.03", "Điện văn cập nhật/hủy phải áp dụng đúng bản FPL gốc và đúng thứ tự thời gian; không cập nhật nhầm chuyến cùng số hiệu ở ngày liền kề."),
+        ("FR-OPT-010.04", "Đồng bộ phải idempotent: xử lý lại cùng điện văn không tạo bản ghi hoặc hiệu ứng trùng; phải dùng định danh/hash nguồn để chống trùng."),
+        ("FR-OPT-010.05", "Khi dữ liệu bị chuyển ngày, hệ thống phải cập nhật nhất quán bản ghi liên quan, giữ ngày cũ để truy vết và tính lại cảnh báo/phân loại cần thiết."),
+        ("FR-OPT-010.06", "Trường hợp có nhiều ứng viên hoặc thiếu dữ liệu phải đưa vào Chưa xác định/xử lý thủ công, không tự ghép có rủi ro."),
+        ("FR-OPT-010.07", "Mỗi lượt đồng bộ phải ghi điện văn nguồn, bản ghi đích, trạng thái trước/sau, quy tắc ghép, thời gian và lỗi; hỗ trợ chạy bù có kiểm soát."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-010-01", "FPL nhận ngày D, chuyến bay ngày D+1 trong cửa sổ", "Liên kết đúng D+1, không nhân đôi"),
+        ("TC-OPT-010-02", "CHG/DLA/CNL qua ngày", "Áp dụng đúng FPL gốc theo thứ tự"),
+        ("TC-OPT-010-03", "Xử lý lại cùng điện văn", "Kết quả không đổi, không sinh bản ghi trùng"),
+        ("TC-OPT-010-04", "Hai ứng viên cùng số hiệu ở ngày liền kề", "Không tự ghép; chuyển xử lý thủ công"),
+    ])
+
+    doc.add_heading("7.13. Ma trận truy vết FR-OPT-006…FR-OPT-010", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-006", "Danh mục sân bay, dữ liệu chuyến bay, bộ lọc/báo cáo", "Bộ dữ liệu nội địa/quốc tế/không xác định và TC-OPT-006-*"),
+        ("FR-OPT-007", "Luồng export và kho tệp", "Ba file mẫu, đối soát số dòng/checksum, log và TC-OPT-007-*"),
+        ("FR-OPT-008", "Màn hình/DAL/API cập nhật chuyến bay", "Ảnh màn hình, DB trước/sau, phân quyền và TC-OPT-008-*"),
+        ("FR-OPT-009", "T_ACTIONHISTORY và giao diện lịch sử", "Log theo định danh chuyến bay, phân quyền và TC-OPT-009-*"),
+        ("FR-OPT-010", "Bộ phân tích/đồng bộ điện văn và dữ liệu chuyến bay", "Dữ liệu liên ngày, log ghép/chống trùng và TC-OPT-010-*"),
+    ])
+
+
 def add_alt002_specification(doc):
     if not ALT002_SOURCE.exists():
         raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-ALT-002: {ALT002_SOURCE}")
@@ -748,7 +856,8 @@ def build():
             next_section = 5
         elif chapter == 7:
             add_opt001_003_specification(doc)
-            next_section = 8
+            add_opt006_010_specification(doc)
+            next_section = 14
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
