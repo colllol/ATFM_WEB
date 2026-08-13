@@ -147,7 +147,10 @@
                 <th>DAILY</th><th>ETD</th><th>ETA</th><th>OPER</th><th>TYPE</th><th>REMARK</th><th>PURPOSE</th>
                 <th>HỦY</th><th>BEGIN HỦY</th><th>END HỦY</th>
             </tr></thead><tbody></tbody></table></div>
-            <div class="impv2__primary-actions"><button id="btnApplyCancellation" type="button">XÁC NHẬN HỦY CHUYẾN</button></div>
+            <div class="impv2__primary-actions">
+                <button id="btnDeleteCancellation" type="button" class="is-danger">DELETE HỦY CHUYẾN</button>
+                <button id="btnApplyCancellation" type="button">XÁC NHẬN HỦY CHUYẾN</button>
+            </div>
         </section>
 
         <div id="formatGuide" class="impv2__guide" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="formatGuideTitle">
@@ -178,5 +181,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-1") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-2") %>"></script>
 </asp:Content>

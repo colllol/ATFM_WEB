@@ -122,6 +122,30 @@ namespace prjApplication.Tool
             return result;
         }
 
+        [WebMethod(EnableSession = true)]
+        public static ApplyResult DeleteCancellation()
+        {
+            var result = new ApplyResult();
+            try
+            {
+                object value = new clsResuftAPI().GetValueApiExtension(
+                    "PERM_IMP_PKG", "DeleteChuyenHuy_IMP", null);
+                int code;
+                result.Success = Int32.TryParse(
+                    Convert.ToString(value, CultureInfo.InvariantCulture), out code) && code == 1;
+                result.Message = result.Success
+                    ? "Đã xóa toàn bộ danh sách HỦY CHUYẾN đang chờ xử lý."
+                    : "Xóa danh sách HỦY CHUYẾN không thành công. Mã trả về: "
+                        + Convert.ToString(value, CultureInfo.InvariantCulture);
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
         private static void CheckExistingPermissions(clsResuftAPI api, IList<ImportRow> selectedRows, ImportResult result)
         {
             DataTable table = api.GetTableApiExtension("PERM_IMP_PKG", "GetPhepBayCoHuyChuyen", null);

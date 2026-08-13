@@ -381,6 +381,26 @@
         }).always(function () { setLoading(false); });
     }
 
+    function deleteCancellation() {
+        if (!window.confirm('DELETE HỦY CHUYẾN sẽ xóa toàn bộ danh sách hủy đang chờ xử lý. Bạn có chắc chắn tiếp tục?')) return;
+        setLoading(true);
+        $.ajax({
+            type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/DeleteCancellation',
+            contentType: 'application/json; charset=utf-8', dataType: 'json', data: '{}'
+        }).done(function (response) {
+            var result = response.d || {};
+            showResult(result.Message, result.Success ? 'success' : 'error');
+            if (result.Success) {
+                $('#importedTable tbody,#cancelledTable tbody').empty();
+                $('#confirmPanel').prop('hidden', true);
+                $('#btnApplyCancellation,#btnDeleteCancellation').prop('disabled', false);
+                $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="2"]').addClass('is-active');
+            }
+        }).fail(function (xhr) {
+            showResult('Không thể xóa danh sách HỦY CHUYẾN: ' + (xhr.responseText || xhr.statusText), 'error');
+        }).always(function () { setLoading(false); });
+    }
+
     $(function () {
         setLoading(false);
         $('#impPermDate').val(today());
@@ -399,6 +419,7 @@
         });
         $('#btnImportSelected').on('click', importSelected);
         $('#btnApplyCancellation').on('click', applyCancellation);
+        $('#btnDeleteCancellation').on('click', deleteCancellation);
         $('#impSource').on('paste', function (event) {
             var tableText = tableTextFromClipboard(event);
             if (!tableText) return;
