@@ -26,6 +26,7 @@ INTEGRATION_SOURCES = [
     ("5.7", "FR-INT-005", "Chuẩn hóa API chia sẻ dữ liệu", "SRS_ATFM_API_Gateway_005.docx"),
 ]
 ALT002_SOURCE = ROOT / "TaiLieu" / "SRS_Live_Fire_Message.docx"
+AI_NL2SQL_SOURCE = "SRS_NL2SQL_Vanna_Oracle_Hien_Tai.docx"
 
 
 SECTIONS = [
@@ -216,6 +217,28 @@ def add_integration_source(doc, section_number, requirement_id, title, filename)
     table(doc, ["Yêu cầu tổng thể", "Yêu cầu chi tiết", "Nguồn bằng chứng"], [
         (requirement_id, "Các FR/BR/NFR trong đặc tả nguồn", "Test case, log, ảnh màn hình, API/DB và biên bản nghiệm thu"),
     ])
+
+
+def add_ai_nl2sql_specification(doc):
+    doc.add_heading("9.3. Ánh xạ yêu cầu Trợ lý AI NL2SQL/Vanna Oracle", level=2)
+    doc.add_paragraph(
+        "Đặc tả hiện trạng của Hệ thống Trợ lý AI ATFM được tích hợp vào phân hệ AI. "
+        "Các yêu cầu chi tiết FR-NL, BR-NL và NFR-NL trong tài liệu nguồn là cơ sở "
+        "thiết kế test case, thu thập bằng chứng và nghiệm thu cho các yêu cầu tổng thể dưới đây."
+    )
+    table(doc, ["Mã tổng thể", "Phạm vi ánh xạ", "Nhóm yêu cầu nguồn"], [
+        ("FR-AI-001", "Tiếp nhận tiếng Việt/giọng nói, nhận biết ý định, bổ sung ngữ cảnh schema và sinh Oracle SQL", "FR-NL-01…17; BR-NL-01…12"),
+        ("FR-AI-002", "Thực thi truy vấn đọc an toàn, chuẩn hóa dữ liệu, tổng hợp và trình bày bảng/biểu đồ", "FR-NL-09…23; BR-NL-03…15"),
+        ("FR-AI-003", "Tích hợp giao diện chat, API thời gian thực, phiên hội thoại, phản hồi và huấn luyện có kiểm duyệt", "FR-NL-01…08; FR-NL-24…39"),
+        ("FR-AI-004", "Báo cáo hoạt động, audit, giám sát hiệu năng, sức khỏe dịch vụ và vận hành", "FR-NL-40…44; NFR-NL-01…16"),
+    ])
+    add_integration_source(
+        doc,
+        "9.4",
+        "FR-AI-001…FR-AI-004",
+        "Trợ lý AI chuyển câu hỏi tiếng Việt thành Oracle SQL, thực thi và trình bày kết quả",
+        AI_NL2SQL_SOURCE,
+    )
 
 
 def add_alt002_specification(doc):
@@ -612,7 +635,10 @@ def build():
         function_rows = []
         prefix = ["INT", "ALT", "OPT", "RPT", "AI"][chapter - 5]
         for index, item in enumerate(items, 1):
-            function_rows.append((f"FR-{prefix}-{index:03d}", item, "Chờ đặc tả", "Chờ xây dựng"))
+            if chapter == 9:
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã tích hợp đặc tả NL2SQL/Vanna Oracle", "Theo FR-NL/BR-NL/NFR-NL và bằng chứng kiểm thử"))
+            else:
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, "Chờ đặc tả", "Chờ xây dựng"))
         table(doc, ["Mã yêu cầu", "Tên yêu cầu", "Nội dung", "Tiêu chí nghiệm thu"], function_rows)
         if chapter == 5:
             add_aerosync_specification(doc)
@@ -622,6 +648,9 @@ def build():
         elif chapter == 6:
             add_alt001_specification(doc)
             add_alt002_specification(doc)
+            next_section = 5
+        elif chapter == 9:
+            add_ai_nl2sql_specification(doc)
             next_section = 5
         else:
             next_section = 3
