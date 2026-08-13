@@ -518,6 +518,46 @@ def add_opt006_010_specification(doc):
         ("FR-OPT-011", "Search Permission Adv, truy vấn thống kê, drill-down và Excel", "Đối soát tổng hợp–chi tiết, file báo cáo và TC-OPT-011-*"),
     ])
 
+    doc.add_heading("7.16. FR-OPT-012 – Cảnh báo chuyến bay không có trong phép bay/KHB ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Vị trí hiển thị", "Biểu tượng chuông tại header của các trang sử dụng ATFM_New.Master; danh sách đầy đủ tại trang Notifications."),
+        ("Loại thay đổi", "Bổ sung nguồn cảnh báo nghiệp vụ vào hạ tầng thông báo runtime hiện hữu."),
+        ("Đối tượng cảnh báo", "Chuyến bay khai thác/ngày bay không tìm thấy phép bay hoặc KHB ngày phù hợp sau đối chiếu."),
+        ("Chu kỳ cập nhật giao diện", "Header tải lại nền định kỳ 30 giây, không hiện loading toàn trang và tạm ngừng polling khi tab không hoạt động theo cơ chế hiện hữu."),
+        ("Quan hệ yêu cầu", "Kế thừa cơ chế thông báo FR-ALT-001; khác FR-OPT-002 ở chỗ FR-OPT-012 cảnh báo chuyến bay vận hành trên KHB ngày và phân phối runtime tại header."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-012.01", "Hệ thống phải chạy tác vụ đối chiếu tự động khi chuyến bay/KHB ngày được tạo, cập nhật, nhận điện văn hoặc theo lịch cấu hình để phát hiện bản ghi không có phép bay/KHB ngày phù hợp."),
+        ("FR-OPT-012.02", "Đối chiếu phải tối thiểu sử dụng số hiệu chuyến bay, ngày bay, sân bay đi/đến, thời gian và trạng thái hiệu lực/duyệt; dữ liệu phải được chuẩn hóa trước khi kết luận."),
+        ("FR-OPT-012.03", "Khi không có bản ghi phù hợp, hệ thống phải tạo thông báo nghiệp vụ có mã nguồn duy nhất, tiêu đề cảnh báo, CALLSIGN, ngày bay, FROM–TO, thời gian và lý do không khớp."),
+        ("FR-OPT-012.04", "Thông báo phải xuất hiện tại chuông header trong chu kỳ cập nhật runtime tiếp theo; badge hiển thị tổng chưa đọc, giới hạn 99+ theo giao diện hiện hữu."),
+        ("FR-OPT-012.05", "Việc tải cảnh báo phải chạy nền, không khóa thao tác nghiệp vụ, không kích hoạt overlay loading toàn trang và không tạo nhiều request đồng thời khi lượt trước chưa hoàn tất."),
+        ("FR-OPT-012.06", "Mỗi cảnh báo phải được phân phối đúng nhóm người dùng/đơn vị/sân bay có trách nhiệm và lưu trạng thái đọc độc lập theo người dùng; không dùng một STATUS chung làm mất cảnh báo của người khác."),
+        ("FR-OPT-012.07", "Một tình huống cảnh báo chỉ được tạo một bản đang hoạt động theo khóa nghiệp vụ chuyến bay–ngày–loại cảnh báo; các lượt đối chiếu lại không được làm tăng badge do bản ghi trùng."),
+        ("FR-OPT-012.08", "Người dùng phải đánh dấu đã đọc từng cảnh báo hoặc tất cả cảnh báo; thao tác chỉ thay đổi trạng thái đọc, không được coi là đã xử lý nguyên nhân nghiệp vụ."),
+        ("FR-OPT-012.09", "Nội dung cảnh báo phải cung cấp liên kết/tham số mở đúng màn hình và bản ghi chuyến bay cần kiểm tra, sau khi hệ thống xác minh người dùng có quyền truy cập."),
+        ("FR-OPT-012.10", "Khi phép bay/KHB ngày phù hợp được bổ sung, duyệt hoặc sửa, hệ thống phải đối chiếu lại và chuyển cảnh báo sang Đã xử lý; không tiếp tục phát sinh cảnh báo mới cho cùng tình huống."),
+        ("FR-OPT-012.11", "Nếu thiếu dữ liệu bắt buộc hoặc dịch vụ đối chiếu lỗi, hệ thống phải ghi nhận Chưa xác định/lỗi xử lý và không kết luận sai rằng chuyến bay không có phép bay/KHB ngày."),
+        ("FR-OPT-012.12", "Danh sách thông báo đầy đủ phải hỗ trợ trạng thái đã đọc/chưa đọc, phân trang và hiển thị thời điểm phát sinh; cảnh báo phải còn truy vết được sau khi được đánh dấu đọc hoặc xử lý."),
+        ("FR-OPT-012.13", "Hệ thống phải ghi audit cho lần phát hiện, quy tắc đối chiếu, dữ liệu nguồn, đối tượng nhận, thời điểm đọc, thời điểm xử lý và lỗi phát sinh; không ghi thông tin nhạy cảm vào nội dung header."),
+        ("FR-OPT-012.14", "Khi có thay đổi cảnh báo trong phiên hiện tại, giao diện phải hỗ trợ sự kiện làm mới ngay; polling 30 giây là cơ chế dự phòng bảo đảm hội tụ trạng thái giữa các trang."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-012-01", "Chuyến bay không có phép bay và KHB ngày phù hợp", "Tạo một cảnh báo; chuông/badge cập nhật chậm nhất trong chu kỳ runtime tiếp theo"),
+        ("TC-OPT-012-02", "Chuyến bay có phép/KHB hợp lệ", "Không phát sinh cảnh báo"),
+        ("TC-OPT-012-03", "Tác vụ đối chiếu chạy lại nhiều lần", "Không tạo thông báo trùng hoặc tăng sai badge"),
+        ("TC-OPT-012-04", "Hai người dùng thuộc phạm vi nhận", "Trạng thái đọc và badge độc lập cho từng người"),
+        ("TC-OPT-012-05", "Đánh dấu đã đọc một/tất cả", "Badge giảm đúng; trạng thái xử lý nghiệp vụ không bị thay đổi"),
+        ("TC-OPT-012-06", "Bổ sung/duyệt phép hoặc KHB phù hợp", "Cảnh báo chuyển Đã xử lý và không tái phát sai"),
+        ("TC-OPT-012-07", "Thiếu dữ liệu hoặc dịch vụ đối chiếu lỗi", "Không kết luận sai; có trạng thái/log lỗi"),
+        ("TC-OPT-012-08", "Nhấn cảnh báo bởi người có/không có quyền", "Người có quyền mở đúng bản ghi; người không có quyền bị từ chối an toàn"),
+        ("TC-OPT-012-09", "Polling khi đang thao tác hoặc tab ẩn", "Không hiện overlay; không request chồng; tab ẩn không polling không cần thiết"),
+    ])
+    doc.add_heading("7.17. Truy vết FR-OPT-012", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-012", "Bộ đối chiếu phép/KHB ngày; T_NOTIFICATION/NOTIFICATION_PKG; Notification.ashx; ATFM_New.Master; trang Notifications", "Dữ liệu mẫu khớp/không khớp, ảnh chuông và badge, trạng thái theo user, audit, log polling và TC-OPT-012-*"),
+    ])
+
 
 def add_alt002_specification(doc):
     if not ALT002_SOURCE.exists():
@@ -933,7 +973,7 @@ def build():
         elif chapter == 7:
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
-            next_section = 16
+            next_section = 18
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
