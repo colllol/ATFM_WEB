@@ -1,9 +1,11 @@
 using prjBusinessLogic;
+using prjInfo;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Web;
 using System.Web.Services;
 
 namespace prjApplication.Tool
@@ -58,6 +60,8 @@ namespace prjApplication.Tool
                 if (existingPermits != null && existingPermits.Rows.Count > 0 && !request.AllowExistingPermit)
                     throw new InvalidOperationException("Số phép đã tồn tại. Cần xác nhận trước khi tiếp tục.");
                 var selectedRows = request.Rows.Where(x => x != null && x.Selected).ToList();
+                string currentUser = CurrentUserName();
+                string batchId = Guid.NewGuid().ToString("N");
                 result.Total = selectedRows.Count;
 
                 foreach (var row in selectedRows)
@@ -66,9 +70,9 @@ namespace prjApplication.Tool
                     {
                         ValidateRow(row);
                         object response = api.GetPostValueApiExtension(
-                            "PERM_IMP_PKG",
-                            "PERMSC_IMP_INSERT_ALL_OPER",
-                            BuildAllOperPayload(request, row));
+                            "PERM_IMP_V2_PKG",
+                            "INSERT_CANCELLATION",
+                            BuildCancellationPayload(request, row, currentUser, batchId));
 
                         int code;
                         if (!Int32.TryParse(Convert.ToString(response, CultureInfo.InvariantCulture), out code) || code <= 0)
@@ -86,7 +90,7 @@ namespace prjApplication.Tool
                 }
 
                 if (result.Failed == 0 && result.Imported > 0)
-                    CheckExistingPermissions(api, selectedRows, result);
+                    CheckExistingPermissions(api, selectedRows, result, currentUser);
 
                 result.RequiresReview = result.Success;
                 result.Message = result.Success
@@ -123,7 +127,7 @@ namespace prjApplication.Tool
                 object value = new clsResuftAPI().GetValueApiExtension(
                     "PERM_IMP_V2_PKG",
                     "APPLY_CANCELLATIONS",
-                    new { P_STAGING_IDS = stagingIdList });
+                    new { P_CREATED_BY = CurrentUserName(), P_STAGING_IDS = stagingIdList });
                 int code;
                 result.Success = Int32.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out code) && code == 1;
                 result.Message = result.Success ? "Hủy chuyến thành công. Quy trình đã hoàn tất."
@@ -138,18 +142,20 @@ namespace prjApplication.Tool
         }
 
         [WebMethod(EnableSession = true)]
-        public static ApplyResult DeleteCancellation()
+        public static ApplyResult DeleteCancellation(long[] stagingIds)
         {
             var result = new ApplyResult();
             try
             {
+                string stagingIdList = StagingIdList(stagingIds);
                 object value = new clsResuftAPI().GetValueApiExtension(
-                    "PERM_IMP_PKG", "DeleteChuyenHuy_IMP", null);
+                    "PERM_IMP_V2_PKG", "DELETE_CANCELLATIONS",
+                    new { P_CREATED_BY = CurrentUserName(), P_STAGING_IDS = stagingIdList });
                 int code;
                 result.Success = Int32.TryParse(
                     Convert.ToString(value, CultureInfo.InvariantCulture), out code) && code == 1;
                 result.Message = result.Success
-                    ? "Đã xóa toàn bộ danh sách HỦY CHUYẾN đang chờ xử lý."
+                    ? "Đã xóa các chuyến hủy đã chọn khỏi danh sách chờ xử lý."
                     : "Xóa danh sách HỦY CHUYẾN không thành công. Mã trả về: "
                         + Convert.ToString(value, CultureInfo.InvariantCulture);
             }
@@ -161,10 +167,110 @@ namespace prjApplication.Tool
             return result;
         }
 
-        private static void CheckExistingPermissions(clsResuftAPI api, IList<ImportRow> selectedRows, ImportResult result)
+        [WebMethod(EnableSession = true)]
+        public static PendingResult SearchPending(PendingSearch request)
         {
+            var result = new PendingResult();
+            try
+            {
+                request = request ?? new PendingSearch();
+                DataTable table = new clsResuftAPI().GetTableApiExtension(
+                    "PERM_IMP_V2_PKG", "SEARCH_PENDING", new
+                    {
+                        P_CREATED_BY = CurrentUserName(),
+                        P_PERMNBR = Clean(request.PermNbr),
+                        P_CALLSIGN = Clean(request.Callsign),
+                        P_FROMDATE = OptionalOracleDate(request.FromDate),
+                        P_TODATE = OptionalOracleDate(request.ToDate),
+                        P_STAGING_IDS = null as string
+                    });
+
+                if (table == null)
+                    throw new InvalidOperationException(
+                        "Khong nhan duoc danh sach cho xu ly tu API.");
+
+                result.Rows = table.AsEnumerable().Select(ToPendingRow).ToList();
+                result.Success = true;
+                result.Message = "Tim thay " + result.Rows.Count
+                    + " dong dang cho xu ly.";
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public static ImportResult ReviewPending(long[] stagingIds)
+        {
+            var result = new ImportResult();
+            try
+            {
+                string idList = StagingIdList(stagingIds);
+                string currentUser = CurrentUserName();
+                var api = new clsResuftAPI();
+
+                object refreshed = api.GetValueApiExtension(
+                    "PERM_IMP_V2_PKG", "REFRESH_VALIDATION",
+                    new { P_CREATED_BY = currentUser, P_STAGING_IDS = idList });
+                if (Convert.ToString(refreshed, CultureInfo.InvariantCulture) != "1")
+                    throw new InvalidOperationException(
+                        "Khong the kiem tra lai du lieu huy cho xu ly.");
+
+                DataTable staged = api.GetTableApiExtension(
+                    "PERM_IMP_V2_PKG", "SEARCH_PENDING", new
+                    {
+                        P_CREATED_BY = currentUser,
+                        P_PERMNBR = null as string,
+                        P_CALLSIGN = null as string,
+                        P_FROMDATE = null as string,
+                        P_TODATE = null as string,
+                        P_STAGING_IDS = idList
+                    });
+                if (staged == null)
+                    throw new InvalidOperationException(
+                        "Khong doc duoc du lieu huy cho xu ly.");
+
+                result.ImportedRows = staged.AsEnumerable()
+                    .Select(ToImportRow).ToList();
+                result.Total = stagingIds.Where(x => x > 0).Distinct().Count();
+                result.Imported = result.ImportedRows.Count;
+                CheckExistingPermissions(
+                    api, result.ImportedRows, result, currentUser);
+                result.RequiresReview = result.Success;
+                result.Message = result.Success
+                    ? "Kiem tra thanh cong " + result.Imported
+                        + " dong. Co the xac nhan huy chuyen."
+                    : "Co du lieu khong con khop voi phep SC. "
+                        + "Vui long kiem tra cac dong loi.";
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = ex.Message;
+                result.Errors.Add(ex.Message);
+            }
+            return result;
+        }
+
+        private static void CheckExistingPermissions(
+            clsResuftAPI api, IList<ImportRow> selectedRows,
+            ImportResult result, string currentUser)
+        {
+            string idList = StagingIdList(selectedRows
+                .Select(x => (long)x.StagingId).ToArray());
+            object validation = api.GetValueApiExtension(
+                "PERM_IMP_V2_PKG", "REFRESH_VALIDATION",
+                new { P_CREATED_BY = currentUser, P_STAGING_IDS = idList });
+            if (Convert.ToString(validation, CultureInfo.InvariantCulture) != "1")
+                throw new InvalidOperationException(
+                    "Khong the cap nhat ket qua kiem tra staging V2.");
+
             DataTable table = api.GetTableApiExtension(
-                "PERM_IMP_V2_PKG", "GET_CANCELLATION_MATCHES", null);
+                "PERM_IMP_V2_PKG", "GET_CANCELLATION_MATCHES",
+                new { P_CREATED_BY = currentUser, P_STAGING_IDS = idList });
             if (table == null) throw new InvalidOperationException("Không nhận được kết quả kiểm tra phép từ API.");
 
             int matchedSources = 0;
@@ -227,7 +333,9 @@ namespace prjApplication.Tool
             };
         }
 
-        private static object BuildAllOperPayload(ImportRequest request, ImportRow row)
+        private static object BuildCancellationPayload(
+            ImportRequest request, ImportRow row,
+            string currentUser, string batchId)
         {
             return new
             {
@@ -237,8 +345,86 @@ namespace prjApplication.Tool
                 P_REMARK = Clean(row.Remark), P_PERMTYPE = "LD", P_FLIGHTTYPE = Clean(request.FlightType),
                 P_PERMNBR = Clean(request.PermNbr), P_SEASON = Clean(request.Season), P_AUTHOR = Clean(request.Author),
                 P_PERMDATE = OracleDate(request.PermDate), P_PURPOSE = Clean(request.Purpose), P_VERSION = Clean(request.Version),
-                P_REGISTRATION = Clean(request.Registration), P_ACTION = "HuyChuyen"
+                P_REGISTRATION = Clean(request.Registration), P_CREATED_BY = currentUser,
+                P_IMPORT_BATCH_ID = batchId
             };
+        }
+
+        private static PendingRow ToPendingRow(DataRow row)
+        {
+            long id;
+            Int64.TryParse(Cell(row, "STAGING_ID"), out id);
+            return new PendingRow
+            {
+                StagingId = id,
+                BatchId = Cell(row, "IMPORT_BATCH_ID"),
+                PermNbr = Cell(row, "PERMNBR"),
+                Callsign = Cell(row, "CALLSIGN"),
+                FromDate = DateCell(row, "FROMDATE"),
+                ToDate = DateCell(row, "TODATE"),
+                Daily = Cell(row, "DAILY"),
+                Craft = Cell(row, "CRAFT"),
+                FromAirp = Cell(row, "FROM_AIRP"),
+                ToAirp = Cell(row, "TO_AIRP"),
+                Etd = Cell(row, "ETD"),
+                Eta = Cell(row, "ETA"),
+                Via = Cell(row, "VIA"),
+                Remark = Cell(row, "REMARK"),
+                Oper = Cell(row, "OPER"),
+                Status = Cell(row, "PROCESS_STATUS"),
+                ErrorMessage = Cell(row, "ERROR_MESSAGE"),
+                CreatedAt = Cell(row, "CREATED_AT")
+            };
+        }
+
+        private static ImportRow ToImportRow(DataRow row)
+        {
+            PendingRow pending = ToPendingRow(row);
+            return new ImportRow
+            {
+                Selected = true,
+                StagingId = pending.StagingId,
+                Callsign = pending.Callsign,
+                FromDate = pending.FromDate,
+                ToDate = pending.ToDate,
+                Daily = pending.Daily,
+                Craft = pending.Craft,
+                FromAirp = pending.FromAirp,
+                ToAirp = pending.ToAirp,
+                Etd = pending.Etd,
+                Eta = pending.Eta,
+                Via = pending.Via,
+                Remark = pending.Remark
+            };
+        }
+
+        private static string CurrentUserName()
+        {
+            HttpContext context = HttpContext.Current;
+            T_Users user = context == null || context.Session == null
+                ? null
+                : context.Session[global::prjApplication.Login.CurrentUserSessionKey]
+                    as T_Users;
+            if (user == null || String.IsNullOrWhiteSpace(user.UserName))
+                throw new UnauthorizedAccessException(
+                    "Phien dang nhap da het han. Vui long dang nhap lai.");
+            return Clean(user.UserName);
+        }
+
+        private static string StagingIdList(IEnumerable<long> stagingIds)
+        {
+            string value = stagingIds == null ? "" : String.Join(",",
+                stagingIds.Where(id => id > 0).Distinct()
+                    .Select(id => id.ToString(CultureInfo.InvariantCulture))
+                    .ToArray());
+            if (String.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Danh sach staging ID khong hop le.");
+            return value;
+        }
+
+        private static string OptionalOracleDate(string value)
+        {
+            return String.IsNullOrWhiteSpace(value) ? null : OracleDate(value);
         }
 
         private static void ValidateRequest(ImportRequest request)
@@ -302,7 +488,7 @@ namespace prjApplication.Tool
             public string Craft { get; set; } public string FromAirp { get; set; } public string ToAirp { get; set; }
             public string Etd { get; set; } public string Eta { get; set; } public string Via { get; set; }
             public string Remark { get; set; }
-            public int StagingId { get; set; }
+            public long StagingId { get; set; }
         }
 
         public class ImportResult
@@ -321,6 +507,44 @@ namespace prjApplication.Tool
         }
 
         public class ApplyResult { public bool Success { get; set; } public string Message { get; set; } }
+
+        public class PendingSearch
+        {
+            public string PermNbr { get; set; }
+            public string Callsign { get; set; }
+            public string FromDate { get; set; }
+            public string ToDate { get; set; }
+        }
+
+        public class PendingResult
+        {
+            public PendingResult() { Rows = new List<PendingRow>(); }
+            public bool Success { get; set; }
+            public string Message { get; set; }
+            public List<PendingRow> Rows { get; set; }
+        }
+
+        public class PendingRow
+        {
+            public long StagingId { get; set; }
+            public string BatchId { get; set; }
+            public string PermNbr { get; set; }
+            public string Callsign { get; set; }
+            public string FromDate { get; set; }
+            public string ToDate { get; set; }
+            public string Daily { get; set; }
+            public string Craft { get; set; }
+            public string FromAirp { get; set; }
+            public string ToAirp { get; set; }
+            public string Etd { get; set; }
+            public string Eta { get; set; }
+            public string Via { get; set; }
+            public string Remark { get; set; }
+            public string Oper { get; set; }
+            public string Status { get; set; }
+            public string ErrorMessage { get; set; }
+            public string CreatedAt { get; set; }
+        }
 
         public class PermitCheckResult
         {

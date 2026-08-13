@@ -4,6 +4,7 @@
     var rows = [];
     var activeFilter = 'ALL';
     var pendingStagingIds = [];
+    var pendingRows = [];
     var cancellationRequestRunning = false;
     var formatGuides = {
         WITH_CRAFT: {
@@ -35,7 +36,7 @@
     function setLoading(show) { $('#impv2Loading').prop('hidden', !show); }
     function setCancellationProcessing(processing) {
         cancellationRequestRunning = processing;
-        $('#btnApplyCancellation,#btnDeleteCancellation').prop('disabled', processing);
+        $('#btnApplyCancellation,#btnDeleteCancellation,#btnDeletePending,#btnReviewPending').prop('disabled', processing);
         $('#impv2Loading span').text(processing
             ? 'Đang xác nhận hủy chuyến, vui lòng không đóng trang...'
             : 'Đang xử lý dữ liệu...');
@@ -337,6 +338,7 @@
             showResult(result.Message, result.Success ? 'success' : 'error', result.Errors);
             if (result.Success) {
                 renderConfirmation(result);
+                searchPending(true);
                 $('#btnApplyCancellation').prop('disabled', false);
                 $('#confirmPanel').prop('hidden', false);
                 $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="3"]').addClass('is-active');
@@ -381,6 +383,108 @@
         $('#cancelledTable tbody').html(cancelled);
     }
 
+    function selectedPendingIds() {
+        var ids = [];
+        $('#pendingTable tbody .pending-row-check:checked').each(function () {
+            var id = +$(this).closest('tr').attr('data-staging-id');
+            if (id > 0 && ids.indexOf(id) < 0) ids.push(id);
+        });
+        return ids;
+    }
+
+    function renderPending() {
+        var body = '';
+        pendingRows.forEach(function (x) {
+            var statusClass = upper(x.Status) === 'ERROR' ? 'is-error' : 'is-valid';
+            body += '<tr class="' + statusClass + '" data-staging-id="' + (+x.StagingId) + '">'
+                + '<td><input type="checkbox" class="pending-row-check"></td>'
+                + '<td>' + html(x.StagingId) + '</td><td>' + html(x.PermNbr) + '</td>'
+                + '<td>' + html(x.Callsign) + '</td><td>' + html(x.FromDate) + '</td>'
+                + '<td>' + html(x.ToDate) + '</td><td>' + html(x.Daily) + '</td>'
+                + '<td>' + html(x.FromAirp) + '</td><td>' + html(x.ToAirp) + '</td>'
+                + '<td>' + html(x.Etd) + '</td><td>' + html(x.Eta) + '</td>'
+                + '<td>' + html(x.Oper) + '</td><td>' + html(x.Status) + '</td>'
+                + '<td>' + html(x.CreatedAt) + '</td><td>' + html(x.ErrorMessage) + '</td></tr>';
+        });
+        if (!body) body = '<tr><td colspan="15" class="impv2__empty">Khong co du lieu dang cho xu ly.</td></tr>';
+        $('#pendingTable tbody').html(body);
+        $('#pendingCount').text(pendingRows.length + ' dong');
+        $('#pendingCheckAll').prop('checked', false);
+    }
+
+    function searchPending(silent) {
+        if (!silent) setLoading(true);
+        return $.ajax({
+            type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/SearchPending',
+            contentType: 'application/json; charset=utf-8', dataType: 'json',
+            data: JSON.stringify({ request: {
+                permNbr: value('pendingPermNbr'), callsign: value('pendingCallsign'),
+                fromDate: value('pendingFromDate'), toDate: value('pendingToDate')
+            } })
+        }).done(function (response) {
+            var result = response.d || {};
+            if (!result.Success) {
+                pendingRows = [];
+                renderPending();
+                if (!silent) showResult(result.Message || 'Khong the tai danh sach cho xu ly.', 'error');
+                return;
+            }
+            pendingRows = result.Rows || [];
+            renderPending();
+        }).fail(function (xhr) {
+            pendingRows = [];
+            renderPending();
+            if (!silent) showResult('Khong the tai danh sach cho xu ly: ' + (xhr.responseText || xhr.statusText), 'error');
+        }).always(function () { if (!silent) setLoading(false); });
+    }
+
+    function reviewPending() {
+        var ids = selectedPendingIds();
+        if (!ids.length) return message('Hay chon it nhat mot dong dang cho xu ly.', 'error');
+        setLoading(true);
+        $.ajax({
+            type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/ReviewPending',
+            contentType: 'application/json; charset=utf-8', dataType: 'json',
+            data: JSON.stringify({ stagingIds: ids })
+        }).done(function (response) {
+            var result = response.d || {};
+            $('#resultPanel').prop('hidden', false);
+            showResult(result.Message, result.Success ? 'success' : 'error', result.Errors);
+            if (result.ImportedRows && result.ImportedRows.length) renderConfirmation(result);
+            if (result.Success) {
+                $('#confirmPanel').prop('hidden', false);
+                $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="3"]').addClass('is-active');
+                $('html,body').animate({ scrollTop: $('#confirmPanel').offset().top - 80 }, 200);
+            } else {
+                $('#confirmPanel').prop('hidden', true);
+                searchPending(true);
+            }
+        }).fail(function (xhr) {
+            showResult('Khong the kiem tra lai du lieu: ' + (xhr.responseText || xhr.statusText), 'error');
+        }).always(function () { setLoading(false); });
+    }
+
+    function deleteByIds(ids) {
+        if (!ids.length) return message('Khong co dong nao duoc chon de xoa.', 'error');
+        if (!window.confirm('Xoa cac dong huy chuyen da chon khoi danh sach cho xu ly?')) return;
+        setLoading(true);
+        $.ajax({
+            type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/DeleteCancellation',
+            contentType: 'application/json; charset=utf-8', dataType: 'json',
+            data: JSON.stringify({ stagingIds: ids })
+        }).done(function (response) {
+            var result = response.d || {};
+            showResult(result.Message, result.Success ? 'success' : 'error');
+            if (result.Success) {
+                pendingStagingIds = [];
+                $('#confirmPanel').prop('hidden', true);
+                searchPending(true);
+            }
+        }).fail(function (xhr) {
+            showResult('Khong the xoa danh sach huy chuyen: ' + (xhr.responseText || xhr.statusText), 'error');
+        }).always(function () { setLoading(false); });
+    }
+
     function applyCancellation() {
         if (cancellationRequestRunning) return;
         if (!pendingStagingIds.length) {
@@ -414,25 +518,8 @@
         });
     }
 
-    function deleteCancellation() {
-        if (!window.confirm('DELETE HỦY CHUYẾN sẽ xóa toàn bộ danh sách hủy đang chờ xử lý. Bạn có chắc chắn tiếp tục?')) return;
-        setLoading(true);
-        $.ajax({
-            type: 'POST', url: 'ImportsPermSC_LD_V2.aspx/DeleteCancellation',
-            contentType: 'application/json; charset=utf-8', dataType: 'json', data: '{}'
-        }).done(function (response) {
-            var result = response.d || {};
-            showResult(result.Message, result.Success ? 'success' : 'error');
-            if (result.Success) {
-                pendingStagingIds = [];
-                $('#importedTable tbody,#cancelledTable tbody').empty();
-                $('#confirmPanel').prop('hidden', true);
-                $('#btnApplyCancellation,#btnDeleteCancellation').prop('disabled', false);
-                $('[data-step-indicator]').removeClass('is-active').filter('[data-step-indicator="2"]').addClass('is-active');
-            }
-        }).fail(function (xhr) {
-            showResult('Không thể xóa danh sách HỦY CHUYẾN: ' + (xhr.responseText || xhr.statusText), 'error');
-        }).always(function () { setLoading(false); });
+    function deleteCurrentCancellation() {
+        deleteByIds(pendingStagingIds.slice(0));
     }
 
     $(function () {
@@ -453,7 +540,13 @@
         });
         $('#btnImportSelected').on('click', importSelected);
         $('#btnApplyCancellation').on('click', applyCancellation);
-        $('#btnDeleteCancellation').on('click', deleteCancellation);
+        $('#btnDeleteCancellation').on('click', deleteCurrentCancellation);
+        $('#btnSearchPending').on('click', function () { searchPending(false); });
+        $('#btnReviewPending').on('click', reviewPending);
+        $('#btnDeletePending').on('click', function () { deleteByIds(selectedPendingIds()); });
+        $('#pendingCheckAll').on('change', function () {
+            $('#pendingTable tbody .pending-row-check').prop('checked', this.checked);
+        });
         $('#impSource').on('paste', function (event) {
             var tableText = tableTextFromClipboard(event);
             if (!tableText) return;
@@ -469,5 +562,6 @@
         $('#previewSearch').on('input', render);
         $('#previewTable').on('change', '.preview-row-check', function () { rows[+$(this).closest('tr').data('row-index')].selected = this.checked; });
         $('#previewCheckAll').on('change', function () { var checked = this.checked; rows.forEach(function (x) { if (x.status !== 'ERROR') x.selected = checked; }); render(); });
+        searchPending(true);
     });
 }(jQuery));

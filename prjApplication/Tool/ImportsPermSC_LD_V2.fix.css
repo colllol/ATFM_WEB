@@ -154,3 +154,50 @@
     justify-content: flex-end;
     margin-top: 15px;
 }
+
+.impv2__pending {
+    border-left: 4px solid #2787c4;
+}
+
+.impv2__pending-note {
+    margin: -4px 0 12px;
+    color: #59758a;
+}
+
+.impv2__pending-count {
+    padding: 6px 10px;
+    border-radius: 14px;
+    background: #e4f4fc;
+    color: #075a8c;
+    font-weight: 700;
+}
+
+.impv2__pending-filter {
+    display: grid;
+    grid-template-columns: 150px 180px 160px 160px auto;
+    align-items: end;
+    gap: 9px;
+    margin-bottom: 12px;
+}
+
+#pendingTable {
+    min-width: 1350px;
+}
+
+#pendingTable td:last-child {
+    min-width: 260px;
+    color: #b12626;
+}
+
+.impv2__empty {
+    padding: 18px !important;
+    text-align: center !important;
+    color: #6b7f8d !important;
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .impv2__pending-filter {
+        grid-template-columns: 1fr 1fr;
+    }
+}

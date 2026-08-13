@@ -4,7 +4,7 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.css?v=20260812-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260812-4") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.fix.css?v=20260813-5") %>" />
 
     <section class="impv2" data-page-method-url="ImportsPermSC_LD_V2.aspx/">
         <header class="impv2__header">
@@ -134,6 +134,40 @@
             <div id="importResult" class="impv2__result-text"></div>
         </section>
 
+        <section id="pendingPanel" class="impv2__panel impv2__pending">
+            <div class="impv2__panel-title">
+                <h3>DANH S&Aacute;CH H&#7910;Y CHUY&#7870;N &#272;ANG CH&#7900; X&Aacute;C NH&#7852;N</h3>
+                <span id="pendingCount" class="impv2__pending-count">0 d&ograve;ng</span>
+            </div>
+            <p class="impv2__pending-note">
+                D&#7919; li&#7879;u c&#7911;a t&agrave;i kho&#7843;n hi&#7879;n t&#7841;i &#273;&#432;&#7907;c l&#432;u ri&ecirc;ng.
+                C&oacute; th&#7875; m&#7903; l&#7841;i trang &#273;&#7875; ti&#7871;p t&#7909;c x&aacute;c nh&#7853;n ho&#7863;c x&oacute;a.
+            </p>
+            <div class="impv2__pending-filter">
+                <label>Number<input id="pendingPermNbr" maxlength="8" /></label>
+                <label>Callsign<input id="pendingCallsign" maxlength="20" /></label>
+                <label>T&#7915; ng&agrave;y<input id="pendingFromDate" type="date" /></label>
+                <label>&#272;&#7871;n ng&agrave;y<input id="pendingToDate" type="date" /></label>
+                <button id="btnSearchPending" type="button">T&Igrave;M KI&#7870;M</button>
+            </div>
+            <div class="impv2__table-wrap">
+                <table id="pendingTable">
+                    <thead><tr>
+                        <th><input id="pendingCheckAll" type="checkbox" /></th>
+                        <th>ID</th><th>NUMBER</th><th>CALLSIGN</th><th>T&#7914; NG&Agrave;Y</th>
+                        <th>&#272;&#7870;N NG&Agrave;Y</th><th>DAILY</th><th>FROM</th><th>TO</th>
+                        <th>ETD</th><th>ETA</th><th>OPER</th><th>TR&#7840;NG TH&Aacute;I</th>
+                        <th>TH&#7900;I &#272;I&#7874;M T&#7840;O</th><th>L&#7894;I</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="impv2__primary-actions">
+                <button id="btnDeletePending" type="button" class="is-danger">X&Oacute;A D&Ograve;NG &#272;&Atilde; CH&#7884;N</button>
+                <button id="btnReviewPending" type="button">TI&#7870;P T&#7908;C X&Aacute;C NH&#7852;N</button>
+            </div>
+        </section>
+
         <section id="confirmPanel" class="impv2__panel" hidden>
             <h3>3. Xác nhận xử lý</h3>
             <h4>DANH SÁCH CHUYẾN ĐÃ IMPORT THÀNH CÔNG</h4>
@@ -181,5 +215,5 @@
         </div>
     </section>
 
-    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-5") %>"></script>
+    <script src="<%= ResolveUrl("~/Tool/ImportsPermSC_LD_V2.js?v=20260813-6") %>"></script>
 </asp:Content>
