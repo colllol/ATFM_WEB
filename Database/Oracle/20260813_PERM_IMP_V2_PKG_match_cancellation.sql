@@ -1,0 +1,49 @@
+-- Doi chieu phep huy cho ImportsPermSC_LD_V2, khong sua PERM_IMP_PKG cu.
+CREATE OR REPLACE PACKAGE PERM_IMP_V2_PKG AS
+    TYPE T_CURSOR IS REF CURSOR;
+    PROCEDURE GET_CANCELLATION_MATCHES(P_OUT OUT T_CURSOR);
+END PERM_IMP_V2_PKG;
+/
+
+CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
+    PROCEDURE GET_CANCELLATION_MATCHES(P_OUT OUT T_CURSOR) IS
+    BEGIN
+        OPEN P_OUT FOR
+            SELECT DISTINCT
+                   i.ID AS STAGING_ID, d.FLIGHTNBR AS CALLSIGN, m.PERMNBR_ID,
+                   d.FROM_AIRP, d.TO_AIRP, d.ETD, d.ETA, m.OPER_ID AS OPER,
+                   m.SEASON, m.PERMTYPE, d.REMARK, d.PURPOSE_ID AS PURPOSE,
+                   d.FLIGHT_PK AS IDPERMDETAIL, i."PERMNBR" AS THAMCHIEU,
+                   d.BEGINDATE AS FROMDATE, d.ENDDATE AS TODATE,
+                   TO_DATE(i.FROMDATE, 'DD-MM-YYYY') AS HUY_FROMDATE,
+                   TO_DATE(i.TODATE, 'DD-MM-YYYY') AS HUY_TODATE,
+                   REPLACE(d.DAY1 || d.DAY2 || d.DAY3 || d.DAY4 || d.DAY5 || d.DAY6 || d.DAY7, '0', '.') AS DAILY_PHEP,
+                   i.DAILY, 'HUY' AS LOAIPHEP
+              FROM T_PERMSC_IMP i
+              JOIN T_PERMDETAIL_SC d
+                ON UPPER(TRIM(d.FLIGHTNBR)) = UPPER(TRIM(i.CALLSIGN))
+               AND UPPER(TRIM(d.FROM_AIRP)) = UPPER(TRIM(i.FROM_AIRP))
+               AND UPPER(TRIM(d.TO_AIRP)) = UPPER(TRIM(i.TO_AIRP))
+               AND TRIM(d.ETD) = TRIM(i.ETD)
+               AND (d.ETA IS NULL OR TRIM(d.ETA) IS NULL OR i.ETA IS NULL OR TRIM(d.ETA) = TRIM(i.ETA))
+               AND d.STATUS IN (0, 1)
+               AND d.BEGINDATE <= TO_DATE(i.TODATE, 'DD-MM-YYYY')
+               AND d.ENDDATE >= TO_DATE(i.FROMDATE, 'DD-MM-YYYY')
+               AND (INSTR(i.DAILY, '1') = 0 OR d.DAY1 = '1')
+               AND (INSTR(i.DAILY, '2') = 0 OR d.DAY2 = '2')
+               AND (INSTR(i.DAILY, '3') = 0 OR d.DAY3 = '3')
+               AND (INSTR(i.DAILY, '4') = 0 OR d.DAY4 = '4')
+               AND (INSTR(i.DAILY, '5') = 0 OR d.DAY5 = '5')
+               AND (INSTR(i.DAILY, '6') = 0 OR d.DAY6 = '6')
+               AND (INSTR(i.DAILY, '7') = 0 OR d.DAY7 = '7')
+              JOIN T_PERMMASTER_SC m ON m.PERM_ID = d.PERM_ID
+             WHERE i.ACTION = 'HuyChuyen'
+             ORDER BY STAGING_ID, FROMDATE, PERMNBR_ID;
+    END GET_CANCELLATION_MATCHES;
+END PERM_IMP_V2_PKG;
+/
+
+SHOW ERRORS PACKAGE PERM_IMP_V2_PKG;
+SHOW ERRORS PACKAGE BODY PERM_IMP_V2_PKG;
+SELECT OBJECT_NAME, OBJECT_TYPE, STATUS FROM USER_OBJECTS
+ WHERE OBJECT_NAME = 'PERM_IMP_V2_PKG' ORDER BY OBJECT_TYPE;

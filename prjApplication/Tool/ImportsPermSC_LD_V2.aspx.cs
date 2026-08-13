@@ -148,31 +148,31 @@ namespace prjApplication.Tool
 
         private static void CheckExistingPermissions(clsResuftAPI api, IList<ImportRow> selectedRows, ImportResult result)
         {
-            DataTable table = api.GetTableApiExtension("PERM_IMP_PKG", "GetPhepBayCoHuyChuyen", null);
+            DataTable table = api.GetTableApiExtension(
+                "PERM_IMP_V2_PKG", "GET_CANCELLATION_MATCHES", null);
             if (table == null) throw new InvalidOperationException("Không nhận được kết quả kiểm tra phép từ API.");
+
+            int matchedSources = 0;
             foreach (ImportRow source in selectedRows)
             {
-                var staging = new PermScImpDAL().GetOnePermScIMP(source.StagingId);
-                if (staging == null)
-                {
-                    result.Errors.Add("Dòng " + source.SourceLine + " - " + source.Callsign
-                        + ": không đọc được bản ghi staging ID " + source.StagingId + ".");
-                    continue;
-                }
-                DataRow matched = table.AsEnumerable().FirstOrDefault(row =>
-                    Same(row, "CALLSIGN", staging.CALLSIGN) && Same(row, "FROM_AIRP", staging.FROM_AIRP) &&
-                    Same(row, "TO_AIRP", staging.TO_AIRP) && SameTime(row, "ETD", staging.ETD) &&
-                    SameTime(row, "ETA", staging.ETA) && Same(row, "THAMCHIEU", staging.PERMNBR));
-                if (matched == null)
+                string stagingId = source.StagingId.ToString(CultureInfo.InvariantCulture);
+                List<DataRow> matches = table.AsEnumerable()
+                    .Where(row => Cell(row, "STAGING_ID") == stagingId)
+                    .ToList();
+
+                if (matches.Count == 0)
                 {
                     result.Errors.Add("Dòng " + source.SourceLine + " - " + source.Callsign
                         + ": không tìm thấy chuyến bay/phép SC tương ứng để hủy.");
                     continue;
                 }
-                result.CancelledFlights.Add(ToCancellationRow(matched));
+
+                matchedSources++;
+                foreach (DataRow matched in matches)
+                    result.CancelledFlights.Add(ToCancellationRow(matched));
             }
             result.Success = result.Failed == 0 && result.Imported == result.Total
-                && result.CancelledFlights.Count == selectedRows.Count;
+                && matchedSources == selectedRows.Count;
         }
 
         private static DataTable FindExistingPermits(clsResuftAPI api, ImportRequest request)
@@ -182,16 +182,6 @@ namespace prjApplication.Tool
                 P_AUTHOR = Clean(request.Author), P_FLIGHT_TYPE = "SC",
                 P_FLIGHTNBR = Clean(request.PermNbr), P_PERMTYPE = "LD"
             });
-        }
-
-        private static bool Same(DataRow row, string column, string value)
-        {
-            return String.Equals(Cell(row, column), Clean(value), StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool SameTime(DataRow row, string column, string value)
-        {
-            return Cell(row, column).Replace(":", "").PadLeft(4, '0') == Clean(value).Replace(":", "").PadLeft(4, '0');
         }
 
         private static string Cell(DataRow row, string column)
