@@ -2,6 +2,28 @@
 -- Toan bo staging nam trong T_PERMSC_CANCEL_V2; khong doc/ghi T_PERMSC_IMP.
 
 DECLARE
+    v_table_count    PLS_INTEGER;
+    v_sequence_count PLS_INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO v_table_count
+      FROM USER_TABLES
+     WHERE TABLE_NAME = 'T_PERMSC_CANCEL_V2';
+
+    SELECT COUNT(*) INTO v_sequence_count
+      FROM USER_SEQUENCES
+     WHERE SEQUENCE_NAME = 'SEQ_T_PERMSC_CANCEL_V2';
+
+    IF v_table_count <> 1 OR v_sequence_count <> 1 THEN
+        RAISE_APPLICATION_ERROR(
+            -20820,
+            'Chua co T_PERMSC_CANCEL_V2/SEQ_T_PERMSC_CANCEL_V2. '
+            || 'Chay 20260813_T_PERMSC_CANCEL_V2.sql truoc.'
+        );
+    END IF;
+END;
+/
+
+DECLARE
     v_count PLS_INTEGER;
 BEGIN
     SELECT COUNT(*) INTO v_count
@@ -163,6 +185,8 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
         v_perm_date DATE;
         v_user      VARCHAR2(100);
         v_oper      VARCHAR2(10);
+        v_error_code NUMBER;
+        v_error_msg  VARCHAR2(1000);
     BEGIN
         P_OUT := -1;
         v_from_date := TO_DATE(TRIM(P_FROMDATE), 'FXDD-MM-YYYY');
@@ -206,13 +230,22 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
         P_OUT := v_id;
     EXCEPTION
         WHEN OTHERS THEN
+            v_error_code := SQLCODE;
+            v_error_msg := SUBSTR(
+                SQLERRM || CHR(10) || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE,
+                1,
+                1000
+            );
             ROLLBACK;
             BEGIN
                 PROCESS_PKG.ADD_ERROR_LOG(
-                    'PERM_IMP_V2_INSERT', SQLCODE, SUBSTR(SQLERRM, 1, 200)
+                    'PERM_IMP_V2_INSERT',
+                    v_error_code,
+                    SUBSTR(v_error_msg, 1, 200)
                 );
             EXCEPTION WHEN OTHERS THEN NULL;
-            P_OUT := -1;
+            END;
+            P_OUT := v_error_code;
     END INSERT_CANCELLATION;
 
     PROCEDURE REFRESH_VALIDATION
@@ -231,9 +264,10 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
                    SELECT CASE WHEN COUNT(*) > 0 THEN 'PENDING' ELSE 'ERROR' END,
                           CASE WHEN COUNT(*) > 0 THEN NULL
                                ELSE 'Khong tim thay chuyen bay/phep SC tuong ung de huy' END
-                     FROM T_PERMDETAIL_SC d
-                     JOIN T_PERMMASTER_SC m ON m.PERM_ID = d.PERM_ID
-                    WHERE UPPER(TRIM(d.FLIGHTNBR)) = UPPER(TRIM(i.CALLSIGN))
+                     FROM T_PERMDETAIL_SC d,
+                          T_PERMMASTER_SC m
+                    WHERE m.PERM_ID = d.PERM_ID
+                      AND UPPER(TRIM(d.FLIGHTNBR)) = UPPER(TRIM(i.CALLSIGN))
                       AND UPPER(TRIM(d.FROM_AIRP)) = UPPER(TRIM(i.FROM_AIRP))
                       AND UPPER(TRIM(d.TO_AIRP)) = UPPER(TRIM(i.TO_AIRP))
                       AND TRIM(d.ETD) = TRIM(i.ETD)
@@ -580,6 +614,7 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
                 'User=' || v_user || '; schedule rows=' || v_updated_count
             );
         EXCEPTION WHEN OTHERS THEN NULL;
+        END;
     EXCEPTION
         WHEN OTHERS THEN
             v_error := SUBSTR(SQLERRM || CHR(10) || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE, 1, 2000);
@@ -593,9 +628,11 @@ CREATE OR REPLACE PACKAGE BODY PERM_IMP_V2_PKG AS
                              ',' || TO_CHAR(i.ID) || ',') > 0;
                 COMMIT;
             EXCEPTION WHEN OTHERS THEN ROLLBACK;
+            END;
             BEGIN
                 PROCESS_PKG.ADD_ERROR_LOG('PERM_IMP_V2_APPLY_ERROR', SQLCODE, SUBSTR(v_error, 1, 200));
             EXCEPTION WHEN OTHERS THEN NULL;
+            END;
             P_OUT := -1;
     END APPLY_CANCELLATIONS;
 END PERM_IMP_V2_PKG;
