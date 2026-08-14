@@ -23,6 +23,17 @@ namespace prjApplication.Permission
         public string _phanCach = "::::";
         public string _IdSelect = "0";
         private string _AliasSession = "ListPermissionSC";
+        protected bool IsAdminUser
+        {
+            get
+            {
+                return _user != null
+                    && String.Equals(
+                        (_user.UserName ?? String.Empty).Trim(),
+                        "admin",
+                        StringComparison.OrdinalIgnoreCase);
+            }
+        }
 
         #region newList
         public string _ListAero
@@ -729,6 +740,12 @@ namespace prjApplication.Permission
 
         protected void lnkDelete_Click(object sender, EventArgs e)
         {
+            if (!IsAdminUser || !_Role.R_Del)
+            {
+                this.AlertMessage("Only admin can delete permission!");
+                return;
+            }
+
             var kq = new PermMasterScDAL().DeleteObject(((LinkButton)sender).Attributes["data-id"].ToString());
             if (kq) { 
                 this.AlertMessage("Delete sussess!");
