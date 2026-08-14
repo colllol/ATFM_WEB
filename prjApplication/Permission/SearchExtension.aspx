@@ -45,6 +45,30 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       text-transform: uppercase;
     }
 
+    #tblSearch {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 9px 0;
+    }
+
+    #tblSearch td {
+      padding: 0;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    #tblSearch tr:first-child td {
+      padding: 0 2px 5px;
+      color: #234761;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 16px;
+    }
+
+    #tblSearch tr:nth-child(2) td {
+      padding-bottom: 8px;
+    }
+
     #tblSource {
       font-size: 12px !important;
       width: 100%;
