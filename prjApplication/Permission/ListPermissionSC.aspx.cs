@@ -216,7 +216,9 @@ namespace prjApplication.Permission
 
         public string GetWhereConditionInGrid()
         {
-            string where = " 1=1 ";
+            string where = @" 1=1
+                AND PERMDATE >= ADD_MONTHS(TRUNC(SYSDATE), -12)
+                AND PERMDATE < TRUNC(SYSDATE) + 1 ";
             
                     
 
