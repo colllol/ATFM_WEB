@@ -73,6 +73,18 @@ namespace prjApplication.Permission
         public string _phanCach = "::::";
         public string _IdSelect = "0";
         private string _AliasSession = "ListPermissionNo";
+        protected bool IsAdminUser
+        {
+            get
+            {
+                return _user != null
+                    && String.Equals(
+                        (_user.UserName ?? String.Empty).Trim(),
+                        "admin",
+                        StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
         public string _ObjRender
         {
             get
@@ -617,6 +629,12 @@ namespace prjApplication.Permission
 
         protected void lnkDelete_Click(object sender, EventArgs e)
         {
+            if (!IsAdminUser || !_Role.R_Del)
+            {
+                this.AlertMessage("Only admin can delete permission!");
+                return;
+            }
+
             var ax = new PermMasterNoDAL().DeleteObject(((LinkButton)sender).Attributes["data-id"].ToString());
             if (ax)
             {

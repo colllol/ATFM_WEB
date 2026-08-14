@@ -343,7 +343,7 @@
                                     <i class="ace-icon fa fa-angle-double-down"></i>
                                 </a>
                                 <asp:LinkButton runat="server" ID="lnkDelete" CssClass="ace-icon fa fa-trash-o bigger-130"
-                                    Visible='<%# _Role.R_Del %>' data-id='<%# Eval("PERM_ID") %>' data-toggle="tooltip"
+                                    Visible='<%# IsAdminUser && _Role.R_Del %>' data-id='<%# Eval("PERM_ID") %>' data-toggle="tooltip"
                                     title='<%# "Delete: " + Eval("PERMNBR_ID") %>'
                                     OnClick="lnkDelete_Click"></asp:LinkButton>
                             </div>
