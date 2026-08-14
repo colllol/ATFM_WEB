@@ -117,11 +117,12 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       position: absolute;
       top: 50%;
       right: 4px;
-      z-index: 120;
-      display: flex;
+      z-index: 5000;
+      display: flex !important;
       flex-direction: column;
       gap: 5px;
       transform: translateY(-50%);
+      visibility: visible !important;
     }
 
     .search-extension-scroll-button {
@@ -159,8 +160,10 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       box-shadow: none;
     }
 
-    .search-extension-scroll-button .fa {
-      font-size: 16px;
+    .search-extension-scroll-symbol {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
     }
   </style>
 
@@ -171,8 +174,7 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       <td>TO</td>
       <td>CRAFT</td>
       <td>VIA</td>
-      <td>FROM DATE</td>
-      <td>TO DATE</td>
+      <td>FLIGHT DATE</td>
       <td>PERM NUMBER</td>
       <td>OPER</td>
       <td>FLIGHT TYPE</td>
@@ -205,21 +207,15 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       <td>
         <input
           data-checkdate="true"
-          id="sToDatePerm"
+          id="sFlightDate"
           class="wid_90px"
           type="text"
+          maxlength="10"
+          placeholder="DD-MM-YYYY"
         />
       </td>
       <td>
-        <input
-          data-checkdate="true"
-          id="sFromDatePerm"
-          class="wid_90px"
-          type="text"
-        />
-      </td>
-      <td>
-        <input id="sPermNbr" maxlength="5" class="wid_80px" type="text" />
+        <input id="sPermNbr" maxlength="8" class="wid_80px" type="text" />
       </td>
       <td>
         <input
@@ -315,11 +311,11 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
     <div class="search-extension-scroll-controls" aria-label="Horizontal table controls">
       <button id="searchExtensionScrollLeft" class="search-extension-scroll-button" type="button"
         title="Scroll table left" aria-label="Scroll table left">
-        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        <span class="search-extension-scroll-symbol" aria-hidden="true">&#10094;</span>
       </button>
       <button id="searchExtensionScrollRight" class="search-extension-scroll-button" type="button"
         title="Scroll table right" aria-label="Scroll table right">
-        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+        <span class="search-extension-scroll-symbol" aria-hidden="true">&#10095;</span>
       </button>
     </div>
   </div>
@@ -334,11 +330,12 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                LoadDataBySearch();
            }
            function LoadDataBySearch() {
-               console.log(getObjectSearch());
                var $request = $.ajax({
-                   method: "PUT",
-                   url: "<%=System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"]%>api/SearchPermExtension/GetPermBySearch",
-                   data: getObjectSearch(),
+                   method: "POST",
+                   url: "SearchExtension.aspx/SearchPermissions",
+                   data: JSON.stringify({ request: getObjectSearch() }),
+                   contentType: "application/json; charset=utf-8",
+                   dataType: "json",
                    beforeSend: function () {
                        $('#tblSource tbody tr').remove();
                        preloadImg('tblSource', 'loadingData', '25px', '25px');
@@ -348,17 +345,19 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                        $('#tblSource').paging({
                            onClickButton: 'LoadDataBySearch',
                        });
+                       $(window).trigger('resize');
                    },
-               }).always(function (data) {
-                   if (data.ListValue == null) {
+               }).done(function (response) {
+                   var data = response && response.d ? response.d : response;
+                   if (!data || data.Code !== '00') {
                        unLoadingData('loadingData');
                        $('#tblSource').attr('data-total', '0');
+                       alert(data && data.Message ? data.Message : 'Không thể tải dữ liệu tìm kiếm.');
                        return;
                    }
                    $('#tblSource tbody tr').remove();
-                   $('#tblSource').attr('data-total', data.ListValue[0]['RECORD_SUM']);
-                   var strAppend = '';
-                   $.each(data.ListValue, function (a, b) {
+                   $('#tblSource').attr('data-total', data.Total || 0);
+                   $.each(data.Items || [], function (a, b) {
                        var permId = parseInt(b.PERM_ID, 10);
                        var permLink = returnEmpty(b.PERMNBR_ID);
                        if (!isNaN(permId) && permId > 0) {
@@ -387,35 +386,34 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                        + "<td>" + returnEmpty(b.REMARK) + "</td>"
                        + "</tr>");
                    });
+               }).fail(function (xhr) {
+                   $('#tblSource tbody tr').remove();
+                   $('#tblSource').attr('data-total', '0');
+                   var message = 'Không thể tải dữ liệu tìm kiếm.';
+                   if (xhr.responseJSON && xhr.responseJSON.Message) message += ' ' + xhr.responseJSON.Message;
+                   alert(message);
                });
-               $request.onreadystatechange = null;
-               $request.abort = null;
-               $request = null;
            }
            function getObjectSearch() {
                if ($('#tblSource').attr('data-pageSize') == null) $('#tblSource').attr('data-pageSize', 500);
                if ($('#tblSource').attr('data-pageIndex') == null) $('#tblSource').attr('data-pageIndex', 1);
-               var _obj = new Object();
-               _obj['FLIGHTNBR'] = $('#sCallSign').val();
-               _obj['FROM_AIRP'] = $('#sFrom_Airp').val();
-               _obj['TO_AIRP'] = $('#sTo_Airp').val();
-               _obj['CRAFT'] = $('#sCraft').val();
-               _obj['VIA'] = $('#sVia').val();
-               _obj['PERMNBR'] = $('#sPermNbr').val();
-               _obj['OPER'] = $('#sOper').val();
-               _obj['SEASION'] = '';
-               _obj['FLIGHT_TYPE'] = $('#sFlightType').val();
-               _obj['PERMTYPE'] = $('#sPermType').val();
-               _obj['ETD'] = $('#sEtd').val();
-               _obj['REMARK'] = $('#sRemark').val();
-               if ($('#sToDatePerm').val() != '')
-                   _obj['SDATE'] = new Date($('#sToDatePerm').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')).format('yyyy-mm-dd');
-               if ($('#sFromDatePerm').val() != '')
-                   _obj['FDATE'] = new Date($('#sFromDatePerm').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')).format('yyyy-mm-dd');
-               _obj['PURPOSE'] = $('#sPurpose').val();
-               _obj['PAGESIZE'] = $('#tblSource').attr('data-pageSize');
-               _obj['PAGEINDEX'] = parseInt($('#tblSource').attr('data-pageIndex')) - 1;
-               return _obj;
+               return {
+                   FlightNbr: $.trim($('#sCallSign').val()),
+                   FromAirp: $.trim($('#sFrom_Airp').val()),
+                   ToAirp: $.trim($('#sTo_Airp').val()),
+                   Craft: $.trim($('#sCraft').val()),
+                   Via: $.trim($('#sVia').val()),
+                   FlightDate: $.trim($('#sFlightDate').val()),
+                   PermNbr: $.trim($('#sPermNbr').val()),
+                   Oper: $.trim($('#sOper').val()),
+                   FlightType: $.trim($('#sFlightType').val()),
+                   PermType: $.trim($('#sPermType').val()),
+                   Etd: $.trim($('#sEtd').val()),
+                   Purpose: $.trim($('#sPurpose').val()),
+                   Remark: $.trim($('#sRemark').val()),
+                   PageSize: parseInt($('#tblSource').attr('data-pageSize'), 10) || 500,
+                   PageIndex: Math.max(0, (parseInt($('#tblSource').attr('data-pageIndex'), 10) || 1) - 1)
+               };
            }
            function returnEmpty(val) {
                return val == null ? "" : val;
@@ -427,12 +425,10 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                $('#sCraft').val('');
                $('#sVia').val('');
                $('#sPermNbr').val('');
-               $('#sDatePerm').val('');
+               $('#sFlightDate').val('');
                $('#sOper').val('');
                $('#sFlightType').val('');
                $('#sPermType').val('');
-               $('#sToDatePerm').val('');
-               $('#sFromDatePerm').val('');
                $('#sEtd').val('');
                $('#sRemark').val('');
                $('#sPurpose').val('');
