@@ -164,31 +164,37 @@ namespace prjApplication.Permission
         {
             string where = " 1=1 ";
 
-                    if (!String.IsNullOrEmpty(txtSearchPERMNBR_ID.Value.Trim()))
-                        where += " AND " + string.Format(" UPPER(PERMNBR_ID) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchPERMNBR_ID.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchAUTHOR.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(AUTHOR_NAME) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchAUTHOR.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchTYPE.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(PERMTYPE) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchTYPE.Value.Trim()));
-                    if (!String.IsNullOrEmpty(txtSearchNUMBER.Value.Trim()))
-                        where += " AND " + string.Format(" UPPER(PERMNBR) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchNUMBER.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchVERSION.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(VERSION) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchVERSION.Value.Trim()));
-                    if (!String.IsNullOrEmpty(txtSearchDATE.Value.Trim()))
-                        where += " AND PERMDATE =" + whereDateHelper(txtSearchDATE.Value.Trim()) + "";
-                    if (!String.IsNullOrEmpty(txtSearchOPER.Value.Trim()))
-                        where += " AND " + string.Format(" UPPER(OPER_ID) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchOPER.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchREFERENCE.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(REFERENCE) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchREFERENCE.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchVALIDHOURS.Value.Trim()))
-                    //    where += " AND VALIDHOURS = " + Convert.ToInt32(txtSearchVALIDHOURS.Value.Trim());                  
-                    //if (!String.IsNullOrEmpty(txtSearchBILLINGADDRESS.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(BILLINGADDRESS) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchBILLINGADDRESS.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchPERMCONTENT.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(PERMCONTENT) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchPERMCONTENT.Value.Trim()));
+            where = AppendContainsCondition(where, "PERMNBR_ID", txtSearchPERMNBR_ID.Value);
+            where = AppendContainsCondition(where, "AUTHOR_NAME", txtSearchAUTHOR.Value);
+            where = AppendContainsCondition(where, "PERMTYPE", txtSearchTYPE.Value);
+            where = AppendContainsCondition(where, "FLIGHTTYPE", txtSearchFLIGHTTYPE.Value);
+            where = AppendContainsCondition(where, "PERMNBR", txtSearchNUMBER.Value);
+            where = AppendContainsCondition(where, "VERSION", txtSearchVERSION.Value);
 
-                
+            if (!String.IsNullOrWhiteSpace(txtSearchDATE.Value))
+                where += " AND PERMDATE = " + whereDateHelper(txtSearchDATE.Value.Trim());
+
+            where = AppendContainsCondition(where, "OPER_ID", txtSearchOPER.Value);
+            where = AppendContainsCondition(where, "REFERENCE", txtSearchREFERENCE.Value);
+
+            int validHours;
+            if (!String.IsNullOrWhiteSpace(txtSearchVALIDHOURS.Value)
+                && Int32.TryParse(txtSearchVALIDHOURS.Value.Trim(), out validHours))
+                where += " AND VALIDHOURS = " + validHours;
+
+            where = AppendContainsCondition(where, "BILLINGADDRESS", txtSearchBILLINGADDRESS.Value);
+            where = AppendContainsCondition(where, "PERMCONTENT", txtSearchPERMCONTENT.Value);
+
             return HttpUtility.UrlEncode(where.ToUpper());
+        }
+
+        private static string AppendContainsCondition(string where, string columnName, string value)
+        {
+            if (String.IsNullOrWhiteSpace(value))
+                return where;
+
+            string safeValue = UltilFunc.SqlFormatText(value.Trim().ToUpperInvariant());
+            return where + String.Format(" AND UPPER({0}) LIKE '%{1}%'", columnName, safeValue);
         }
         private string whereDateHelper(string value)
         {

@@ -10,6 +10,57 @@
             width: 100%;
         }
 
+        #tblSource {
+            min-width: 1540px;
+            table-layout: fixed;
+        }
+
+        .permission-list-scroll {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        #tblSource col.col-action { width: 74px; }
+        #tblSource col.col-perm { width: 190px; }
+        #tblSource col.col-author { width: 120px; }
+        #tblSource col.col-ptype,
+        #tblSource col.col-ftype { width: 65px; }
+        #tblSource col.col-number { width: 80px; }
+        #tblSource col.col-version { width: 65px; }
+        #tblSource col.col-date { width: 100px; }
+        #tblSource col.col-oper { width: 75px; }
+        #tblSource col.col-reference { width: 150px; }
+        #tblSource col.col-valid { width: 65px; }
+        #tblSource col.col-address { width: 230px; }
+        #tblSource col.col-content { width: 260px; }
+
+        #tblSource .permission-filter-row th {
+            padding: 4px;
+            vertical-align: middle;
+        }
+
+        #tblSource .permission-filter-row .sInput {
+            min-width: 0;
+            height: 30px;
+            padding: 4px 5px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        #tblSource td.col-perm,
+        #tblSource td.col-author {
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        #tblSource .permission-list-text {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         input, textarea {
             text-transform: uppercase;
         }
@@ -85,19 +136,6 @@
         #tblPermDetailNoActionHistory .history-loading {
             padding: 24px;
             text-align: center;
-        }
-    </style>
-    <style type="text/css">
-        #dhtmltooltip {
-            position: absolute;
-            width: 150px;
-            border: 2px solid black;
-            padding: 2px;
-            background-color: lightyellow;
-            visibility: hidden;
-            z-index: 999999;
-            /*Remove below line to remove shadow. Below line should always appear last within this CSS*/
-            filter: progid:DXImageTransform.Microsoft.Shadow(color=gray,direction=135);
         }
     </style>
     <style>
@@ -233,39 +271,61 @@
 
     </div>
 
-    <table id="tblSource" class="table table-bordered">
+    <div class="permission-list-scroll">
+    <table id="tblSource" class="table table-bordered" data-atfm-responsive-table="off">
+        <colgroup>
+            <col class="col-action" />
+            <col class="col-perm" />
+            <col class="col-author" />
+            <col class="col-ptype" />
+            <col class="col-ftype" />
+            <col class="col-number" />
+            <col class="col-version" />
+            <col class="col-date" />
+            <col class="col-oper" />
+            <col class="col-reference" />
+            <col class="col-valid" />
+            <col class="col-address" />
+            <col class="col-content" />
+        </colgroup>
         <thead>
-            <tr>
+            <tr class="permission-filter-row">
                 <th></th>
                 <th>
-                    <input runat="server" class="sInput" type="text" id="txtSearchPERMNBR_ID" />
+                    <input runat="server" class="sInput" type="text" id="txtSearchPERMNBR_ID" placeholder="PERM" />
                 </th>
                 <th>
-                    <!--<input runat="server" class="sInput" type="text" id="txtSearchAUTHOR" />-->
-                        </th>
-                <th>
-                    <input runat="server" class="sInput" type="text" id="txtSearchTYPE" /></th>
-                <th></th>
-                <th>
-                    <input runat="server" class="sInput" type="text" id="txtSearchNUMBER" /></th>
-                <th>
-                    <!--<input runat="server" class="sInput" type="text" id="txtSearchVERSION" />-->
-                        </th>
-                <th>
-                    <input runat="server" class="sInput" type="text" id="txtSearchDATE" /></th>
-                <th>
-                    <input runat="server" class="sInput" type="text" id="txtSearchOPER" /></th>
-                <th>
-                    <!--<input runat="server" class="sInput" type="text" id="txtSearchREFERENCE" />-->
-                        </th>
-                <th>
-                    <!--<input runat="server" class="sInput" type="text" id="txtSearchVALIDHOURS" />-->
+                    <input runat="server" class="sInput" type="text" id="txtSearchAUTHOR" placeholder="AUTHOR" />
                 </th>
                 <th>
-                    <!--<input runat="server" class="sInput" type="text" id="txtSearchBILLINGADDRESS" />-->
+                    <input runat="server" class="sInput" type="text" id="txtSearchTYPE" placeholder="PTYPE" />
                 </th>
                 <th>
-                    <!--<input runat="server" class="sInput" type="text" id="txtSearchPERMCONTENT" />-->
+                    <input runat="server" class="sInput" type="text" id="txtSearchFLIGHTTYPE" placeholder="FTYPE" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" id="txtSearchNUMBER" placeholder="NUMBER" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" id="txtSearchVERSION" placeholder="VERSION" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" id="txtSearchDATE" placeholder="DD-MM-YYYY" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" id="txtSearchOPER" placeholder="OPER" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" id="txtSearchREFERENCE" placeholder="REFERENCE" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" inputmode="numeric" pattern="[0-9]*" id="txtSearchVALIDHOURS" placeholder="VALID" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" id="txtSearchBILLINGADDRESS" placeholder="ADDRESS" />
+                </th>
+                <th>
+                    <input runat="server" class="sInput" type="text" id="txtSearchPERMCONTENT" placeholder="CONTENT" />
                 </th>
             </tr>
             <tr>
@@ -307,8 +367,8 @@
                                     OnClick="lnkDelete_Click"></asp:LinkButton>
                             </div>
                         </td>
-                        <td style="white-space: nowrap;"><%# Eval("PERMNBR_ID") %></td>
-                        <td style="width: 90px"><%# Eval("AUTHOR_NAME") %></td>
+                        <td class="col-perm"><%# Eval("PERMNBR_ID") %></td>
+                        <td class="col-author"><%# Eval("AUTHOR_NAME") %></td>
                         <td style="width: 50px"><%# Eval("PERMTYPE") %></td>
                         <td style="width: 50px"><%# Eval("FLIGHTTYPE") %></td>
                         <td style="width: 60px" onclick="EditNo('<%# Eval("PERM_ID") %>')"><%# Eval("PERMNBR") %></td>
@@ -317,13 +377,11 @@
                         <td style="width: 40px"><%# Eval("OPER_ID") %></td>
                         <td style="width: 120px"><%# Eval("REFERENCE") %></td>
                         <td style="width: 40px"><%# Eval("VALIDHOURS") %></td>
-                        <td style="width: 220px">
-                            <span ondblclick="copyToClipboard('<%# Eval("BILLINGADDRESS").ToString().Replace("\n","<br>") %>')"
-                                onmouseout="hideddrivetip();" onmouseover="ddrivetip('<%# Eval("BILLINGADDRESS").ToString().Replace("\n", "</br>") %>', 'yellow', 900);">
+                        <td>
+                            <span class="permission-list-text" ondblclick="copyToClipboard('<%# Eval("BILLINGADDRESS").ToString().Replace("\n","<br>") %>')">
                                 <%# Eval("BILLINGADDRESS").ToString().Length>40? Eval("BILLINGADDRESS").ToString().Substring(0,40)+"..."  : Eval("BILLINGADDRESS").ToString() %></span>
                         </td>
-                        <td style="width: 220px"><span ondblclick="copyToClipboard('<%# Eval("PERMCONTENT").ToString().Replace("\n","<br>") %>')"
-                            onmouseout="hideddrivetip();" onmouseover="ddrivetip('<%# Eval("PERMCONTENT").ToString().Replace("\n", "</br>") %>', 'yellow', 1250);">
+                        <td><span class="permission-list-text" ondblclick="copyToClipboard('<%# Eval("PERMCONTENT").ToString().Replace("\n","<br>") %>')">
                             <%# Eval("PERMCONTENT").ToString().Length>40? Eval("PERMCONTENT").ToString().Substring(0,40)+"..."  : Eval("PERMCONTENT").ToString() %></span>
                         </td>
                     </tr>
@@ -336,6 +394,7 @@
             </asp:Repeater>
         </tbody>
     </table>
+    </div>
     <div style="text-align: right; float:left">
         <cc1:PhanTrang ID="PhanTrang1" runat="server" PageSize="100" OnPaging_IndexChange="PhanTrang1_Paging_IndexChange" />
     </div>
@@ -720,7 +779,6 @@
 
     </div>
 
-    <div id="dhtmltooltip"></div>
     <script src="../Scripts/CustomDynamic.js"></script>
     <script src="../Scripts/CustomPaging.js"></script>
     <%--<script src="../Scripts/CustumStaticdata.js"></script>--%>
@@ -1061,16 +1119,6 @@
             //new_row.cells[13].innerHTML = new Date().format('dd/mm/yyyy hh:mm:ss');
             new_row.cells[11].innerHTML = mBillingAddress.value.length > 40 ? mBillingAddress.value.substring(0, 40) + '...' : mBillingAddress.value;
             new_row.cells[12].innerHTML = mPermContent.value.length > 40 ? mPermContent.value.substring(0, 40) + '...' : mPermContent.value;
-            if (mBillingAddress.value.length > 40) {
-                new_row.cells[11].setAttribute("onmouseover", "ddrivetip('" + mBillingAddress.value.replace(/\r?\n|\r/g, '<br>') + "', 'yellow', 500);");
-                new_row.cells[11].setAttribute('onmouseout', 'hideddrivetip();');
-                new_row.cells[11].setAttribute('ondblclick', 'copyToClipboard(' + mBillingAddress.value + ');');
-            }
-            if (mPermContent.value.length > 40) {
-                new_row.cells[12].setAttribute("onmouseover", "ddrivetip('" + mPermContent.value.replace(/\r?\n|\r/g, "<br>") + "', 'yellow', 500);");
-                new_row.cells[12].setAttribute('onmouseout', 'hideddrivetip();');
-                new_row.cells[12].setAttribute('ondblclick', 'copyToClipboard(' + mPermContent.value + ');');
-            }
             new_row.id = 'tr' + id;
             tblMultiAdd.tBodies[0].appendChild(new_row);
             if (iRowAdd == 1)
@@ -1133,16 +1181,6 @@
             //uRow.cells[13].innerHTML = new Date().format('dd/mm/yyyy hh:mm:ss');
             uRow.cells[11].innerHTML = mBillingAddress.value.length > 40 ? mBillingAddress.value.substring(0, 40) + '...' : mBillingAddress.value;
             uRow.cells[12].innerHTML = mPermContent.value.length > 40 ? mPermContent.value.substring(0, 40) + '...' : mPermContent.value;
-            if (mBillingAddress.value.length > 40) {
-                uRow.cells[11].setAttribute("onmouseover", "ddrivetip('" + mBillingAddress.value.replace(/\r?\n|\r/g, '</br>') + "', 'yellow', 500);");
-                uRow.cells[11].setAttribute('onmouseout', 'hideddrivetip();');
-                uRow.cells[11].setAttribute('ondblclick', 'copyToClipboard(' + mBillingAddress.value + ');');
-            }
-            if (mPermContent.value.length > 40) {
-                uRow.cells[12].setAttribute("onmouseover", "ddrivetip('" + mPermContent.value.replace(/\r?\n|\r/g, '</br>') + "', 'yellow', 500);");
-                uRow.cells[12].setAttribute('onmouseout', 'hideddrivetip();');
-                uRow.cells[12].setAttribute('ondblclick', 'copyToClipboard(' + mPermContent.value + ');');
-            }
         }
         function createPermNBRID(au, typ, nbr, ye) {
             var y = '';
