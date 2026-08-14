@@ -7,10 +7,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
+using System.Web.Script.Services;
 using System.Web.Script.Serialization;
+using System.Web.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Data;
+using System.Globalization;
 using prjComponents;
 
 namespace prjApplication.Permission
@@ -174,6 +177,62 @@ namespace prjApplication.Permission
             string kq = GetOneFlight(Request.Params["ID"]);
             this.ExcuteJavascript($"ReadInfoPerm('{kq}'); listfile();");
             
+        }
+
+        [WebMethod(EnableSession = true)]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static object GetFlightDetails(long permissionId, string flightNbr)
+        {
+            if (permissionId <= 0)
+                throw new ArgumentException("Permission ID is invalid.", "permissionId");
+
+            string normalizedFlightNbr = (flightNbr ?? string.Empty).Trim().ToUpperInvariant();
+            var search = new PermDetailSc_Search
+            {
+                PERM_ID = permissionId,
+                FLIGHTNBR = normalizedFlightNbr,
+                PageSize = 10000,
+                PageIndex = 0,
+                rStart = 0,
+                rFinish = 10000
+            };
+
+            DataTable table = new PermDetailScDAL().GetBySearch(search);
+            var rows = new List<Dictionary<string, object>>();
+
+            if (table != null)
+            {
+                foreach (DataRow row in table.Rows)
+                {
+                    string rowFlightNbr = table.Columns.Contains("FLIGHTNBR")
+                        ? Convert.ToString(row["FLIGHTNBR"]).Trim().ToUpperInvariant()
+                        : string.Empty;
+
+                    if (normalizedFlightNbr.Length > 0
+                        && !string.Equals(rowFlightNbr, normalizedFlightNbr, StringComparison.Ordinal))
+                        continue;
+
+                    rows.Add(ToSerializableFlightDetail(row));
+                }
+            }
+
+            return new { Rows = rows, Total = rows.Count };
+        }
+
+        private static Dictionary<string, object> ToSerializableFlightDetail(DataRow row)
+        {
+            var result = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            foreach (DataColumn column in row.Table.Columns)
+            {
+                object value = row[column];
+                if (value == DBNull.Value)
+                    result[column.ColumnName] = null;
+                else if (value is DateTime)
+                    result[column.ColumnName] = ((DateTime)value).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                else
+                    result[column.ColumnName] = value;
+            }
+            return result;
         }
 
         private PermDetailSc_Search GetObjectSearch()

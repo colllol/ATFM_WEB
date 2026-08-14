@@ -476,7 +476,7 @@
     <%--<script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js"></script>--%>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomPaging.js"></script>
-    <script src="<%=Global.ApplicationPath%>/Scripts/PermissionFlightDetails.js?v=20260814-2"></script>
+    <script src="<%= ResolveUrl("~/Scripts/PermissionFlightDetails.js?v=20260814-3") %>"></script>
     <script>
 
         function LoadShowHisEventClick(){   
@@ -810,28 +810,21 @@
             ClearValue();
         }
         function ClearValue() {
-            txtBEGINDATE_SC.value = '';
-            txtENDDATE_SC.value = '';
-            txtETA.value = '';
-            txtETD.value = '';
-           
-            txtFLIGHTNBR.value = '';            
-            txtREGISTRATION.value = '';
-            txtREMARK.value = '';
-            txtVIA.value = '';
+            var valueFields = [
+                txtBEGINDATE_SC, txtENDDATE_SC, txtETA, txtETD,
+                txtFLIGHTNBR, txtREGISTRATION, txtREMARK, txtVIA, txtLASTUSER
+            ];
+            $.each(valueFields, function (_, field) {
+                if (field) field.value = '';
+            });
             
             //ddlCRAFT_ID.value='';
             //ddlFROM_AIRP.value='';
             //ddlPURPOSE_ID.selectedIndex = 0;
             //ddlTO_AIRP.selectedIndex = 0;
-            txtLASTUSER.value='';
-            chkDAY1.checked = false;
-            chkDAY2.checked = false;
-            chkDAY3.checked = false;
-            chkDAY4.checked = false;
-            chkDAY5.checked = false;
-            chkDAY6.checked = false;
-            chkDAY7.checked = false;
+            $.each([chkDAY1, chkDAY2, chkDAY3, chkDAY4, chkDAY5, chkDAY6, chkDAY7], function (_, checkbox) {
+                if (checkbox) checkbox.checked = false;
+            });
             IdSelectDT = '0';
         }
         function CRAFT_ID_Onchange() {
@@ -1578,6 +1571,7 @@
             permissionId: '<%= _ID %>',
             flightNbr: '<%= System.Web.HttpUtility.JavaScriptStringEncode(Request.QueryString["FlightNbr"] ?? string.Empty) %>',
             apiBase: '<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>',
+            pageMethod: '<%= ResolveUrl("~/Permission/View_PermSC.aspx/GetFlightDetails") %>',
             tableId: 'permissionFlightDetailsTableSC',
             totalId: 'permissionFlightDetailsTotalSC'
         });

@@ -97,6 +97,23 @@
         body.appendChild(fragment);
     }
 
+    function unwrapResponse(response, usePageMethod) {
+        var payload = response;
+        if (usePageMethod && payload && payload.d !== undefined) payload = payload.d;
+        if (typeof payload === 'string') {
+            try {
+                payload = JSON.parse(payload);
+            } catch (ignore) {
+                payload = null;
+            }
+        }
+
+        if (usePageMethod) {
+            return payload && payload.Rows ? payload.Rows : [];
+        }
+        return payload && payload.ListValue ? payload.ListValue : [];
+    }
+
     function init(options) {
         var table = document.getElementById(options.tableId);
         var total = document.getElementById(options.totalId);
@@ -121,6 +138,8 @@
         var endpoint = permissionType === 'NO'
             ? 'api/PermDetailNo/GetBySearch'
             : 'api/PermDetailSc/GetBySearch';
+        var pageMethod = text(options.pageMethod).trim();
+        var usePageMethod = pageMethod.length > 0;
         var payload = {
             PERM_ID: permissionId,
             FLIGHTNBR: flightNbr,
@@ -131,15 +150,19 @@
         };
 
         $.ajax({
-            method: 'PUT',
-            url: text(options.apiBase).replace(/\/?$/, '/') + endpoint,
-            data: JSON.stringify(payload),
+            method: usePageMethod ? 'POST' : 'PUT',
+            url: usePageMethod
+                ? pageMethod
+                : text(options.apiBase).replace(/\/?$/, '/') + endpoint,
+            data: JSON.stringify(usePageMethod
+                ? { permissionId: permissionId, flightNbr: flightNbr }
+                : payload),
             contentType: 'application/json; charset=utf-8',
             dataType: 'json'
         }).done(function (response) {
-            var rows = response && response.ListValue
-                ? $.grep(response.ListValue, function (item) { return item !== null; })
-                : [];
+            var rows = $.grep(unwrapResponse(response, usePageMethod), function (item) {
+                return item !== null;
+            });
             if (flightNbr) {
                 rows = $.grep(rows, function (item) {
                     return text(item.FLIGHTNBR).trim().toUpperCase() === flightNbr;
