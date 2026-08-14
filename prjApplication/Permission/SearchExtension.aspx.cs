@@ -18,13 +18,9 @@ namespace prjApplication.Permission
             public string Craft { get; set; }
             public string Via { get; set; }
             public string FlightDate { get; set; }
-            public string PermNbr { get; set; }
-            public string Oper { get; set; }
             public string FlightType { get; set; }
             public string PermType { get; set; }
-            public string Etd { get; set; }
             public string Purpose { get; set; }
-            public string Remark { get; set; }
             public int PageSize { get; set; }
             public int PageIndex { get; set; }
         }
@@ -113,18 +109,9 @@ namespace prjApplication.Permission
                           AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
                           AND (:craft IS NULL OR UPPER(TRIM(c.MA)) LIKE '%' || :craft || '%')
                           AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
-                          AND
-                          (
-                              :permNbr IS NULL
-                              OR UPPER(TRIM(m.PERMNBR_ID)) LIKE '%' || :permNbr || '%'
-                              OR UPPER(TRIM(m.PERMNBR)) LIKE '%' || :permNbr || '%'
-                          )
-                          AND (:oper IS NULL OR UPPER(TRIM(m.OPER_ID)) LIKE '%' || :oper || '%')
                           AND (:flightType IS NULL OR UPPER(TRIM(m.FLIGHTTYPE)) = :flightType)
                           AND (:permType IS NULL OR UPPER(TRIM(m.PERMTYPE)) = :permType)
-                          AND (:etd IS NULL OR UPPER(TRIM(d.ETD)) LIKE '%' || :etd || '%')
                           AND (:purpose IS NULL OR UPPER(TRIM(d.PURPOSE_ID)) = :purpose)
-                          AND (:remark IS NULL OR UPPER(TRIM(d.REMARK)) LIKE '%' || :remark || '%')
                           AND
                           (
                               :flightDate IS NULL
@@ -158,13 +145,9 @@ namespace prjApplication.Permission
                     AddString(command, "toAirp", Normalize(request.ToAirp));
                     AddString(command, "craft", Normalize(request.Craft));
                     AddString(command, "via", Normalize(request.Via));
-                    AddString(command, "permNbr", Normalize(request.PermNbr));
-                    AddString(command, "oper", Normalize(request.Oper));
                     AddString(command, "flightType", Normalize(request.FlightType));
                     AddString(command, "permType", Normalize(request.PermType));
-                    AddString(command, "etd", Normalize(request.Etd));
                     AddString(command, "purpose", Normalize(request.Purpose));
-                    AddString(command, "remark", Normalize(request.Remark));
                     command.Parameters.Add("flightDate", OracleDbType.Date).Value =
                         flightDate.HasValue ? (object)flightDate.Value.Date : DBNull.Value;
                     command.Parameters.Add("firstRow", OracleDbType.Int32).Value = firstRow;

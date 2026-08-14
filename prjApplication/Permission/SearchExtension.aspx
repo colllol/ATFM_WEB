@@ -175,13 +175,9 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       <td>CRAFT</td>
       <td>VIA</td>
       <td>FLIGHT DATE</td>
-      <td>PERM NUMBER</td>
-      <td>OPER</td>
       <td>FLIGHT TYPE</td>
       <td>TYPE</td>
-      <td>ETD</td>
       <td>PURPOSE</td>
-      <td>REMARK</td>
     </tr>
     <tr>
       <td>
@@ -215,17 +211,6 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
         />
       </td>
       <td>
-        <input id="sPermNbr" maxlength="8" class="wid_80px" type="text" />
-      </td>
-      <td>
-        <input
-          id="sOper"
-          data-autocomplete="OPER"
-          class="wid_60px"
-          type="text"
-        />
-      </td>
-      <td>
         <input
           id="sFlightType"
           data-autocomplete="FLIGHTTYPE"
@@ -243,23 +228,11 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       </td>
       <td>
         <input
-          id="sEtd"
-          type="text"
-          data-number="true"
-          maxlength="4"
-          class="wid_50px"
-        />
-      </td>
-      <td>
-        <input
           id="sPurpose"
           data-autocomplete="PURPOSE"
           type="text"
           class="wid_60px"
         />
-      </td>
-      <td>
-        <input id="sRemark" maxlength="200" type="text" class="wid_100px" />
       </td>
     </tr>
   </table>
@@ -405,13 +378,9 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                    Craft: $.trim($('#sCraft').val()),
                    Via: $.trim($('#sVia').val()),
                    FlightDate: $.trim($('#sFlightDate').val()),
-                   PermNbr: $.trim($('#sPermNbr').val()),
-                   Oper: $.trim($('#sOper').val()),
                    FlightType: $.trim($('#sFlightType').val()),
                    PermType: $.trim($('#sPermType').val()),
-                   Etd: $.trim($('#sEtd').val()),
                    Purpose: $.trim($('#sPurpose').val()),
-                   Remark: $.trim($('#sRemark').val()),
                    PageSize: parseInt($('#tblSource').attr('data-pageSize'), 10) || 500,
                    PageIndex: Math.max(0, (parseInt($('#tblSource').attr('data-pageIndex'), 10) || 1) - 1)
                };
@@ -425,13 +394,9 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                $('#sTo_Airp').val('');
                $('#sCraft').val('');
                $('#sVia').val('');
-               $('#sPermNbr').val('');
                $('#sFlightDate').val('');
-               $('#sOper').val('');
                $('#sFlightType').val('');
                $('#sPermType').val('');
-               $('#sEtd').val('');
-               $('#sRemark').val('');
                $('#sPurpose').val('');
            }
 
