@@ -1336,17 +1336,11 @@
                 return;
             }
 
-            var currentTime = new Date();
-            var currentUtcStart = Date.UTC(
-                currentTime.getUTCFullYear(),
-                currentTime.getUTCMonth(),
-                currentTime.getUTCDate()
-            );
-            var maximumUtcTime = currentTime.getTime() + (24 * 60 * 60 * 1000);
-
-            // Chi chap nhan ngay UTC hien tai hoac ngay bat dau trong 24 gio toi.
-            if (selectedUtcStart < currentUtcStart || selectedUtcStart > maximumUtcTime) {
-                alert('Not accepted! The processing date must be the current UTC date or within the next 24 hours.');
+            // Chi chap nhan den dung 00:00:00 UTC cua NGAY XU LY.
+            // Vi du: NGAY XU LY 14-08-2026 co moc kiem tra la
+            // 2026-08-14T00:00:00Z; sau thoi diem nay se khong duoc Access.
+            if (Date.now() > selectedUtcStart) {
+                alert('Not accepted! Current UTC time is later than 00:00:00 of the processing date.');
                 return;
             }
 
