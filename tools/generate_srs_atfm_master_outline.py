@@ -978,6 +978,79 @@ def add_opt004_specification(doc):
     ])
 
 
+def add_opt004_specification_current(doc):
+    doc.add_heading("7.31. FR-OPT-004 – Tìm kiếm chuyến bay đa trường và theo từ khóa", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Permission/SearchExtension.aspx?Menu_ID=381 – Search Extension, phiên bản cập nhật ngày 14/08/2026."),
+        ("Mục tiêu", "Tra cứu chi tiết chuyến bay thuộc phép bay SC bằng các từ khóa nhập tại nhiều trường nghiệp vụ, ngày bay thực tế và khoảng giờ ETD; cho phép mở hồ sơ phép để xem chi tiết."),
+        ("Nguồn dữ liệu", "T_PERMMASTER_SC, T_PERMDETAIL_SC và M_CRAFT_TYPE; xử lý trực tiếp qua WebMethod SearchExtension.aspx/SearchPermissions."),
+        ("Phạm vi hiện tại", "Tìm kiếm trên phép SC. Giao diện không có một ô từ khóa chung; thuật ngữ theo từ khóa được hiểu là giá trị tìm kiếm nhập trong từng trường lọc."),
+        ("Trạng thái", "Đã cập nhật theo phiên bản mới: rút gọn bộ lọc, bổ sung khoảng giờ ETD và giữ phân trang/mở chi tiết phép SC."),
+    ])
+
+    doc.add_heading("7.31.1. Bộ lọc và yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-004.01", "Màn hình phải cung cấp đúng 11 tiêu chí: Callsign, FROM, TO, Craft, VIA, Flight date, Từ giờ ETD, Đến giờ ETD, Flight type, Permission type và Purpose."),
+        ("FR-OPT-004.02", "Người dùng được nhập một hoặc nhiều tiêu chí; các tiêu chí khác nhau kết hợp theo phép AND, tiêu chí để trống không giới hạn kết quả."),
+        ("FR-OPT-004.03", "Giá trị chuỗi phải được trim, chuyển chữ hoa và so khớp không phân biệt chữ hoa/thường."),
+        ("FR-OPT-004.04", "Callsign phải so khớp chính xác; FROM, TO, Craft và VIA tìm chứa; Flight type, Permission type và Purpose so khớp chính xác theo mã nghiệp vụ."),
+        ("FR-OPT-004.05", "Flight date phải chấp nhận DD-MM-YYYY, DD/MM/YYYY hoặc YYYY-MM-DD; dữ liệu sai định dạng phải bị từ chối với thông báo rõ định dạng yêu cầu."),
+        ("FR-OPT-004.06", "Khi có Flight date, hệ thống chỉ trả chi tiết có ngày tìm kiếm nằm trong BEGINDATE–ENDDATE và cờ DAY1…DAY7 tương ứng đang được phép khai thác."),
+        ("FR-OPT-004.07", "Từ giờ ETD và Đến giờ ETD là tùy chọn, nhập theo HH:mm 24 giờ từ 00:00 đến 23:59; giao diện phải tự định dạng tối đa bốn chữ số thành HH:mm."),
+        ("FR-OPT-004.08", "Có thể chỉ nhập một đầu khoảng ETD: thiếu Từ giờ mặc định 00:00, thiếu Đến giờ mặc định 23:59; nếu cả hai để trống thì không lọc ETD."),
+        ("FR-OPT-004.09", "Từ giờ ETD không được lớn hơn Đến giờ ETD. Máy chủ phải kiểm tra lại quy tắc này, không chỉ dựa vào JavaScript."),
+        ("FR-OPT-004.10", "ETD nguồn phải được chuẩn hóa thành bốn ký tự HHMM trước khi so sánh BETWEEN với khoảng giờ đã chọn."),
+        ("FR-OPT-004.11", "Kết quả phải hiển thị STT, số/ngày phép, Daily, ValidHours, ValidDate, Callsign, FROM, TO, ETD, Permission type, Flight type, OPER, Purpose, Craft, VIA và Remark."),
+        ("FR-OPT-004.12", "Kết quả mặc định phải sắp xếp theo PERMDATE giảm dần, PERM_ID giảm dần và ID chi tiết giảm dần để ưu tiên hồ sơ mới và giữ phân trang ổn định."),
+        ("FR-OPT-004.13", "Hệ thống phải phân trang tại máy chủ, trả tổng số bản ghi và STT toàn tập; PageSize mặc định 500 và bị giới hạn tối đa 1.000 dòng/trang."),
+        ("FR-OPT-004.14", "Nhấn Search phải kiểm tra khoảng ETD, đưa về trang đầu, xóa kết quả cũ, hiển thị trạng thái đang tải và thực hiện WebMethod bằng request JSON."),
+        ("FR-OPT-004.15", "Nút Clear phải xóa đầy đủ 11 tiêu chí của giao diện mới, bao gồm cả hai đầu khoảng giờ ETD."),
+        ("FR-OPT-004.16", "Nhấn Permission number trong kết quả phải mở View_PermSC.aspx theo PERM_ID và truyền Callsign; FLIGHTTYPE không được dùng để suy đoán nguồn SC/NO."),
+        ("FR-OPT-004.17", "Bảng rộng phải hỗ trợ cuộn ngang và nút cuộn trái/phải, kể cả thao tác bấm giữ; trạng thái nút phải phản ánh vị trí cuộn hiện tại."),
+        ("FR-OPT-004.18", "Khi kết quả rỗng hoặc WebMethod lỗi, hệ thống phải đặt tổng số về 0, xóa dữ liệu cũ, kết thúc trạng thái tải và hiển thị thông báo phù hợp."),
+    ])
+
+    doc.add_heading("7.31.2. Quy tắc nghiệp vụ và giới hạn", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-004.01", "Một dòng kết quả đại diện cho một chi tiết hành trình/giai đoạn của phép SC; cùng một PERM_ID có thể xuất hiện nhiều dòng."),
+        ("BR-OPT-004.02", "Daily được tạo từ DAY1…DAY7: ngày khai thác hiển thị số thứ tương ứng, ngày không khai thác hiển thị dấu chấm."),
+        ("BR-OPT-004.03", "Flight date chỉ hợp lệ với chi tiết phép khi đồng thời thuộc thời hạn BEGINDATE–ENDDATE và đúng ngày thứ có cờ khác 0."),
+        ("BR-OPT-004.04", "FTYPE là loại chuyến bay nghiệp vụ, không phải dấu hiệu xác định bảng phép; màn hình hiện tại luôn mở View_PermSC theo PERM_ID."),
+        ("BR-OPT-004.05", "Bản cập nhật đã loại khỏi vùng nhập các bộ lọc Permission number, OPER và Remark; các trường này vẫn được hiển thị trong kết quả khi nguồn có dữ liệu."),
+        ("BR-OPT-004.06", "Khoảng ETD hiện tại chỉ hỗ trợ trong cùng ngày từ 00:00 đến 23:59, không diễn giải khoảng bắt qua nửa đêm."),
+    ])
+
+    doc.add_heading("7.31.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-004.01", "Màn hình và WebMethod phải yêu cầu phiên đăng nhập/quyền menu hợp lệ; kiểm soát truy cập phải thực hiện phía máy chủ."),
+        ("NFR-OPT-004.02", "Truy vấn phải bind theo tên, giới hạn PageSize, dùng timeout 60 giây và không ghép trực tiếp dữ liệu người dùng vào SQL."),
+        ("NFR-OPT-004.03", "Quan hệ PERM_ID, ngày hiệu lực và các trường lọc thường dùng phải có index/kế hoạch thực thi phù hợp; kiểm thử hiệu năng phải dùng tập dữ liệu cao điểm."),
+        ("NFR-OPT-004.04", "Giao diện phải sử dụng được trên vùng hiển thị hẹp thông qua cuộn ngang, không làm mất liên kết xem chi tiết hoặc nhầm cột dữ liệu."),
+        ("NFR-OPT-004.05", "Dữ liệu chèn vào HTML phải được encode an toàn; lỗi chi tiết ghi log nhưng không để lộ connection string, SQL hoặc stack trace cho người dùng."),
+    ])
+
+    doc.add_heading("7.31.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-004-01", "Tìm riêng Callsign", "Chỉ trả Callsign khớp chính xác sau chuẩn hóa."),
+        ("TC-OPT-004-02", "Kết hợp FROM, TO, Craft, VIA, Flight type và Purpose", "Mọi dòng thỏa đồng thời các điều kiện và đúng kiểu tìm chứa/chính xác."),
+        ("TC-OPT-004-03", "Flight date thuộc thời hạn nhưng DAY tương ứng bằng 0", "Không trả chi tiết phép đó."),
+        ("TC-OPT-004-04", "Flight date đúng thời hạn và DAY tương ứng được bật", "Trả đúng chi tiết; ngày sai định dạng bị chặn."),
+        ("TC-OPT-004-05", "Chỉ nhập Từ giờ ETD 08:00", "Trả ETD từ 0800 đến 2359."),
+        ("TC-OPT-004-06", "Chỉ nhập Đến giờ ETD 12:00", "Trả ETD từ 0000 đến 1200."),
+        ("TC-OPT-004-07", "Nhập 12:00–08:00 hoặc giờ ngoài 00:00–23:59", "Bị chặn ở giao diện và máy chủ với thông báo phù hợp."),
+        ("TC-OPT-004-08", "Kết quả vượt 500 dòng và chuyển trang", "Tổng số, STT và thứ tự ổn định; không lặp hoặc thiếu dòng."),
+        ("TC-OPT-004-09", "Nhấn số phép có FTYPE bất kỳ", "Luôn mở đúng View_PermSC theo PERM_ID và Callsign; popup bị chặn có hướng dẫn."),
+        ("TC-OPT-004-10", "Nhấn Clear sau khi điền đủ bộ lọc", "Cả 11 tiêu chí, gồm Từ/Đến giờ ETD, được xóa."),
+        ("TC-OPT-004-11", "Kết quả rỗng hoặc WebMethod lỗi", "Tổng số 0, không giữ kết quả cũ, trạng thái tải kết thúc và có thông báo."),
+        ("TC-OPT-004-12", "Bảng rộng trên màn hình nhỏ", "Cuộn ngang và bấm/giữ nút trái-phải hoạt động, liên kết chi tiết vẫn truy cập được."),
+    ])
+
+    doc.add_heading("7.32. Truy vết FR-OPT-004", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-004", "SearchExtension.aspx/.cs; SearchPermissions WebMethod; T_PERMMASTER_SC; T_PERMDETAIL_SC; M_CRAFT_TYPE; View_PermSC.aspx", "Ảnh 11 bộ lọc và khoảng ETD, request/response, SQL bind/execution plan, dữ liệu ngày-thứ, cửa sổ chi tiết và TC-OPT-004-*"),
+    ])
+
+
 def add_rpt001_specification(doc):
     doc.add_heading("8.3. FR-RPT-001 – Biểu đồ thông tin tổng quan khai thác bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
@@ -1697,7 +1770,7 @@ def build():
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã tích hợp đặc tả NL2SQL/Vanna Oracle", "Theo FR-NL/BR-NL/NFR-NL và bằng chứng kiểm thử"))
             elif chapter == 7 and index in (4, 24, 30):
                 source_pages = {
-                    4: "SearchExtension.aspx (đang triển khai)",
+                    4: "SearchExtension.aspx (phiên bản cập nhật)",
                     24: "ListFlightOnMess.aspx",
                     30: "ListFinishedFlightsMilitaryReport.aspx",
                 }
@@ -1722,7 +1795,7 @@ def build():
             add_opt006_010_specification(doc)
             add_opt024_specification(doc)
             add_opt030_specification(doc)
-            add_opt004_specification(doc)
+            add_opt004_specification_current(doc)
             next_section = 33
         elif chapter == 8:
             add_rpt001_specification(doc)
