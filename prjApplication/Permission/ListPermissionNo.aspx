@@ -11,7 +11,7 @@
         }
 
         #tblSource {
-            min-width: 1540px;
+            min-width: 1050px;
             table-layout: fixed;
         }
 
@@ -32,8 +32,6 @@
         #tblSource col.col-oper { width: 75px; }
         #tblSource col.col-reference { width: 150px; }
         #tblSource col.col-valid { width: 65px; }
-        #tblSource col.col-address { width: 230px; }
-        #tblSource col.col-content { width: 260px; }
 
         #tblSource .permission-filter-row th {
             padding: 4px;
@@ -52,13 +50,6 @@
         #tblSource td.col-author {
             white-space: normal;
             overflow-wrap: anywhere;
-        }
-
-        #tblSource .permission-list-text {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
         input, textarea {
@@ -285,8 +276,6 @@
             <col class="col-oper" />
             <col class="col-reference" />
             <col class="col-valid" />
-            <col class="col-address" />
-            <col class="col-content" />
         </colgroup>
         <thead>
             <tr class="permission-filter-row">
@@ -321,12 +310,6 @@
                 <th>
                     <input runat="server" class="sInput" type="text" inputmode="numeric" pattern="[0-9]*" id="txtSearchVALIDHOURS" placeholder="VALID" />
                 </th>
-                <th>
-                    <input runat="server" class="sInput" type="text" id="txtSearchBILLINGADDRESS" placeholder="ADDRESS" />
-                </th>
-                <th>
-                    <input runat="server" class="sInput" type="text" id="txtSearchPERMCONTENT" placeholder="CONTENT" />
-                </th>
             </tr>
             <tr>
                 <th></th>
@@ -340,8 +323,6 @@
                 <th>OPER</th>
                 <th>REFERENCE</th>
                 <th>VALID</th>
-                <th>ADDRESS</th>
-                <th>CONTENT</th>
             </tr>
         </thead>
         <tbody>
@@ -377,13 +358,6 @@
                         <td style="width: 40px"><%# Eval("OPER_ID") %></td>
                         <td style="width: 120px"><%# Eval("REFERENCE") %></td>
                         <td style="width: 40px"><%# Eval("VALIDHOURS") %></td>
-                        <td>
-                            <span class="permission-list-text" ondblclick="copyToClipboard('<%# Eval("BILLINGADDRESS").ToString().Replace("\n","<br>") %>')">
-                                <%# Eval("BILLINGADDRESS").ToString().Length>40? Eval("BILLINGADDRESS").ToString().Substring(0,40)+"..."  : Eval("BILLINGADDRESS").ToString() %></span>
-                        </td>
-                        <td><span class="permission-list-text" ondblclick="copyToClipboard('<%# Eval("PERMCONTENT").ToString().Replace("\n","<br>") %>')">
-                            <%# Eval("PERMCONTENT").ToString().Length>40? Eval("PERMCONTENT").ToString().Substring(0,40)+"..."  : Eval("PERMCONTENT").ToString() %></span>
-                        </td>
                     </tr>
                     <%--<tr class="detail-row">
                         <td colspan="11" class="text-left">

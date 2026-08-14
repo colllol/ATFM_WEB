@@ -182,9 +182,6 @@ namespace prjApplication.Permission
                 && Int32.TryParse(txtSearchVALIDHOURS.Value.Trim(), out validHours))
                 where += " AND VALIDHOURS = " + validHours;
 
-            where = AppendContainsCondition(where, "BILLINGADDRESS", txtSearchBILLINGADDRESS.Value);
-            where = AppendContainsCondition(where, "PERMCONTENT", txtSearchPERMCONTENT.Value);
-
             return HttpUtility.UrlEncode(where.ToUpper());
         }
 
