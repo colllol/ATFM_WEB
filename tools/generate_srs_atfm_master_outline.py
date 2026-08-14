@@ -832,7 +832,54 @@ def add_rpt002_010_specification(doc):
         ("TC-RPT-003-05", "Không có cảnh báo", "KPI 0 và thông báo rõ"),
     ])
 
-    doc.add_heading("8.6. FR-RPT-005 – Tổng hợp chỉ số hiệu suất bay từ ADS-B O/F", level=2)
+    doc.add_heading("8.6. FR-RPT-004 – Tích hợp ADS-B cho báo cáo khai thác thực tế", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Quan hệ kế thừa", "Áp dụng cùng nguồn, hợp đồng dữ liệu, quy tắc chuẩn hóa và kiểm soát chất lượng của FR-INT-002 – Thu thập và xử lý dữ liệu ADS-B cho khai thác O/F."),
+        ("Phạm vi FR-INT-002", "Tiếp nhận/đồng bộ ADS-B, chuẩn hóa bản tin/vệt bay, chống trùng, lưu T_TRACKS_LOG và giám sát luồng tích hợp."),
+        ("Phạm vi FR-RPT-004", "Khai thác dữ liệu ADS-B đã chuẩn hóa để lập báo cáo thực tế, đối soát KHB/FPL và cung cấp bằng chứng vệt bay; không định nghĩa lại cơ chế thu thập."),
+        ("Màn hình liên quan", "ReportNew/AdsBPerformanceReport.aspx, các báo cáo khai thác thực tế và màn hình bản đồ/vệt bay được phân quyền."),
+        ("Nguồn chính", "T_TRACKS_LOG và dữ liệu ADS-B chuẩn hóa; dữ liệu KHB/FPL/T_DAY_FLIGHTS/T_FINISHED_FLIGHTS dùng để đối chiếu."),
+    ])
+    doc.add_heading("8.6.1. Hợp đồng dữ liệu kế thừa từ FR-INT-002", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-004.01", "Báo cáo chỉ được sử dụng bản ghi ADS-B đã qua chuẩn hóa và đạt trạng thái chất lượng cho phép theo FR-INT-002; bản ghi lỗi/cách ly không được đưa vào KPI chính."),
+        ("FR-RPT-004.02", "Mỗi bản ghi/vệt bay phải giữ định danh nguồn như TRLOG_ID, CALLSIGN, thời gian UTC, vị trí, FROM/TO, PERMTYPE và trạng thái để truy vết ngược."),
+        ("FR-RPT-004.03", "Báo cáo phải dùng cùng quy tắc chống trùng, chuẩn hóa CALLSIGN, mã sân bay, múi giờ và phân loại LD/O/F của FR-INT-002."),
+        ("FR-RPT-004.04", "Khi dữ liệu ADS-B đến muộn hoặc được hiệu chỉnh, báo cáo phải thể hiện thời điểm cập nhật và cho phép tính lại mà không nhân đôi chuyến/vệt bay."),
+        ("FR-RPT-004.05", "Nếu luồng ADS-B gián đoạn hoặc độ trễ vượt ngưỡng, báo cáo phải cảnh báo tình trạng nguồn, không hiển thị số liệu cũ như dữ liệu thời gian thực."),
+    ])
+    doc.add_heading("8.6.2. Báo cáo khai thác thực tế và đối soát", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-004.06", "Người dùng phải lọc được khoảng ngày, PERMTYPE LD/O/F, hãng, CALLSIGN, sân bay/FIR hoặc tiêu chí ADS-B được cấp quyền."),
+        ("FR-RPT-004.07", "Hệ thống phải ghép dữ liệu ADS-B với KHB/FPL/chuyến bay bằng khóa nghiệp vụ có thứ tự ưu tiên; trường hợp nhiều ứng viên phải đưa vào Chưa xác định, không tự ghép rủi ro."),
+        ("FR-RPT-004.08", "Báo cáo phải cung cấp tối thiểu tổng chuyến có ADS-B, số/tỷ lệ LD, O/F, Không xác định, trạng thái vùng/FIR và xu hướng theo ngày."),
+        ("FR-RPT-004.09", "Danh sách chi tiết phải hiển thị CALLSIGN, OPER, PERMTYPE, FROM/TO, ETD/ETA, trạng thái, ngày, thời gian cập nhật UTC và liên kết đến vệt bay/bản ghi ADS-B nguồn."),
+        ("FR-RPT-004.10", "Khi có dữ liệu tọa độ, người dùng có quyền phải xem được vệt bay trên bản đồ theo trình tự thời gian; điểm bất hợp lệ phải bị đánh dấu/loại theo quy tắc chất lượng."),
+        ("FR-RPT-004.11", "Báo cáo phải nhận diện các trường hợp có KHB/FPL nhưng không có ADS-B, có ADS-B nhưng không ghép được KHB/FPL và sai khác thời gian/hành trình để phục vụ kiểm tra."),
+        ("FR-RPT-004.12", "Drill-down và export phải giữ tiêu chí lọc, định danh nguồn, thời gian UTC và trạng thái chất lượng; dữ liệu nhạy cảm chỉ xuất cho người có quyền."),
+        ("FR-RPT-004.13", "KPI, biểu đồ, bảng và export trong một lần xem phải dùng cùng snapshot/phiên bản dữ liệu ADS-B."),
+        ("FR-RPT-004.14", "Mọi kết quả phải truy vết hai chiều tới FR-INT-002, batch/lần nhận, bản ghi T_TRACKS_LOG và test case tích hợp tương ứng."),
+    ])
+    doc.add_heading("8.6.3. Yêu cầu phi chức năng và nghiệm thu", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-RPT-004.01", "Thời gian tải báo cáo phải được đo trên tập dữ liệu ADS-B ngày cao điểm; truy vấn phải phân trang và dùng index theo thời gian/khóa ghép."),
+        ("NFR-RPT-004.02", "Thời gian UTC phải được lưu/đối soát nhất quán; khi hiển thị giờ địa phương phải ghi rõ múi giờ."),
+        ("NFR-RPT-004.03", "Dữ liệu bản đồ/vị trí và export phải tuân thủ phân quyền, audit truy cập và chính sách lưu giữ ADS-B."),
+        ("NFR-RPT-004.04", "Mất kết nối nguồn báo cáo không được ảnh hưởng luồng thu thập FR-INT-002; lỗi hiển thị phải được cô lập và log."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-RPT-004-01", "Bản ghi ADS-B hợp lệ đã chuẩn hóa", "Xuất hiện đúng một lần trong KPI, xu hướng và chi tiết"),
+        ("TC-RPT-004-02", "Bản ghi lỗi/cách ly từ FR-INT-002", "Không vào KPI chính; hiển thị riêng nếu có quyền"),
+        ("TC-RPT-004-03", "ADS-B ghép đúng KHB/FPL", "Hiển thị đầy đủ chuyến và liên kết hai chiều"),
+        ("TC-RPT-004-04", "Nhiều ứng viên hoặc không có KHB/FPL", "Chưa xác định/cảnh báo, không ghép sai"),
+        ("TC-RPT-004-05", "Dữ liệu đến muộn và chạy lại", "Kết quả cập nhật, không trùng"),
+        ("TC-RPT-004-06", "Mất/độ trễ luồng ADS-B", "Cảnh báo tình trạng nguồn và thời điểm dữ liệu cuối"),
+        ("TC-RPT-004-07", "Drill-down vệt bay", "Đúng TRLOG_ID, thứ tự UTC và tọa độ hợp lệ"),
+        ("TC-RPT-004-08", "Export theo LD/O/F và hãng", "Số dòng/snapshot khớp báo cáo, có định danh nguồn"),
+        ("TC-RPT-004-09", "Người dùng không có quyền vị trí/export", "Bị từ chối và có audit"),
+    ])
+
+    doc.add_heading("8.7. FR-RPT-005 – Tổng hợp chỉ số hiệu suất bay từ ADS-B O/F", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Màn hình", "ReportNew/AdsBPerformanceReport.aspx?Menu_ID=923."),
         ("Nguồn", "API AdsBPerformance và T_TRACKS_LOG; bổ sung OPER từ T_DAY_FLIGHTS_GOINGON khi cần."),
@@ -856,7 +903,7 @@ def add_rpt002_010_specification(doc):
         ("TC-RPT-005-05", "Đối soát TRLOG_ID", "Không trùng và tổng đúng"),
     ])
 
-    doc.add_heading("8.7. FR-RPT-006 – Biểu đồ thống kê trạng thái chuyến bay theo tỷ lệ phần trăm", level=2)
+    doc.add_heading("8.8. FR-RPT-006 – Biểu đồ thống kê trạng thái chuyến bay theo tỷ lệ phần trăm", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Màn hình", "ReportNew/FlightStatusRate.aspx?Menu_ID=907."),
         ("Nhóm trạng thái", "Hoàn thành, Hủy, Delay và Chờ."),
@@ -880,7 +927,7 @@ def add_rpt002_010_specification(doc):
         ("TC-RPT-006-05", "Tổng bằng 0", "Tỷ lệ 0%, không lỗi"),
     ])
 
-    doc.add_heading("8.8. FR-RPT-007 – Biểu đồ so sánh hoạt động bay giữa các sân bay", level=2)
+    doc.add_heading("8.9. FR-RPT-007 – Biểu đồ so sánh hoạt động bay giữa các sân bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Màn hình", "Common/ChartReportAirport.aspx?Menu_ID=906."),
         ("Mục tiêu", "So sánh lưu lượng chuyến bay của từ một đến năm sân bay trong khoảng ngày."),
@@ -901,7 +948,7 @@ def add_rpt002_010_specification(doc):
         ("TC-RPT-007-04", "Đối soát FROM/TO", "Số liệu từng sân bay khớp Oracle"),
     ])
 
-    doc.add_heading("8.9. FR-RPT-008 – Báo cáo chuyến bay quân sự theo tiêu chí mở rộng", level=2)
+    doc.add_heading("8.10. FR-RPT-008 – Báo cáo chuyến bay quân sự theo tiêu chí mở rộng", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Màn hình", "ReportNew/MilitaryFlightReport.aspx?Menu_ID=911."),
         ("Nguồn/API", "api/MilitaryFlightReport/GetData; dữ liệu chuyến bay quân sự đã được phép khai thác theo phân quyền."),
@@ -922,7 +969,7 @@ def add_rpt002_010_specification(doc):
         ("TC-RPT-008-04", "Người không có quyền", "Bị từ chối và có audit"),
     ])
 
-    doc.add_heading("8.10. FR-RPT-009 – Báo cáo tổng hợp hoạt động bay tại tất cả sân bay dân dụng", level=2)
+    doc.add_heading("8.11. FR-RPT-009 – Báo cáo tổng hợp hoạt động bay tại tất cả sân bay dân dụng", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Màn hình", "ReportNew/CivilFlightSummary.aspx?Menu_ID=912."),
         ("Mục tiêu", "Tổng hợp hoạt động bay dân dụng và lưu lượng đi/đến tại các sân bay."),
@@ -943,7 +990,7 @@ def add_rpt002_010_specification(doc):
         ("TC-RPT-009-04", "Dữ liệu quân sự", "Bị loại đúng quy tắc"),
     ])
 
-    doc.add_heading("8.11. FR-RPT-010 – Báo cáo cất, hạ cánh tại các sân bay toàn quốc", level=2)
+    doc.add_heading("8.12. FR-RPT-010 – Báo cáo cất, hạ cánh tại các sân bay toàn quốc", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Màn hình", "ReportNew/AirportTakeoffLanding.aspx?Menu_ID=913."),
         ("Nguồn", "T_FINISHED_FLIGHTS, chỉ trạng thái FINISHED hoặc DELAY*."),
@@ -966,10 +1013,11 @@ def add_rpt002_010_specification(doc):
         ("TC-RPT-010-05", "Không có dữ liệu", "KPI 0 và thông báo rõ"),
     ])
 
-    doc.add_heading("8.12. Ma trận truy vết FR-RPT-002…FR-RPT-010", level=2)
+    doc.add_heading("8.13. Ma trận truy vết FR-RPT-002…FR-RPT-010", level=2)
     table(doc, ["Yêu cầu", "Thành phần chính", "Bằng chứng kiểm định"], [
         ("FR-RPT-002", "FlightTrendAnalysis.aspx/.js/.cs", "KPI, hai chuỗi xu hướng, Oracle và TC-RPT-002-*"),
         ("FR-RPT-003", "AnomalyWarning.aspx/.js/.cs", "Dữ liệu biên delay, popup cảnh báo và TC-RPT-003-*"),
+        ("FR-RPT-004", "FR-INT-002, T_TRACKS_LOG, báo cáo/bản đồ ADS-B", "Batch nguồn, KPI, vệt bay, export và TC-RPT-004-*"),
         ("FR-RPT-005", "AdsBPerformanceReport, API AdsBPerformance, T_TRACKS_LOG", "KPI/xu hướng/end-of-day và TC-RPT-005-*"),
         ("FR-RPT-006", "FlightStatusRate.aspx/.js/.cs", "Donut, drill-down, Excel, Oracle và TC-RPT-006-*"),
         ("FR-RPT-007", "ChartReportAirport.aspx/.cs", "Biểu đồ 1–5 sân bay, Oracle và TC-RPT-007-*"),
@@ -1397,7 +1445,7 @@ def build():
         elif chapter == 8:
             add_rpt001_specification(doc)
             add_rpt002_010_specification(doc)
-            next_section = 13
+            next_section = 14
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
