@@ -130,6 +130,23 @@
         .permission-flight-details__error {
             color: #c0392b;
         }
+
+        .permission-content-panel {
+            margin: 12px 0 18px;
+            padding: 12px;
+            border: 1px solid #c5d9ea;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .permission-content-panel label {
+            display: block;
+            margin-bottom: 6px;
+            color: #234761;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
     </style>
      <style>
          .preloader {
@@ -258,13 +275,6 @@
                 
                 </fieldset>
                      </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <label for="txtPERMCONTENT" style="font-size:12px;">Perm content</label><br />
-                                      <textarea id="txtPERMCONTENT" maxlength="4000"  rows="25" data-control="update"
-                            class="wid_100" data-toggle="tooltip"  title="Limit 4000 character !" ></textarea>
-                </td>
             </tr>
         </table>
          
@@ -445,7 +455,7 @@
     -->
     <section class="permission-flight-details" data-permission-type="SC">
         <div class="permission-flight-details__header">
-            <h3 class="permission-flight-details__title">Flight details - SC</h3>
+            <h3 class="permission-flight-details__title">Flight details</h3>
             <span id="permissionFlightDetailsTotalSC" class="permission-flight-details__total">TOTAL: 0</span>
         </div>
         <div class="permission-flight-details__scroll">
@@ -456,12 +466,17 @@
             </table>
         </div>
     </section>
+    <section class="permission-content-panel">
+        <label for="txtPERMCONTENT">Perm content</label>
+        <textarea id="txtPERMCONTENT" maxlength="4000" rows="25" data-control="update"
+            class="wid_100" data-toggle="tooltip" title="Limit 4000 character !"></textarea>
+    </section>
     <script src="<%=Global.ApplicationPath%>/Style/assets/js/jquery-2.1.4.min.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomDynamic.js"></script>
     <%--<script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js"></script>--%>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomPaging.js"></script>
-    <script src="<%=Global.ApplicationPath%>/Scripts/PermissionFlightDetails.js?v=20260814-1"></script>
+    <script src="<%=Global.ApplicationPath%>/Scripts/PermissionFlightDetails.js?v=20260814-2"></script>
     <script>
 
         function LoadShowHisEventClick(){   
@@ -1564,6 +1579,7 @@
         PermissionFlightDetails.init({
             permissionType: 'SC',
             permissionId: '<%= _ID %>',
+            flightNbr: '<%= System.Web.HttpUtility.JavaScriptStringEncode(Request.QueryString["FlightNbr"] ?? string.Empty) %>',
             apiBase: '<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>',
             tableId: 'permissionFlightDetailsTableSC',
             totalId: 'permissionFlightDetailsTotalSC'

@@ -102,6 +102,7 @@
         var total = document.getElementById(options.totalId);
         var permissionType = text(options.permissionType).toUpperCase() === 'NO' ? 'NO' : 'SC';
         var permissionId = parseInt(options.permissionId, 10);
+        var flightNbr = text(options.flightNbr).trim().toUpperCase();
         if (!table) return;
 
         var columns = getColumns(permissionType);
@@ -122,6 +123,7 @@
             : 'api/PermDetailSc/GetBySearch';
         var payload = {
             PERM_ID: permissionId,
+            FLIGHTNBR: flightNbr,
             PageSize: 10000,
             PageIndex: 0,
             rStart: 0,
@@ -138,16 +140,29 @@
             var rows = response && response.ListValue
                 ? $.grep(response.ListValue, function (item) { return item !== null; })
                 : [];
+            if (flightNbr) {
+                rows = $.grep(rows, function (item) {
+                    return text(item.FLIGHTNBR).trim().toUpperCase() === flightNbr;
+                });
+            }
             table.querySelector('tbody').innerHTML = '';
 
             if (!rows.length) {
-                renderMessage(table, columns.length, 'No flight details found.');
+                renderMessage(
+                    table,
+                    columns.length,
+                    flightNbr
+                        ? 'No flight details found for callsign ' + flightNbr + '.'
+                        : 'No flight details found.'
+                );
                 if (total) total.textContent = 'TOTAL: 0';
                 return;
             }
 
             renderRows(table, rows, columns);
-            var recordTotal = rows[0].Record_Sum || rows[0].RECORD_SUM || rows.length;
+            var recordTotal = flightNbr
+                ? rows.length
+                : (rows[0].Record_Sum || rows[0].RECORD_SUM || rows.length);
             if (total) {
                 total.textContent = 'TOTAL: ' + recordTotal
                     + (recordTotal > rows.length ? ' (DISPLAYING ' + rows.length + ')' : '');

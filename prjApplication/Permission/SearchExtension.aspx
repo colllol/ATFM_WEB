@@ -362,6 +362,7 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                        var permLink = returnEmpty(b.PERMNBR_ID);
                        if (!isNaN(permId) && permId > 0) {
                            permLink = "<a href='#' class='js-view-permission-sc' data-perm-id='" + permId
+                               + "' data-flight-nbr='" + encodeURIComponent(returnEmpty(b.FLIGHTNBR))
                                + "' title='View permission details'>" + returnEmpty(b.PERMNBR_ID) + "</a>";
                        }
 
@@ -524,10 +525,13 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
            })
            $('#tblSource').on('click', '.js-view-permission-sc', function (event) {
                event.preventDefault();
-               getcontentPerm($(this).attr('data-perm-id'));
+               getcontentPerm(
+                   $(this).attr('data-perm-id'),
+                   decodeURIComponent($(this).attr('data-flight-nbr') || '')
+               );
            });
 
-           function getcontentPerm(permId) {
+           function getcontentPerm(permId, flightNbr) {
                var normalizedPermId = parseInt(permId, 10);
                if (isNaN(normalizedPermId) || normalizedPermId <= 0) {
                    alert('Permission ID is invalid.');
@@ -538,7 +542,8 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                // bay nghiep vu cua phep, khong phai dau hieu de chon bang SC/NO.
                var viewUrl = '<%= Page.ResolveUrl("~/Permission/View_PermSC.aspx") %>'
                    + '?Menu_Id=' + encodeURIComponent('<%= System.Web.HttpUtility.JavaScriptStringEncode(Request.Params["Menu_ID"] ?? string.Empty) %>')
-                   + '&ID=' + encodeURIComponent(normalizedPermId);
+                   + '&ID=' + encodeURIComponent(normalizedPermId)
+                   + '&FlightNbr=' + encodeURIComponent($.trim(flightNbr || ''));
                var detailWindow = window.open(
                    viewUrl,
                    '_blank',

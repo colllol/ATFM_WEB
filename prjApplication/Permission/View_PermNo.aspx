@@ -474,7 +474,7 @@
     <script src="../Scripts/CustomDynamic.js"></script>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script src="../Scripts/CustomPaging.js"></script>
-    <script src="../Scripts/PermissionFlightDetails.js?v=20260814-1"></script>
+    <script src="../Scripts/PermissionFlightDetails.js?v=20260814-2"></script>
     <script type="text/javascript">
         jQuery(function($) {
             var $validation = false;
