@@ -176,9 +176,16 @@
                 $('#tblSource').attr('data-total', data.ListValue[0]['RECORD_SUM']);
                 var strAppend = '';
                 $.each(data.ListValue, function (a, b) {
+                    var permId = parseInt(b.PERM_ID, 10);
+                    var permLink = returnEmpty(b.PERMNBR_ID);
+                    if (!isNaN(permId) && permId > 0) {
+                        permLink = "<a href='#' class='js-view-permission-sc' data-perm-id='" + permId
+                            + "' title='View permission details'>" + returnEmpty(b.PERMNBR_ID) + "</a>";
+                    }
+
                     $('#tblSource tbody').append("<tr>"
                     + "<td>" + b.RNUM + "</td>"
-                    + "<td style='white-space: nowrap;'><a style='cursor: pointer;' onclick=\"getcontentPerm(\'" + returnEmpty(b.PERM_ID) + "\',\'" + returnEmpty(b.FTYPE) + "\',\'" + returnEmpty(b.DAYLY) + "\' )\">" + returnEmpty(b.PERMNBR_ID) + "</a></td>"
+                    + "<td style='white-space: nowrap;'>" + permLink + "</td>"
                     + "<td>" + returnEmpty(new Date(b.PERMDATE).format('dd-mm-yyyy')) + "</td>"
                     + "<td style='white-space: nowrap;'>" + returnEmpty(b.DAYLY) + "</td>"
                     + "<td style='text-align:center; white-space: nowrap;'>" + returnEmpty(b.VALIDDATE) + "</td>"
@@ -250,17 +257,37 @@
         $('#tblSearch input[type="text"]').each(function () {
             $(this).ValidateTip();
         })
-        function getcontentPerm(a,b,c) {
-            //22-MAY-2023
-           var parsedDate = Date.parse(c);
-           if (isNaN(c) && !isNaN(parsedDate)) {
-                console.log(isNaN(c));
+        $('#tblSource').on('click', '.js-view-permission-sc', function (event) {
+            event.preventDefault();
+            getcontentPerm($(this).attr('data-perm-id'));
+        });
+
+        function getcontentPerm(permId) {
+            var normalizedPermId = parseInt(permId, 10);
+            if (isNaN(normalizedPermId) || normalizedPermId <= 0) {
+                alert('Permission ID is invalid.');
+                return false;
             }
-           if (b == 'SC')
-           
-                window.open('<%= Page.ResolveUrl("~/Permission/View_PermSC.aspx") + "?Menu_Id=" + Request.Params["Menu_ID"] + "&ID=" %>' + a.trim(), '_blank', 'toolbar=yes,scrollbars=yes,resizable=yes').resizeTo(window.screen.availWidth, window.screen.availHeight);
-            else
-                window.open('<%= Page.ResolveUrl("~/Permission/View_PermNo.aspx") + "?Menu_Id=" + Request.Params["Menu_ID"] + "&ID=" %>' + a.trim(), '_blank', 'toolbar=yes,scrollbars=yes,resizable=yes').resizeTo(window.screen.availWidth, window.screen.availHeight);
+
+            // SearchPermExtension tra du lieu tu phep SC. FTYPE la loai chuyen
+            // bay nghiep vu cua phep, khong phai dau hieu de chon bang SC/NO.
+            var viewUrl = '<%= Page.ResolveUrl("~/Permission/View_PermSC.aspx") %>'
+                + '?Menu_Id=' + encodeURIComponent('<%= System.Web.HttpUtility.JavaScriptStringEncode(Request.Params["Menu_ID"] ?? string.Empty) %>')
+                + '&ID=' + encodeURIComponent(normalizedPermId);
+            var detailWindow = window.open(
+                viewUrl,
+                '_blank',
+                'toolbar=yes,scrollbars=yes,resizable=yes'
+            );
+
+            if (detailWindow) {
+                detailWindow.resizeTo(window.screen.availWidth, window.screen.availHeight);
+                detailWindow.focus();
+            } else {
+                alert('Please allow pop-ups to view permission details.');
+            }
+
+            return false;
         }
        
     </script>
