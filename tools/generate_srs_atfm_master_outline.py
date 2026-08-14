@@ -558,7 +558,78 @@ def add_opt006_010_specification(doc):
         ("FR-OPT-012", "Bộ đối chiếu phép/KHB ngày; T_NOTIFICATION/NOTIFICATION_PKG; Notification.ashx; ATFM_New.Master; trang Notifications", "Dữ liệu mẫu khớp/không khớp, ảnh chuông và badge, trạng thái theo user, audit, log polling và TC-OPT-012-*"),
     ])
 
-    doc.add_heading("7.18. FR-OPT-014 – Tối ưu hiệu năng ExportBravo dưới 3 phút", level=2)
+    doc.add_heading("7.18. FR-OPT-013 – Hỗ trợ hủy phép bay quốc tế/quốc nội", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Tool/ImportsPermSC_LD_V2.aspx?Menu_ID=991 – HỦY CHUYẾN."),
+        ("Loại nghiệp vụ", "Nhập danh sách chuyến cần hủy, đối chiếu phép bay SC và xác nhận áp dụng hủy có kiểm soát."),
+        ("Phạm vi", "Hỗ trợ chuyến quốc tế/quốc nội theo dữ liệu phép SC và quy tắc Callsign–FROM–TO–ngày–thứ khai thác; không sửa luồng import T_PERMSC_IMP/PERM_IMP_PKG cũ."),
+        ("Kho staging", "T_PERMSC_CANCEL_V2 riêng biệt, định danh theo IMPORT_BATCH_ID và CREATED_BY."),
+        ("Package", "PERM_IMP_V2_PKG: INSERT_CANCELLATION, SEARCH_PENDING, kiểm tra/đối chiếu, xóa mềm và APPLY_CANCELLATION."),
+        ("Trạng thái", "PENDING, ERROR, PROCESSING, DONE, CANCELLED."),
+    ])
+
+    doc.add_heading("7.18.1. Tiếp nhận và chuẩn hóa danh sách hủy", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-013.01", "Màn hình phải hỗ trợ dán bảng từ Word/Excel hoặc nhập nội dung theo các mẫu: tự nhận diện, có loại tàu bay, không có loại tàu bay và dữ liệu đã chuẩn hóa."),
+        ("FR-OPT-013.02", "Hệ thống phải nhận diện tiêu đề nhiều hàng/ô gộp, bỏ qua dòng tiêu đề rời và ánh xạ các trường Number, thời hạn, Daily, Callsign, FROM, TO, ETD, ETA, Craft, Remark, Purpose."),
+        ("FR-OPT-013.03", "Trước khi staging, dữ liệu phải chuẩn hóa Callsign, mã IATA sang ICAO, ngày, thứ khai thác, giờ HHMM và ký hiệu ngày hôm sau '+'; OPER được xác định từ Callsign bằng quy tắc GetOper."),
+        ("FR-OPT-013.04", "Các trường bắt buộc, định dạng ngày/giờ, sân bay, Callsign và thời hạn phải được kiểm tra ở cả trình duyệt và máy chủ; dòng lỗi không được chọn để đưa vào staging."),
+        ("FR-OPT-013.05", "Người dùng phải xem trước, chọn/bỏ chọn từng dòng hoặc tất cả dòng hợp lệ; chỉ dòng được chọn mới được đưa vào danh sách hủy."),
+        ("FR-OPT-013.06", "Nếu số phép đã tồn tại, hệ thống phải hiển thị PERMNBR_ID liên quan và yêu cầu người dùng xác nhận trước khi tiếp tục; xác nhận phía client không thay thế kiểm tra máy chủ."),
+    ])
+
+    doc.add_heading("7.18.2. Staging, tìm lại và kiểm tra phép", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-013.07", "Mỗi lượt nhập phải tạo IMPORT_BATCH_ID duy nhất và lưu dòng vào T_PERMSC_CANCEL_V2 với CREATED_BY, CREATED_AT và PROCESS_STATUS=PENDING."),
+        ("FR-OPT-013.08", "Staging hủy V2 không được đọc/ghi T_PERMSC_IMP; dữ liệu của người dùng khác hoặc batch khác không được hiển thị/xử lý trái quyền."),
+        ("FR-OPT-013.09", "Sau khi insert, hệ thống phải đối chiếu từng dòng với phép SC theo Callsign, FROM/TO đã chuẩn hóa, khoảng ngày giao nhau, từng thứ khai thác và các giai đoạn chi tiết của phép."),
+        ("FR-OPT-013.10", "Dòng tìm thấy phép phù hợp giữ PENDING; dòng không tìm thấy hoặc dữ liệu không hợp lệ chuyển ERROR kèm thông báo cụ thể, không được phép xác nhận hủy."),
+        ("FR-OPT-013.11", "Người dùng phải tìm lại danh sách PENDING/ERROR của chính mình, chọn dòng để Kiểm tra lại, tiếp tục phiên xử lý sau khi tải lại hoặc đăng nhập lại."),
+        ("FR-OPT-013.12", "Chức năng Xóa dòng đã chọn/Xóa chuyến hủy phải chuyển PENDING/ERROR sang CANCELLED theo người dùng, không xóa vật lý dấu vết staging đã phát sinh."),
+    ])
+
+    doc.add_heading("7.18.3. Xác nhận và áp dụng hủy chuyến", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-013.13", "Nút XÁC NHẬN HỦY CHUYẾN chỉ được bật khi danh sách đã kiểm tra có dòng PENDING; người dùng phải xác nhận cảnh báo trước khi thực hiện."),
+        ("FR-OPT-013.14", "Máy chủ phải kiểm tra lại quyền, chủ sở hữu staging, trạng thái và sự tồn tại của phép ngay trước khi áp dụng; không tin dữ liệu định danh phép do trình duyệt gửi."),
+        ("FR-OPT-013.15", "Khi bắt đầu, dòng phải chuyển nguyên tử từ PENDING sang PROCESSING để chống hai request xử lý cùng bản ghi."),
+        ("FR-OPT-013.16", "Hệ thống phải áp dụng hủy đúng chuyến/đoạn ngày/thứ khai thác của phép được đối chiếu, không hủy nhầm chuyến cùng Callsign ở giai đoạn khác."),
+        ("FR-OPT-013.17", "Sau khi hủy thành công, dòng chuyển DONE, lưu PROCESSED_AT, người xử lý và liên kết bản ghi phép; giao diện hiển thị danh sách chuyến đã hủy."),
+        ("FR-OPT-013.18", "Nếu một dòng lỗi, trạng thái phải trở về ERROR/PENDING theo chính sách với ERROR_MESSAGE; không được để PROCESSING vô thời hạn hoặc báo thành công sai."),
+        ("FR-OPT-013.19", "Thao tác phải idempotent: gửi lại cùng staging DONE không hủy lần hai; batch trùng nghiệp vụ phải được phát hiện/cảnh báo."),
+        ("FR-OPT-013.20", "Kết quả phải nêu tổng dòng yêu cầu, thành công, lỗi, bị bỏ qua; sau thành công giao diện có thể tải lại về trạng thái nhập mới, còn lỗi phải giữ dữ liệu để kiểm tra."),
+    ])
+
+    doc.add_heading("7.18.4. Quy tắc, bảo mật và vận hành", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("BR-OPT-013.01", "Quốc tế/quốc nội được xác định từ hành trình/danh mục sân bay, không làm thay đổi quy tắc tìm phép SC cốt lõi."),
+        ("BR-OPT-013.02", "ETA để trống chỉ được chấp nhận khi quy tắc phép cho phép; ETA sai định dạng như giá trị hai chữ số phải bị từ chối."),
+        ("BR-OPT-013.03", "Khoảng ngày và DAILY của dòng hủy phải giao với ít nhất một chi tiết phép; hủy chỉ áp dụng phần giao hợp lệ."),
+        ("NFR-OPT-013.01", "Mọi API/PageMethod phải yêu cầu phiên hợp lệ, resolve người dùng từ session/forms authentication và không nhận CREATED_BY từ client."),
+        ("NFR-OPT-013.02", "Phải có index theo user–status, batch và khóa đối chiếu; tìm danh sách chờ và xác nhận không được quét toàn bảng ở tải thực tế."),
+        ("NFR-OPT-013.03", "Mọi thay đổi phép và trạng thái staging phải được audit; script triển khai/rollback phải kiểm tra đúng schema ATFM và dependency."),
+    ])
+
+    doc.add_heading("7.18.5. Tiêu chí kiểm thử và truy vết", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-013-01", "Dán bảng Word/Excel có tiêu đề nhiều hàng, có/không Craft", "Nhận diện đúng cột và dòng dữ liệu"),
+        ("TC-OPT-013-02", "IATA, Callsign chưa chuẩn hóa và ETA có +1", "Chuyển đúng ICAO/Callsign và dấu '+'"),
+        ("TC-OPT-013-03", "ETA hoặc ngày/DAILY không hợp lệ", "Dòng ERROR, không staging/xác nhận sai"),
+        ("TC-OPT-013-04", "Phép chia nhiều giai đoạn và khoảng ngày giao nhau", "Tìm/hủy đúng chi tiết phép"),
+        ("TC-OPT-013-05", "Không tìm thấy phép phù hợp", "ERROR có lý do, không cho Apply"),
+        ("TC-OPT-013-06", "Tải lại trang/tìm danh sách chờ", "Khôi phục đúng PENDING/ERROR của người dùng"),
+        ("TC-OPT-013-07", "Hai người dùng/batch", "Không xem hoặc xử lý dữ liệu của nhau"),
+        ("TC-OPT-013-08", "Hai request Apply đồng thời", "Mỗi staging chỉ xử lý một lần"),
+        ("TC-OPT-013-09", "Apply thành công rồi gửi lại", "Không hủy lần hai; trạng thái vẫn DONE"),
+        ("TC-OPT-013-10", "Xóa dòng PENDING/ERROR", "Chuyển CANCELLED, không còn trong danh sách chờ"),
+        ("TC-OPT-013-11", "Lỗi giữa quá trình Apply", "Không để PROCESSING treo; có ERROR_MESSAGE/audit"),
+        ("TC-OPT-013-12", "Chuyến quốc nội và quốc tế hợp lệ", "Cả hai được hủy đúng phép, đúng giai đoạn"),
+    ])
+    table(doc, ["Yêu cầu", "Thành phần", "Bằng chứng"], [
+        ("FR-OPT-013", "ImportsPermSC_LD_V2.aspx/.js/.cs; T_PERMSC_CANCEL_V2; PERM_IMP_V2_PKG", "Ảnh ba bước, dữ liệu staging/trạng thái, phép trước–sau, audit và TC-OPT-013-*"),
+    ])
+
+    doc.add_heading("7.19. FR-OPT-014 – Tối ưu hiệu năng ExportBravo dưới 3 phút", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Chức năng hiện hữu", "ExportBravo tại CalendarFlight/CanlendarFlights.aspx; dữ liệu đích T_DAY_FLIGHTS_BRAVO."),
         ("Mục tiêu SLA", "Hoàn thành dưới 180 giây cho một ngày khai thác ở tải nghiệm thu; mục tiêu nội bộ nên ≤150 giây để có biên an toàn."),
@@ -580,7 +651,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-014-04", "Hai yêu cầu đồng thời cùng ngày", "Một yêu cầu được xử lý, yêu cầu còn lại bị chặn/thông báo"),
     ])
 
-    doc.add_heading("7.19. FR-OPT-015 – Chức năng F8 ép dòng trong Calendar Accepted", level=2)
+    doc.add_heading("7.20. FR-OPT-015 – Chức năng F8 ép dòng trong Calendar Accepted", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Chức năng hiện hữu", "Calendar/Calendar Accepted; hành vi F8 trong CanlendarFlights.aspx dùng dòng và ô đang chọn."),
         ("Mục tiêu", "Cho phép sao chép/ép nhanh giá trị hoặc dòng kế hoạch đã Accepted để hiệu chỉnh có kiểm soát, không làm mất bản gốc."),
@@ -601,7 +672,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-015-04", "Hủy dòng tạm", "Dòng nguồn giữ nguyên; không có bản ghi DB mới"),
     ])
 
-    doc.add_heading("7.20. FR-OPT-016 – Tối ưu Gen KHB ngày hôm sau ra AFTN dưới 3 phút", level=2)
+    doc.add_heading("7.21. FR-OPT-016 – Tối ưu Gen KHB ngày hôm sau ra AFTN dưới 3 phút", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Mục tiêu SLA", "Sinh đầy đủ KHB ngày D+1 thành điện văn/đầu ra AFTN dưới 180 giây ở tải nghiệm thu."),
         ("Phạm vi", "Chọn dữ liệu KHB đã đủ điều kiện, phân nhóm/đánh part, dựng nội dung và lưu hàng chờ gửi; không đồng nhất thời gian chờ mạng AMHS/AFTN bên ngoài với thời gian sinh."),
@@ -622,7 +693,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-016-04", "Đối soát message với KHB duyệt", "Số chuyến, nhóm, thứ tự và nội dung khớp"),
     ])
 
-    doc.add_heading("7.21. FR-OPT-017 – Mở rộng phạm vi tra cứu INBOX trên 7 ngày", level=2)
+    doc.add_heading("7.22. FR-OPT-017 – Mở rộng phạm vi tra cứu INBOX trên 7 ngày", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Màn hình", "Receive_LogFile/Inbox.aspx?Menu_ID=47; MESSAGE_PKG.GetInboxBySearchLogFile."),
         ("Mục tiêu", "Cho phép người dùng chủ động tra cứu khoảng ngày lớn hơn 7 ngày mà vẫn phân trang, ổn định và an toàn."),
@@ -643,7 +714,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-017-04", "Nhấn Search liên tục", "Chỉ một request hoạt động, không trùng kết quả"),
     ])
 
-    doc.add_heading("7.22. FR-OPT-018 – Tự động cập nhật khi sửa KHB đã build", level=2)
+    doc.add_heading("7.23. FR-OPT-018 – Tự động cập nhật khi sửa KHB đã build", level=2)
     table(doc, ["Mã chi tiết", "Yêu cầu"], [
         ("FR-OPT-018.01", "Khi KHB đã build bị sửa trường ảnh hưởng đầu ra, hệ thống phải phát hiện thay đổi và đánh dấu bản build hiện tại là cần cập nhật."),
         ("FR-OPT-018.02", "Các trường ảnh hưởng tối thiểu gồm CALLSIGN, ngày, FROM/TO, ETD/ETA, craft, purpose, VIA, remark và trạng thái hủy/duyệt."),
@@ -660,7 +731,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-018-04", "Sửa trường không ảnh hưởng", "Không build lại không cần thiết"),
     ])
 
-    doc.add_heading("7.23. FR-OPT-019 – Cảnh báo chuyến bay cấp sai ngày bay so với thực tế", level=2)
+    doc.add_heading("7.24. FR-OPT-019 – Cảnh báo chuyến bay cấp sai ngày bay so với thực tế", level=2)
     table(doc, ["Mã chi tiết", "Yêu cầu"], [
         ("FR-OPT-019.01", "Hệ thống phải so sánh ngày được cấp trong phép/KHB với ngày bay thực tế xác định từ điện văn, FPL và mốc thời gian khai thác đã chuẩn hóa."),
         ("FR-OPT-019.02", "Quy tắc phải xử lý chuyến qua đêm, ETA có dấu +, cửa sổ 120 giờ và đổi ngày/tháng/năm trước khi kết luận sai ngày."),
@@ -677,7 +748,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-019-04", "Sửa ngày về phù hợp", "Đóng cảnh báo và có audit"),
     ])
 
-    doc.add_heading("7.24. FR-OPT-020 – Bổ sung trường Mục đích chuyến bay trong KHB ngày", level=2)
+    doc.add_heading("7.25. FR-OPT-020 – Bổ sung trường Mục đích chuyến bay trong KHB ngày", level=2)
     table(doc, ["Mã chi tiết", "Yêu cầu"], [
         ("FR-OPT-020.01", "KHB ngày phải có trường PURPOSE/Mục đích chuyến bay tại màn hình thêm, sửa, xem, duyệt và danh sách phù hợp."),
         ("FR-OPT-020.02", "Giá trị phải chọn/đối chiếu từ danh mục M_FLY_PURPOSE theo PURPOSE_CODE; không lưu tên tự do khi quy trình yêu cầu mã chuẩn."),
@@ -694,7 +765,7 @@ def add_opt006_010_specification(doc):
         ("TC-OPT-020-04", "Sửa PURPOSE của KHB đã build", "Build được đánh dấu/cập nhật theo FR-OPT-018"),
     ])
 
-    doc.add_heading("7.25. Truy vết FR-OPT-014…FR-OPT-020", level=2)
+    doc.add_heading("7.26. Truy vết FR-OPT-014…FR-OPT-020", level=2)
     table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
         ("FR-OPT-014", "CanlendarFlights, BRAVO_EXPORT_PKG, T_DAY_FLIGHTS_BRAVO", "Log 3 lượt <180 giây, execution plan, đối soát nguồn–đích"),
         ("FR-OPT-015", "Calendar Accepted và xử lý phím F8", "Video/ảnh thao tác, DB trước–sau, audit và TC-OPT-015-*"),
@@ -1441,7 +1512,7 @@ def build():
         elif chapter == 7:
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
-            next_section = 26
+            next_section = 27
         elif chapter == 8:
             add_rpt001_specification(doc)
             add_rpt002_010_specification(doc)
