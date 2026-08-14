@@ -54,6 +54,82 @@
         textarea {
             text-transform: uppercase;
         }
+
+        .permission-flight-details {
+            margin: 18px 0 12px;
+            border: 1px solid #c5d9ea;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .permission-flight-details__header {
+            display: flex;
+            min-height: 42px;
+            padding: 9px 12px;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #c5d9ea;
+            background: #eef7fd;
+        }
+
+        .permission-flight-details__title {
+            margin: 0;
+            color: #1d5f91;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .permission-flight-details__total {
+            color: #234761;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .permission-flight-details__scroll {
+            width: 100%;
+            max-height: 520px;
+            overflow: auto;
+        }
+
+        .permission-flight-details__table {
+            width: 100%;
+            min-width: 1550px;
+            margin: 0;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .permission-flight-details__table th,
+        .permission-flight-details__table td {
+            padding: 7px 8px;
+            border: 1px solid #c5d9ea;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .permission-flight-details__table th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #337ab7;
+            color: #fff;
+            text-align: center;
+        }
+
+        .permission-flight-details__table tbody tr:nth-child(even) {
+            background: #f5faff;
+        }
+
+        .permission-flight-details__message,
+        .permission-flight-details__error {
+            padding: 20px !important;
+            text-align: center;
+        }
+
+        .permission-flight-details__error {
+            color: #c0392b;
+        }
     </style>
      <style>
          .preloader {
@@ -367,11 +443,25 @@
          </div>
     </div>
     -->
+    <section class="permission-flight-details" data-permission-type="SC">
+        <div class="permission-flight-details__header">
+            <h3 class="permission-flight-details__title">Flight details - SC</h3>
+            <span id="permissionFlightDetailsTotalSC" class="permission-flight-details__total">TOTAL: 0</span>
+        </div>
+        <div class="permission-flight-details__scroll">
+            <table id="permissionFlightDetailsTableSC" class="permission-flight-details__table"
+                data-atfm-responsive-table="off">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
     <script src="<%=Global.ApplicationPath%>/Style/assets/js/jquery-2.1.4.min.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomDynamic.js"></script>
     <%--<script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js"></script>--%>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomPaging.js"></script>
+    <script src="<%=Global.ApplicationPath%>/Scripts/PermissionFlightDetails.js?v=20260814-1"></script>
     <script>
 
         function LoadShowHisEventClick(){   
@@ -1471,7 +1561,13 @@
         }
     </script>
     <script>
-        LoadDataAjax();
+        PermissionFlightDetails.init({
+            permissionType: 'SC',
+            permissionId: '<%= _ID %>',
+            apiBase: '<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>',
+            tableId: 'permissionFlightDetailsTableSC',
+            totalId: 'permissionFlightDetailsTotalSC'
+        });
     </script>
     <script>
         function getMessageFullByRefence(){

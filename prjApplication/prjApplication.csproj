@@ -1413,6 +1413,7 @@
     <Content Include="Scripts\CustomDynamic.js" />
     <Content Include="Scripts\CustomPaging.js" />
     <Content Include="Scripts\CustumStaticdata.js" />
+    <Content Include="Scripts\PermissionFlightDetails.js" />
     <Content Include="Scripts\datepicker.js" />
     <Content Include="Scripts\DateTimeFomat.js" />
     <Content Include="Scripts\DateTimeJQ\jquery-1.8.3.js" />
