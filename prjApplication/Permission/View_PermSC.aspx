@@ -1445,9 +1445,6 @@
             alert('Update susser: '+ c + 'flight permission.');
             LoadDataAjax();
         }
-        window.onbeforeunload = function() {
-            return "Leaving this page will reset the wizard";
-        };
         window.onkeydown = function(e) {
             var charCode = (e.which) ? e.which : e.keyCode;      
             var c= $('#tblSource tr').length;
