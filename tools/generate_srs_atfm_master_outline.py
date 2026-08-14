@@ -777,6 +777,71 @@ def add_opt006_010_specification(doc):
     ])
 
 
+def add_opt024_specification(doc):
+    doc.add_heading("7.27. FR-OPT-024 – Theo dõi kế hoạch bay hằng ngày với cập nhật liên tục", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "FinishFlights/ListFlightOnMess.aspx?Menu_ID=948 – Danh sách chuyến bay trong điện văn."),
+        ("Mục tiêu", "Theo dõi KHB ngày theo từng nhóm điện văn, lọc ra danh sách chuyến bay được điện văn tham chiếu và nhận biết tập chuyến thay đổi/bổ sung so với kế hoạch đã khai thác."),
+        ("Nguồn dữ liệu", "T_PLAN_MESSAGE theo FLIGHTDATE, MESS_TYPE, CONTENT và LISTFLIGHTID; đối chiếu chi tiết chuyến bay tại T_DAY_FLIGHTS theo FLIGHT_ID; danh mục loại tàu bay M_CRAFT_TYPE."),
+        ("Đối tượng sử dụng", "Người khai thác, cán bộ trực và người lập/kiểm tra KHB ngày có quyền truy cập Menu_ID=948."),
+        ("Tính chất", "Màn hình chỉ đọc; dữ liệu được lấy lại từ nguồn mới nhất khi tra cứu/chuyển trang. Phiên bản hiện tại không tự polling theo chu kỳ."),
+    ])
+
+    doc.add_heading("7.27.1. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-024.01", "Hệ thống phải cho phép chọn Ngày điện văn theo định dạng DD-MM-YYYY; ngày không hợp lệ phải bị từ chối trước khi gửi yêu cầu."),
+        ("FR-OPT-024.02", "Người dùng phải chọn được loại điện văn HVN MESSAGE, LANDING FLIGHTS, OVER FLIGHTS, QS MESSAGE hoặc AIRSPACE MESSAGE."),
+        ("FR-OPT-024.03", "Hệ thống phải hỗ trợ ba chế độ nội dung: Kế hoạch 15H – điện văn không chứa chuỗi THONG BAO; Bổ sung – điện văn có chứa chuỗi THONG BAO; Tất cả – không lọc theo nội dung này."),
+        ("FR-OPT-024.04", "Hệ thống phải cho phép lọc bổ sung theo sân bay đi, sân bay đến và hãng khai thác; so sánh không phân biệt chữ hoa/thường sau khi loại bỏ khoảng trắng đầu/cuối."),
+        ("FR-OPT-024.05", "Với mỗi điện văn phù hợp, hệ thống phải tách danh sách FLIGHT_ID từ T_PLAN_MESSAGE.LISTFLIGHTID theo dấu phẩy; chỉ chấp nhận token số hợp lệ."),
+        ("FR-OPT-024.06", "Các FLIGHT_ID lặp lại giữa nhiều điện văn/part phải được hợp nhất để mỗi chuyến bay chỉ xuất hiện một lần trong kết quả."),
+        ("FR-OPT-024.07", "Hệ thống phải đối chiếu FLIGHT_ID với T_DAY_FLIGHTS và chỉ hiển thị chuyến bay tồn tại trong KHB ngày; token không hợp lệ hoặc không đối chiếu được không được làm hỏng toàn bộ truy vấn."),
+        ("FR-OPT-024.08", "Danh sách phải hiển thị tối thiểu STT, hãng khai thác, Callsign, đăng ký, loại tàu bay, mục đích, loại phép, sân bay đi/đến, ngày bay, ETD, ETA, đường bay và ghi chú."),
+        ("FR-OPT-024.09", "Kết quả phải thể hiện tổng số chuyến bay và tiêu chí đang áp dụng; danh sách được sắp xếp ổn định theo part, Callsign, FROM, TO và FLIGHT_ID."),
+        ("FR-OPT-024.10", "Người dùng phải chọn được 50, 100, 200 hoặc 500 dòng/trang và chuyển trang Trước/Sau; tổng bản ghi phải giữ nguyên theo cùng bộ lọc."),
+        ("FR-OPT-024.11", "Mỗi lần nhấn Search, đổi số dòng hoặc chuyển trang, hệ thống phải truy vấn lại dữ liệu hiện hành để phản ánh điện văn/KHB vừa được cập nhật; không dùng kết quả cache như dữ liệu mới."),
+        ("FR-OPT-024.12", "Chức năng Export Excel phải xuất toàn bộ tập kết quả theo bộ lọc, không chỉ trang đang xem; file phải gắn loại điện văn và ngày trong tên file."),
+        ("FR-OPT-024.13", "Trong thời gian tải, các nút Search/Export phải được vô hiệu hóa để tránh request chồng; khi không có dữ liệu phải hiển thị trạng thái rỗng rõ ràng."),
+        ("FR-OPT-024.14", "Khi API/package trả mã khác 00 hoặc lỗi kết nối, hệ thống phải báo lỗi, đặt tổng số về 0 và không hiển thị kết quả cũ như dữ liệu mới."),
+        ("FR-OPT-024.15", "Màn hình phải nhận tham số ngày, loại điện văn và chế độ nội dung từ URL để mở đúng ngữ cảnh; khi có ngày/loại hợp lệ hệ thống tự thực hiện tra cứu."),
+    ])
+
+    doc.add_heading("7.27.2. Quy tắc nghiệp vụ và giới hạn", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-024.01", "Danh sách chuyến bay thay đổi được suy ra từ tập FLIGHT_ID do điện văn tham chiếu; chế độ Bổ sung dùng dấu hiệu nội dung THONG BAO theo quy tắc hiện hành."),
+        ("BR-OPT-024.02", "Chức năng không tự so sánh giá trị trước–sau của từng trường chuyến bay; nếu cần nêu chi tiết trường thay đổi phải có nguồn phiên bản/lịch sử riêng."),
+        ("BR-OPT-024.03", "PART được tổng hợp tất cả trong truy vấn hiện tại; trường hợp một chuyến xuất hiện ở nhiều part chỉ hiển thị một dòng."),
+        ("BR-OPT-024.04", "Cập nhật liên tục trong phạm vi hiện tại là lấy dữ liệu mới nhất theo thao tác tra cứu; tự động polling/đẩy sự kiện chỉ được coi là đã đáp ứng khi được triển khai và có chỉ tiêu chu kỳ riêng."),
+    ])
+
+    doc.add_heading("7.27.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-024.01", "Màn hình và API phải yêu cầu phiên đăng nhập/quyền menu hợp lệ; truy vấn phải dùng tham số, không ghép chuỗi dữ liệu người dùng."),
+        ("NFR-OPT-024.02", "Phân trang phải thực hiện tại Oracle; kích thước trang bị giới hạn từ 1 đến 100.000, trong đó giao diện tra cứu tối đa 500 dòng/trang."),
+        ("NFR-OPT-024.03", "Truy vấn phải có kế hoạch thực thi/index phù hợp cho FLIGHTDATE, MESS_TYPE và FLIGHT_ID; thời gian phản hồi cần được đo trên bộ dữ liệu cao điểm và chốt ngưỡng khi nghiệm thu."),
+        ("NFR-OPT-024.04", "Dữ liệu hiển thị và xuất file phải được encode an toàn; lỗi kỹ thuật chi tiết được ghi log nhưng không để lộ thông tin nhạy cảm trên giao diện."),
+    ])
+
+    doc.add_heading("7.27.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-024-01", "Tra HVN MESSAGE/Kế hoạch 15H theo ngày có dữ liệu", "Chỉ hiển thị chuyến trong điện văn không chứa THONG BAO và đối chiếu được KHB ngày."),
+        ("TC-OPT-024-02", "Chọn Bổ sung", "Chỉ hiển thị tập chuyến được tham chiếu bởi điện văn có THONG BAO."),
+        ("TC-OPT-024-03", "Chọn Tất cả", "Kết quả là hợp của hai nhóm nội dung, không lặp FLIGHT_ID."),
+        ("TC-OPT-024-04", "Một FLIGHT_ID xuất hiện trong nhiều điện văn/part", "Danh sách chỉ có một dòng cho chuyến bay."),
+        ("TC-OPT-024-05", "LISTFLIGHTID có token rỗng, phi số hoặc ID không tồn tại", "Bỏ qua token không hợp lệ; các chuyến hợp lệ vẫn hiển thị."),
+        ("TC-OPT-024-06", "Lọc FROM, TO và OPER", "Mọi dòng thỏa đồng thời các điều kiện đã nhập."),
+        ("TC-OPT-024-07", "Điện văn/KHB được cập nhật sau lần tra đầu", "Nhấn Search lại hiển thị tập dữ liệu mới nhất và tổng số tương ứng."),
+        ("TC-OPT-024-08", "Chuyển trang và đổi kích thước trang", "Không lặp/thiếu bản ghi, STT và tổng số đúng."),
+        ("TC-OPT-024-09", "Export khi kết quả nhiều hơn một trang", "File chứa đủ toàn bộ bản ghi theo bộ lọc và tên file đúng quy ước."),
+        ("TC-OPT-024-10", "Ngày sai định dạng/API lỗi/kết quả rỗng", "Hệ thống hiển thị đúng thông báo, không giữ dữ liệu cũ như kết quả mới."),
+    ])
+
+    doc.add_heading("7.28. Truy vết FR-OPT-024", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-024", "ListFlightOnMess.aspx; MESSAGE_FLIGHT_PKG.GET_FLIGHTS_ON_MESSAGE; T_PLAN_MESSAGE; T_DAY_FLIGHTS; M_CRAFT_TYPE", "Ảnh bộ lọc/kết quả, điện văn và LISTFLIGHTID nguồn, bản ghi KHB đối chiếu, file Excel, log API/package và TC-OPT-024-*"),
+    ])
+
+
 def add_rpt001_specification(doc):
     doc.add_heading("8.3. FR-RPT-001 – Biểu đồ thông tin tổng quan khai thác bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
@@ -1494,6 +1559,8 @@ def build():
         for index, item in enumerate(items, 1):
             if chapter == 9:
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã tích hợp đặc tả NL2SQL/Vanna Oracle", "Theo FR-NL/BR-NL/NFR-NL và bằng chứng kiểm thử"))
+            elif chapter == 7 and index == 24:
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã đặc tả theo ListFlightOnMess.aspx", "Theo FR/BR/NFR và TC-OPT-024-*"))
             else:
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, "Chờ đặc tả", "Chờ xây dựng"))
         table(doc, ["Mã yêu cầu", "Tên yêu cầu", "Nội dung", "Tiêu chí nghiệm thu"], function_rows)
@@ -1512,7 +1579,8 @@ def build():
         elif chapter == 7:
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
-            next_section = 27
+            add_opt024_specification(doc)
+            next_section = 29
         elif chapter == 8:
             add_rpt001_specification(doc)
             add_rpt002_010_specification(doc)
