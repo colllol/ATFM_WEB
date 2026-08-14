@@ -49,6 +49,11 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       width: 100%;
       border-collapse: separate;
       border-spacing: 9px 0;
+      background: #f3f9fd;
+    }
+
+    #tblSearch .search-extension-time-input {
+      width: 70px;
     }
 
     #tblSearch td {
@@ -175,6 +180,8 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
       <td>CRAFT</td>
       <td>VIA</td>
       <td>FLIGHT DATE</td>
+      <td>TỪ GIỜ ETD</td>
+      <td>ĐẾN GIỜ ETD</td>
       <td>FLIGHT TYPE</td>
       <td>TYPE</td>
       <td>PURPOSE</td>
@@ -208,6 +215,28 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
           type="text"
           maxlength="10"
           placeholder="DD-MM-YYYY"
+        />
+      </td>
+      <td>
+        <input
+          id="sFromEtd"
+          class="search-extension-time-input"
+          type="text"
+          inputmode="numeric"
+          maxlength="5"
+          placeholder="00:00"
+          autocomplete="off"
+        />
+      </td>
+      <td>
+        <input
+          id="sToEtd"
+          class="search-extension-time-input"
+          type="text"
+          inputmode="numeric"
+          maxlength="5"
+          placeholder="23:59"
+          autocomplete="off"
         />
       </td>
       <td>
@@ -298,6 +327,7 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
   <script src="../Scripts/CustomPaging.js"></script>
   <script>
            function btnSearchExtension_Click() {
+               if (!validateSearchExtensionEtdRange()) return;
                $('#tblSource').attr('data-pageindex', '1');
                $('#tblSource').attr('data-total', 0);
                LoadDataBySearch();
@@ -378,6 +408,8 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                    Craft: $.trim($('#sCraft').val()),
                    Via: $.trim($('#sVia').val()),
                    FlightDate: $.trim($('#sFlightDate').val()),
+                   FromEtd: $.trim($('#sFromEtd').val()),
+                   ToEtd: $.trim($('#sToEtd').val()),
                    FlightType: $.trim($('#sFlightType').val()),
                    PermType: $.trim($('#sPermType').val()),
                    Purpose: $.trim($('#sPurpose').val()),
@@ -395,9 +427,45 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
                $('#sCraft').val('');
                $('#sVia').val('');
                $('#sFlightDate').val('');
+               $('#sFromEtd').val('');
+               $('#sToEtd').val('');
                $('#sFlightType').val('');
                $('#sPermType').val('');
                $('#sPurpose').val('');
+           }
+
+           function formatSearchExtensionTimeInput(input) {
+               var digits = (input.value || '').replace(/\D/g, '').slice(0, 4);
+               input.value = digits.length > 2
+                   ? digits.slice(0, 2) + ':' + digits.slice(2)
+                   : digits;
+           }
+
+           function isValidSearchExtensionTime(value) {
+               return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+           }
+
+           function validateSearchExtensionEtdRange() {
+               var fromInput = document.getElementById('sFromEtd');
+               var toInput = document.getElementById('sToEtd');
+               var fromValue = $.trim(fromInput.value);
+               var toValue = $.trim(toInput.value);
+
+               if ((fromValue && !isValidSearchExtensionTime(fromValue))
+                   || (toValue && !isValidSearchExtensionTime(toValue))) {
+                   alert('Khung giờ ETD phải đúng định dạng 24h HH:mm, từ 00:00 đến 23:59. Có thể để trống nếu không lọc theo giờ.');
+                   (fromValue && !isValidSearchExtensionTime(fromValue) ? fromInput : toInput).focus();
+                   return false;
+               }
+
+               if ((fromValue || toValue)
+                   && (fromValue || '00:00') > (toValue || '23:59')) {
+                   alert('Từ giờ ETD không được lớn hơn Đến giờ ETD.');
+                   fromInput.focus();
+                   return false;
+               }
+
+               return true;
            }
 
            function initializeSearchExtensionScrollControls() {
@@ -483,6 +551,9 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
 
            $(document).ready(function () {
                initializeSearchExtensionScrollControls();
+               $('#sFromEtd, #sToEtd').on('input', function () {
+                   formatSearchExtensionTimeInput(this);
+               });
            });
 
            $('#tblSearch input[type="text"]').each(function () {

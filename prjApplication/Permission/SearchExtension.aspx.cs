@@ -18,6 +18,8 @@ namespace prjApplication.Permission
             public string Craft { get; set; }
             public string Via { get; set; }
             public string FlightDate { get; set; }
+            public string FromEtd { get; set; }
+            public string ToEtd { get; set; }
             public string FlightType { get; set; }
             public string PermType { get; set; }
             public string Purpose { get; set; }
@@ -63,6 +65,19 @@ namespace prjApplication.Permission
                 int firstRow = pageIndex * pageSize + 1;
                 int lastRow = firstRow + pageSize - 1;
                 DateTime? flightDate = ParseOptionalDate(request.FlightDate);
+                bool hasFromEtd = !String.IsNullOrWhiteSpace(request.FromEtd);
+                bool hasToEtd = !String.IsNullOrWhiteSpace(request.ToEtd);
+                bool useEtdFilter = hasFromEtd || hasToEtd;
+                TimeSpan selectedFromEtd = hasFromEtd
+                    ? ParseSearchTime(request.FromEtd, "Từ giờ ETD")
+                    : TimeSpan.Zero;
+                TimeSpan selectedToEtd = hasToEtd
+                    ? ParseSearchTime(request.ToEtd, "Đến giờ ETD")
+                    : new TimeSpan(23, 59, 0);
+                if (useEtdFilter && selectedFromEtd > selectedToEtd)
+                    throw new ArgumentException("Từ giờ ETD không được lớn hơn Đến giờ ETD.");
+                string fromEtdHhmm = selectedFromEtd.ToString(@"hhmm", CultureInfo.InvariantCulture);
+                string toEtdHhmm = selectedToEtd.ToString(@"hhmm", CultureInfo.InvariantCulture);
                 var items = new List<SearchItem>();
 
                 const string sql = @"
@@ -109,6 +124,11 @@ namespace prjApplication.Permission
                           AND (:toAirp IS NULL OR UPPER(TRIM(d.TO_AIRP)) LIKE '%' || :toAirp || '%')
                           AND (:craft IS NULL OR UPPER(TRIM(c.MA)) LIKE '%' || :craft || '%')
                           AND (:via IS NULL OR UPPER(TRIM(d.VIA)) LIKE '%' || :via || '%')
+                          AND
+                          (
+                              :useEtdFilter = 0
+                              OR LPAD(TRIM(d.ETD), 4, '0') BETWEEN :fromEtd AND :toEtd
+                          )
                           AND (:flightType IS NULL OR UPPER(TRIM(m.FLIGHTTYPE)) = :flightType)
                           AND (:permType IS NULL OR UPPER(TRIM(m.PERMTYPE)) = :permType)
                           AND (:purpose IS NULL OR UPPER(TRIM(d.PURPOSE_ID)) = :purpose)
@@ -145,6 +165,9 @@ namespace prjApplication.Permission
                     AddString(command, "toAirp", Normalize(request.ToAirp));
                     AddString(command, "craft", Normalize(request.Craft));
                     AddString(command, "via", Normalize(request.Via));
+                    command.Parameters.Add("useEtdFilter", OracleDbType.Int32).Value = useEtdFilter ? 1 : 0;
+                    command.Parameters.Add("fromEtd", OracleDbType.Varchar2).Value = fromEtdHhmm;
+                    command.Parameters.Add("toEtd", OracleDbType.Varchar2).Value = toEtdHhmm;
                     AddString(command, "flightType", Normalize(request.FlightType));
                     AddString(command, "permType", Normalize(request.PermType));
                     AddString(command, "purpose", Normalize(request.Purpose));
@@ -210,6 +233,24 @@ namespace prjApplication.Permission
                 DateTimeStyles.None, out parsed))
                 throw new ArgumentException("FLIGHT DATE không hợp lệ. Định dạng yêu cầu DD-MM-YYYY.");
             return parsed.Date;
+        }
+
+        private static TimeSpan ParseSearchTime(string value, string fieldName)
+        {
+            string normalized = (value ?? String.Empty).Trim();
+            if (normalized.Length == 4 && normalized.IndexOf(':') < 0)
+                normalized = normalized.Insert(2, ":");
+
+            TimeSpan parsed;
+            if (!TimeSpan.TryParseExact(normalized, @"hh\:mm", CultureInfo.InvariantCulture, out parsed)
+                || parsed < TimeSpan.Zero
+                || parsed >= TimeSpan.FromDays(1))
+            {
+                throw new ArgumentException(fieldName
+                    + " không hợp lệ. Định dạng yêu cầu HH:mm từ 00:00 đến 23:59.");
+            }
+
+            return parsed;
         }
 
         private static string Normalize(string value)
