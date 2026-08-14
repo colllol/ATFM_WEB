@@ -842,6 +842,73 @@ def add_opt024_specification(doc):
     ])
 
 
+def add_opt030_specification(doc):
+    doc.add_heading("7.29. FR-OPT-030 – Mở rộng tìm kiếm trên giao diện Daily Military Report", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "FinishFlights/ListFinishedFlightsMilitaryReport.aspx?Menu_ID=863 – Daily Military Report."),
+        ("Mục tiêu", "Cho phép người khai thác tra cứu linh hoạt danh sách KHB quân sự đã được duyệt theo khoảng ngày, khung giờ và nhiều thuộc tính nghiệp vụ; phục vụ xem, đối soát và trích xuất báo cáo."),
+        ("Nguồn dữ liệu", "T_FINISHFLIGHTS_MILITARY thông qua A_TEST_SEARCH.GET_FINISHED_FLIGHTS_MINITARY."),
+        ("Phạm vi dữ liệu", "Chỉ hiển thị bản ghi đã Accepted với ISACCEPTED = 1; chức năng báo cáo không thay đổi dữ liệu nguồn."),
+        ("Đối tượng sử dụng", "Người khai thác và cán bộ lập/kiểm tra báo cáo có quyền truy cập Menu_ID=863."),
+    ])
+
+    doc.add_heading("7.29.1. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-030.01", "Hệ thống phải cho phép chọn Từ ngày và Đến ngày bằng bộ chọn ngày; mặc định theo khoảng ngày nghiệp vụ được cấu hình trên màn hình."),
+        ("FR-OPT-030.02", "Cả hai ngày là bắt buộc và Từ ngày không được lớn hơn Đến ngày; dữ liệu phải được truy vấn theo FLIGHTDATE từ đầu Từ ngày đến hết Đến ngày."),
+        ("FR-OPT-030.03", "Hệ thống phải cho phép chọn loại giờ Tất cả, ETD, ETA, ATD hoặc ATA. Khi chọn một loại giờ, người dùng được nhập khung từ HHMM đến HHMM; khi chọn Tất cả, khung giờ trở về 0000–2359 và bị khóa."),
+        ("FR-OPT-030.04", "Khung giờ phải chỉ gồm bốn chữ số hợp lệ và giờ bắt đầu không lớn hơn giờ kết thúc trong cùng ngày; dữ liệu được lọc trên đúng trường giờ đã chọn."),
+        ("FR-OPT-030.05", "Hệ thống phải cung cấp bộ lọc tại từng cột gồm OPER, FLIGHTDATE, CALLSIGN, REGIS, R_CRAFT, F_CRAFT, PURPOSE, P_TYPE, FROM, TO, ATD, ATA, VIA, FPL_VIA, REMARK, ETD và ETA."),
+        ("FR-OPT-030.06", "Các điều kiện cột được kết hợp theo phép AND. CALLSIGN, FROM, TO, ETD, ETA, ATD, ATA, VIA, FPL_VIA, REMARK, OPER và REGIS hỗ trợ tìm chứa; P_TYPE, PURPOSE, R_CRAFT và F_CRAFT so khớp giá trị chuẩn theo quy tắc package."),
+        ("FR-OPT-030.07", "So khớp chuỗi phải bỏ khoảng trắng đầu/cuối và không phân biệt chữ hoa/thường; điều kiện để trống không được giới hạn kết quả."),
+        ("FR-OPT-030.08", "Mọi truy vấn từ màn hình báo cáo phải cố định P_ISACCEPTED = 1, không cho phép tham số phía trình duyệt mở rộng sang dữ liệu chưa duyệt hoặc đã hủy."),
+        ("FR-OPT-030.09", "Danh sách phải hiển thị STT, OPER, FLIGHTDATE, CALLSIGN, REGIS, R_CRAFT, F_CRAFT, PURPOSE, P_TYPE, FROM, TO, ATD, ATA, VIA, FPL_VIA, REMARK, ETD, ETA và người tạo/cập nhật cuối nếu nguồn có dữ liệu."),
+        ("FR-OPT-030.10", "Kết quả phải hiển thị tổng số bản ghi thỏa điều kiện và hỗ trợ kích thước trang 100, 500, 1.000, 2.000, 4.000, 6.000 hoặc 8.000 dòng; chuyển trang phải giữ nguyên toàn bộ tiêu chí tìm kiếm."),
+        ("FR-OPT-030.11", "Phân trang phải thực hiện tại Oracle bằng PAGEINDEX/PAGESIZE; STT trên giao diện phải liên tục theo vị trí bản ghi trong toàn bộ tập kết quả."),
+        ("FR-OPT-030.12", "Người dùng phải có thể sắp xếp tăng/giảm trên các cột hiển thị; thao tác sắp xếp không được làm thay đổi dữ liệu nguồn hoặc tổng số kết quả."),
+        ("FR-OPT-030.13", "Nút Search phải xóa kết quả cũ, hiển thị trạng thái đang tải và chỉ hiển thị dữ liệu của request thành công mới nhất; kết quả rỗng phải thể hiện tổng số 0."),
+        ("FR-OPT-030.14", "Export Excel phải sử dụng cùng bộ lọc, lấy toàn bộ tập kết quả từ trang đầu với kích thước export, không chỉ các dòng đang hiển thị trên trang hiện tại."),
+        ("FR-OPT-030.15", "File Excel phải giữ các cột nghiệp vụ của danh sách, định dạng ngày dễ đọc và tên file có dấu thời gian để phân biệt các lượt xuất."),
+        ("FR-OPT-030.16", "Khi API/package lỗi, hệ thống phải đặt tổng số về 0, dừng trạng thái tải và thông báo không tải được báo cáo; khi export không có dữ liệu phải thông báo và không tạo file rỗng."),
+    ])
+
+    doc.add_heading("7.29.2. Quy tắc nghiệp vụ", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-030.01", "Daily Military Report là nguồn chỉ xem cho người khai thác; bản ghi chỉ xuất hiện sau khi hoàn tất bước Accepted trong quy trình quản lý KHB quân sự."),
+        ("BR-OPT-030.02", "Khoảng ngày được áp dụng theo FLIGHTDATE với điều kiện >= ngày bắt đầu và < ngày kết thúc + 1 để bao phủ toàn bộ ngày cuối."),
+        ("BR-OPT-030.03", "CAT_HA = 0 không lọc giờ; 1 lọc ETD; 2 lọc ETA; 3 lọc ATD; 4 lọc ATA. Giá trị giờ được so sánh trên bốn ký tự HHMM đã chuẩn hóa."),
+        ("BR-OPT-030.04", "Thứ tự mặc định của package là CALLSIGN, FROM_AIRP, TO_AIRP và FLIGHT_ID để kết quả phân trang ổn định."),
+        ("BR-OPT-030.05", "Bộ lọc mở rộng không được làm thay đổi trạng thái duyệt, dữ liệu KHB quân sự hoặc lịch sử nguồn."),
+    ])
+
+    doc.add_heading("7.29.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-030.01", "Màn hình/API phải yêu cầu phiên đăng nhập và quyền menu hợp lệ; điều kiện truy vấn phải được bind qua tham số package."),
+        ("NFR-OPT-030.02", "Truy vấn phải dùng phân trang và index/kế hoạch thực thi phù hợp cho ISACCEPTED, FLIGHTDATE cùng các khóa tìm kiếm thường dùng; ngưỡng phản hồi phải được đo và phê duyệt trên dữ liệu cao điểm."),
+        ("NFR-OPT-030.03", "Trong thời gian export, nút Export phải bị vô hiệu hóa để tránh gửi lặp; giới hạn số dòng/kích thước file phải được cấu hình phù hợp năng lực máy chủ và trình duyệt."),
+        ("NFR-OPT-030.04", "Dữ liệu đưa vào HTML và Excel phải được encode để ngăn thực thi nội dung ngoài ý muốn; chi tiết lỗi kỹ thuật chỉ ghi log, không hiển thị thông tin nhạy cảm."),
+    ])
+
+    doc.add_heading("7.29.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-030-01", "Tra cứu một ngày và khoảng nhiều ngày", "Chỉ trả bản ghi có FLIGHTDATE trong khoảng bao gồm cả hai ngày."),
+        ("TC-OPT-030-02", "Từ ngày lớn hơn Đến ngày hoặc thiếu một ngày", "Chặn request và thông báo dữ liệu ngày không hợp lệ."),
+        ("TC-OPT-030-03", "Lọc lần lượt ETD/ETA/ATD/ATA theo 0600–1200", "Mỗi lượt chỉ đánh giá đúng trường giờ được chọn."),
+        ("TC-OPT-030-04", "Kết hợp CALLSIGN, FROM, TO, PURPOSE và P_TYPE", "Mọi dòng đồng thời thỏa tất cả điều kiện; so khớp đúng chứa/chính xác theo quy tắc."),
+        ("TC-OPT-030-05", "Nhập chữ thường và khoảng trắng thừa", "Kết quả giống giá trị đã chuẩn hóa chữ hoa và trim."),
+        ("TC-OPT-030-06", "Nguồn có bản chưa duyệt và bản đã duyệt cùng tiêu chí", "Chỉ bản ISACCEPTED = 1 xuất hiện."),
+        ("TC-OPT-030-07", "Kết quả lớn hơn một trang và đổi kích thước trang", "Tổng số đúng, STT liên tục, không lặp hoặc thiếu bản ghi."),
+        ("TC-OPT-030-08", "Sắp xếp tăng rồi giảm theo cột", "Thứ tự hiển thị thay đổi đúng, tổng số và dữ liệu nguồn không đổi."),
+        ("TC-OPT-030-09", "Export tập kết quả nhiều trang", "File chứa toàn bộ bản ghi theo đúng bộ lọc và đủ các cột quy định."),
+        ("TC-OPT-030-10", "Kết quả rỗng, API lỗi hoặc export lỗi", "Hiển thị trạng thái/thông báo phù hợp, không giữ dữ liệu cũ và không tạo file sai."),
+    ])
+
+    doc.add_heading("7.30. Truy vết FR-OPT-030", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-030", "ListFinishedFlightsMilitaryReport.aspx; A_TEST_SEARCH.GET_FINISHED_FLIGHTS_MINITARY; T_FINISHFLIGHTS_MILITARY", "Ảnh bộ lọc/kết quả, tham số request, dữ liệu nguồn Accepted/chưa Accepted, file Excel, execution plan/log lỗi và TC-OPT-030-*"),
+    ])
+
+
 def add_rpt001_specification(doc):
     doc.add_heading("8.3. FR-RPT-001 – Biểu đồ thông tin tổng quan khai thác bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
@@ -1559,8 +1626,9 @@ def build():
         for index, item in enumerate(items, 1):
             if chapter == 9:
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã tích hợp đặc tả NL2SQL/Vanna Oracle", "Theo FR-NL/BR-NL/NFR-NL và bằng chứng kiểm thử"))
-            elif chapter == 7 and index == 24:
-                function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã đặc tả theo ListFlightOnMess.aspx", "Theo FR/BR/NFR và TC-OPT-024-*"))
+            elif chapter == 7 and index in (24, 30):
+                source_page = "ListFlightOnMess.aspx" if index == 24 else "ListFinishedFlightsMilitaryReport.aspx"
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, f"Đã đặc tả theo {source_page}", f"Theo FR/BR/NFR và TC-OPT-{index:03d}-*"))
             else:
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, "Chờ đặc tả", "Chờ xây dựng"))
         table(doc, ["Mã yêu cầu", "Tên yêu cầu", "Nội dung", "Tiêu chí nghiệm thu"], function_rows)
@@ -1580,7 +1648,8 @@ def build():
             add_opt001_003_specification(doc)
             add_opt006_010_specification(doc)
             add_opt024_specification(doc)
-            next_section = 29
+            add_opt030_specification(doc)
+            next_section = 31
         elif chapter == 8:
             add_rpt001_specification(doc)
             add_rpt002_010_specification(doc)
