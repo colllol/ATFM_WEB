@@ -262,7 +262,7 @@ Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
   </button>
   <div class="search-extension-table-shell">
     <div id="searchExtensionTableScroll" class="search-extension-table-scroll">
-      <table id="tblSource" class="table table-bordered">
+      <table id="tblSource" class="table table-bordered" data-atfm-responsive-table="off">
         <thead>
           <tr>
             <th></th>
