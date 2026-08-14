@@ -783,6 +783,202 @@ def add_rpt001_specification(doc):
     ])
 
 
+def add_rpt002_010_specification(doc):
+    doc.add_heading("8.4. FR-RPT-002 – Phân tích xu hướng khai thác theo thời gian", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/FlightTrendAnalysis.aspx?Menu_ID=909."),
+        ("Mục tiêu", "So sánh chuyến Hoàn thành và Delay của kỳ hiện tại với đúng cùng kỳ năm trước theo ngày hoặc tháng."),
+        ("Nguồn", "T_DAY_FLIGHTS_GOINGON cho đúng ngày hiện tại; T_FINISHED_FLIGHTS cho lịch sử; danh mục hãng tổng hợp thêm từ T_KHH."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-002.01", "Bộ lọc phải gồm Từ ngày, Đến ngày, Sân bay, Hãng bay và kỳ nhóm Ngày/Tháng; khoảng ngày phải hợp lệ, không vượt ngày hiện tại."),
+        ("FR-RPT-002.02", "Hệ thống phải tính kỳ so sánh bằng cùng khoảng ngày lùi đúng một năm và trả rõ previousFrom/previousTo."),
+        ("FR-RPT-002.03", "Chỉ FINISHED và DELAY* được đưa vào xu hướng; mọi điểm hiện tại và cùng kỳ phải dùng cùng quy tắc trạng thái, sân bay và hãng."),
+        ("FR-RPT-002.04", "Phải hiển thị bốn KPI: tổng kỳ hiện tại, tổng cùng kỳ, chênh lệch tuyệt đối và tỷ lệ thay đổi; trường hợp mẫu bằng 0 phải có quy ước rõ."),
+        ("FR-RPT-002.05", "Biểu đồ phải có hai chuỗi Kỳ hiện tại/Cùng kỳ năm trước, nhóm theo ngày hoặc tháng, sắp xếp thời gian tăng dần và hiển thị tooltip số chuyến."),
+        ("FR-RPT-002.06", "Các khoảng không có dữ liệu phải hiển thị điểm 0 để hai chuỗi có cùng trục, không được dịch sai mốc so sánh."),
+        ("FR-RPT-002.07", "Danh sách hãng phải được nạp theo khoảng ngày, chuẩn hóa mã VNA thành HVN theo quy tắc hiện hành và giữ lựa chọn khi tải lại."),
+        ("FR-RPT-002.08", "KPI, biểu đồ và nguồn dữ liệu phải thuộc cùng một kết quả request; lỗi tải không được giữ biểu đồ cũ dưới tiêu chí mới."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-002-01", "Nhóm theo ngày", "Điểm hiện tại/cùng kỳ đúng ngày và tổng bằng KPI"),
+        ("TC-RPT-002-02", "Nhóm theo tháng qua nhiều tháng", "Tổng hợp đúng tháng, đúng thứ tự"),
+        ("TC-RPT-002-03", "Lọc sân bay và hãng", "Hai kỳ áp dụng cùng bộ lọc"),
+        ("TC-RPT-002-04", "Cùng kỳ bằng 0", "Chênh lệch đúng, tỷ lệ không lỗi chia"),
+        ("TC-RPT-002-05", "Đối soát Oracle", "Tổng Finished+Delay từng kỳ khớp nguồn"),
+    ])
+
+    doc.add_heading("8.5. FR-RPT-003 – Phát hiện và cảnh báo dữ liệu bất thường", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/AnomalyWarning.aspx?Menu_ID=910 – hiện triển khai cảnh báo chuyến bay delay ngày hiện tại."),
+        ("Nguồn", "T_DAY_FLIGHTS_GOINGON; so sánh ETD và ATD sau chuẩn hóa."),
+        ("Ngưỡng", "Mức 1: 15–29 phút; Mức 2: 30–59 phút; Mức 3: từ 60 phút."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-003.01", "Hệ thống phải lấy chuyến ngày hiện tại có đủ ETD/ATD và tính số phút chậm theo thời gian nghiệp vụ, xử lý đúng qua ngày."),
+        ("FR-RPT-003.02", "Chỉ tạo cảnh báo khi delay từ 15 phút; phân mức chính xác tại các biên 15, 30 và 60 phút."),
+        ("FR-RPT-003.03", "Phải hiển thị KPI Tổng cảnh báo và số lượng Mức 1/2/3; tổng ba mức phải bằng Tổng cảnh báo."),
+        ("FR-RPT-003.04", "Nút Xem cảnh báo delay phải mở hộp thoại danh sách và cho lọc Tất cả hoặc từng mức mà không tải lại trang."),
+        ("FR-RPT-003.05", "Danh sách phải gồm mức, CALLSIGN, hãng, đăng ký, PERMTYPE, FROM, TO, ETD bốn số, ATD sáu số và thời lượng chậm."),
+        ("FR-RPT-003.06", "Cảnh báo phải sắp xếp ưu tiên mức cao/thời lượng lớn trước và không nhân đôi cùng chuyến trong một lần tính."),
+        ("FR-RPT-003.07", "Thiếu/sai ETD hoặc ATD phải được ghi lỗi dữ liệu, không suy đoán và không tạo cảnh báo delay sai."),
+        ("FR-RPT-003.08", "Giao diện phải hiển thị thời điểm cập nhật/nguồn và trạng thái không có cảnh báo; dữ liệu đưa vào HTML phải encode."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-003-01", "Delay 14/15/29/30/59/60 phút", "Phân loại đúng các biên"),
+        ("TC-RPT-003-02", "Lọc từng mức", "Số dòng và KPI mức khớp"),
+        ("TC-RPT-003-03", "Chuyến qua ngày", "Số phút delay đúng, không âm"),
+        ("TC-RPT-003-04", "Thiếu ETD/ATD", "Không cảnh báo sai; có dấu vết lỗi"),
+        ("TC-RPT-003-05", "Không có cảnh báo", "KPI 0 và thông báo rõ"),
+    ])
+
+    doc.add_heading("8.6. FR-RPT-005 – Tổng hợp chỉ số hiệu suất bay từ ADS-B O/F", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/AdsBPerformanceReport.aspx?Menu_ID=923."),
+        ("Nguồn", "API AdsBPerformance và T_TRACKS_LOG; bổ sung OPER từ T_DAY_FLIGHTS_GOINGON khi cần."),
+        ("Phạm vi", "PERMTYPE Tất cả/LD/O/F, hãng khai thác, khoảng ngày; có báo cáo end-of-day."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-005.01", "Bộ lọc phải gồm Từ ngày, Đến ngày, PERMTYPE ALL/LD/O/F và OPER; danh sách OPER phải phụ thuộc khoảng ngày và loại phép."),
+        ("FR-RPT-005.02", "Phải hiển thị KPI Tổng bản ghi, LD, O/F và tỷ lệ LD/O/F; tổng các nhóm đã xác định cộng nhóm khác phải bằng tổng."),
+        ("FR-RPT-005.03", "Biểu đồ xu hướng phải tổng hợp theo ngày, tối thiểu tách LD, O/F và Other, sắp xếp theo ngày tăng dần."),
+        ("FR-RPT-005.04", "Bảng chi tiết phải gồm CALLSIGN, OPER, PERMTYPE, FROM/TO, ETD/ETA, STATUS, DATE và UPDATED_AT_UTC; hỗ trợ 50/100/200/500 dòng."),
+        ("FR-RPT-005.05", "Trạng thái ADS-B phải hiển thị nhãn VVHN, VVHM hoặc Không xác định theo mã trạng thái hiện hành."),
+        ("FR-RPT-005.06", "Báo cáo end-of-day phải trả TIME_IN/TIME_OUT và đúng cùng bộ lọc; số liệu phải truy vết về TRLOG_ID."),
+        ("FR-RPT-005.07", "API lỗi hoặc dữ liệu không đầy đủ phải hiển thị thông báo, không trộn kết quả cũ; mốc UTC phải được ghi nhãn rõ."),
+        ("FR-RPT-005.08", "KPI, xu hướng, bảng và end-of-day phải đối soát được với T_TRACKS_LOG và không đếm trùng TRLOG_ID."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-005-01", "Lọc LD và O/F", "KPI/bảng/xu hướng chỉ gồm loại chọn"),
+        ("TC-RPT-005-02", "Lọc OPER", "Danh sách và tổng khớp hãng"),
+        ("TC-RPT-005-03", "Có trạng thái khác", "Đưa vào Other/Không xác định, không mất tổng"),
+        ("TC-RPT-005-04", "End-of-day", "TIME_IN/TIME_OUT và số dòng khớp nguồn"),
+        ("TC-RPT-005-05", "Đối soát TRLOG_ID", "Không trùng và tổng đúng"),
+    ])
+
+    doc.add_heading("8.7. FR-RPT-006 – Biểu đồ thống kê trạng thái chuyến bay theo tỷ lệ phần trăm", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/FlightStatusRate.aspx?Menu_ID=907."),
+        ("Nhóm trạng thái", "Hoàn thành, Hủy, Delay và Chờ."),
+        ("Nguồn", "Ngày hiện tại: T_DAY_FLIGHTS_GOINGON và T_DAY_FLIGHTS_CANCEL; lịch sử: T_FINISHED_FLIGHTS cùng dữ liệu ghép FPL/KHH."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-006.01", "Bộ lọc phải gồm ngày/khoảng ngày, sân bay và hãng; chế độ ngày hiện tại phải dùng đúng nguồn currentDay."),
+        ("FR-RPT-006.02", "Tổng chuyến phải bằng Finished + Cancel + Delay + Wait; mỗi chuyến chỉ thuộc một nhóm trạng thái ưu tiên."),
+        ("FR-RPT-006.03", "Delay phải phân loại theo quy tắc DELAY_15_29, DELAY_30_59, DELAY_60_PLUS nhưng biểu đồ tỷ lệ được gộp vào nhóm Delay."),
+        ("FR-RPT-006.04", "KPI và biểu đồ donut phải hiển thị số lượng, tỷ lệ một chữ số thập phân và màu/nhãn nhất quán cho bốn nhóm."),
+        ("FR-RPT-006.05", "Nhấn KPI hoặc phân đoạn donut phải lọc/bỏ lọc danh sách chi tiết và cập nhật số dòng/trang."),
+        ("FR-RPT-006.06", "Danh sách phải gồm CALLSIGN, OPER, REGISTRATION, PERMTYPE, FROM/TO, ATDDAY, ATADAY, EOBTDAY, trạng thái và hỗ trợ 25–1000 dòng/trang."),
+        ("FR-RPT-006.07", "Export Excel phải xuất toàn bộ tập trạng thái đang chọn, không chỉ trang hiện tại."),
+        ("FR-RPT-006.08", "Logic ghép dữ liệu nhiều nguồn phải chống trùng bằng độ ưu tiên/ROWID hoặc khóa nghiệp vụ và truy vết được nguồn."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-006-01", "Tập có đủ bốn trạng thái", "Tỷ lệ/tổng bằng 100% trong sai số làm tròn"),
+        ("TC-RPT-006-02", "Drill-down từng trạng thái", "Danh sách đúng nhóm và tổng"),
+        ("TC-RPT-006-03", "Ngày hiện tại/lịch sử", "Chọn đúng nguồn, không trùng"),
+        ("TC-RPT-006-04", "Export sau chọn Delay", "Chỉ toàn bộ DELAY*, đúng số dòng"),
+        ("TC-RPT-006-05", "Tổng bằng 0", "Tỷ lệ 0%, không lỗi"),
+    ])
+
+    doc.add_heading("8.8. FR-RPT-007 – Biểu đồ so sánh hoạt động bay giữa các sân bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Common/ChartReportAirport.aspx?Menu_ID=906."),
+        ("Mục tiêu", "So sánh lưu lượng chuyến bay của từ một đến năm sân bay trong khoảng ngày."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-007.01", "Người dùng phải chọn số lượng 1–5 sân bay, các sân bay tương ứng và Từ ngày/Đến ngày; không cho chọn trùng sân bay."),
+        ("FR-RPT-007.02", "Biểu đồ phải hiển thị hai chuỗi so sánh theo quy ước giao diện, dùng cùng nguồn/quy tắc trạng thái cho mọi sân bay."),
+        ("FR-RPT-007.03", "Số liệu cất/đến hoặc hai nhóm so sánh phải tính theo FROM_AIRP/TO_AIRP sau chuẩn hóa và chỉ gồm trạng thái hợp lệ đã công bố."),
+        ("FR-RPT-007.04", "Biểu đồ cột phải có số trên cột, nhãn sân bay, legend, trục tỷ lệ dùng chung và co giãn theo giá trị lớn nhất."),
+        ("FR-RPT-007.05", "Thay đổi số sân bay phải hiện/ẩn đúng các ô chọn, giữ các lựa chọn còn hợp lệ và tải lại khi người dùng xác nhận."),
+        ("FR-RPT-007.06", "Ngày hiện tại và lịch sử phải áp dụng cùng quy tắc nguồn với FlightStatusRate; dữ liệu hủy phải được tính đúng nhóm nếu biểu đồ yêu cầu."),
+        ("FR-RPT-007.07", "Không có dữ liệu hoặc lỗi phải hiển thị trạng thái rõ, không giữ cột của lần trước."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-007-01", "So sánh 1 và 5 sân bay", "Đủ cột/nhãn, không lệch trục"),
+        ("TC-RPT-007-02", "Chọn trùng sân bay", "Bị chặn"),
+        ("TC-RPT-007-03", "Sân bay có lưu lượng chênh lệch lớn", "Tỷ lệ cột chính xác"),
+        ("TC-RPT-007-04", "Đối soát FROM/TO", "Số liệu từng sân bay khớp Oracle"),
+    ])
+
+    doc.add_heading("8.9. FR-RPT-008 – Báo cáo chuyến bay quân sự theo tiêu chí mở rộng", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/MilitaryFlightReport.aspx?Menu_ID=911."),
+        ("Nguồn/API", "api/MilitaryFlightReport/GetData; dữ liệu chuyến bay quân sự đã được phép khai thác theo phân quyền."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-008.01", "Bộ lọc phải gồm Sân bay, Mục đích, Từ ngày và Đến ngày; danh mục sân bay/mục đích phải được trả từ dữ liệu/danh mục hợp lệ."),
+        ("FR-RPT-008.02", "Lọc sân bay phải nhận chuyến có FROM hoặc TO là sân bay chọn; lọc mục đích phải khớp PURPOSE sau chuẩn hóa."),
+        ("FR-RPT-008.03", "Báo cáo phải hiển thị các KPI/tổng hợp do API trả và danh sách chi tiết cùng một tập dữ liệu."),
+        ("FR-RPT-008.04", "Danh sách phải gồm P_TYPE, FROM/TO, ETD/ETA, ATD/ATA, PURPOSE và FLIGHTDATE; hỗ trợ 25/50/100/200/500 dòng."),
+        ("FR-RPT-008.05", "Export Excel chỉ bật khi có dữ liệu và phải xuất toàn bộ kết quả lọc, kèm tiêu chí ngày/sân bay/mục đích."),
+        ("FR-RPT-008.06", "Báo cáo chỉ đọc; người không có quyền dữ liệu quân sự không được gọi API hoặc xem/export kết quả."),
+        ("FR-RPT-008.07", "Dữ liệu nhạy cảm phải được encode, log truy cập/export và không lộ ngoài phạm vi người dùng được cấp quyền."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-008-01", "Lọc sân bay/mục đích", "Danh sách và KPI khớp"),
+        ("TC-RPT-008-02", "Phân trang", "Tổng/STT/trang nhất quán"),
+        ("TC-RPT-008-03", "Export", "Đủ toàn bộ dòng lọc"),
+        ("TC-RPT-008-04", "Người không có quyền", "Bị từ chối và có audit"),
+    ])
+
+    doc.add_heading("8.10. FR-RPT-009 – Báo cáo tổng hợp hoạt động bay tại tất cả sân bay dân dụng", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/CivilFlightSummary.aspx?Menu_ID=912."),
+        ("Mục tiêu", "Tổng hợp hoạt động bay dân dụng và lưu lượng đi/đến tại các sân bay."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-009.01", "Bộ lọc phải gồm Sân bay, Từ ngày, Đến ngày; mặc định khoảng 30 ngày đến hiện tại."),
+        ("FR-RPT-009.02", "Báo cáo phải loại trừ chuyến quân sự theo quy tắc nghiệp vụ được phê duyệt và chỉ tính các sân bay dân dụng hợp lệ."),
+        ("FR-RPT-009.03", "KPI phải tối thiểu tổng chuyến, chuyến hoàn thành/delay hoặc các chỉ số API công bố; tổng hợp phải khớp danh sách chi tiết."),
+        ("FR-RPT-009.04", "Bảng lưu lượng sân bay phải gồm Sân bay, Đi, Đến và Tổng; Tổng = Đi + Đến, sắp xếp lưu lượng giảm dần."),
+        ("FR-RPT-009.05", "Danh sách chi tiết phải gồm Ngày bay, Chuyến bay, Hãng, FROM, TO và Trạng thái; lọc sân bay áp dụng cho FROM hoặc TO."),
+        ("FR-RPT-009.06", "Một chuyến nội địa có thể tạo một lượt đi và một lượt đến ở hai sân bay nhưng chỉ được tính một chuyến trong KPI tổng."),
+        ("FR-RPT-009.07", "Không có dữ liệu/lỗi phải hiển thị rõ; số liệu phải truy vết được về nguồn và tiêu chí."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-009-01", "Tất cả sân bay 30 ngày", "KPI, lưu lượng và chi tiết khớp"),
+        ("TC-RPT-009-02", "Lọc một sân bay", "Đi/Đến/Tổng đúng"),
+        ("TC-RPT-009-03", "Chuyến nội địa A→B", "KPI đếm một; A đi một; B đến một"),
+        ("TC-RPT-009-04", "Dữ liệu quân sự", "Bị loại đúng quy tắc"),
+    ])
+
+    doc.add_heading("8.11. FR-RPT-010 – Báo cáo cất, hạ cánh tại các sân bay toàn quốc", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/AirportTakeoffLanding.aspx?Menu_ID=913."),
+        ("Nguồn", "T_FINISHED_FLIGHTS, chỉ trạng thái FINISHED hoặc DELAY*."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-010.01", "Bộ lọc phải gồm Từ ngày, Đến ngày, Sân bay/Tất cả; ngày phải hợp lệ và gồm trọn ngày kết thúc."),
+        ("FR-RPT-010.02", "Phải hiển thị KPI Tổng cất cánh, Tổng hạ cánh, Số sân bay khai thác và Sân bay lưu lượng cao nhất."),
+        ("FR-RPT-010.03", "Cất cánh được tính theo FROM_AIRP, hạ cánh theo TO_AIRP; chỉ mã sân bay Việt Nam hợp lệ được đưa vào tổng hợp toàn quốc."),
+        ("FR-RPT-010.04", "Biểu đồ phải có cặp cột cất/hạ cánh theo sân bay, số trên cột và sắp xếp theo tổng lưu lượng giảm dần."),
+        ("FR-RPT-010.05", "Nhấn một cột phải tải danh sách chi tiết phía máy chủ theo sân bay và movement departure/arrival, không lọc toàn bộ dữ liệu ở client."),
+        ("FR-RPT-010.06", "Chi tiết phải gồm CALLSIGN, OPER, REGISTRATION, PERMTYPE, FROM/TO, ATDDAY, ATADAY, EOBTDAY, trạng thái và hỗ trợ 25–500 dòng/trang."),
+        ("FR-RPT-010.07", "Tổng chi tiết drill-down phải bằng giá trị cột; phân trang phải trả total/totalPages ổn định."),
+        ("FR-RPT-010.08", "Sân bay lưu lượng cao nhất phải là sân bay có Departures + Arrivals lớn nhất; hòa phải áp dụng thứ tự mã ổn định."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-010-01", "Tất cả sân bay", "KPI và cặp cột khớp nguồn"),
+        ("TC-RPT-010-02", "Lọc một sân bay", "Chỉ sân bay chọn, tổng đúng"),
+        ("TC-RPT-010-03", "Drill-down cất/hạ cánh", "Chi tiết và giá trị cột khớp"),
+        ("TC-RPT-010-04", "Phân trang 25/500", "Tổng và trang ổn định"),
+        ("TC-RPT-010-05", "Không có dữ liệu", "KPI 0 và thông báo rõ"),
+    ])
+
+    doc.add_heading("8.12. Ma trận truy vết FR-RPT-002…FR-RPT-010", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chính", "Bằng chứng kiểm định"], [
+        ("FR-RPT-002", "FlightTrendAnalysis.aspx/.js/.cs", "KPI, hai chuỗi xu hướng, Oracle và TC-RPT-002-*"),
+        ("FR-RPT-003", "AnomalyWarning.aspx/.js/.cs", "Dữ liệu biên delay, popup cảnh báo và TC-RPT-003-*"),
+        ("FR-RPT-005", "AdsBPerformanceReport, API AdsBPerformance, T_TRACKS_LOG", "KPI/xu hướng/end-of-day và TC-RPT-005-*"),
+        ("FR-RPT-006", "FlightStatusRate.aspx/.js/.cs", "Donut, drill-down, Excel, Oracle và TC-RPT-006-*"),
+        ("FR-RPT-007", "ChartReportAirport.aspx/.cs", "Biểu đồ 1–5 sân bay, Oracle và TC-RPT-007-*"),
+        ("FR-RPT-008", "MilitaryFlightReport.js/API", "Phân quyền, danh sách, Excel và TC-RPT-008-*"),
+        ("FR-RPT-009", "CivilFlightSummary/FlightSummaryReports.js/API", "KPI, bảng lưu lượng, chi tiết và TC-RPT-009-*"),
+        ("FR-RPT-010", "AirportTakeoffLanding.aspx/.js/.cs", "KPI, cột, drill-down, Oracle và TC-RPT-010-*"),
+    ])
+
+
 def add_alt002_specification(doc):
     if not ALT002_SOURCE.exists():
         raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-ALT-002: {ALT002_SOURCE}")
@@ -1200,7 +1396,8 @@ def build():
             next_section = 26
         elif chapter == 8:
             add_rpt001_specification(doc)
-            next_section = 4
+            add_rpt002_010_specification(doc)
+            next_section = 13
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
