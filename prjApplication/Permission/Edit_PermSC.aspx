@@ -1511,6 +1511,19 @@
             };
         }
 
+        function isPermDetailExpired(endDateValue) {
+            if (endDateValue == null || endDateValue === '') return false;
+
+            var endDate = new Date(endDateValue);
+            if (isNaN(endDate.getTime())) return false;
+
+            var today = new Date();
+            endDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            return endDate.getTime() < today.getTime();
+        }
+
         function LoadDataAjax(ignoreCurrentFilters){
             if ($('#perm_id').html() == '')
             {
@@ -1588,7 +1601,7 @@
                             _sttr="";
                             break;
                     }
-                    strAppend = strAppend +"<tr "+ _sttr +" id='"+b.ID+"' class='"+ ((new Date().getTime() -new Date(b.ENDDATE).getTime())>0? "cssHetHan":"") +"' data-isUpdate='false' onmouseover='rowId="+b.ID+";' onmouseout='rowId=0;'>"
+                    strAppend = strAppend +"<tr "+ _sttr +" id='"+b.ID+"' class='"+ (isPermDetailExpired(b.ENDDATE) ? "cssHetHan" : "") +"' data-isUpdate='false' onmouseover='rowId="+b.ID+";' onmouseout='rowId=0;'>"
                     //kq += "<tr data-isUpdate='false'>"
                     +  "<td id='b_"+b.RNUM+"'>" +  b.RNUM + "</td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='3' maxlength='9' class='sInput' id='txtFLIGHTNBR"+a+"' data-oldValue='"+returnEmpty(b.FLIGHTNBR)+"' value='"+returnEmpty(b.FLIGHTNBR)+"' onchange='checkIsUpdate(this)' /></td>"
