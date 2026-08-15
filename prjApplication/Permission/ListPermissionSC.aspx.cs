@@ -14,6 +14,7 @@ using Newtonsoft.Json.Converters;
 using System.Data;
 using TuesPechkin;
 using System.Web.UI.HtmlControls;
+using System.Globalization;
 
 namespace prjApplication.Permission
 {
@@ -33,6 +34,45 @@ namespace prjApplication.Permission
                         "admin",
                         StringComparison.OrdinalIgnoreCase);
             }
+        }
+
+        protected bool IsPermissionExpired(object endDateValue)
+        {
+            if (endDateValue == null || endDateValue == DBNull.Value)
+                return false;
+
+            DateTime endDate;
+            if (endDateValue is DateTime)
+            {
+                endDate = (DateTime)endDateValue;
+            }
+            else
+            {
+                string value = Convert.ToString(endDateValue, CultureInfo.InvariantCulture);
+                string[] formats =
+                {
+                    "dd/MM/yyyy", "dd-MM-yyyy", "yyyy-MM-dd",
+                    "dd/MM/yyyy HH:mm:ss", "dd-MM-yyyy HH:mm:ss",
+                    "yyyy-MM-dd HH:mm:ss"
+                };
+
+                if (!DateTime.TryParseExact(
+                        value,
+                        formats,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out endDate)
+                    && !DateTime.TryParse(
+                        value,
+                        CultureInfo.CurrentCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out endDate))
+                {
+                    return false;
+                }
+            }
+
+            return endDate.Date < DateTime.Today;
         }
 
         #region newList

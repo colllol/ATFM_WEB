@@ -402,7 +402,7 @@
         <tbody>
             <asp:Repeater runat="server" ID="rptSource">
                 <ItemTemplate>
-                    <tr <%#  (DateTime.Parse(Eval("ENDDATE").ToString()) < DateTime.Now) ? "style='color: red!important;'" : ""   %>>
+                    <tr <%# IsPermissionExpired(Eval("ENDDATE")) ? "style='color: red!important;'" : "" %>>
                         <td style="width: 70px">
                             <div class="action-buttons" style="width: 70px" id="divattribute" runat="server">
                                 <a data-toggle="tooltip" title='<%# "Edit: " + Eval("PERM_ID") %>' runat="server"
