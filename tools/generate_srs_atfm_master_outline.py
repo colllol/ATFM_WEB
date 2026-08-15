@@ -1051,6 +1051,80 @@ def add_opt004_specification_current(doc):
     ])
 
 
+def add_opt021_specification(doc):
+    doc.add_heading("7.33. FR-OPT-021 – Logic cảnh báo đỏ chính xác cho chuyến bay hết hiệu lực", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Hiển thị màu đỏ nhất quán cho phép bay hoặc dòng chuyến bay đã hết hiệu lực, giúp người khai thác nhận biết nhanh nhưng không cảnh báo sai bản ghi còn hiệu lực trong ngày hiện tại."),
+        ("Màn hình danh sách", "Permission/ListPermissionNo.aspx và Permission/ListPermissionSC.aspx."),
+        ("Màn hình chỉnh sửa", "Permission/EditPermNo.aspx hoặc biến thể đang sử dụng Edit_PermNo.aspx; Permission/Edit_PermSC.aspx."),
+        ("Nguồn thời hạn NO", "Cấp phép: PERMDATE + VALIDHOURS; chi tiết chuyến: danh sách DAYSFLIGHT."),
+        ("Nguồn thời hạn SC", "Cấp phép/chi tiết chuyến: ENDDATE."),
+        ("Nguyên tắc chung", "Chỉ đánh dấu hết hiệu lực khi ngày hết hạn nhỏ hơn ngày hiện tại của máy chủ/ứng dụng; ngày hết hạn bằng hôm nay vẫn được coi là còn hiệu lực trong ngày."),
+    ])
+
+    doc.add_heading("7.33.1. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-021.01", "ListPermissionNo.aspx phải tô chữ đỏ cho toàn bộ dòng phép NO khi ngày hết hiệu lực tính từ PERMDATE cộng VALIDHOURS nhỏ hơn ngày hiện tại."),
+        ("FR-OPT-021.02", "Khi tính hạn phép NO, VALIDHOURS rỗng, không hợp lệ hoặc âm phải được chuẩn hóa về 0; phép có hiệu lực đến ngày hiện tại không bị tô đỏ."),
+        ("FR-OPT-021.03", "ListPermissionSC.aspx phải tô chữ đỏ cho toàn bộ dòng phép SC khi ENDDATE sau khi bỏ phần giờ nhỏ hơn ngày hiện tại."),
+        ("FR-OPT-021.04", "Trên EditPermNo.aspx/Edit_PermNo.aspx, mỗi dòng chi tiết NO phải được tô lớp cssHetHan khi tất cả ngày bay hợp lệ trong DAYSFLIGHT đều nhỏ hơn ngày hiện tại."),
+        ("FR-OPT-021.05", "Nếu DAYSFLIGHT có ít nhất một ngày hợp lệ bằng hoặc lớn hơn ngày hiện tại, dòng chi tiết NO không được tô đỏ."),
+        ("FR-OPT-021.06", "Bộ phân tích DAYSFLIGHT phải hỗ trợ các định dạng ngày đang được màn hình chấp nhận, tách nhiều ngày theo dấu phẩy và chuẩn hóa về ngày không kèm thời gian trước khi so sánh."),
+        ("FR-OPT-021.07", "Trên Edit_PermSC.aspx, mỗi dòng chi tiết SC phải được gắn cssHetHan khi ENDDATE của dòng nhỏ hơn ngày hiện tại; ENDDATE bằng hôm nay không bị tô đỏ."),
+        ("FR-OPT-021.08", "Logic cảnh báo ở danh sách và màn hình sửa phải sử dụng cùng mốc ngày hiện tại và cùng quy tắc loại bỏ phần giờ để tránh một phép hiển thị khác trạng thái giữa hai màn hình."),
+        ("FR-OPT-021.09", "Dữ liệu ngày rỗng, NULL, ngoài phạm vi hoặc không phân tích được không được tự động kết luận hết hạn; hệ thống phải giữ màu bình thường và ghi nhận dữ liệu bất thường để kiểm tra."),
+        ("FR-OPT-021.10", "Màu cảnh báo phải áp dụng cho cả nội dung chữ và các ô nhập trong dòng chi tiết, bảo đảm người dùng nhận biết được dù bảng đang ở chế độ xem hay sửa."),
+        ("FR-OPT-021.11", "Cảnh báo đỏ chỉ là trạng thái trình bày; không tự khóa, xóa hoặc thay đổi dữ liệu phép/chuyến bay và không thay thế kiểm tra hiệu lực khi thực hiện nghiệp vụ."),
+        ("FR-OPT-021.12", "Sau khi người dùng sửa PERMDATE, VALIDHOURS, DAYSFLIGHT hoặc ENDDATE và dữ liệu được tải lại/lưu thành công, trạng thái màu đỏ phải được tính lại theo giá trị mới."),
+        ("FR-OPT-021.13", "Nếu một dòng đồng thời có màu trạng thái nghiệp vụ khác, hệ thống phải có thứ tự ưu tiên CSS rõ ràng để cảnh báo hết hiệu lực vẫn dễ nhận biết và không bị ghi đè ngoài ý muốn."),
+        ("FR-OPT-021.14", "Danh sách phân trang, tìm kiếm hoặc sắp xếp lại phải giữ đúng trạng thái hết hiệu lực của từng bản ghi; không dựa vào vị trí dòng hoặc số thứ tự trên giao diện."),
+        ("FR-OPT-021.15", "Mốc ngày hiện tại dùng ở phía máy chủ phải là ngày nghiệp vụ của hệ thống; phía trình duyệt phải được đồng bộ cùng múi giờ cấu hình để tránh sai khác quanh 00:00."),
+        ("FR-OPT-021.16", "Hệ thống phải cung cấp chú giải hoặc tooltip cho biết màu đỏ nghĩa là Hết hiệu lực và nêu ngày hết hiệu lực khi người dùng cần đối chiếu."),
+    ])
+
+    doc.add_heading("7.33.2. Quy tắc nghiệp vụ", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-021.01", "NO cấp phép: ExpiryDate = Date(PERMDATE + max(VALIDHOURS, 0)); hết hiệu lực khi ExpiryDate < Today."),
+        ("BR-OPT-021.02", "NO chi tiết: còn hiệu lực khi tồn tại ít nhất một ngày hợp lệ trong DAYSFLIGHT có Date >= Today; hết hiệu lực khi có ngày hợp lệ nhưng không còn ngày nào đạt điều kiện này."),
+        ("BR-OPT-021.03", "SC cấp phép và chi tiết: hết hiệu lực khi Date(ENDDATE) < Today."),
+        ("BR-OPT-021.04", "Ngày bằng Today thuộc trường hợp biên còn hiệu lực; trạng thái chỉ chuyển đỏ từ ngày kế tiếp."),
+        ("BR-OPT-021.05", "Không có ngày hợp lệ đồng nghĩa Chưa xác định, không đồng nghĩa Hết hiệu lực; nguyên tắc này ngăn dữ liệu lỗi bị tô đỏ sai."),
+        ("BR-OPT-021.06", "Màu đỏ không làm thay đổi quyền sửa/xóa. Quyền thao tác tiếp tục tuân theo phân quyền và trạng thái nghiệp vụ hiện hành."),
+    ])
+
+    doc.add_heading("7.33.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-021.01", "Việc xác định hết hiệu lực trên danh sách máy chủ phải thực hiện trong quá trình bind dữ liệu, không phát sinh một truy vấn riêng cho từng dòng."),
+        ("NFR-OPT-021.02", "Hàm phân tích ngày phải dùng danh sách định dạng xác định, xử lý an toàn NULL/lỗi chuyển đổi và không làm hỏng toàn bộ trang."),
+        ("NFR-OPT-021.03", "Màu cảnh báo phải có độ tương phản đủ rõ; không chỉ dựa duy nhất vào màu mà cần có chú giải/tooltip phục vụ khả năng tiếp cận."),
+        ("NFR-OPT-021.04", "Múi giờ/ngày nghiệp vụ phải được cấu hình thống nhất giữa IIS, máy chủ API, Oracle và trình duyệt; kiểm thử biên phải thực hiện quanh 00:00."),
+        ("NFR-OPT-021.05", "Các trường hợp dữ liệu không xác định phải có khả năng ghi log/đối soát mà không để lộ thông tin kỹ thuật nhạy cảm trên giao diện."),
+    ])
+
+    doc.add_heading("7.33.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-021-01", "NO có PERMDATE + VALIDHOURS kết thúc hôm qua", "Dòng ListPermissionNo hiển thị đỏ."),
+        ("TC-OPT-021-02", "NO hết hạn đúng hôm nay", "Không đỏ trong hôm nay; chuyển đỏ vào ngày kế tiếp."),
+        ("TC-OPT-021-03", "NO có VALIDHOURS rỗng, âm hoặc không phải số", "Chuẩn hóa theo quy tắc, không phát sinh lỗi trang và không cảnh báo sai."),
+        ("TC-OPT-021-04", "DAYSFLIGHT gồm hôm qua và ngày mai", "Chi tiết NO không đỏ vì vẫn còn một ngày hiệu lực."),
+        ("TC-OPT-021-05", "DAYSFLIGHT chỉ gồm các ngày trước hôm nay", "Chi tiết NO gắn cssHetHan."),
+        ("TC-OPT-021-06", "DAYSFLIGHT rỗng hoặc toàn token sai định dạng", "Không tự tô đỏ; được coi là chưa xác định."),
+        ("TC-OPT-021-07", "SC có ENDDATE hôm qua/hôm nay/ngày mai", "Chỉ trường hợp hôm qua hiển thị đỏ ở cả danh sách và màn hình sửa."),
+        ("TC-OPT-021-08", "Cùng một phép mở từ danh sách sang màn hình sửa", "Trạng thái hết hiệu lực nhất quán theo loại NO/SC và cấp phép/chi tiết."),
+        ("TC-OPT-021-09", "Sửa ngày hết hạn từ quá khứ sang tương lai rồi tải lại", "Màu đỏ được gỡ sau khi dữ liệu mới lưu thành công."),
+        ("TC-OPT-021-10", "Sửa ngày tương lai thành quá khứ rồi tải lại", "Dòng chuyển đỏ đúng, không cần xóa cache trình duyệt."),
+        ("TC-OPT-021-11", "Phân trang, lọc và sắp xếp danh sách", "Màu đỏ theo đúng bản ghi, không lệch dòng."),
+        ("TC-OPT-021-12", "Kiểm thử trước/sau 00:00 theo múi giờ cấu hình", "Không có chênh lệch trạng thái giữa server-rendered và JavaScript."),
+        ("TC-OPT-021-13", "Dòng SC có STATUS tạo màu nền khác và đã hết hạn", "Cảnh báo hết hiệu lực vẫn nhận biết được theo thứ tự ưu tiên CSS."),
+        ("TC-OPT-021-14", "Người dùng không phân biệt màu", "Chú giải/tooltip vẫn truyền đạt được trạng thái Hết hiệu lực."),
+    ])
+
+    doc.add_heading("7.34. Truy vết FR-OPT-021", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-021", "ListPermissionNo.aspx/.cs; ListPermissionSC.aspx/.cs; EditPermNo.aspx/Edit_PermNo.aspx; Edit_PermSC.aspx; cssHetHan", "Ảnh bốn màn hình, dữ liệu PERMDATE/VALIDHOURS/DAYSFLIGHT/ENDDATE, kết quả biên hôm qua-hôm nay-ngày mai, kiểm thử múi giờ và TC-OPT-021-*"),
+    ])
+
+
 def add_rpt001_specification(doc):
     doc.add_heading("8.3. FR-RPT-001 – Biểu đồ thông tin tổng quan khai thác bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
@@ -1768,9 +1842,10 @@ def build():
         for index, item in enumerate(items, 1):
             if chapter == 9:
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã tích hợp đặc tả NL2SQL/Vanna Oracle", "Theo FR-NL/BR-NL/NFR-NL và bằng chứng kiểm thử"))
-            elif chapter == 7 and index in (4, 24, 30):
+            elif chapter == 7 and index in (4, 21, 24, 30):
                 source_pages = {
                     4: "SearchExtension.aspx (phiên bản cập nhật)",
+                    21: "Danh sách/chỉnh sửa phép NO và SC",
                     24: "ListFlightOnMess.aspx",
                     30: "ListFinishedFlightsMilitaryReport.aspx",
                 }
@@ -1796,7 +1871,8 @@ def build():
             add_opt024_specification(doc)
             add_opt030_specification(doc)
             add_opt004_specification_current(doc)
-            next_section = 33
+            add_opt021_specification(doc)
+            next_section = 35
         elif chapter == 8:
             add_rpt001_specification(doc)
             add_rpt002_010_specification(doc)
