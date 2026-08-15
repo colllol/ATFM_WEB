@@ -14,6 +14,7 @@ using Newtonsoft.Json.Converters;
 using System.Data;
 using TuesPechkin;
 using System.Web.UI.HtmlControls;
+using System.Globalization;
 
 namespace prjApplication.Permission
 {
@@ -83,6 +84,65 @@ namespace prjApplication.Permission
                         "admin",
                         StringComparison.OrdinalIgnoreCase);
             }
+        }
+
+        protected bool IsPermissionExpired(object permDateValue, object validHoursValue)
+        {
+            if (permDateValue == null || permDateValue == DBNull.Value)
+                return false;
+
+            DateTime permDate;
+            if (permDateValue is DateTime)
+            {
+                permDate = (DateTime)permDateValue;
+            }
+            else
+            {
+                string value = Convert.ToString(permDateValue, CultureInfo.InvariantCulture);
+                string[] formats =
+                {
+                    "dd/MM/yyyy", "dd-MM-yyyy", "yyyy-MM-dd",
+                    "dd/MM/yyyy HH:mm:ss", "dd-MM-yyyy HH:mm:ss",
+                    "yyyy-MM-dd HH:mm:ss"
+                };
+
+                if (!DateTime.TryParseExact(
+                        value,
+                        formats,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out permDate)
+                    && !DateTime.TryParse(
+                        value,
+                        CultureInfo.CurrentCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out permDate))
+                {
+                    return false;
+                }
+            }
+
+            double validHours;
+            if (!Double.TryParse(
+                    Convert.ToString(validHoursValue, CultureInfo.InvariantCulture),
+                    NumberStyles.Number,
+                    CultureInfo.InvariantCulture,
+                    out validHours))
+            {
+                validHours = 0;
+            }
+
+            DateTime expiryDate;
+            try
+            {
+                expiryDate = permDate.AddHours(Math.Max(validHours, 0)).Date;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
+
+            return expiryDate < DateTime.Today;
         }
 
         public string _ObjRender

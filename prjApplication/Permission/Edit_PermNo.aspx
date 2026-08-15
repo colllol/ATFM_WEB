@@ -2051,36 +2051,52 @@
         $('#txtPERMDATE').val(new Date().format('dd/mm/yyyy'));
         
 	
+        function parsePermNoFlightDate(value) {
+            value = $.trim(value || '');
+            if (!value) return null;
+
+            var serializedDate = /^\/Date\((-?\d+)(?:[+-]\d{4})?\)\/$/.exec(value);
+            if (serializedDate) {
+                var parsedMilliseconds = new Date(parseInt(serializedDate[1], 10));
+                return isNaN(parsedMilliseconds.getTime()) ? null : new Date(
+                    parsedMilliseconds.getFullYear(),
+                    parsedMilliseconds.getMonth(),
+                    parsedMilliseconds.getDate());
+            }
+
+            var dayFirst = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/.exec(value);
+            if (dayFirst) {
+                var day = parseInt(dayFirst[1], 10);
+                var month = parseInt(dayFirst[2], 10) - 1;
+                var year = parseInt(dayFirst[3], 10);
+                var parsedDate = new Date(year, month, day);
+
+                if (parsedDate.getFullYear() === year
+                    && parsedDate.getMonth() === month
+                    && parsedDate.getDate() === day) {
+                    return parsedDate;
+                }
+            }
+
+            return null;
+        }
+
 	function compeValid(t) {
-	    
-            var dates = t.split(',');
-            var bx = 0;
-            var ax = 0;
-	              
-            
-            
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            var hasValidDate = false;
+            var dates = String(t || '').split(',');
 
-            var parts =t.split('-');
-	    //var mydate = new Date(parts[2], parts[1], parts[0]); 
-            
- 	    var mydate  = new Date(parts[1] + "," + parts[0] +"," + parts[2]);
-	    
-	    //console.log(mydate);	
-            $.each(dates, function (a, b) {
-                var dx = new Date(b);
-               
-                if ((new Date(new Date().format('yyyy/mm/dd')) - mydate) <= 0)
-                    bx++;
-		/*
-                if ((new Date(new Date().format('yyyy/mm/dd')).getTime() - new Date(b).getTime()) <= 0)
-                    ax++;*/
-            })
+            for (var i = 0; i < dates.length; i++) {
+                var flightDate = parsePermNoFlightDate(dates[i]);
+                if (!flightDate) continue;
 
-            
+                hasValidDate = true;
+                if (flightDate.getTime() >= today.getTime()) return true;
+            }
 
-		
-            if (bx > 0) return true;
-            return false;
+            // Khong to do khi du lieu ngay rong hoac sai dinh dang.
+            return !hasValidDate;
         }
         function sortOnclick(ele) {
 

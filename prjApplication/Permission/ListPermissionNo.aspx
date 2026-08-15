@@ -328,7 +328,7 @@
         <tbody>
             <asp:Repeater runat="server" ID="rptSource">
                 <ItemTemplate>
-                    <tr >
+                    <tr <%# IsPermissionExpired(Eval("PERMDATE"), Eval("VALIDHOURS")) ? "style='color: red!important;'" : "" %>>
                         <td style="width: 70px; white-space: nowrap;">
                             <div class="action-buttons" id="divattribute" runat="server">
                                 <a data-toggle="tooltip" title='<%# "Edit: " + Eval("PERM_ID") %>' runat="server"
