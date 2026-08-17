@@ -1125,6 +1125,201 @@ def add_opt021_specification(doc):
     ])
 
 
+def add_opt022_023_025_029_031_032_specifications(doc):
+    def feature(number, section, title, objective, source, requirements, tests):
+        code = f"FR-OPT-{number:03d}"
+        doc.add_heading(f"7.{section}. {code} – {title}", level=2)
+        table(doc, ["Thuộc tính", "Nội dung"], [
+            ("Mục tiêu", objective),
+            ("Nguồn yêu cầu", source),
+            ("Trạng thái thành phần", "Tên màn hình, bảng, package/API cụ thể phải được chốt trong thiết kế chi tiết nếu chưa có trong mã nguồn hiện hành."),
+        ])
+        table(doc, ["Mã chi tiết", "Yêu cầu"], [
+            (f"{code}.{index:02d}", value) for index, value in enumerate(requirements, 1)
+        ])
+        table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+            (f"TC-OPT-{number:03d}-{index:02d}", situation, expected)
+            for index, (situation, expected) in enumerate(tests, 1)
+        ])
+
+    feature(22, 35, "Tự động cập nhật đường bay theo đoạn từ FPL thực tế",
+        "Cập nhật đường bay chi tiết của chuyến bay theo FPL thực tế đã nộp/được TBHĐB chuyển đến, thay cho đường bay kế hoạch không còn phù hợp.",
+        "Chương V mục 3.3.22 và Bảng 1 dòng 50–51.", [
+            "Khi nhận chuyến bay hoặc FPL thực tế từ Trung tâm TBHĐB, hệ thống phải nhận diện đúng chuyến theo khóa đã phê duyệt trước khi cập nhật đường bay.",
+            "Hệ thống phải phân tích route string thành danh sách đoạn có thứ tự, chuẩn hóa điểm đường bay/đường hàng không và lưu được cả chuỗi gốc lẫn cấu trúc segment.",
+            "Đường bay mới chỉ được áp dụng khi FPL hợp lệ, khớp chuyến và mới hơn phiên bản đang hiệu lực; request trùng không tạo thêm phiên bản.",
+            "Khi cập nhật thành công, giao diện danh sách chuyến bay theo phép/KHB phải hiển thị route mới nhất và cho phép xem route trước–sau.",
+            "Route string không chuẩn, thiếu điểm hoặc không thể đối chiếu phải gắn ROUTE_UNCERTAIN, giữ dữ liệu hiện hành và đưa vào danh sách kiểm tra thủ công.",
+            "Không được tự ghi đè route đã được người có quyền xác nhận thủ công nếu chính sách ưu tiên chưa được cấu hình; xung đột phải được cảnh báo.",
+            "Mỗi lần xử lý phải lưu flight ID, FPL/message ID, nguồn, thời điểm nhận, phiên bản, route cũ–mới, kết quả và người xử lý/xác nhận.",
+            "Việc cập nhật route phải kích hoạt tính toán/báo cáo phụ thuộc nhưng không sinh trùng chuyến bay hoặc làm mất liên kết điện văn/KHB.",
+        ], [
+            ("FPL hợp lệ có route khác kế hoạch", "Tạo phiên bản route mới, hiển thị đúng các segment và có audit trước–sau."),
+            ("Nhận lại cùng FPL", "Không nhân đôi phiên bản hoặc cập nhật lại ngoài ý muốn."),
+            ("Route sai chuẩn/không khớp chuyến", "Gắn ROUTE_UNCERTAIN, không ghi đè và có danh sách review."),
+            ("Có route thủ công đã xác nhận", "Áp dụng đúng chính sách ưu tiên hoặc chuyển xung đột để duyệt."),
+        ])
+
+    feature(23, 36, "Tự động nhận diện và chuyển ngày cho chuyến bay quốc tế hạ cánh hôm sau",
+        "Xác định đúng ngày nghiệp vụ của chuyến quốc tế hạ cánh sau 00:00 để giao diện, điện văn liên quan và báo cáo không bị lệch ngày.",
+        "Chương V mục 3.3.23; Bảng 1 dòng 27–28 và 52.", [
+            "Hệ thống phải dùng scheduled_date, estimated_arrival_utc/ETA/STA, event timestamp và múi giờ địa phương được cấu hình để xác định ngày hạ cánh.",
+            "Nếu giờ đến quy đổi sang địa phương thuộc ngày kế tiếp so với scheduled_date, chuyến phải được đánh dấu cross_midnight=true và hiển thị ngày đến thực tế.",
+            "Điện văn DEP/ARR và dữ liệu liên quan phải được liên kết theo flight ID/khóa chuyến, không chỉ theo ngày, để giữ quan hệ khi chuyển ngày.",
+            "Báo cáo và export sau khai thác phải tính chuyến theo ngày nghiệp vụ thực tế đã xác định và thể hiện dấu hiệu chuyển ngày.",
+            "Nếu thiếu ngày/giờ thực tế, hệ thống dùng scheduled_date làm fallback, gắn date_uncertain và đưa vào danh sách cần rà soát; không tự kết luận chắc chắn.",
+            "Quy tắc phải xử lý đổi ngày/tháng/năm, ETA có dấu ngày kế tiếp và dữ liệu UTC/local; không cộng ngày hai lần.",
+            "Khi ARR/ADS-B thực tế đến sau, hệ thống phải tính lại, đóng cờ date_uncertain nếu đủ bằng chứng và cập nhật các báo cáo liên quan.",
+            "Mọi thay đổi ngày phải lưu nguồn thời gian, múi giờ, ngày trước–sau, quy tắc áp dụng và correlation ID để truy vết.",
+        ], [
+            ("Chuyến 23:30 đến 00:45 hôm sau", "Đánh dấu cross_midnight và chuyển đúng sang ngày kế tiếp."),
+            ("Chuyến qua cuối tháng/cuối năm", "Ngày đến chính xác, không lỗi tháng/năm."),
+            ("Thiếu thời gian thực tế", "Dùng scheduled_date, gắn date_uncertain và không báo sai."),
+            ("Nhận ARR sau fallback", "Tính lại ngày, cập nhật báo cáo và lưu lịch sử."),
+        ])
+
+    feature(25, 37, "Thông báo thời điểm nhận số liệu bay Đi/Đến từ Trung tâm TBHĐB",
+        "Thông báo kịp thời thời điểm và số lượng dữ liệu DEP/ARR nhận từ Trung tâm TBHĐB, cho phép người dùng truy xuống danh sách chuyến vừa cập nhật.",
+        "Chương V mục 3.3.25 và Bảng 1 dòng 54.", [
+            "Mỗi batch dữ liệu Đi/Đến nhận từ TBHĐB phải ghi loại dữ liệu, source timestamp, received timestamp, batch ID, số bản ghi và kết quả xử lý.",
+            "Sau khi xử lý thành công, hệ thống phải hiển thị thông báo dạng 'Nhận dữ liệu ARR/DEP lúc HH:mm – X chuyến' tại Dashboard/header theo phạm vi người nhận.",
+            "Nhấn thông báo phải mở danh sách đúng batch, loại DEP/ARR và các chuyến vừa thêm/cập nhật; số lượng chi tiết phải đối soát với thông báo.",
+            "Thông báo trùng batch không được tạo nhiều lần; batch bổ sung phải có định danh và số lượng riêng.",
+            "Thông báo phải có trạng thái chưa đọc/đã đọc, thời điểm tạo và thời điểm người dùng mở; quyền xem chi tiết tuân theo phân quyền dữ liệu.",
+            "Batch lỗi hoặc xử lý một phần phải hiển thị trạng thái cảnh báo riêng, số thành công/lỗi và liên kết đến chi tiết xử lý, không báo thành công toàn bộ.",
+            "Hệ thống phải hiển thị thời điểm nhận gần nhất theo từng loại dữ liệu và cảnh báo vận hành khi quá ngưỡng chưa nhận được batch dự kiến.",
+        ], [
+            ("Nhận batch ARR 25 chuyến", "Thông báo đúng giờ, đúng 25 chuyến và drill-down khớp danh sách."),
+            ("Gửi lại cùng batch", "Không tạo thông báo hoặc dữ liệu trùng."),
+            ("Batch có 2 dòng lỗi", "Thông báo xử lý một phần và xem được 23 thành công/2 lỗi."),
+            ("Người dùng không có quyền", "Không xem được chi tiết ngoài phạm vi dù có URL."),
+        ])
+
+    feature(26, 38, "Cập nhật số liệu bay từ HTSLB sang Bravo",
+        "Đồng bộ dữ liệu chuyến bay sang Bravo 10 qua API, bảo toàn thời gian thực tế và mục đích bay, có đối soát và xử lý xung đột.",
+        "Chương V mục 2.2.2, 2.3.4, 3.3.26 và Bảng 1 dòng 55–56.", [
+            "Tích hợp Bravo 10 phải thực hiện qua API được xác thực/mã hóa, không kết nối ghi trực tiếp cơ sở dữ liệu Bravo.",
+            "Hệ thống phải chọn phạm vi đồng bộ theo ngày/batch và xây payload từ dữ liệu HTSLB đã được duyệt, kèm khóa idempotency/correlation ID.",
+            "Với mỗi chuyến, nếu chưa tồn tại ở Bravo thì INSERT; nếu đã tồn tại thì chỉ UPDATE các trường được phép thay đổi theo mapping đã phê duyệt.",
+            "actual_time và purpose hiện có ở Bravo phải được KEEP ORIGINAL khi chính sách yêu cầu; không ghi đè giá trị sửa thủ công ngoài ý muốn.",
+            "Xung đột với dữ liệu Bravo sửa thủ công phải áp dụng manual_override_wins hoặc chuyển conflict queue để review; chính sách phải cấu hình và audit được.",
+            "Kết quả batch phải nêu tổng gửi, insert, update, không đổi, xung đột, lỗi và thời gian; người dùng được drill-down từng chuyến.",
+            "Request lỗi tạm thời phải retry có giới hạn; gửi lại cùng khóa không tạo chuyến trùng. Lỗi vĩnh viễn phải vào hàng chờ xử lý.",
+            "Sau đồng bộ phải đối soát khóa chuyến, actual time, purpose, kiểu bay và các trường tài chính liên quan; chỉ báo hoàn thành khi kết quả nhất quán.",
+            "Dataset lớn phải chạy nền và thông báo khi hoàn thành; mục tiêu hiệu năng áp dụng theo NFR/FR-OPT-014 đã được phê duyệt.",
+        ], [
+            ("Chuyến chưa có ở Bravo", "INSERT một lần và đối soát đúng."),
+            ("Chuyến đã có, thay đổi trường cho phép", "UPDATE đúng trường, giữ actual_time/purpose theo policy."),
+            ("Bravo đã sửa manual", "Không ghi đè; áp dụng manual_override_wins hoặc tạo conflict."),
+            ("Timeout rồi gửi lại", "Idempotent, không tạo bản ghi trùng và log đủ retry."),
+        ])
+
+    feature(27, 39, "Khắc phục lỗi nhầm ngày so với thực tế",
+        "Ngăn chặn, phát hiện và sửa có kiểm soát trường hợp ngày kế hoạch không khớp ngày khai thác thực tế.",
+        "Chương V mục 3.3.27; Bảng 1 dòng 27–28, 46, 52 và 57.", [
+            "Khi nhận dữ liệu TBHĐB, DEP/ARR, ADS-B hoặc cập nhật khai thác, hệ thống phải xác định ngày thực tế từ event timestamp và múi giờ nguồn.",
+            "Ngày thực tế phải được so sánh với scheduled/flight date sau khi áp dụng quy tắc chuyến qua đêm và chuyển múi giờ; chênh lệch hợp lệ không bị coi là lỗi.",
+            "Sai lệch không giải thích được phải gắn DATE_MISMATCH, hiển thị ngày kế hoạch/ngày thực tế/nguồn và không tự sửa khi bằng chứng chưa đủ.",
+            "Khi nguồn có độ tin cậy đã phê duyệt và quy tắc xác định duy nhất, hệ thống được cập nhật đúng ngày thực tế, đồng bộ liên kết điện văn và tính lại báo cáo.",
+            "Thiếu thông tin phải gắn DATE_UNCERTAIN và chuyển review; giá trị tương lai bất thường hoặc chênh quá ngưỡng phải bị chặn/cảnh báo.",
+            "Người có quyền phải xem trước và xác nhận sửa thủ công; hệ thống lưu ngày cũ–mới, lý do, nguồn bằng chứng, người và thời gian.",
+            "Cập nhật ngày phải idempotent, không sinh trùng chuyến, không mất lịch sử và không làm đứt liên kết KHB–FPL–DEP/ARR–ADS-B–Bravo.",
+        ], [
+            ("TBHĐB cung cấp ngày thực tế khác do qua đêm", "Áp dụng quy tắc hợp lệ, cập nhật đúng ngày và không cảnh báo sai."),
+            ("Sai ngày không có bằng chứng", "Gắn DATE_MISMATCH/UNCERTAIN, không tự ghi đè."),
+            ("Xác nhận sửa ngày", "Cập nhật liên kết/báo cáo và có audit trước–sau."),
+            ("Nhận lại sự kiện", "Không đổi ngày lần hai hoặc sinh trùng chuyến."),
+        ])
+
+    feature(28, 40, "Sửa nhiều chuyến bay cùng nội dung trong một thao tác",
+        "Cho phép cập nhật hàng loạt một trường/nội dung cho nhiều chuyến với preview, phân quyền, transaction và audit chi tiết.",
+        "Chương V mục 3.3.28 và Bảng 1 dòng 58–59.", [
+            "Người dùng phải chọn được nhiều dòng trong cùng phạm vi nghiệp vụ, chọn trường cho phép sửa và nhập giá trị mới một lần.",
+            "Danh sách trường sửa hàng loạt phải là whitelist theo vai trò/trạng thái chuyến; không cho sửa khóa, dữ liệu đã khóa hoặc trường nhạy cảm trái quyền.",
+            "Trước khi xác nhận, hệ thống phải validate giá trị và hiển thị preview từng chuyến gồm giá trị cũ–mới, dòng hợp lệ, không đủ quyền và lỗi.",
+            "Các dòng không đủ quyền/không hợp lệ phải bị loại trước khi commit và báo lý do; người dùng xác nhận rõ phạm vi thực sự được cập nhật.",
+            "Tập dòng hợp lệ phải cập nhật trong transaction theo chính sách đã phê duyệt; lỗi giữa transaction phải rollback tập tương ứng, không báo thành công sai.",
+            "Hệ thống phải chống lost update bằng version/timestamp hoặc kiểm tra giá trị đã thay đổi sau preview; xung đột phải yêu cầu tải lại.",
+            "Kết quả phải nêu tổng chọn, thành công, bỏ qua, lỗi; ghi audit cho từng chuyến và một batch ID liên kết toàn thao tác.",
+            "Thao tác gửi lặp cùng batch không được cập nhật hai lần; sau thành công danh sách phải làm mới và phản ánh giá trị mới.",
+        ], [
+            ("10 chuyến hợp lệ cùng trường", "Preview đúng, cập nhật đủ 10 trong một batch và có audit từng dòng."),
+            ("2/10 chuyến không đủ quyền", "Loại 2 dòng trước xác nhận, cập nhật 8 và báo chi tiết."),
+            ("Một dòng đổi sau preview", "Phát hiện conflict, không ghi đè âm thầm."),
+            ("Lỗi DB giữa transaction", "Rollback đúng phạm vi và không báo thành công toàn bộ."),
+        ])
+
+    feature(29, 41, "Đối chiếu số liệu bay giữa HTSLB và Bravo",
+        "So sánh số liệu hãng bay quốc nội/quốc tế giữa HTSLB và Bravo theo phạm vi, kiểu bay và trường dữ liệu để phát hiện sai lệch/orphan.",
+        "Chương V mục 3.3.29 và Bảng 1 dòng 60–61.", [
+            "Người dùng phải chọn phạm vi đối chiếu theo ngày/khoảng ngày, hãng, quốc nội/quốc tế, kiểu bay và trạng thái phù hợp.",
+            "Hệ thống phải lấy snapshot có timestamp từ cả HTSLB và Bravo, lưu batch/correlation ID và không so dữ liệu ở hai thời điểm không kiểm soát.",
+            "Bản ghi phải match theo khóa đối chiếu được phê duyệt; chuẩn hóa callsign, ngày, FROM/TO và các mã trước khi so sánh.",
+            "Hệ thống phải so sánh từng trường cấu hình như actual time, purpose, loại/kiểu bay, sân bay, hãng và trường phục vụ thu phí; nêu giá trị hai phía.",
+            "Sai lệch phải được highlight, phân loại MISMATCH/MISSING_IN_HTSLB/MISSING_IN_BRAVO/CONFLICT; không tìm thấy khóa phải đánh dấu ORPHAN đúng phía.",
+            "Kết quả phải có tổng hai nguồn, số match, khớp hoàn toàn, sai lệch và orphan; tổng chi tiết phải đối soát được với KPI.",
+            "Người dùng phải drill-down, ghi nhận kết quả xử lý/giải trình và export discrepancy list với bộ lọc, snapshot time và batch ID.",
+            "Chức năng đối chiếu chỉ đọc; việc sửa/đồng bộ lại phải đi qua FR-OPT-026 hoặc quy trình nguồn có phân quyền/audit.",
+        ], [
+            ("Hai nguồn khớp hoàn toàn", "KPI khớp, không có discrepancy."),
+            ("Khác actual time/purpose", "Hiển thị MISMATCH và hai giá trị rõ ràng."),
+            ("Chỉ tồn tại một nguồn", "Đánh dấu đúng MISSING/ORPHAN và đưa vào export."),
+            ("Khóa có khác biệt định dạng", "Chuẩn hóa và match đúng, không tạo orphan giả."),
+        ])
+
+    feature(31, 42, "Thêm lựa chọn theo tất cả tiêu chí thống kê trong báo cáo",
+        "Chuẩn hóa panel bộ lọc đầy đủ cho mọi báo cáo, hỗ trợ kết hợp tiêu chí, tùy chọn cột, lưu preset và export đúng ngữ cảnh.",
+        "Chương V mục 3.3.31 và Bảng 1 dòng 63.", [
+            "Mỗi báo cáo phải khai báo metadata về toàn bộ tiêu chí được hỗ trợ, kiểu dữ liệu, toán tử, danh mục, mặc định và phụ thuộc giữa các tiêu chí.",
+            "Khi mở báo cáo, hệ thống phải hiển thị panel gồm tất cả tiêu chí đã khai báo; người dùng được kết hợp nhiều tiêu chí theo logic xác định.",
+            "Truy vấn động phải dùng whitelist trường/toán tử và bind parameter; không ghép tên/câu lệnh tùy ý từ đầu vào người dùng.",
+            "Kết quả bảng, KPI, biểu đồ và drill-down phải dùng cùng một ngữ cảnh bộ lọc và hiển thị tiêu chí đang áp dụng.",
+            "Người dùng phải tùy chọn ẩn/hiện cột trong phạm vi được phép; cột bắt buộc/nhạy cảm tuân theo vai trò.",
+            "Hệ thống phải cho phép lưu, đặt tên, tải, cập nhật và xóa preset cá nhân; preset dùng chung cần quyền quản trị/phê duyệt.",
+            "Export phải phản ánh toàn bộ bộ lọc, thứ tự và cột đang chọn, kèm thời gian sinh/nguồn; không chỉ xuất trang hiện tại.",
+            "Dữ liệu không đủ phải hiển thị thông báo và gợi ý mở rộng phạm vi; không dựng KPI/biểu đồ gây hiểu nhầm.",
+        ], [
+            ("Kết hợp nhiều tiêu chí", "Bảng/KPI/biểu đồ/drill-down cùng trả đúng giao của bộ lọc."),
+            ("Ẩn/hiện cột và export", "File giữ đúng cột được phép và toàn bộ tập lọc."),
+            ("Lưu rồi mở preset", "Khôi phục đúng tiêu chí/cột, không lộ preset người khác."),
+            ("Đầu vào trường/toán tử không whitelist", "Bị từ chối, không phát sinh SQL động nguy hiểm."),
+        ])
+
+    feature(32, 43, "Đánh giá, so sánh số liệu của KHBHĐBN",
+        "So sánh KHBHĐBN ngày đánh giá với cùng ngày tuần trước để nhận diện tăng/giảm, chuyến bổ sung, trùng số hiệu/chặng và các yếu tố bất thường.",
+        "Chương V mục 3.3.32.", [
+            "Người dùng phải chọn ngày đánh giá; hệ thống mặc định lấy ngày đối chứng là cùng thứ của tuần trước và cho phép xem rõ hai kỳ.",
+            "Hệ thống phải chuẩn hóa phạm vi, phiên bản KHBHĐBN và trạng thái phê duyệt trước khi so sánh; không trộn bản nháp với bản đã duyệt ngoài ý muốn.",
+            "Phải tính tổng chuyến và mức tăng/giảm tuyệt đối, phần trăm theo các chiều tối thiểu: hãng/đơn vị, sân bay, chặng, loại chuyến và khung giờ khi dữ liệu hỗ trợ.",
+            "Hệ thống phải nhận diện chuyến mới/mất, bổ sung theo mùa, bổ sung đột xuất và thay đổi lịch dựa trên nguồn/phiên bản/quy tắc phân loại được phê duyệt.",
+            "Phải phát hiện số hiệu trùng, trùng số hiệu–chặng, dữ liệu bất thường về ngày/giờ/route và nêu danh sách chi tiết thay vì chỉ số tổng.",
+            "Ngưỡng bất thường phải cấu hình theo chỉ số/nhóm; vượt ngưỡng tạo cảnh báo cho nhân viên lập KHHĐBN với mức độ và lý do.",
+            "Người dùng phải drill-down từ chỉ số/cảnh báo tới chuyến, xác nhận hợp lệ, ghi giải trình hoặc yêu cầu điều chỉnh; trạng thái xử lý được audit.",
+            "Cảnh báo đã xác nhận hợp lệ không được lặp vô hạn cho cùng phiên bản; khi dữ liệu thay đổi phải tính lại và mở cảnh báo mới nếu còn vi phạm.",
+            "Báo cáo so sánh phải export được, ghi hai kỳ, bộ lọc, phiên bản nguồn, công thức và thời điểm sinh để phục vụ kiểm tra.",
+        ], [
+            ("Ngày đánh giá có tổng tăng", "Hiển thị đúng tăng tuyệt đối/phần trăm và drill-down chuyến mới."),
+            ("Có chuyến mùa/đột xuất", "Phân loại đúng theo quy tắc và nêu nguồn bằng chứng."),
+            ("Trùng callsign và chặng", "Tạo cảnh báo, hiển thị đầy đủ các dòng liên quan."),
+            ("Xác nhận bất thường hợp lệ", "Lưu giải trình, không cảnh báo lặp cùng phiên bản; dữ liệu đổi được tính lại."),
+        ])
+
+    doc.add_heading("7.44. Yêu cầu chung và truy vết FR-OPT-022…023, 025…029, 031…032", level=2)
+    table(doc, ["Mã", "Yêu cầu chung"], [
+        ("NFR-OPT-REM-01", "Mọi job/tích hợp phải có batch/correlation ID, trạng thái, retry có giới hạn, idempotency và log không chứa bí mật."),
+        ("NFR-OPT-REM-02", "Ngày/giờ phải lưu nguồn và múi giờ; giao diện hiển thị múi giờ nghiệp vụ; kiểm thử biên qua ngày/tháng/năm."),
+        ("NFR-OPT-REM-03", "Truy vấn/báo cáo lớn phải phân trang hoặc chạy nền; dữ liệu, biểu đồ và export phải đối soát cùng bộ lọc."),
+        ("NFR-OPT-REM-04", "Mọi thao tác ghi, xác nhận xung đột, batch edit và đồng bộ phải kiểm tra quyền phía máy chủ và lưu audit trước–sau."),
+    ])
+    table(doc, ["Yêu cầu", "Thành phần cần chốt trong thiết kế", "Bằng chứng nghiệm thu"], [
+        ("FR-OPT-022/023/027", "FPL/TBHĐB, flight matching, route segment, time/date service", "Dữ liệu nguồn, phiên bản trước–sau, cờ uncertainty/cross-midnight và test biên."),
+        ("FR-OPT-025", "Receiver batch, Notification/Dashboard, trang drill-down", "Log nhận, thông báo, danh sách chi tiết và quyền."),
+        ("FR-OPT-026/029", "Bravo API, mapping/match key, conflict queue, reconciliation", "Payload/response đã che bí mật, snapshot, KPI và discrepancy export."),
+        ("FR-OPT-028", "Danh sách chuyến, batch-edit service, audit", "Preview, phân quyền, transaction/rollback và log từng dòng."),
+        ("FR-OPT-031/032", "Report metadata/query builder, preset, KHBHĐBN compare/alert", "Bộ lọc, công thức, drill-down, preset, cảnh báo/giải trình và file export."),
+    ])
+
+
 def add_rpt001_specification(doc):
     doc.add_heading("8.3. FR-RPT-001 – Biểu đồ thông tin tổng quan khai thác bay", level=2)
     table(doc, ["Thuộc tính", "Nội dung"], [
@@ -2057,7 +2252,7 @@ def build():
     for roman, name, items in SECTIONS:
         for index, item in enumerate(items, 1):
             prefix_by_roman = {"I": "INT", "II": "ALT", "III": "OPT", "IV": "RPT", "V": "AI"}
-            detailed = roman != "III" or index in set(range(1, 22)) | {24, 30}
+            detailed = True
             rows.append((f"{roman}.{index:02d}", name, item, "Đã đặc tả" if detailed else "Chờ đặc tả"))
     table(doc, ["Mã", "Phân hệ", "Chức năng/hạng mục", "Trạng thái SRS"], rows)
 
@@ -2083,7 +2278,7 @@ def build():
                 source_note = "Đã tích hợp đặc tả chi tiết"
                 acceptance_note = "Theo FR/BR/NFR và ca kiểm thử của phân hệ"
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, source_note, acceptance_note))
-            elif chapter == 7 and index in set(range(1, 22)) | {24, 30}:
+            elif chapter == 7:
                 source_pages = {
                     4: "SearchExtension.aspx (phiên bản cập nhật)",
                     21: "Danh sách/chỉnh sửa phép NO và SC",
@@ -2114,7 +2309,8 @@ def build():
             add_opt030_specification(doc)
             add_opt004_specification_current(doc)
             add_opt021_specification(doc)
-            next_section = 35
+            add_opt022_023_025_029_031_032_specifications(doc)
+            next_section = 45
         elif chapter == 8:
             add_rpt001_specification(doc)
             add_rpt002_010_specification(doc)
