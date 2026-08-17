@@ -3358,20 +3358,37 @@
             return deferred.promise();
         }
 
+        function getSelectedFinishedFlightDate() {
+            var selectedText = $.trim($('#ddlDateFlight option:selected').text() || '');
+            var dateParts = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(selectedText);
+
+            if (!dateParts) return null;
+            return dateParts[1] + '-' + dateParts[2] + '-' + dateParts[3];
+        }
+
         function LoadDataGrid_Finished() {
             var cf = confirm('Do you want export finished ?');
             if (!cf) return;
+
+            var selectedFlightDate = getSelectedFinishedFlightDate();
+            if (!selectedFlightDate) {
+                alert('Flight date is invalid. Required format: DD-MM-YYYY.');
+                return;
+            }
 
             showFinishedExportLoading();
 
             // Nhường một nhịp render để overlay hiển thị trước khi bắt đầu xử lý.
             window.setTimeout(function () {
-                var url = urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=MAKE_FINISHED&storeName=make_finished_flights_news";
+                var url = urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=MAKE_FINISHED&storeName=make_finished_flights_news4day";
 
                 $.ajax({
                     method: "PUT",
                     url: url,
-                    data: JSON.stringify({ P_STRING: '<%= _user.UserName%>' })
+                    data: JSON.stringify({
+                        P_STRING: '<%= _user.UserName%>',
+                        P_DATE: selectedFlightDate
+                    })
                 }).then(function (data) {
                     if (!data || data.ListValue == null || data.ListValue == -1) {
                         return rejectFinishedExport('MAKE_FINISHED', data);
