@@ -2167,6 +2167,49 @@ def add_completed_appendices(doc):
     ])
 
 
+def add_automatic_toc(doc):
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.space_after = Pt(12)
+    run = title.add_run("MỤC LỤC")
+    run.bold = True
+    run.font.name = "Times New Roman"
+    run._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
+    run.font.size = Pt(15)
+
+    paragraph = doc.add_paragraph()
+    begin_run = OxmlElement("w:r")
+    field_begin = OxmlElement("w:fldChar")
+    field_begin.set(qn("w:fldCharType"), "begin")
+    field_begin.set(qn("w:dirty"), "true")
+    begin_run.append(field_begin)
+    instruction_run = OxmlElement("w:r")
+    instruction = OxmlElement("w:instrText")
+    instruction.set(qn("xml:space"), "preserve")
+    instruction.text = ' TOC \\o "1-3" \\h \\z \\u '
+    instruction_run.append(instruction)
+    separate_run = OxmlElement("w:r")
+    field_separate = OxmlElement("w:fldChar")
+    field_separate.set(qn("w:fldCharType"), "separate")
+    separate_run.append(field_separate)
+    placeholder_run = OxmlElement("w:r")
+    placeholder_text = OxmlElement("w:t")
+    placeholder_text.text = "Mở tài liệu bằng Microsoft Word và cập nhật trường để hiển thị mục lục."
+    placeholder_run.append(placeholder_text)
+    end_run = OxmlElement("w:r")
+    field_end = OxmlElement("w:fldChar")
+    field_end.set(qn("w:fldCharType"), "end")
+    end_run.append(field_end)
+    paragraph._p.extend([begin_run, instruction_run, separate_run, placeholder_run, end_run])
+
+    settings = doc.settings._element
+    update_fields = settings.find(qn("w:updateFields"))
+    if update_fields is None:
+        update_fields = OxmlElement("w:updateFields")
+        settings.append(update_fields)
+    update_fields.set(qn("w:val"), "true")
+
+
 def build():
     doc = Document()
     section = doc.sections[0]
@@ -2231,17 +2274,7 @@ def build():
         ("Người phê duyệt", "", "", ""),
     ])
 
-    doc.add_heading("MỤC LỤC DỰ KIẾN", level=1)
-    for item in [
-        "1. Giới thiệu", "2. Tổng quan hệ thống", "3. Phạm vi và danh mục chức năng",
-        "4. Yêu cầu chung", "5. Phân hệ tích hợp và tự động hóa dữ liệu",
-        "6. Phân hệ cảnh báo và tiện ích hỗ trợ", "7. Phân hệ nâng cấp và tối ưu HTSLB",
-        "8. Phân hệ phân tích và báo cáo thông minh", "9. Phân hệ ứng dụng AI",
-        "10. Yêu cầu dữ liệu và tích hợp", "11. Yêu cầu phi chức năng",
-        "12. Yêu cầu triển khai và vận hành", "13. Kiểm thử và nghiệm thu",
-        "14. Ma trận truy vết", "15. Phụ lục",
-    ]:
-        doc.add_paragraph(item, style="List Number")
+    add_automatic_toc(doc)
     doc.add_page_break()
 
     add_completed_introduction(doc)
