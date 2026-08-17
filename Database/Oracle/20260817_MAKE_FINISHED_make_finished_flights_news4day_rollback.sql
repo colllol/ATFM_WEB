@@ -1,8 +1,6 @@
 -- Rollback rieng MAKE_FINISHED.make_finished_flights_news4day.
 -- Script giu nguyen cac thanh phan khac cua package MAKE_FINISHED.
-
-SET SERVEROUTPUT ON SIZE UNLIMITED
-SET DEFINE OFF
+-- Script thuan Oracle/JDBC, co the chay bang DBeaver Alt+X.
 
 DECLARE
     c_procedure_name CONSTANT VARCHAR2(30) :=

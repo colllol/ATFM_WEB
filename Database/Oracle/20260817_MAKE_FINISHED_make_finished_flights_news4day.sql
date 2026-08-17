@@ -8,10 +8,10 @@
 -- DAY_WORKING dang loc DATE_FLY - 1, vi vay procedure truyen P_DATE + 1.
 -- Script chi chen/thay procedure moi, khong thay noi dung cac procedure khac.
 -- Chay bang DBeaver: Execute SQL Script (Alt+X).
+-- Day la script thuan Oracle/JDBC; khong dat cac lenh SET cua SQL*Plus
+-- trong file vi mot so cau hinh DBeaver se gui SET xuong Oracle va gay
+-- ORA-00922: missing or invalid option.
 -- ============================================================================
-
-SET SERVEROUTPUT ON SIZE UNLIMITED
-SET DEFINE OFF
 
 DECLARE
     c_procedure_name CONSTANT VARCHAR2(30) :=
