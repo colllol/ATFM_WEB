@@ -1735,6 +1735,243 @@ def add_aerosync_specification(doc):
     ])
 
 
+def add_completed_introduction(doc):
+    doc.add_heading("1. Giới thiệu", level=1)
+    doc.add_heading("1.1. Mục đích", level=2)
+    doc.add_paragraph("Tài liệu xác định yêu cầu chức năng, dữ liệu, tích hợp, phi chức năng, triển khai và nghiệm thu cho dự án Cập nhật, hiệu chỉnh cơ sở dữ liệu, phần mềm Hệ thống số liệu điều hành bay. Tài liệu là cơ sở thống nhất phạm vi giữa chủ đầu tư, đơn vị nghiệp vụ, đơn vị triển khai, kiểm thử và nghiệm thu.")
+    doc.add_heading("1.2. Phạm vi", level=2)
+    table(doc, ["Trong phạm vi", "Ngoài phạm vi/điều kiện"], [
+        ("Nâng cấp ATFM_WEB theo 5 phân hệ; dữ liệu Oracle; tích hợp Email, ADS-B, SLOT, AMHS/AFTN, Bravo và API; báo cáo, cảnh báo, AI; bảo mật, vận hành và chuyển giao.", "Không thay đổi nghiệp vụ/hệ thống bên ngoài nếu không có đặc tả giao tiếp được phê duyệt; mua sắm phần cứng và license được quản lý theo hồ sơ dự án, SRS chỉ nêu ràng buộc phần mềm."),
+    ])
+    doc.add_heading("1.3. Đối tượng sử dụng tài liệu", level=2)
+    table(doc, ["Đối tượng", "Mục đích sử dụng"], [
+        ("Chủ đầu tư/Người quyết định đầu tư", "Phê duyệt phạm vi, tiêu chí nghiệm thu và thay đổi."),
+        ("Đơn vị nghiệp vụ, khai thác viên", "Xác nhận quy trình, dữ liệu, giao diện và UAT."),
+        ("Đơn vị triển khai/phát triển", "Thiết kế, lập trình, tích hợp, chuyển đổi và triển khai."),
+        ("Nhóm kiểm thử/kiểm định", "Xây dựng test case, truy vết và bằng chứng."),
+        ("Quản trị hệ thống, ATTT và vận hành", "Đánh giá kiến trúc, bảo mật, giám sát, sao lưu và xử lý sự cố."),
+    ])
+    doc.add_heading("1.4. Thuật ngữ và từ viết tắt", level=2)
+    table(doc, ["Thuật ngữ", "Diễn giải"], [
+        ("ATFM/HTSLB", "Quản lý luồng không lưu/Hệ thống số liệu điều hành bay."),
+        ("KHB/KHBN/KHHĐBN", "Kế hoạch bay/Kế hoạch bay ngày/Kế hoạch hoạt động bay ngày."),
+        ("FPL, DEP, ARR, DLA", "Các loại điện văn kế hoạch, khởi hành, đến và chậm chuyến."),
+        ("AFTN/AMHS", "Mạng/dịch vụ xử lý điện văn hàng không."),
+        ("ADS-B; O/F", "Giám sát phụ thuộc tự động–quảng bá; chuyến bay quá cảnh."),
+        ("SLOT", "Giờ cất/hạ cánh được phân bổ."),
+        ("FIR", "Vùng thông báo bay."),
+        ("API; REST; JSON; JWT; OAuth", "Giao diện lập trình; kiểu API; định dạng dữ liệu; cơ chế token/xác thực."),
+        ("DMZ", "Vùng mạng trung gian tiếp nhận kết nối bên ngoài."),
+        ("FR/BR/NFR/TC", "Yêu cầu chức năng/Quy tắc nghiệp vụ/Yêu cầu phi chức năng/Ca kiểm thử."),
+        ("RTO/RPO", "Thời gian phục hồi/Mức mất dữ liệu tối đa chấp nhận."),
+        ("UAT", "Kiểm thử chấp nhận người dùng."),
+    ])
+    doc.add_heading("1.5. Tài liệu tham chiếu", level=2)
+    table(doc, ["Mã", "Tài liệu", "Mục đích"], [
+        ("REF-01", "CHƯƠNG V; YÊU CẦU KỸ THUẬT 21.5.2026.pdf", "Nguồn yêu cầu dự án, kiến trúc, NFR, ATTT cấp độ 2, đào tạo và danh mục chức năng."),
+        ("REF-02", "Plan_20-25.7.2026.docx", "Kế hoạch/phạm vi triển khai."),
+        ("REF-03", "Mã nguồn, cấu hình và script Oracle của ATFM_WEB", "Xác minh hiện trạng và truy vết kỹ thuật."),
+        ("REF-04", "Các SRS thành phần AeroSync, ADS-B, SLOT, AMHS, API Gateway, Live Fire và NL2SQL", "Đặc tả chi tiết các phân hệ tích hợp."),
+        ("REF-05", "Quy định ATTT cấp độ 2 hiện hành và quy chế nội bộ VATM", "Cơ sở kiểm tra tuân thủ; phiên bản áp dụng phải được xác nhận khi nghiệm thu."),
+    ])
+
+
+def add_completed_overview(doc):
+    doc.add_heading("2. Tổng quan hệ thống", level=1)
+    doc.add_heading("2.1. Bối cảnh nghiệp vụ", level=2)
+    doc.add_paragraph("ATFM_WEB phục vụ quản lý phép bay, KHB, hiệp đồng thông báo bay, thống kê số liệu và chia sẻ dữ liệu. Hệ thống hiện hữu vận hành trên web từ năm 2020/2021, sử dụng Oracle, các máy chủ ứng dụng/web và gateway AFTN/AMHS. Dự án là nâng cấp mở rộng tại Trung tâm Quản lý luồng không lưu, dự kiến thực hiện trong năm 2026.")
+    doc.add_heading("2.2. Mục tiêu nâng cấp", level=2)
+    table(doc, ["Mã", "Mục tiêu"], [
+        ("OBJ-01", "Tự động hóa tiếp nhận, chuẩn hóa và đồng bộ dữ liệu; giảm nhập và đối chiếu thủ công."),
+        ("OBJ-02", "Bổ sung dữ liệu ADS-B O/F, SLOT, AMHS/AFTN và API Bravo 10/chia sẻ dữ liệu."),
+        ("OBJ-03", "Tối ưu truy vấn, ExportBravo và Gen KHB; nâng cao tìm kiếm, báo cáo và cảnh báo chủ động."),
+        ("OBJ-04", "Tăng cường bảo mật, giám sát, sao lưu và khả năng truy vết theo ATTT cấp độ 2."),
+        ("OBJ-05", "Hỗ trợ tra cứu ngôn ngữ tự nhiên và phân tích số liệu nhưng bảo đảm kiểm soát quyền/dữ liệu."),
+    ])
+    doc.add_heading("2.3. Các bên liên quan", level=2)
+    table(doc, ["Bên liên quan", "Trách nhiệm"], [
+        ("Trung tâm Quản lý luồng không lưu", "Chủ đầu tư, quản lý dự án, xác nhận nghiệp vụ và nghiệm thu."),
+        ("Đơn vị thông báo hiệp đồng/điều phối/khai thác", "Cung cấp quy trình, dữ liệu mẫu, UAT và khai thác."),
+        ("Đơn vị CNTT/CNS/ATTT", "Hạ tầng, mạng, tài khoản, giám sát, sao lưu và an toàn hệ thống."),
+        ("Hệ thống/đơn vị bên ngoài", "ADS-B, SLOT, AMHS/AFTN, Bravo 10, email và bên tiêu thụ API."),
+        ("Nhà thầu", "Thiết kế, phát triển, kiểm thử, triển khai, tài liệu và đào tạo chuyển giao."),
+    ])
+    doc.add_heading("2.4. Nhóm người dùng", level=2)
+    table(doc, ["Nhóm", "Phạm vi"], [
+        ("Khai thác viên", "Nhập, tra cứu, xử lý dữ liệu theo nhiệm vụ và đơn vị."),
+        ("Người duyệt", "Kiểm tra, phê duyệt KHB/điện văn/báo cáo theo phân quyền."),
+        ("Quản lý/báo cáo", "Dashboard, thống kê, đối soát và xuất báo cáo."),
+        ("Quản trị ứng dụng", "Người dùng, vai trò, menu, danh mục và tham số."),
+        ("Quản trị kỹ thuật/ATTT", "Dịch vụ, log, giám sát, backup, phục hồi và sự cố."),
+        ("Hệ thống tích hợp", "Truy cập API bằng định danh máy/client và phạm vi quyền."),
+    ])
+    doc.add_heading("2.5. Kiến trúc và sơ đồ ngữ cảnh", level=2)
+    table(doc, ["Lớp/vùng", "Thành phần và luồng cho phép"], [
+        ("DMZ", "Reverse Proxy/API Gateway; tiếp nhận người dùng/hệ thống ngoài; không truy cập trực tiếp Data Zone."),
+        ("Presentation", "ATFM_WEB trên Web Server; giao diện, kiểm tra cơ bản và trình bày dữ liệu."),
+        ("Business/Application", "Application/API Server; quy tắc nghiệp vụ, điều phối, job nền và tích hợp."),
+        ("Integration", "Email/file, ADS-B, SLOT, AMHS/AFTN, Bravo và API; xác thực, chuẩn hóa, retry và log."),
+        ("Data", "Oracle và kho hiện thời/lịch sử; chỉ nhận kết nối từ Application Zone qua luồng firewall cho phép."),
+        ("Operations", "Giám sát CPU/RAM/đĩa/dịch vụ/mạng, log tập trung, antivirus, backup NAS/DAS."),
+    ])
+    doc.add_paragraph("Ngữ cảnh: Người dùng → DMZ/Web → Application/API → Oracle; các nguồn ngoài → Gateway/Integration → chuẩn hóa/đối soát → Oracle; kết quả → giao diện/báo cáo/API/điện văn. Mọi luồng qua ranh giới vùng phải được firewall cho phép và ghi log phù hợp.")
+    doc.add_heading("2.6. Giả định và phụ thuộc", level=2)
+    table(doc, ["Mã", "Giả định/phụ thuộc"], [
+        ("DEP-01", "Hạ tầng Primary/Secondary, mạng nội bộ, firewall, DNS/NTP và lưu trữ được cung cấp ổn định."),
+        ("DEP-02", "Oracle, Windows Server/RHEL và antivirus có license/phiên bản được phê duyệt; PDF nêu Oracle Database Standard Edition 2, Windows Server 2025 và RHEL subscription."),
+        ("DEP-03", "Đơn vị sở hữu ADS-B, SLOT, AMHS/AFTN và Bravo cung cấp endpoint, tài khoản, schema, mẫu dữ liệu và môi trường kiểm thử."),
+        ("DEP-04", "Múi giờ nghiệp vụ, mã sân bay/FIR, danh mục và quy tắc đối soát được chủ đầu tư xác nhận."),
+        ("DEP-05", "Các ngưỡng đề xuất trong SRS phải được phê duyệt trước kiểm thử hiệu năng/DR."),
+    ])
+
+
+def add_completed_common_requirements(doc):
+    doc.add_heading("4. Yêu cầu chung", level=1)
+    table(doc, ["Mã", "Nhóm", "Yêu cầu kiểm định"], [
+        ("COM-AUTH-01", "Đăng nhập/phiên", "Mọi màn hình và API bảo vệ phải yêu cầu xác thực; phiên hết hạn buộc đăng nhập lại, không tiếp tục request bằng phiên cũ."),
+        ("COM-AUTH-02", "Đăng nhập/phiên", "Cookie/token phải dùng thuộc tính bảo vệ phù hợp; đăng xuất hủy phiên phía máy chủ; chống cố định phiên và request giả mạo."),
+        ("COM-RBAC-01", "Phân quyền", "Quyền được kiểm tra phía máy chủ theo người dùng–vai trò–menu–thao tác Xem/Thêm/Sửa/Xóa/Duyệt/Export."),
+        ("COM-RBAC-02", "Phân quyền", "API tích hợp dùng OAuth/JWT hoặc cơ chế được phê duyệt, giới hạn scope/client và ghi log truy cập."),
+        ("COM-SEARCH-01", "Tra cứu", "Bộ lọc được trim/chuẩn hóa, bind tham số; điều kiện rỗng không giới hạn; ngày/giờ dùng định dạng thống nhất."),
+        ("COM-SEARCH-02", "Phân trang", "Danh sách lớn phân trang phía DB/service, có tổng số, thứ tự ổn định và giữ bộ lọc khi chuyển trang."),
+        ("COM-INPUT-01", "Nhập liệu", "Kiểm tra bắt buộc, kiểu, độ dài, danh mục, ngày giờ và quy tắc chéo ở cả client và server; lỗi nêu rõ trường/nguyên nhân."),
+        ("COM-INPUT-02", "An toàn dữ liệu", "Encode đầu ra; chống SQL injection, XSS, upload sai loại và công thức nguy hiểm trong file export."),
+        ("COM-AUDIT-01", "Nhật ký", "Ghi người dùng/client, thời gian, hành động, đối tượng, khóa nghiệp vụ, trước–sau, kết quả và correlation ID cho thao tác quan trọng."),
+        ("COM-AUDIT-02", "Truy vết", "Log không chứa mật khẩu/token/dữ liệu bí mật; quyền xem/xóa log bị giới hạn và thời hạn lưu theo chính sách."),
+        ("COM-OUT-01", "Báo cáo", "Export phản ánh toàn bộ tập lọc, có tiêu chí, thời gian sinh và định dạng Excel/PDF/Word khi chức năng yêu cầu."),
+        ("COM-OUT-02", "Điện văn", "Điện văn phải kiểm tra mẫu/cú pháp, chống gửi trùng, lưu nội dung/phiên bản/trạng thái gửi và lỗi phản hồi."),
+    ])
+
+
+def add_completed_data_integration(doc):
+    doc.add_heading("10. Yêu cầu dữ liệu và tích hợp", level=1)
+    table(doc, ["Mã", "Phạm vi", "Yêu cầu"], [
+        ("DATA-01", "Mô hình dữ liệu", "Phân tách dữ liệu tác nghiệp hiện thời, lịch sử, staging, danh mục, audit và cấu hình; mọi bảng có khóa chính, kiểu/độ dài, NULL, mặc định và quan hệ được mô tả."),
+        ("DATA-02", "Từ điển dữ liệu", "Mỗi trường phải có tên vật lý/nghiệp vụ, mô tả, đơn vị, miền giá trị, nguồn, quy tắc chuẩn hóa, dữ liệu nhạy cảm và thời hạn lưu."),
+        ("DATA-03", "Oracle", "Dùng bind parameter, transaction, index theo thời gian/chuyến bay/sân bay/FIR/trạng thái; phân trang tại DB và execution plan cho truy vấn trọng yếu."),
+        ("DATA-04", "Lưu trữ", "INBOX lưu/tra cứu tối thiểu 60 ngày; dữ liệu hiện thời và archive phải tra cứu thống nhất theo quyền."),
+        ("INT-ADS-01", "ADS-B", "Tiếp nhận dữ liệu được cấu hình, kiểm tra schema/thời gian/tọa độ, match KHB/FPL, lưu nguồn và trạng thái chất lượng; hỗ trợ O/F và báo cáo thực tế."),
+        ("INT-MAIL-01", "Email/file", "Quét theo lịch, phát hiện file mới, kiểm tra định dạng, chống trùng; file lỗi chuyển error và cảnh báo; file thành công lưu archive/audit."),
+        ("INT-AMHS-01", "AMHS/AFTN", "Gửi/nhận điện văn qua giao tiếp được phê duyệt, phân tích loại/khóa chuyến, lưu nội dung gốc, trạng thái, retry có giới hạn và log."),
+        ("INT-BRV-01", "Bravo 10", "Trao đổi qua API thay kết nối DB trực tiếp; xác thực, mã hóa kênh truyền, idempotency, đối soát số dòng/tổng tiền và conflict policy."),
+        ("INT-API-01", "API chia sẻ", "REST/JSON qua API Gateway, OAuth/JWT, versioning, scope, rate limit, mã lỗi chuẩn, correlation ID, OpenAPI và log truy cập."),
+        ("INT-REC-01", "Đối soát", "Mọi job nhập/đồng bộ lưu batch, nguồn, số nhận–hợp lệ–lỗi–chèn–cập nhật–bỏ qua; cho phép chạy lại không nhân đôi."),
+        ("INT-ERR-01", "Ngoại lệ", "Lỗi một bản ghi không làm mất dấu toàn batch; có retry/backoff, dead-letter/error queue hoặc danh sách chờ xử lý thủ công."),
+        ("INT-TIME-01", "Thời gian", "Lưu dấu thời gian và múi giờ nguồn; chuẩn hóa múi giờ nghiệp vụ trước so sánh/chuyển ngày; không suy đoán khi thiếu thông tin."),
+    ])
+
+
+def add_completed_nfr(doc):
+    doc.add_heading("11. Yêu cầu phi chức năng", level=1)
+    doc.add_paragraph("Các ngưỡng có nhãn Đề xuất là baseline SRS để kiểm thử và phải được chủ đầu tư phê duyệt; các yêu cầu còn lại được chuẩn hóa từ Chương V – Yêu cầu kỹ thuật.")
+    table(doc, ["Mã", "Nhóm", "Chỉ tiêu/tiêu chí"], [
+        ("NFR-PERF-01", "Hiệu năng", "ExportBravo và Gen KHB ngày hôm sau ra AFTN hoàn thành <180 giây trên bộ dữ liệu cao điểm, tối thiểu 3 lượt liên tiếp."),
+        ("NFR-PERF-02", "Hiệu năng", "Đề xuất: 95% tra cứu/phân trang thông thường ≤5 giây; 95% thao tác ghi thông thường ≤3 giây, không tính hệ thống ngoài."),
+        ("NFR-PERF-03", "Tải lớn", "Tác vụ nặng/đối soát/báo cáo lớn chạy nền, có tiến độ và thông báo; dữ liệu >50.000 bản ghi không khóa request tương tác."),
+        ("NFR-AVAIL-01", "Sẵn sàng", "Khai thác Primary/Secondary 1+1; lỗi một node không làm mất dữ liệu đã commit. Đề xuất availability ứng dụng ≥99,5%/tháng, loại trừ bảo trì được duyệt."),
+        ("NFR-SEC-01", "ATTT", "Đáp ứng yêu cầu hệ thống thông tin cấp độ 2: phòng thủ nhiều lớp, quyền tối thiểu, phân vùng DMZ/Application/Data và kiểm soát firewall."),
+        ("NFR-SEC-02", "Bảo mật", "Mã hóa kênh truyền, bảo vệ dữ liệu lưu trữ phù hợp, quản lý bí mật ngoài mã nguồn, antivirus và vá lỗ hổng trước nghiệm thu."),
+        ("NFR-AUD-01", "Audit", "100% đăng nhập thất bại, thay đổi quyền/cấu hình/dữ liệu, duyệt, export, gửi điện văn và tích hợp trọng yếu có log truy vết."),
+        ("NFR-MON-01", "Giám sát", "Thu thập CPU, RAM, đĩa, dịch vụ, lỗi ứng dụng/DB/tích hợp và lưu lượng mạng; cảnh báo khi vượt ngưỡng cấu hình."),
+        ("NFR-BKP-01", "Sao lưu", "Backup Oracle/cấu hình/tệp nghiệp vụ theo chính sách; mã hóa và kiểm tra khả năng khôi phục. Đề xuất RPO ≤24 giờ, RTO ≤4 giờ cho sự cố mức hệ thống."),
+        ("NFR-RET-01", "Lưu trữ", "INBOX tối thiểu 60 ngày; thời hạn log/audit và dữ liệu lịch sử theo chính sách được phê duyệt, có archive/purge kiểm soát."),
+        ("NFR-USE-01", "Sử dụng", "Giao diện nhất quán, thông tin quan trọng dễ quan sát, bộ lọc/tìm kiếm rõ ràng, cảnh báo không chỉ dựa vào màu và hoạt động trên độ phân giải khai thác phổ biến."),
+        ("NFR-HELP-01", "Trợ giúp", "Có trợ giúp theo ngữ cảnh, tài liệu điện tử/FAQ và đầu mối hỗ trợ cho chức năng mới."),
+        ("NFR-COMP-01", "Tương thích", "Tương thích hạ tầng được phê duyệt gồm Oracle Database Standard Edition 2, Windows Server 2025/RHEL và trình duyệt doanh nghiệp còn hỗ trợ."),
+        ("NFR-MNT-01", "Bảo trì", "Cấu hình theo môi trường; triển khai/rollback có script, version và kiểm tra; không lưu endpoint/tài khoản/bí mật cố định trong mã."),
+    ])
+
+
+def add_completed_operations(doc):
+    doc.add_heading("12. Yêu cầu triển khai và vận hành", level=1)
+    table(doc, ["Mã", "Chủ đề", "Yêu cầu"], [
+        ("OPS-ENV-01", "Môi trường", "Tách DEV/TEST-UAT/PROD; dữ liệu PROD không sao chép sang môi trường thấp nếu chưa ẩn danh và phê duyệt."),
+        ("OPS-NET-01", "Mạng", "Triển khai theo DMZ–Application–Data; firewall chỉ mở cổng/nguồn/đích cần thiết; DB không nhận kết nối trực tiếp bên ngoài."),
+        ("OPS-DEP-01", "Cài đặt", "Gói phát hành có checksum, version, release note, dependency, script DB idempotent, thứ tự chạy, precheck/postcheck và phê duyệt thay đổi."),
+        ("OPS-CFG-01", "Cấu hình", "Endpoint, timeout, lịch job, ngưỡng cảnh báo và bí mật tách theo môi trường; bí mật lưu trong cơ chế được phê duyệt."),
+        ("OPS-MON-01", "Giám sát", "Dashboard/cảnh báo cho CPU, RAM, đĩa, dịch vụ, API, Oracle, job và tích hợp; cảnh báo có mức độ, người nhận, xác nhận và đóng sự cố."),
+        ("OPS-BKP-01", "Sao lưu", "Có lịch full/incremental phù hợp, backup ngoài máy chủ chính, kiểm tra log backup và diễn tập restore trước nghiệm thu."),
+        ("OPS-RBK-01", "Rollback", "Mỗi release có rollback ứng dụng/DB; thay đổi dữ liệu không đảo ngược phải có backup, phương án bù và quyết định Go/No-Go."),
+        ("OPS-RUN-01", "Vận hành", "Runbook gồm start/stop, kiểm tra sức khỏe, xử lý job treo, đầy đĩa, lỗi DB/API/điện văn, chuyển Primary/Secondary và liên hệ escalation."),
+        ("OPS-TRN-01", "Đào tạo", "Nhà thầu đào tạo trực tiếp 2 buổi, 2 chuyên gia, 15 học viên; nội dung kiến trúc, khai thác, phân quyền, quản trị, sự cố, backup/restore và ATTT."),
+        ("OPS-HO-01", "Bàn giao", "Bàn giao mã nguồn, gói cài đặt, script DB, cấu hình mẫu, tài liệu SRS/thiết kế/test/vận hành/đào tạo và biên bản phiên bản."),
+    ])
+
+
+def add_completed_test_acceptance(doc):
+    doc.add_heading("13. Kiểm thử và nghiệm thu", level=1)
+    table(doc, ["Mã", "Nhóm", "Tiêu chí đạt và bằng chứng"], [
+        ("TST-FR-01", "Chức năng", "Mỗi FR/BR có test luồng chính, biên và ngoại lệ; 100% test mức Critical/High đạt; không còn lỗi blocker/critical."),
+        ("TST-INT-01", "Tích hợp", "Kiểm thử contract, xác thực, timeout, retry, trùng, sai schema và mất kết nối cho Email, ADS-B, SLOT, AMHS/AFTN, Bravo, API; đối soát nguồn–đích."),
+        ("TST-DATA-01", "Dữ liệu", "Kiểm tra mapping, NULL, danh mục, ngày/múi giờ, duplicate, batch và archive; tổng số và mẫu dữ liệu khớp biên bản đối soát."),
+        ("TST-PERF-01", "Hiệu năng", "Đo tải đại diện/cao điểm; ExportBravo và Gen KHB <180 giây ba lượt; các baseline NFR đã phê duyệt đạt."),
+        ("TST-SEC-01", "ATTT", "Kiểm tra xác thực, RBAC, injection/XSS/CSRF, upload/export, secret, TLS, log; quét lỗ hổng không còn mức nghiêm trọng/cao chưa có chấp thuận rủi ro."),
+        ("TST-DR-01", "Sao lưu/DR", "Backup và restore thành công; đo RPO/RTO; diễn tập node/service/DB lỗi và lưu biên bản."),
+        ("TST-UAT-01", "UAT", "Đại diện nghiệp vụ thực hiện các quy trình end-to-end, ký biên bản; tồn tại còn lại có mức độ, phương án và thời hạn được chấp thuận."),
+        ("TST-DOC-01", "Tài liệu/chuyển giao", "Đủ tài liệu bàn giao, đào tạo 2 buổi/15 học viên, danh sách tham dự và đánh giá kết quả."),
+    ])
+    doc.add_paragraph("Điều kiện nghiệm thu tổng thể: phạm vi phát hành được phê duyệt; test/bằng chứng truy vết đầy đủ; không còn lỗi ngăn khai thác; dữ liệu đối soát đạt; ATTT, hiệu năng, backup/restore và UAT có biên bản; có phương án rollback và vận hành.")
+
+
+def add_completed_traceability(doc):
+    doc.add_heading("14. Ma trận truy vết", level=1)
+    table(doc, ["Nhóm yêu cầu", "Thiết kế/thành phần", "Kiểm thử", "Bằng chứng bắt buộc", "Trạng thái"], [
+        ("FR-INT-*", "Email/ADS-B/SLOT/AMHS/API Gateway", "TC-INT-* và test contract", "Request/response, batch/log, đối soát", "Theo từng FR"),
+        ("FR-ALT-*", "Notification, Live Fire/Daily/Military", "TC-ALT-*", "Ảnh, DB, điện văn và audit", "Theo từng FR"),
+        ("FR-OPT-*", "Các màn hình/package nâng cấp", "TC-OPT-*", "Ảnh, SQL/API, log hiệu năng và DB trước–sau", "Theo từng FR"),
+        ("FR-RPT-*", "ReportNew/Common và nguồn báo cáo", "TC-RPT-*", "Bộ lọc, KPI, drill-down, file export", "Theo từng FR"),
+        ("FR-AI-*", "NL2SQL/Chatbot/API Oracle", "TC-NL/AI-*", "Câu hỏi, SQL kiểm soát, kết quả và audit", "Theo từng FR"),
+        ("COM/DATA/INT-*", "Master page, API, Oracle, tích hợp", "TST-INT/DATA/SEC", "Cấu hình, log, mapping, đối soát", "Nghiệm thu chung"),
+        ("NFR/OPS-*", "Hạ tầng, giám sát, backup, deployment", "TST-PERF/SEC/DR/DOC", "Báo cáo đo, scan, restore, runbook/đào tạo", "Nghiệm thu chung"),
+    ])
+    doc.add_paragraph("Mỗi dòng chi tiết trong ma trận bàn giao phải có: mã yêu cầu duy nhất, phiên bản thiết kế/mã nguồn/script, mã test, môi trường, dữ liệu kiểm thử, người thực hiện, ngày, kết quả, liên kết bằng chứng và lỗi liên quan.")
+
+
+def add_completed_appendices(doc):
+    doc.add_heading("15. Phụ lục", level=1)
+    doc.add_heading("15.1. Danh mục màn hình và URL", level=2)
+    table(doc, ["Nhóm", "Màn hình đại diện"], [
+        ("Phép bay", "Permission/ListPermissionSC.aspx; ListPermissionNo.aspx; SearchExtension.aspx; SearchPermissionAdv.aspx; View/Edit Perm SC/NO."),
+        ("KHB/điện văn", "Day_Flights/DaylyFlight.aspx; Receive_LogFile/Inbox.aspx; MessManagement/LiveFireMessage*.aspx."),
+        ("Hoàn thành/quân sự", "FinishFlights/ListFinishedFlights*.aspx; ListFlightOnMess.aspx; MilitaryReport.aspx."),
+        ("Báo cáo", "ReportNew/FlightOperationOverview, FlightTrendAnalysis, AnomalyWarning, ADS-B, Military/Civil/Airport reports; Common/ChartReport*.aspx."),
+        ("Công cụ", "Tool/ImportsPermSC_LD_V2.aspx; công cụ phân tích điện văn; AI/Chatbot theo cấu hình."),
+    ])
+    doc.add_heading("15.2. Danh mục API/Package", level=2)
+    table(doc, ["Loại", "Thành phần đại diện"], [
+        ("API dùng chung", "ApiExtension/ExcuteTable, ExcuteReturnInt; API Gateway REST/JSON; OAuth/JWT."),
+        ("Package", "A_TEST_SEARCH, MESSAGE_FLIGHT_PKG, PERM_IMP_V2_PKG, BRAVO_EXPORT_PKG, MESSAGE_PKG/P_FLY và package theo từng FR."),
+        ("Tích hợp", "Email/File ingest, ADS-B/TracksSync, AMHS/AFTN, SLOT, Bravo 10 API."),
+    ])
+    doc.add_heading("15.3. Danh mục bảng dữ liệu", level=2)
+    table(doc, ["Nhóm", "Bảng/kho đại diện"], [
+        ("Phép bay", "T_PERMMASTER_SC/NO, T_PERMDETAIL_SC/NO, staging/import/cancel và danh mục liên quan."),
+        ("KHB/chuyến bay", "T_DAY_FLIGHTS, T_DAY_FLIGHTS_GOINGON, T_FINISHED_FLIGHTS, T_FINISHFLIGHTS_MILITARY."),
+        ("Điện văn", "T_PLAN_MESSAGE, INBOX current/archive và log nhận/gửi."),
+        ("ADS-B/Báo cáo", "T_TRACKS_LOG, kho báo cáo/Bravo và bảng tổng hợp theo thiết kế."),
+        ("Quản trị", "T_MENUS, người dùng/vai trò/quyền, cấu hình, audit/error log."),
+    ])
+    doc.add_heading("15.4. Ma trận phân quyền tối thiểu", level=2)
+    table(doc, ["Vai trò", "Xem", "Nhập/Sửa", "Duyệt", "Export", "Quản trị"], [
+        ("Khai thác", "Theo đơn vị/menu", "Theo nhiệm vụ", "Không mặc định", "Theo quyền", "Không"),
+        ("Người duyệt", "Theo phạm vi", "Điều chỉnh được phép", "Có", "Theo quyền", "Không"),
+        ("Quản lý/báo cáo", "Báo cáo được cấp", "Không mặc định", "Theo nghiệp vụ", "Có", "Không"),
+        ("Quản trị ứng dụng", "Có kiểm soát", "Danh mục/cấu hình", "Không thay nghiệp vụ", "Theo quyền", "User/role/menu"),
+        ("Quản trị kỹ thuật/ATTT", "Log/monitor", "Cấu hình kỹ thuật", "Không", "Log theo quyền", "Hạ tầng/bảo mật"),
+        ("API client", "Theo scope", "Theo endpoint", "Không", "Không mặc định", "Không"),
+    ])
+    doc.add_heading("15.5. Danh mục báo cáo/điện văn", level=2)
+    doc.add_paragraph("Gồm FR-RPT-001…010; Daily Statistic/Military Report; các file ALL/LD/OF/Bravo; KHB ngày; điện văn FPL/DEP/ARR/DLA, Live Fire/QS/Airspace và đầu ra AFTN/AMHS. Mỗi đầu ra phải có mẫu, trường, bộ lọc, nguồn và quyền được phê duyệt.")
+    doc.add_heading("15.6. Biểu mẫu bằng chứng kiểm thử", level=2)
+    table(doc, ["Trường", "Nội dung bắt buộc"], [
+        ("Định danh", "Mã TC, mã FR/NFR, phiên bản build/DB, môi trường, người/ngày thực hiện."),
+        ("Điều kiện", "Tiền điều kiện, dữ liệu đầu vào, tài khoản/vai trò, bước thực hiện."),
+        ("Kết quả", "Mong đợi, thực tế, Pass/Fail/Blocked, thời gian đo."),
+        ("Bằng chứng", "Ảnh/video, request/response, SQL đối soát, log, file output, execution plan/scan report."),
+        ("Lỗi", "Mã lỗi, mức độ, liên kết sửa, phiên bản retest và phê duyệt ngoại lệ nếu có."),
+    ])
+
+
 def build():
     doc = Document()
     section = doc.sections[0]
@@ -1764,16 +2001,18 @@ def build():
     line = doc.add_paragraph()
     line.alignment = WD_ALIGN_PARAGRAPH.CENTER
     line.paragraph_format.space_before = Pt(30)
-    line.add_run("KHUNG SƯỜN TÀI LIỆU – BƯỚC 1").bold = True
+    line.add_run("BẢN ĐẶC TẢ TỔNG HỢP PHỤC VỤ KIỂM ĐỊNH").bold = True
     info = doc.add_paragraph()
     info.alignment = WD_ALIGN_PARAGRAPH.CENTER
     info.paragraph_format.space_before = Pt(50)
     info.add_run(
         "Mã tài liệu: SRS-ATFM-WEB\n"
-        "Phiên bản: 0.1 – Khung sườn\n"
-        "Ngày lập: 12/08/2026\n"
-        "Đơn vị: ........................................................\n"
-        "Người lập: ...................................................."
+        "Phiên bản: 1.0 – Dự thảo hoàn thiện\n"
+        "Ngày cập nhật: 17/08/2026\n"
+        "Đơn vị lập: .....................................................\n"
+        "Người lập: ......................................................\n"
+        "Người kiểm tra: .................................................\n"
+        "Người phê duyệt: ................................................"
     )
     doc.add_page_break()
 
@@ -1781,13 +2020,14 @@ def build():
     table(doc, ["Thuộc tính", "Nội dung"], [
         ("Tên tài liệu", "Đặc tả yêu cầu phần mềm ATFM_WEB"),
         ("Mã tài liệu", "SRS-ATFM-WEB"),
-        ("Phiên bản", "0.1"),
-        ("Trạng thái", "Khung sườn – chờ bổ sung đặc tả chi tiết"),
-        ("Tài liệu đầu vào", "Plan_20-25.7.2026.docx; NHAT_KY_THAY_DOI.txt; mã nguồn ATFM_WEB"),
+        ("Phiên bản", "1.0"),
+        ("Trạng thái", "Dự thảo hoàn thiện – chờ kiểm tra và phê duyệt"),
+        ("Tài liệu đầu vào", "CHƯƠNG V; YÊU CẦU KỸ THUẬT 21.5.2026.pdf; Plan_20-25.7.2026.docx; các SRS thành phần; NHAT_KY_THAY_DOI.txt; mã nguồn ATFM_WEB"),
     ])
     doc.add_heading("Lịch sử thay đổi", level=2)
     table(doc, ["Phiên bản", "Ngày", "Nội dung", "Người thực hiện"], [
         ("0.1", "12/08/2026", "Tạo bìa và khung sườn SRS", "Codex"),
+        ("1.0", "17/08/2026", "Hoàn thiện các chương dùng chung theo Chương V – Yêu cầu kỹ thuật", "Codex"),
     ])
     doc.add_heading("Phê duyệt tài liệu", level=2)
     table(doc, ["Vai trò", "Họ tên", "Chữ ký", "Ngày"], [
@@ -1809,47 +2049,49 @@ def build():
         doc.add_paragraph(item, style="List Number")
     doc.add_page_break()
 
-    doc.add_heading("1. Giới thiệu", level=1)
-    for title in ["1.1. Mục đích", "1.2. Phạm vi", "1.3. Đối tượng sử dụng tài liệu", "1.4. Thuật ngữ và từ viết tắt", "1.5. Tài liệu tham chiếu"]:
-        doc.add_heading(title, level=2)
-        placeholder(doc)
-
-    doc.add_heading("2. Tổng quan hệ thống", level=1)
-    for title in ["2.1. Bối cảnh nghiệp vụ", "2.2. Mục tiêu nâng cấp", "2.3. Các bên liên quan", "2.4. Nhóm người dùng", "2.5. Kiến trúc và sơ đồ ngữ cảnh", "2.6. Giả định và phụ thuộc"]:
-        doc.add_heading(title, level=2)
-        placeholder(doc)
+    add_completed_introduction(doc)
+    add_completed_overview(doc)
 
     doc.add_heading("3. Phạm vi và danh mục chức năng", level=1)
     rows = []
     for roman, name, items in SECTIONS:
         for index, item in enumerate(items, 1):
-            rows.append((f"{roman}.{index:02d}", name, item, "Chờ đặc tả"))
+            prefix_by_roman = {"I": "INT", "II": "ALT", "III": "OPT", "IV": "RPT", "V": "AI"}
+            detailed = roman != "III" or index in set(range(1, 22)) | {24, 30}
+            rows.append((f"{roman}.{index:02d}", name, item, "Đã đặc tả" if detailed else "Chờ đặc tả"))
     table(doc, ["Mã", "Phân hệ", "Chức năng/hạng mục", "Trạng thái SRS"], rows)
 
-    doc.add_heading("4. Yêu cầu chung", level=1)
-    for title in ["4.1. Đăng nhập và quản lý phiên", "4.2. Phân quyền", "4.3. Tra cứu và phân trang", "4.4. Nhập liệu và kiểm tra dữ liệu", "4.5. Nhật ký và truy vết", "4.6. Xuất báo cáo/điện văn"]:
-        doc.add_heading(title, level=2)
-        placeholder(doc)
+    add_completed_common_requirements(doc)
 
     chapter = 5
+    subsystem_scope = {
+        5: "Tự động tiếp nhận, chuẩn hóa và đồng bộ dữ liệu Email/File, ADS-B, SLOT, AMHS/AFTN và API; bảo đảm nguồn, trạng thái, lỗi và đối soát được truy vết.",
+        6: "Phát hiện, phân phối và theo dõi cảnh báo theo quy tắc; quản lý KHB quân sự/vùng trời qua quy trình nhập–duyệt–phát điện văn–khai thác báo cáo.",
+        7: "Nâng cấp các chức năng HTSLB hiện hữu về lưu trữ, tìm kiếm, cảnh báo, đồng bộ, hiệu năng, phép bay, KHB và đối soát nhưng không làm gián đoạn nghiệp vụ đang vận hành.",
+        8: "Cung cấp dashboard, biểu đồ và báo cáo có bộ lọc, drill-down, dữ liệu lịch sử/thực tế, export và đối soát phục vụ điều hành, thống kê và thu phí.",
+        9: "Hỗ trợ truy vấn ngôn ngữ tự nhiên, sinh truy vấn có kiểm soát, tổng hợp kết quả và tích hợp Chatbot; không vượt quyền dữ liệu của người dùng.",
+    }
     for roman, name, items in SECTIONS:
         doc.add_heading(f"{chapter}. {name.title()}", level=1)
         doc.add_heading(f"{chapter}.1. Mục tiêu và phạm vi phân hệ", level=2)
-        placeholder(doc)
+        doc.add_paragraph(subsystem_scope[chapter])
         doc.add_heading(f"{chapter}.2. Danh mục yêu cầu chức năng", level=2)
         function_rows = []
         prefix = ["INT", "ALT", "OPT", "RPT", "AI"][chapter - 5]
         for index, item in enumerate(items, 1):
-            if chapter == 9:
-                function_rows.append((f"FR-{prefix}-{index:03d}", item, "Đã tích hợp đặc tả NL2SQL/Vanna Oracle", "Theo FR-NL/BR-NL/NFR-NL và bằng chứng kiểm thử"))
-            elif chapter == 7 and index in (4, 21, 24, 30):
+            if chapter in (5, 6, 8, 9):
+                source_note = "Đã tích hợp đặc tả chi tiết"
+                acceptance_note = "Theo FR/BR/NFR và ca kiểm thử của phân hệ"
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, source_note, acceptance_note))
+            elif chapter == 7 and index in set(range(1, 22)) | {24, 30}:
                 source_pages = {
                     4: "SearchExtension.aspx (phiên bản cập nhật)",
                     21: "Danh sách/chỉnh sửa phép NO và SC",
                     24: "ListFlightOnMess.aspx",
                     30: "ListFinishedFlightsMilitaryReport.aspx",
                 }
-                function_rows.append((f"FR-{prefix}-{index:03d}", item, f"Đã đặc tả theo {source_pages[index]}", f"Theo FR/BR/NFR và TC-OPT-{index:03d}-*"))
+                source_note = f"Đã đặc tả theo {source_pages[index]}" if index in source_pages else "Đã đặc tả chi tiết"
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, source_note, f"Theo FR/BR/NFR và TC-OPT-{index:03d}-*"))
             else:
                 function_rows.append((f"FR-{prefix}-{index:03d}", item, "Chờ đặc tả", "Chờ xây dựng"))
         table(doc, ["Mã yêu cầu", "Tên yêu cầu", "Nội dung", "Tiêu chí nghiệm thu"], function_rows)
@@ -1880,51 +2122,21 @@ def build():
         else:
             next_section = 3
         doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
-        placeholder(doc)
+        table(doc, ["Mã", "Quy tắc chung"], [
+            (f"BR-{prefix}-GEN-01", "Mọi dữ liệu phải xác định nguồn, thời gian nghiệp vụ, trạng thái và khóa chống trùng trước khi xử lý."),
+            (f"BR-{prefix}-GEN-02", "Thao tác ghi/duyệt/gửi/export phải kiểm tra quyền phía máy chủ và lưu audit theo người dùng hoặc API client."),
+            (f"BR-{prefix}-GEN-03", "Kết quả tổng hợp phải truy ngược được dữ liệu chi tiết; không báo thành công khi xử lý một phần chưa được công bố rõ."),
+        ])
         doc.add_heading(f"{chapter}.{next_section + 1}. Luồng xử lý và ngoại lệ chung", level=2)
-        placeholder(doc)
+        doc.add_paragraph("Luồng chuẩn: tiếp nhận yêu cầu/dữ liệu → xác thực và phân quyền → kiểm tra/chuẩn hóa → áp dụng quy tắc nghiệp vụ → lưu hoặc truy vấn → đối soát → trả kết quả/thông báo → ghi audit và chỉ số giám sát. Ngoại lệ phải trả mã/thông báo rõ, không giữ dữ liệu cũ như kết quả mới, retry có giới hạn đối với lỗi tạm thời và chuyển hàng chờ/xử lý thủ công khi vượt ngưỡng.")
         chapter += 1
 
-    doc.add_heading("10. Yêu cầu dữ liệu và tích hợp", level=1)
-    for title in ["10.1. Mô hình và từ điển dữ liệu", "10.2. Oracle và các kho dữ liệu", "10.3. ADS-B", "10.4. Email và thư mục lưu trữ", "10.5. AMHS/AFTN", "10.6. Bravo", "10.7. API chia sẻ dữ liệu", "10.8. Chuyển đổi, đối soát và lưu trữ dữ liệu"]:
-        doc.add_heading(title, level=2)
-        placeholder(doc)
-
-    doc.add_heading("11. Yêu cầu phi chức năng", level=1)
-    table(doc, ["Mã nhóm", "Nhóm yêu cầu", "Chỉ tiêu cần đặc tả"], [
-        ("NFR-PERF", "Hiệu năng", "Thời gian phản hồi, số người dùng, thời gian export/build"),
-        ("NFR-SEC", "An toàn thông tin", "Xác thực, phân quyền, bảo vệ dữ liệu, quản lý bí mật"),
-        ("NFR-AVAIL", "Sẵn sàng và tin cậy", "Tỷ lệ sẵn sàng, xử lý lỗi, retry"),
-        ("NFR-AUDIT", "Nhật ký và kiểm toán", "Sự kiện, nội dung, thời hạn lưu"),
-        ("NFR-BACKUP", "Sao lưu và khôi phục", "RTO, RPO, chu kỳ sao lưu"),
-        ("NFR-COMPAT", "Tương thích", "Trình duyệt, hệ điều hành, phiên bản Oracle"),
-        ("NFR-USABLE", "Khả năng sử dụng", "Giao diện, cảnh báo, khả năng tiếp cận"),
-        ("NFR-MAINT", "Khả năng bảo trì", "Cấu hình, giám sát, triển khai và rollback"),
-    ])
-
-    doc.add_heading("12. Yêu cầu triển khai và vận hành", level=1)
-    for title in ["12.1. Môi trường triển khai", "12.2. Cấu hình", "12.3. Quy trình cài đặt", "12.4. Giám sát và cảnh báo", "12.5. Rollback", "12.6. Hướng dẫn vận hành"]:
-        doc.add_heading(title, level=2)
-        placeholder(doc)
-
-    doc.add_heading("13. Kiểm thử và nghiệm thu", level=1)
-    table(doc, ["Nhóm", "Phạm vi dự kiến", "Tiêu chí đạt"], [
-        ("Chức năng", "Luồng chính, ngoại lệ và phân quyền", "Mỗi FR có tối thiểu một test case"),
-        ("Tích hợp", "Oracle, ADS-B, Email, AMHS, Bravo, API", "Dữ liệu đúng và có đối soát"),
-        ("Hiệu năng", "Tra cứu, export, build, đồng bộ", "Đạt chỉ tiêu NFR đã phê duyệt"),
-        ("An toàn thông tin", "Xác thực, phân quyền và dữ liệu đầu vào", "Không còn lỗi nghiêm trọng"),
-        ("Nghiệm thu người dùng", "Các quy trình nghiệp vụ chính", "Có biên bản và bằng chứng"),
-    ])
-
-    doc.add_heading("14. Ma trận truy vết", level=1)
-    table(doc, ["Mã yêu cầu", "Thiết kế/thành phần", "Mã kiểm thử", "Bằng chứng", "Kết quả"], [
-        ("[FR-...]", "[Màn hình/API/Package]", "[TC-...]", "[Ảnh/Log/Biên bản]", "Chờ kiểm thử"),
-    ])
-
-    doc.add_heading("15. Phụ lục", level=1)
-    for title in ["15.1. Danh mục màn hình và URL", "15.2. Danh mục API/Package", "15.3. Danh mục bảng dữ liệu", "15.4. Ma trận phân quyền", "15.5. Danh mục báo cáo/điện văn", "15.6. Biểu mẫu bằng chứng kiểm thử"]:
-        doc.add_heading(title, level=2)
-        placeholder(doc)
+    add_completed_data_integration(doc)
+    add_completed_nfr(doc)
+    add_completed_operations(doc)
+    add_completed_test_acceptance(doc)
+    add_completed_traceability(doc)
+    add_completed_appendices(doc)
 
     for item in doc.sections:
         footer = item.footer.paragraphs[0]
