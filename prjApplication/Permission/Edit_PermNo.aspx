@@ -492,6 +492,7 @@
 
     <script src="../Style/assets/js/jquery-2.1.4.min.js"></script>
 
+    <script src="../Style/assets/js/moment.min.js"></script>
     <script src="../Style/assets/js/wizard.min.js"></script>
     <script src="../Style/assets/js/bootstrap-datetimepicker.min.js"></script>
     <script src="../Style/assets/js/bootstrap-datepicker.min.js"></script>
@@ -630,7 +631,7 @@
             }
         }
         function ReadInfoPerm(data) {
-            var obj = JSON.parse(data.replace(/\n/gi, '<br>').replace(/\\/gi, '\\\\').replace(/\t/gi, '     '));
+            var obj = JSON.parse(data);
             txtPERMDATE.value = obj['PERMDATE'] == null ? null : obj['PERMDATE']['DateTime'];
 
             txtPERMNBR_ID.value = obj['PERMNBR_ID'];
