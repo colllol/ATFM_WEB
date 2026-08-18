@@ -90,10 +90,10 @@ procedure make_finished_flights_news4day
     p_out    OUT NUMBER
 )
 IS
-    v_error_text    VARCHAR2(1000);
-    v_result        NUMBER;
+    v_error_text    VARCHAR2(4000);
+    v_summary_code  NUMBER;
+    v_finish_code   NUMBER;
     v_selected_date DATE;
-    v_working_date  DATE;
 BEGIN
     p_out := -1;
 
@@ -101,11 +101,45 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'P_DATE is required');
     END IF;
 
-    v_selected_date := TO_DATE(TRIM(p_date), 'FXDD-MM-YYYY');
+    BEGIN
+        v_selected_date := TO_DATE(TRIM(p_date), 'FXDD-MM-YYYY');
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(
+                -20002,
+                'P_DATE must use DD-MM-YYYY format'
+            );
+    END;
 
-    -- Hai ham DAY_WORKING loc DATE_FLY - 1.
-    -- Cong mot ngay de xu ly dung FLIGHTDATE ma nguoi dung da chon.
-    v_working_date := TRUNC(v_selected_date) + 1;
+    v_selected_date := TRUNC(v_selected_date);
+
+    -- FLIGHTS_SUMMARIZE hien loc DATE_FLY - 1.
+    v_summary_code := DAY_WORKING.FLIGHTS_SUMMARIZE(
+        v_selected_date + 1,
+        v_error_text
+    );
+
+    IF NVL(v_summary_code, -1) <> 0 THEN
+        RAISE_APPLICATION_ERROR(
+            -20011,
+            'FLIGHTS_SUMMARIZE failed: code=' || v_summary_code ||
+            '; ' || SUBSTR(v_error_text, 1, 1000)
+        );
+    END IF;
+
+    -- REMOVE_FINISHED_FLIGHS_DELETE toi uu nhan ngay can xu ly truc tiep.
+    v_finish_code := DAY_WORKING.REMOVE_FINISHED_FLIGHS_DELETE(
+        v_selected_date,
+        v_error_text
+    );
+
+    IF NVL(v_finish_code, -1) <> 0 THEN
+        RAISE_APPLICATION_ERROR(
+            -20012,
+            'REMOVE_FINISHED failed: code=' || v_finish_code ||
+            '; ' || SUBSTR(v_error_text, 1, 1000)
+        );
+    END IF;
 
     INSERT INTO T_ACTIONHISTORY
     (
@@ -131,16 +165,6 @@ BEGIN
     );
 
     COMMIT;
-
-    v_result := DAY_WORKING.FLIGHTS_SUMMARIZE(
-        v_working_date,
-        v_error_text
-    );
-    v_result := DAY_WORKING.REMOVE_FINISHED_FLIGHS_DELETE(
-        v_working_date,
-        v_error_text
-    );
-
     p_out := 1;
 EXCEPTION
     WHEN OTHERS THEN
