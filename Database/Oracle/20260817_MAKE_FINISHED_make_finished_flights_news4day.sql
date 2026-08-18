@@ -5,7 +5,8 @@
 -- vuot gioi han 30 ky tu cua Oracle 12.1. Ten 4day dai dung 30 ky tu.
 --
 -- P_DATE: ngay chuyen bay can xu ly, dinh dang DD-MM-YYYY.
--- DAY_WORKING dang loc DATE_FLY - 1, vi vay procedure truyen P_DATE + 1.
+-- DAY_WORKING.FLIGHTS_SUMMARIZE_NEW va REMOVE_FINISHED_FLIGHS_DEL_NEW
+-- deu nhan truc tiep ngay chuyen bay can xu ly.
 -- Script chi chen/thay procedure moi, khong thay noi dung cac procedure khac.
 -- Chay bang DBeaver: Execute SQL Script (Alt+X).
 -- Day la script thuan Oracle/JDBC; khong dat cac lenh SET cua SQL*Plus
@@ -113,22 +114,21 @@ BEGIN
 
     v_selected_date := TRUNC(v_selected_date);
 
-    -- FLIGHTS_SUMMARIZE hien loc DATE_FLY - 1.
-    v_summary_code := DAY_WORKING.FLIGHTS_SUMMARIZE(
-        v_selected_date + 1,
+    -- Nhanh NEW nhan truc tiep ngay chuyen bay, khong anh huong ham cu.
+    v_summary_code := DAY_WORKING.FLIGHTS_SUMMARIZE_NEW(
+        v_selected_date,
         v_error_text
     );
 
     IF NVL(v_summary_code, -1) <> 0 THEN
         RAISE_APPLICATION_ERROR(
             -20011,
-            'FLIGHTS_SUMMARIZE failed: code=' || v_summary_code ||
+            'FLIGHTS_SUMMARIZE_NEW failed: code=' || v_summary_code ||
             '; ' || SUBSTR(v_error_text, 1, 1000)
         );
     END IF;
 
-    -- REMOVE_FINISHED_FLIGHS_DELETE toi uu nhan ngay can xu ly truc tiep.
-    v_finish_code := DAY_WORKING.REMOVE_FINISHED_FLIGHS_DELETE(
+    v_finish_code := DAY_WORKING.REMOVE_FINISHED_FLIGHS_DEL_NEW(
         v_selected_date,
         v_error_text
     );
@@ -136,7 +136,7 @@ BEGIN
     IF NVL(v_finish_code, -1) <> 0 THEN
         RAISE_APPLICATION_ERROR(
             -20012,
-            'REMOVE_FINISHED failed: code=' || v_finish_code ||
+            'REMOVE_FINISHED_NEW failed: code=' || v_finish_code ||
             '; ' || SUBSTR(v_error_text, 1, 1000)
         );
     END IF;
