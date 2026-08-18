@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 from pathlib import Path
 
 from docx import Document
@@ -18,6 +19,9 @@ OUTPUT = Path(os.environ.get(
     "SRS_ATFM_MASTER_OUTPUT",
     ROOT / "TaiLieu" / "SRS_ATFM_WEB_Khung_Suon.docx",
 ))
+INCLUDE_INSPECTION_CONTENT = os.environ.get(
+    "SRS_ATFM_INCLUDE_INSPECTION_CONTENT", "1"
+).strip().lower() not in {"0", "false", "no"}
 AEROSYNC_SOURCE = ROOT / "TaiLieu" / "SRS_VATM_AeroSync_Hien_Tai.docx"
 INTEGRATION_SOURCES = [
     ("5.4", "FR-INT-002", "Thu thập và xử lý dữ liệu ADS-B cho khai thác O/F", "SRS_VATM_ADS-B.docx"),
@@ -160,6 +164,160 @@ def iter_blocks(document):
             yield Paragraph(child, document)
         elif child.tag == qn("w:tbl"):
             yield Table(child, document)
+
+
+def fold_text(value):
+    normalized = unicodedata.normalize("NFD", value.lower())
+    return "".join(
+        character for character in normalized
+        if unicodedata.category(character) != "Mn"
+    ).replace("đ", "d")
+
+
+def heading_level(paragraph):
+    style = paragraph.style.name if paragraph.style else ""
+    match = re.fullmatch(r"Heading (\d+)", style)
+    return int(match.group(1)) if match else None
+
+
+def remove_table_column(source_table, column_index):
+    for row in source_table.rows:
+        cells = row.cells
+        if column_index < len(cells):
+            row._tr.remove(cells[column_index]._tc)
+    grid_columns = source_table._tbl.tblGrid.gridCol_lst
+    if column_index < len(grid_columns):
+        source_table._tbl.tblGrid.remove(grid_columns[column_index])
+
+
+def replace_paragraph_text(paragraph, replacements):
+    original = paragraph.text
+    updated = original
+    for pattern, replacement in replacements:
+        updated = re.sub(pattern, replacement, updated, flags=re.IGNORECASE)
+    if updated == original:
+        return
+    was_bold = any(run.bold for run in paragraph.runs)
+    was_italic = any(run.italic for run in paragraph.runs)
+    paragraph.text = updated
+    if paragraph.runs:
+        paragraph.runs[0].bold = was_bold
+        paragraph.runs[0].italic = was_italic
+
+
+def remove_inspection_content(doc):
+    """Create the business/technical SRS variant without inspection-only material."""
+    body = doc.element.body
+    remove_until_level = None
+
+    for child in list(body.iterchildren()):
+        if child.tag != qn("w:p"):
+            if remove_until_level is not None:
+                body.remove(child)
+            continue
+
+        paragraph = Paragraph(child, doc)
+        level = heading_level(paragraph)
+        folded = fold_text(paragraph.text.strip())
+
+        if remove_until_level is not None:
+            if level is not None and level <= remove_until_level:
+                remove_until_level = None
+            else:
+                body.remove(child)
+                continue
+
+        remove_section = any([
+            level == 1 and re.match(r"^13\.\s*kiem thu va nghiem thu", folded),
+            level == 1 and re.match(r"^14\.\s*ma tran truy vet", folded),
+            level == 2 and re.match(r"^15\.6\.\s*bieu mau bang chung kiem thu", folded),
+            "lien ket kiem thu va truy vet" in folded,
+            "tieu chi kiem thu" in folded,
+            "tieu chi nghiem thu" in folded,
+            "ca kiem thu nghiem thu" in folded,
+            bool(re.search(r"(?:^|\.\s*)ma tran truy vet", folded)),
+            bool(re.search(r"(?:^|\.\s*)truy vet fr-", folded)),
+        ])
+        if remove_section and level is not None:
+            body.remove(child)
+            remove_until_level = level
+
+    inspection_table_terms = (
+        "bang chung",
+        "ma kiem thu",
+        "pham vi kiem thu",
+    )
+    for source_table in list(doc.tables):
+        if not source_table.rows:
+            continue
+        header = " | ".join(cell.text.strip() for cell in source_table.rows[0].cells)
+        folded_header = fold_text(header)
+        if any(term in folded_header for term in inspection_table_terms):
+            source_table._element.getparent().remove(source_table._element)
+            continue
+
+        headers = [fold_text(cell.text.strip()) for cell in source_table.rows[0].cells]
+        if "tieu chi nghiem thu" in headers:
+            remove_table_column(source_table, headers.index("tieu chi nghiem thu"))
+
+        for row in list(source_table.rows):
+            row_text = fold_text(" | ".join(cell.text for cell in row.cells))
+            if "nhom kiem thu/kiem dinh" in row_text:
+                source_table._tbl.remove(row._tr)
+
+    replacements = [
+        (r"BẢN ĐẶC TẢ TỔNG HỢP PHỤC VỤ KIỂM ĐỊNH", "BẢN ĐẶC TẢ YÊU CẦU PHẦN MỀM TỔNG HỢP"),
+        (r"Quy tắc chung và truy vết kiểm định", "Quy tắc chung"),
+        (r"Yêu cầu chung và truy vết FR-[^\r\n]+", "Yêu cầu chung"),
+        (r"Yêu cầu phi chức năng và nghiệm thu", "Yêu cầu phi chức năng"),
+        (r"Kiểm định, nhận dạng và chuẩn hóa", "Kiểm tra, nhận dạng và chuẩn hóa"),
+        (r"Kiểm định, parse, chuẩn hóa", "Kiểm tra, parse, chuẩn hóa"),
+        (r"không thuộc phạm vi kiểm định chính của tài liệu này", "không thuộc phạm vi chức năng chính được mô tả tại mục này"),
+        (r"kiểm tra/kiểm định", "kiểm tra và đối soát"),
+        (r"người kiểm định", "người sử dụng"),
+        (r"Yêu cầu kiểm định", "Yêu cầu chung"),
+        (r"kiểm định", "kiểm tra"),
+    ]
+    for paragraph in doc.paragraphs:
+        replace_paragraph_text(paragraph, replacements)
+    for source_table in doc.tables:
+        for row in source_table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    replace_paragraph_text(paragraph, replacements)
+
+    for paragraph in doc.paragraphs:
+        if paragraph.text.startswith("Mã tài liệu: SRS-ATFM-WEB"):
+            paragraph.text = paragraph.text.replace(
+                "Phiên bản: 1.0 – Dự thảo hoàn thiện",
+                "Phiên bản: 1.1 – Bản nghiệp vụ và kỹ thuật",
+            ).replace("Ngày cập nhật: 17/08/2026", "Ngày cập nhật: 18/08/2026")
+            break
+
+    for source_table in doc.tables:
+        if not source_table.rows:
+            continue
+        first_cell = source_table.rows[0].cells[0].text.strip()
+        if first_cell == "Thuộc tính":
+            for row in source_table.rows[1:]:
+                key = row.cells[0].text.strip()
+                if key == "Phiên bản":
+                    row.cells[1].text = "1.1"
+                elif key == "Trạng thái":
+                    row.cells[1].text = "Bản nghiệp vụ và kỹ thuật – chờ kiểm tra và phê duyệt"
+            break
+
+    for source_table in doc.tables:
+        if not source_table.rows:
+            continue
+        headers = [cell.text.strip() for cell in source_table.rows[0].cells]
+        if headers == ["Phiên bản", "Ngày", "Nội dung", "Người thực hiện"]:
+            row = source_table.add_row().cells
+            row[0].text = "1.1"
+            row[1].text = "18/08/2026"
+            row[2].text = "Tạo bản nghiệp vụ và kỹ thuật từ bản đặc tả tổng hợp"
+            row[3].text = "Codex"
+            break
 
 
 def clean_source_heading(text):
@@ -2366,6 +2524,9 @@ def build():
     add_completed_test_acceptance(doc)
     add_completed_traceability(doc)
     add_completed_appendices(doc)
+
+    if not INCLUDE_INSPECTION_CONTENT:
+        remove_inspection_content(doc)
 
     for item in doc.sections:
         footer = item.footer.paragraphs[0]
