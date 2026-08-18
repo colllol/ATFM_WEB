@@ -723,6 +723,10 @@ IS
     v_summary_code  NUMBER;
     v_finish_code   NUMBER;
     v_selected_date DATE;
+    v_flight_count  NUMBER;
+    v_notification_id      T_NOTIFICATION.ID%TYPE;
+    v_notification_title   T_NOTIFICATION.TITLE%TYPE;
+    v_notification_content T_NOTIFICATION.CONTENT%TYPE;
 BEGIN
     p_out := -1;
 
@@ -767,6 +771,73 @@ BEGIN
             '; ' || SUBSTR(v_error_text, 1, 1000)
         );
     END IF;
+
+    SELECT COUNT(*)
+      INTO v_flight_count
+      FROM T_DAY_FLIGHTS_GOINGON g
+     WHERE g.MOVEFINISH = 1
+       AND g.FLIGHTDATE >= v_selected_date
+       AND g.FLIGHTDATE <  v_selected_date + 1;
+
+    v_notification_title :=
+        UNISTR('Nh\1EADn d\1EEF li\1EC7u \0110i/\0110\1EBFn');
+    v_notification_content :=
+        v_notification_title
+        || UNISTR(' l\00FAc ')
+        || TO_CHAR(
+               SYSTIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh',
+               'HH24:MI'
+           )
+        || UNISTR(' \2013 ')
+        || TO_CHAR(v_flight_count)
+        || UNISTR(' chuy\1EBFn. Ng\01B0\1EDDi chuy\1EC3n ')
+        || NVL(TRIM(p_string), 'UNKNOWN');
+
+    MERGE INTO T_NOTIFICATION target
+    USING
+    (
+        SELECT 'ATFM' AS SOURCE_TYPE,
+               'DPLKL' AS SOURCE_KEY
+          FROM DUAL
+    ) source
+       ON
+       (
+           target.SOURCE_TYPE = source.SOURCE_TYPE
+           AND target.SOURCE_KEY = source.SOURCE_KEY
+       )
+    WHEN MATCHED THEN
+        UPDATE SET
+            target.TITLE = v_notification_title,
+            target.CONTENT = v_notification_content,
+            target.DATETIME = SYSTIMESTAMP,
+            target.TARGET_TYPE = 0
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+            TITLE, CONTENT, DATETIME, TARGET_TYPE,
+            SOURCE_TYPE, SOURCE_KEY
+        )
+        VALUES
+        (
+            v_notification_title,
+            v_notification_content,
+            SYSTIMESTAMP,
+            0,
+            source.SOURCE_TYPE,
+            source.SOURCE_KEY
+        );
+
+    SELECT ID
+      INTO v_notification_id
+      FROM T_NOTIFICATION
+     WHERE SOURCE_TYPE = 'ATFM'
+       AND SOURCE_KEY = 'DPLKL';
+
+    DELETE FROM T_NOTIFICATION_READ
+     WHERE NOTIFICATION_ID = v_notification_id;
+
+    DELETE FROM T_NOTIFICATION_TARGET
+     WHERE NOTIFICATION_ID = v_notification_id;
 
     INSERT INTO T_ACTIONHISTORY
     (
