@@ -1,7 +1,8 @@
 -- ============================================================================
 -- Rollback logic thong bao ATFM/DPLKL cua make_finished_flights_news4day.
 -- Khoi phuc chinh xac MAKE_FINISHED package body truoc khi deploy.
--- Khong xoa ban ghi T_NOTIFICATION da phat sinh.
+-- Khong xoa ban ghi T_NOTIFICATION da phat sinh va khong doi unique index ve
+-- dang cu, vi sau khi co nhieu ATFM/DPLKL thi index cu khong the tao lai.
 -- ============================================================================
 
 DECLARE

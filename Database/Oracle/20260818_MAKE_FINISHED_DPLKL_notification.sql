@@ -6,8 +6,9 @@
 --   Nhan du lieu Di/Den luc HH:mm - X chuyen. Nguoi chuyen <P_STRING>
 -- SOURCE_TYPE = ATFM; SOURCE_KEY = DPLKL.
 --
--- T_NOTIFICATION co unique index (SOURCE_TYPE, SOURCE_KEY), do do script dung
--- MERGE: lan dau INSERT, cac lan sau UPDATE va xoa trang thai da doc.
+-- Moi lan xu ly thanh cong se INSERT mot dong T_NOTIFICATION rieng.
+-- Unique index duoc doi thanh function-based unique index: chi cho phep trung
+-- rieng cap ATFM/DPLKL; cac nguon/khoa khac van duoc chong trung.
 -- X la so dong dung dieu kien cua A_TEST_SEARCH.GetExportMOVEFINISH:
 -- MOVEFINISH=1 va FLIGHTDATE thuoc ngay P_DATE.
 --
@@ -60,6 +61,48 @@ BEGIN
 
     IF v_count <> 4 THEN
         RAISE_APPLICATION_ERROR(-20964, 'Thieu bang phu thuoc cho notification');
+    END IF;
+END;
+/
+
+-- Cho phep moi lan export tao mot dong ATFM/DPLKL, van giu unique cho moi
+-- SOURCE_TYPE/SOURCE_KEY khac (bao gom EMAIL_API).
+DECLARE
+    v_function_index_count PLS_INTEGER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_function_index_count
+      FROM USER_INDEXES
+     WHERE INDEX_NAME = 'UX_T_NOTIFICATION_SOURCE'
+       AND UNIQUENESS = 'UNIQUE'
+       AND INDEX_TYPE = 'FUNCTION-BASED NORMAL';
+
+    IF v_function_index_count = 0 THEN
+        BEGIN
+            EXECUTE IMMEDIATE 'DROP INDEX UX_T_NOTIFICATION_SOURCE';
+        EXCEPTION
+            WHEN OTHERS THEN
+                IF SQLCODE <> -1418 THEN
+                    RAISE;
+                END IF;
+        END;
+
+        EXECUTE IMMEDIATE q'~
+            CREATE UNIQUE INDEX UX_T_NOTIFICATION_SOURCE
+            ON T_NOTIFICATION
+            (
+                CASE
+                    WHEN SOURCE_TYPE = 'ATFM' AND SOURCE_KEY = 'DPLKL'
+                    THEN NULL
+                    ELSE SOURCE_TYPE
+                END,
+                CASE
+                    WHEN SOURCE_TYPE = 'ATFM' AND SOURCE_KEY = 'DPLKL'
+                    THEN NULL
+                    ELSE SOURCE_KEY
+                END
+            )
+        ~';
     END IF;
 END;
 /
@@ -178,7 +221,6 @@ IS
     v_finish_code   NUMBER;
     v_selected_date DATE;
     v_flight_count  NUMBER;
-    v_notification_id      T_NOTIFICATION.ID%TYPE;
     v_notification_title   T_NOTIFICATION.TITLE%TYPE;
     v_notification_content T_NOTIFICATION.CONTENT%TYPE;
 BEGIN
@@ -247,51 +289,20 @@ BEGIN
         || UNISTR(' chuy\1EBFn. Ng\01B0\1EDDi chuy\1EC3n ')
         || NVL(TRIM(p_string), 'UNKNOWN');
 
-    MERGE INTO T_NOTIFICATION target
-    USING
+    INSERT INTO T_NOTIFICATION
     (
-        SELECT 'ATFM' AS SOURCE_TYPE,
-               'DPLKL' AS SOURCE_KEY
-          FROM DUAL
-    ) source
-       ON
-       (
-           target.SOURCE_TYPE = source.SOURCE_TYPE
-           AND target.SOURCE_KEY = source.SOURCE_KEY
-       )
-    WHEN MATCHED THEN
-        UPDATE SET
-            target.TITLE = v_notification_title,
-            target.CONTENT = v_notification_content,
-            target.DATETIME = SYSTIMESTAMP,
-            target.TARGET_TYPE = 0
-    WHEN NOT MATCHED THEN
-        INSERT
-        (
-            TITLE, CONTENT, DATETIME, TARGET_TYPE,
-            SOURCE_TYPE, SOURCE_KEY
-        )
-        VALUES
-        (
-            v_notification_title,
-            v_notification_content,
-            SYSTIMESTAMP,
-            0,
-            source.SOURCE_TYPE,
-            source.SOURCE_KEY
-        );
-
-    SELECT ID
-      INTO v_notification_id
-      FROM T_NOTIFICATION
-     WHERE SOURCE_TYPE = 'ATFM'
-       AND SOURCE_KEY = 'DPLKL';
-
-    DELETE FROM T_NOTIFICATION_READ
-     WHERE NOTIFICATION_ID = v_notification_id;
-
-    DELETE FROM T_NOTIFICATION_TARGET
-     WHERE NOTIFICATION_ID = v_notification_id;
+        TITLE, CONTENT, DATETIME, TARGET_TYPE,
+        SOURCE_TYPE, SOURCE_KEY
+    )
+    VALUES
+    (
+        v_notification_title,
+        v_notification_content,
+        SYSTIMESTAMP,
+        0,
+        'ATFM',
+        'DPLKL'
+    );
 
     INSERT INTO T_ACTIONHISTORY
     (
@@ -405,15 +416,40 @@ BEGIN
        AND TYPE = 'PACKAGE BODY'
        AND
        (
-           UPPER(TEXT) LIKE '%MERGE INTO T_NOTIFICATION%'
-           OR UPPER(TEXT) LIKE '%SOURCE_KEY = ''DPLKL''%'
+           UPPER(TEXT) LIKE '%INSERT INTO T_NOTIFICATION%'
+           OR UPPER(TEXT) LIKE '%''DPLKL''%'
        );
 
     IF v_count < 2 THEN
         RAISE_APPLICATION_ERROR(-20968, 'Chua tim thay logic DPLKL notification');
     END IF;
 
-    DBMS_OUTPUT.PUT_LINE('VERIFY OK: MAKE_FINISHED VALID, DPLKL logic found.');
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_INDEXES
+     WHERE INDEX_NAME = 'UX_T_NOTIFICATION_SOURCE'
+       AND TABLE_NAME = 'T_NOTIFICATION'
+       AND UNIQUENESS = 'UNIQUE'
+       AND INDEX_TYPE = 'FUNCTION-BASED NORMAL'
+       AND STATUS = 'VALID';
+
+    IF v_count <> 1 THEN
+        RAISE_APPLICATION_ERROR(-20969, 'Unique index chua cho phep ATFM/DPLKL lap');
+    END IF;
+
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_IND_COLUMNS
+     WHERE INDEX_NAME = 'UX_T_NOTIFICATION_SOURCE'
+       AND TABLE_NAME = 'T_NOTIFICATION';
+
+    IF v_count <> 2 THEN
+        RAISE_APPLICATION_ERROR(-20970, 'Unique index DPLKL sai so cot');
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE(
+        'VERIFY OK: MAKE_FINISHED VALID; every success inserts one DPLKL row.'
+    );
 END;
 /
 

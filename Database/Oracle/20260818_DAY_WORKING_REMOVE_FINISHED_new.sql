@@ -69,6 +69,48 @@ BEGIN
 END;
 /
 
+-- Moi lan NEWS4DAY thanh cong can tao mot notification ATFM/DPLKL rieng.
+-- Chi cap nay duoc phep lap; cac SOURCE_TYPE/SOURCE_KEY khac van unique.
+DECLARE
+    v_function_index_count PLS_INTEGER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_function_index_count
+      FROM USER_INDEXES
+     WHERE INDEX_NAME = 'UX_T_NOTIFICATION_SOURCE'
+       AND UNIQUENESS = 'UNIQUE'
+       AND INDEX_TYPE = 'FUNCTION-BASED NORMAL';
+
+    IF v_function_index_count = 0 THEN
+        BEGIN
+            EXECUTE IMMEDIATE 'DROP INDEX UX_T_NOTIFICATION_SOURCE';
+        EXCEPTION
+            WHEN OTHERS THEN
+                IF SQLCODE <> -1418 THEN
+                    RAISE;
+                END IF;
+        END;
+
+        EXECUTE IMMEDIATE q'~
+            CREATE UNIQUE INDEX UX_T_NOTIFICATION_SOURCE
+            ON T_NOTIFICATION
+            (
+                CASE
+                    WHEN SOURCE_TYPE = 'ATFM' AND SOURCE_KEY = 'DPLKL'
+                    THEN NULL
+                    ELSE SOURCE_TYPE
+                END,
+                CASE
+                    WHEN SOURCE_TYPE = 'ATFM' AND SOURCE_KEY = 'DPLKL'
+                    THEN NULL
+                    ELSE SOURCE_KEY
+                END
+            )
+        ~';
+    END IF;
+END;
+/
+
 -- Luu trang thai ngay truoc khi tach nhanh de rollback chinh xac.
 DECLARE
     c_deployment_id CONSTANT VARCHAR2(80) :=
@@ -724,7 +766,6 @@ IS
     v_finish_code   NUMBER;
     v_selected_date DATE;
     v_flight_count  NUMBER;
-    v_notification_id      T_NOTIFICATION.ID%TYPE;
     v_notification_title   T_NOTIFICATION.TITLE%TYPE;
     v_notification_content T_NOTIFICATION.CONTENT%TYPE;
 BEGIN
@@ -793,51 +834,20 @@ BEGIN
         || UNISTR(' chuy\1EBFn. Ng\01B0\1EDDi chuy\1EC3n ')
         || NVL(TRIM(p_string), 'UNKNOWN');
 
-    MERGE INTO T_NOTIFICATION target
-    USING
+    INSERT INTO T_NOTIFICATION
     (
-        SELECT 'ATFM' AS SOURCE_TYPE,
-               'DPLKL' AS SOURCE_KEY
-          FROM DUAL
-    ) source
-       ON
-       (
-           target.SOURCE_TYPE = source.SOURCE_TYPE
-           AND target.SOURCE_KEY = source.SOURCE_KEY
-       )
-    WHEN MATCHED THEN
-        UPDATE SET
-            target.TITLE = v_notification_title,
-            target.CONTENT = v_notification_content,
-            target.DATETIME = SYSTIMESTAMP,
-            target.TARGET_TYPE = 0
-    WHEN NOT MATCHED THEN
-        INSERT
-        (
-            TITLE, CONTENT, DATETIME, TARGET_TYPE,
-            SOURCE_TYPE, SOURCE_KEY
-        )
-        VALUES
-        (
-            v_notification_title,
-            v_notification_content,
-            SYSTIMESTAMP,
-            0,
-            source.SOURCE_TYPE,
-            source.SOURCE_KEY
-        );
-
-    SELECT ID
-      INTO v_notification_id
-      FROM T_NOTIFICATION
-     WHERE SOURCE_TYPE = 'ATFM'
-       AND SOURCE_KEY = 'DPLKL';
-
-    DELETE FROM T_NOTIFICATION_READ
-     WHERE NOTIFICATION_ID = v_notification_id;
-
-    DELETE FROM T_NOTIFICATION_TARGET
-     WHERE NOTIFICATION_ID = v_notification_id;
+        TITLE, CONTENT, DATETIME, TARGET_TYPE,
+        SOURCE_TYPE, SOURCE_KEY
+    )
+    VALUES
+    (
+        v_notification_title,
+        v_notification_content,
+        SYSTIMESTAMP,
+        0,
+        'ATFM',
+        'DPLKL'
+    );
 
     INSERT INTO T_ACTIONHISTORY
     (
