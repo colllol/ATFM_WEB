@@ -16,3 +16,8 @@ This is a derived index. Ticket files are the source of truth.
 
 | ID | Title | Priority | Agents | Waiting on | Detail |
 | --- | --- | --- | --- | --- | --- |
+
+## Closed
+
+| ID | Title | Priority | Agents | Waiting on | Detail |
+| --- | --- | --- | --- | --- | --- |

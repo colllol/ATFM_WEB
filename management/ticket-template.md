@@ -23,6 +23,24 @@ Out of scope:
 
 - <observable check>
 
-## Verification
+## Outcome
 
-Commands, counts, observed behavior, harness delta, and residual risk are recorded here before closing.
+Files changed:
+
+- <path>
+
+Verified via:
+
+- <command or harness>
+
+Evidence:
+
+- <counted result and observed behavior>
+
+Harness delta:
+
+- <what the work taught the operating model, or None>
+
+Residual risk:
+
+- <remaining risk or why a check could not run>

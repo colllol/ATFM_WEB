@@ -15,6 +15,7 @@ This repository uses Gangline as its file-native operating model.
 - Ticket files in `backlog/` and `bugs/` are the source of truth for existence and status. `STATUS.md` is a derived index.
 - `decisions/` stores accepted decisions and decision candidates. Do not hide product or contract decisions in ticket prose.
 - Ticket IDs are derived from ticket filenames, never from `STATUS.md`.
+- Surface mapping is explicit: `prjApplication`, `prjBusinessLogic`, `database`, `tools-services-tests`, `shared-libraries` (`prjInfo`, `prjComponents`, `HPCServerDataAccess`, `HPCShareDLL`, `CustomControl`), and `deployment` (`Deploy`). The `services/` tree is artifact-only until tracked source returns.
 
 ## Required loop
 

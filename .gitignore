@@ -20,6 +20,9 @@ packages/
 # Generated publish output and local backups
 **/PackageTmp/
 **/Back*/
+# Gangline board (not a generated backup directory)
+!backlog/
+!backlog/**
 Crystal Reports Backup Files/
 prjApplicationOnline/
 
