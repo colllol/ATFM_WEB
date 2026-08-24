@@ -2,7 +2,7 @@
     CodeBehind="Notifications.aspx.cs" Inherits="prjApplication.SLOTS.Notifications" %>
 
 <asp:Content ID="NotificationsContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260804-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260824-1") %>" />
 
     <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>">
         <header class="notifications-page-header">
@@ -38,6 +38,7 @@
                         <col class="notifications-col-status" />
                         <col class="notifications-col-title" />
                         <col class="notifications-col-content" />
+                        <col class="notifications-col-type" />
                         <col class="notifications-col-time" />
                         <col class="notifications-col-action" />
                     </colgroup>
@@ -46,12 +47,13 @@
                             <th scope="col">Trạng thái</th>
                             <th scope="col">Tiêu đề</th>
                             <th scope="col">Nội dung</th>
+                            <th scope="col">Type</th>
                             <th scope="col">Thời gian</th>
                             <th scope="col" class="notifications-action-heading">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="notificationsRows">
-                        <tr><td colspan="5" class="notifications-empty-cell">Đang tải dữ liệu...</td></tr>
+                        <tr><td colspan="6" class="notifications-empty-cell">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
                 <div id="notificationsLoading" class="notifications-local-loading" aria-live="polite" hidden>
@@ -66,5 +68,5 @@
         </section>
     </section>
 
-    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260723-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260824-1") %>"></script>
 </asp:Content>
