@@ -1400,6 +1400,69 @@ def add_report_detailed_appendix(doc):
     page_break(doc)
 
 
+def add_ai_detailed_appendix(doc):
+    heading(doc, "PHỤ LỤC K. Thiết kế chi tiết phân hệ AI hỗ trợ thống kê, tìm kiếm và tổng hợp", 1)
+    paragraph(doc, "Phụ lục này cụ thể hóa Mục 8 theo SRS cho FR-AI-001 đến FR-AI-004. AI được triển khai như dịch vụ độc lập, chỉ truy vấn dữ liệu được cấp phép bằng tài khoản Oracle read-only; mọi câu hỏi, SQL, kết quả, phiên bản model/prompt và thao tác người dùng phải có thể truy vết.")
+    heading(doc, "K.1. Kiến trúc AI dùng chung", 2)
+    code_block(doc, "Question/Voice → Session/Auth → Intent/Context Builder → LLM Draft\n                              → SQL Parser/Allowlist/Policy → Preview/Approval\n                              → OracleRunner(read-only) → Result Normalizer\n                              → Table/Chart/Summary → Audit/Feedback/Monitoring")
+    table(doc, ["Thành phần", "Thiết kế", "Kiểm soát"], [
+        ("Chat API", "Nhận câu hỏi, session, scope và trả intent/SQL/kết quả", "HTTPS, token/CSRF, rate limit, timeout"),
+        ("Intent/Context Builder", "Nhận diện ngày, hãng, sân bay, loại chuyến, metric và bổ sung schema nghiệp vụ", "Không cho model tự chọn bảng/cột ngoài metadata"),
+        ("LLM/Prompt Store", "Quản lý model, system prompt, few-shot, training sample và version", "Review/approval, không chứa secret, rollback version"),
+        ("SQL Guard", "Parse Oracle SQL, chặn DML/DDL/multi-statement/SELECT ngoài allowlist", "Bind parameter, row/time limit, policy decision"),
+        ("OracleRunner", "Thực thi SELECT bằng read-only account và trả snapshot/result metadata", "Circuit breaker, kill timeout, data scope"),
+        ("Result Renderer", "Chuẩn hóa bảng, biểu đồ, tổng hợp và giải thích nguồn", "Mask dữ liệu nhạy cảm, không suy diễn khi NULL"),
+        ("AI Monitor", "Đo latency, token/cost, lỗi, chất lượng, usage và health", "Dashboard, alert, audit và retention"),
+    ])
+    heading(doc, "K.2. Vòng đời yêu cầu AI và chính sách an toàn", 2)
+    table(doc, ["Bước", "Xử lý", "Trạng thái/bằng chứng"], [
+        ("Receive", "Nhận câu hỏi tiếng Việt/giọng nói, user/session/scope", "RECEIVED, request_id"),
+        ("Understand", "Nhận diện intent, thực thể, kỳ dữ liệu và câu hỏi thiếu", "UNDERSTOOD/CLARIFY"),
+        ("Draft", "Sinh SQL hoặc kế hoạch tổng hợp theo schema version", "DRAFT, prompt/model version"),
+        ("Guard", "Parse, allowlist, bind, giới hạn dòng/thời gian và kiểm tra scope", "APPROVED/REJECTED, policy reason"),
+        ("Execute", "Oracle read-only hoặc chuyển export nền nếu kết quả lớn", "RUNNING/COMPLETED/FAILED"),
+        ("Present", "Trình bày bảng/biểu đồ/tóm tắt và nguồn dữ liệu", "PRESENTED, snapshot_id"),
+        ("Learn/Monitor", "Phản hồi người dùng, đánh giá chất lượng và metric vận hành", "FEEDBACK/REVIEWED/AUDITED"),
+    ])
+    heading(doc, "K.3. NFR và kiểm soát dùng chung", 2)
+    table(doc, ["Nhóm", "Yêu cầu", "Bằng chứng"], [
+        ("Bảo mật", "RBAC/data scope ở API và Oracle; không nhận CREATED_BY/scope từ payload không tin cậy", "Denied action, read-only account, audit"),
+        ("An toàn SQL", "Một SELECT hợp lệ; cấm DML/DDL/lock/INTO/SELECT * sản xuất; bind tham số", "SQL Guard decision, blocked query log"),
+        ("Đúng dữ liệu", "Hiển thị snapshot, source timestamp, công thức và cảnh báo dữ liệu thiếu/trễ", "Result metadata, formula version"),
+        ("Hiệu năng", "P95 câu hỏi thông thường theo SLA; query lớn chuyển export nền; LLM timeout có giới hạn retry", "Latency/token/timeout metrics"),
+        ("Riêng tư", "Mask nội dung nhạy cảm, không log secret/prompt chứa dữ liệu cá nhân ngoài chính sách", "Log review, retention/masking test"),
+        ("Rollback", "Có thể tắt model/prompt/route bằng feature flag và quay về bản đã phê duyệt", "Version registry, rollback runbook"),
+    ])
+    heading(doc, "K.4. Phiếu thiết kế riêng theo từng mã FR-AI", 2)
+    ai_cards = [
+        ("FR-AI-001", "Xử lý ngôn ngữ tự nhiên cho truy vấn hàng không", "Nhận câu hỏi tiếng Việt/giọng nói, nhận diện ý định, thực thể, kỳ dữ liệu và sinh Oracle SQL có ngữ cảnh schema.", "Chat API, Intent/Context Builder, Prompt Store, LLM, SQL Guard.", "Question, user scope, schema_version, intent, entities, draft_sql, confidence, clarification.", "Câu hỏi mơ hồ phải hỏi lại; tên bảng/cột ngoài allowlist bị từ chối; SQL không được thực thi trước Guard/Preview; lưu model/prompt/version."),
+        ("FR-AI-002", "Truy vấn và tổng hợp dữ liệu tự động theo yêu cầu", "Thực thi truy vấn đọc an toàn, chuẩn hóa dữ liệu, tính tổng hợp và trình bày bảng/biểu đồ theo câu hỏi.", "SQL Guard, OracleRunner, SnapshotProvider, ResultNormalizer, KPI/Chart Renderer.", "Approved SQL, bind params, snapshot_id, columns/rows, row_count, KPI formula, source timestamp.", "Giới hạn dòng/thời gian; kết quả lớn chuyển export; NULL/thiếu nguồn phải hiển thị rõ; KPI và chi tiết cùng snapshot."),
+        ("FR-AI-003", "Tích hợp Trợ lý ảo (Chatbot) vào giao diện HTSLB", "Cung cấp giao diện chat/API thời gian thực, quản lý phiên hội thoại, phản hồi và training sample có kiểm duyệt.", "Chat UI/handler, Chat API, SessionStore, FeedbackStore, TrainingApprovalService, Notification/RateLimiter.", "SessionId, user/role/scope, conversation turns, message status, feedback, prompt/model version.", "Phiên hết hạn phải yêu cầu đăng nhập lại; không lộ SQL/secret; feedback chưa duyệt không đưa vào training; streaming phải có cancel/timeout."),
+        ("FR-AI-004", "Báo cáo và giám sát hiệu năng của Trợ lý ảo", "Theo dõi hoạt động, audit, chất lượng, sức khỏe dịch vụ, hiệu năng truy vấn và chi phí sử dụng AI.", "AI Monitor, UsageRepository, AuditService, HealthProbe, Dashboard/Report API, AlertPublisher.", "Request/response latency, token/cost, model, prompt, SQL policy, error, row_count, user, feedback score, health state.", "Tách metric kỹ thuật và chất lượng; cảnh báo LLM/Oracle timeout, SQL reject, usage tăng bất thường; dữ liệu giám sát phải mask và có retention."),
+    ]
+    for index, (code, title, objective, components, data, rules) in enumerate(ai_cards, 1):
+        heading(doc, f"K.4.{index}. {code} – {title}", 3)
+        table(doc, ["Trường thiết kế", "Đặc tả riêng cho mã FR"], [
+            ("Mục tiêu/phạm vi", objective),
+            ("Thành phần", components),
+            ("Dữ liệu/API", data),
+            ("Luồng chính", "Receive → Understand → Draft/Guard → Execute → Present; với FR-AI-003 bổ sung Session/Chat/Feedback, với FR-AI-004 bổ sung Collect → Evaluate → Alert."),
+            ("Quy tắc/ngoại lệ", rules),
+            ("Đầu ra/NFR/rollback", "Kết quả có request/correlation/snapshot hoặc health/metric tương ứng; audit đầy đủ; retry có giới hạn; tắt feature/model và quay về version trước khi phát hiện lỗi."),
+        ])
+    heading(doc, "K.5. API, dữ liệu và kiểm thử AI", 2)
+    table(doc, ["Mã", "Endpoint/bằng chứng", "Kiểm tra tối thiểu"], [
+        ("AI-API-01", "/api/ai/session, /api/ai/query/preview", "Scope, intent, SQL masked, clarification, policy decision"),
+        ("AI-API-02", "/api/ai/query/execute, /api/ai/export", "Read-only, bind parameter, row/time limit, snapshot và export nền"),
+        ("AI-API-03", "/api/ai/feedback, /api/ai/admin/training", "Approval, version, rollback và không training từ mẫu chưa duyệt"),
+        ("AI-OPS-01", "Dashboard/health/audit/alert", "Latency, timeout, reject, quality score, usage/cost và source status"),
+        ("AI-TC-01", "Bộ câu hỏi tiếng Việt/giọng nói và dữ liệu biên", "Đúng intent, hỏi lại khi mơ hồ, không hallucinate dữ liệu"),
+        ("AI-TC-02", "SQL độc hại, ngoài allowlist, query quá lớn", "Reject/preview, audit, không ghi dữ liệu, không lộ secret"),
+        ("AI-TC-03", "Oracle/LLM timeout, mất session, nguồn thiếu", "Retry/circuit breaker, thông báo rõ, khôi phục hoặc rollback đúng trạng thái"),
+    ])
+    page_break(doc)
+
+
 def add_change_annex(doc):
     heading(doc, "PHỤ LỤC H. Thiết kế quản lý phiên bản và thay đổi", 1)
     paragraph(doc, "Phụ lục này quy định cách giữ tính nhất quán giữa SRS, SDD, mã nguồn WebForms, package Oracle, adapter tích hợp và cấu hình triển khai. Mục tiêu là có thể nâng cấp từng phần mà không làm mất dữ liệu hoặc phá vỡ URL/hợp đồng hiện hữu.")
@@ -1516,6 +1579,7 @@ def build():
     add_change_annex(doc)
     add_opt_detailed_appendix(doc)
     add_report_detailed_appendix(doc)
+    add_ai_detailed_appendix(doc)
     for item in doc.sections:
         add_page_number(item)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
