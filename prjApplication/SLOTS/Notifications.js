@@ -110,7 +110,7 @@
         if (!items.length) {
             var emptyRow = document.createElement('tr');
             var emptyCell = document.createElement('td');
-            emptyCell.colSpan = 5;
+            emptyCell.colSpan = 6;
             emptyCell.className = 'notifications-empty-cell';
             emptyCell.textContent = 'Không có thông báo phù hợp.';
             emptyRow.appendChild(emptyCell);
@@ -127,6 +127,7 @@
             createStatusCell(row, isUnread);
             appendCell(row, 'notifications-title-cell', item.TITLE || 'Thông báo');
             appendCell(row, 'notifications-content-cell', item.CONTENT || '');
+            appendCell(row, 'notifications-type-cell', item.SOURCE_TYPE || '--');
             appendCell(row, 'notifications-time-cell', formatDate(item.DATETIME));
             createActionCell(row, item, isUnread);
             rows.appendChild(row);

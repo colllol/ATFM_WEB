@@ -233,7 +233,8 @@ namespace prjApplication.Permission
         protected void GetInfoByFirstLoad()
         {
             string kq = GetOneFlight(Request.Params["ID"]==null?"0": Request.Params["ID"]);
-            this.ExcuteJavascript($"ReadInfoPerm('{ kq }');");
+            string safeJson = HttpUtility.JavaScriptStringEncode(kq, true);
+            this.ExcuteJavascript($"ReadInfoPerm({safeJson});");
         }
         private static void NormalizePermMasterNo(PermMasterNo obj)
         {

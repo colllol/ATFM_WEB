@@ -1373,6 +1373,8 @@
                         var $copy = $('<div>').addClass('atfm-notification-copy').appendTo($entry);
                         $('<h3>').addClass('atfm-notification-item-title').text(item.TITLE || '').appendTo($copy);
                         $('<p>').addClass('atfm-notification-item-content').text(item.CONTENT || '').appendTo($copy);
+                        $('<p>').addClass('atfm-notification-item-content')
+                            .text('Type: ' + (item.SOURCE_TYPE || 'Không có')).appendTo($copy);
                         $('<time>').addClass('atfm-notification-item-time')
                             .attr('datetime', item.DATETIME || '')
                             .text(formatDate(item.DATETIME))

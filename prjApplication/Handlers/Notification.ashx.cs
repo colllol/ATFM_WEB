@@ -18,7 +18,6 @@ namespace prjApplication.Handlers
     public class NotificationHandler : IHttpHandler, IReadOnlySessionState
     {
         private const string CurrentUserSessionKey = "ATFM_CURRENT_USER";
-        private const string EmailNotificationSource = "EMAIL_API";
         private static readonly object EmailSyncStateLock = new object();
         private static DateTime _lastEmailSyncAttemptUtc = DateTime.MinValue;
         private static bool _emailSyncInProgress;
@@ -179,11 +178,11 @@ namespace prjApplication.Handlers
                 if (item == null)
                     continue;
 
-                string sourceKey = BuildEmailSourceKey(item);
+                string sourceHash = BuildEmailSourceHash(item);
                 EmailReportItem selected;
-                if (!emails.TryGetValue(sourceKey, out selected)
+                if (!emails.TryGetValue(sourceHash, out selected)
                     || GetEmailRowPriority(item) > GetEmailRowPriority(selected))
-                    emails[sourceKey] = item;
+                    emails[sourceHash] = item;
             }
 
             using (OracleConnection connection = CreateConnection())
@@ -209,28 +208,30 @@ namespace prjApplication.Handlers
         private static void UpsertEmailNotification(
             OracleConnection connection,
             OracleTransaction transaction,
-            string sourceKey,
+            string sourceHash,
             EmailReportItem item)
         {
             const string sql = @"
 MERGE INTO T_NOTIFICATION TARGET
 USING (
-    SELECT :P_SOURCE_TYPE AS SOURCE_TYPE,
-           :P_SOURCE_KEY AS SOURCE_KEY
+    SELECT :P_SOURCE_HASH AS SOURCE_HASH
     FROM DUAL
 ) SOURCE
-ON (TARGET.SOURCE_TYPE = SOURCE.SOURCE_TYPE
-    AND TARGET.SOURCE_KEY = SOURCE.SOURCE_KEY)
+ON (TARGET.SOURCE_HASH = SOURCE.SOURCE_HASH)
 WHEN MATCHED THEN
     UPDATE SET TARGET.TITLE = :P_TITLE,
                TARGET.CONTENT = :P_CONTENT,
-               TARGET.DATETIME = :P_DATETIME
+               TARGET.DATETIME = :P_DATETIME,
+               TARGET.SOURCE_TYPE = :P_SOURCE_TYPE,
+               TARGET.SOURCE_KEY = :P_SOURCE_KEY
     WHERE TARGET.TITLE <> :P_TITLE
        OR TARGET.CONTENT <> :P_CONTENT
        OR TARGET.DATETIME <> :P_DATETIME
+       OR NVL(TARGET.SOURCE_TYPE, '~') <> NVL(:P_SOURCE_TYPE, '~')
+       OR NVL(TARGET.SOURCE_KEY, '~') <> NVL(:P_SOURCE_KEY, '~')
 WHEN NOT MATCHED THEN
-    INSERT (TITLE, CONTENT, DATETIME, TARGET_TYPE, SOURCE_TYPE, SOURCE_KEY)
-    VALUES (:P_TITLE, :P_CONTENT, :P_DATETIME, 0, :P_SOURCE_TYPE, :P_SOURCE_KEY)";
+    INSERT (TITLE, CONTENT, DATETIME, TARGET_TYPE, SOURCE_TYPE, SOURCE_KEY, SOURCE_HASH)
+    VALUES (:P_TITLE, :P_CONTENT, :P_DATETIME, 0, :P_SOURCE_TYPE, :P_SOURCE_KEY, :P_SOURCE_HASH)";
 
             using (OracleCommand command = new OracleCommand(sql, connection))
             {
@@ -238,8 +239,11 @@ WHEN NOT MATCHED THEN
                 command.BindByName = true;
                 command.CommandType = CommandType.Text;
                 command.CommandTimeout = 10;
-                command.Parameters.Add("P_SOURCE_TYPE", OracleDbType.Varchar2, 30).Value = EmailNotificationSource;
-                command.Parameters.Add("P_SOURCE_KEY", OracleDbType.Varchar2, 80).Value = sourceKey;
+                command.Parameters.Add("P_SOURCE_HASH", OracleDbType.Varchar2, 80).Value = sourceHash;
+                command.Parameters.Add("P_SOURCE_TYPE", OracleDbType.Varchar2, 30).Value =
+                    (object)Truncate(NullIfBlank(item.SourceType), 30) ?? DBNull.Value;
+                command.Parameters.Add("P_SOURCE_KEY", OracleDbType.Varchar2, 80).Value =
+                    (object)Truncate(NullIfBlank(item.SourceKey), 80) ?? DBNull.Value;
                 command.Parameters.Add("P_TITLE", OracleDbType.NVarchar2, 250).Value = BuildEmailTitle(item);
                 command.Parameters.Add("P_CONTENT", OracleDbType.NVarchar2, 2000).Value = BuildEmailContent(item);
                 command.Parameters.Add("P_DATETIME", OracleDbType.TimeStamp).Value = ParseReceivedAt(item.ReceivedAt);
@@ -247,7 +251,12 @@ WHEN NOT MATCHED THEN
             }
         }
 
-        private static string BuildEmailSourceKey(EmailReportItem item)
+        private static string NullIfBlank(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private static string BuildEmailSourceHash(EmailReportItem item)
         {
             string identity = !string.IsNullOrWhiteSpace(item.MessageId)
                 ? "message:" + item.MessageId.Trim()
@@ -341,6 +350,12 @@ WHEN NOT MATCHED THEN
             public string ErrorMessage { get; set; }
             public string ProcessingStatus { get; set; }
             public string AcknowledgementStatus { get; set; }
+
+            [JsonProperty("source_type")]
+            public string SourceType { get; set; }
+
+            [JsonProperty("source_key")]
+            public string SourceKey { get; set; }
         }
 
         private static object GetState(long userId)

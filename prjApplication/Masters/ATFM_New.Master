@@ -1946,6 +1946,7 @@
                         copy.className = 'atfm-notification-copy';
                         appendNotificationText(copy, 'atfm-notification-title', item.TITLE || 'Thông báo');
                         appendNotificationText(copy, 'atfm-notification-message', item.CONTENT || '');
+                        appendNotificationText(copy, 'atfm-notification-message', 'Type: ' + (item.SOURCE_TYPE || 'Không có'));
                         appendNotificationText(copy, 'atfm-notification-time', formatNotificationDate(item.DATETIME));
                         entry.appendChild(copy);
                         var readButton = document.createElement('button');

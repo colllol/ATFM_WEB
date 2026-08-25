@@ -134,6 +134,7 @@
 .notifications-col-status { width: 112px; }
 .notifications-col-title { width: 21%; }
 .notifications-col-content { width: auto; }
+.notifications-col-type { width: 96px; }
 .notifications-col-time { width: 158px; }
 .notifications-col-action { width: 86px; }
 
@@ -170,6 +171,7 @@
     color: #557084;
     white-space: pre-line;
 }
+.notifications-type-cell { color: #557084; word-break: break-word; }
 .notifications-time-cell { color: #71889a; white-space: nowrap !important; }
 .notifications-action-heading,
 .notifications-action-cell { text-align: center !important; }
@@ -279,7 +281,8 @@
     .notifications-status-cell { grid-column: 1; grid-row: 1; }
     .notifications-title-cell { grid-column: 1; grid-row: 2; font-size: 13px !important; }
     .notifications-content-cell { grid-column: 1 / -1; grid-row: 3; }
-    .notifications-time-cell { grid-column: 1; grid-row: 4; white-space: normal !important; }
+    .notifications-type-cell { grid-column: 1 / -1; grid-row: 4; }
+    .notifications-time-cell { grid-column: 1; grid-row: 5; white-space: normal !important; }
     .notifications-action-cell { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
     .notifications-empty-cell { display: block !important; grid-column: 1 / -1; height: auto; padding: 50px 16px !important; }
     .notifications-pagination { align-items: flex-start; flex-direction: column; }
