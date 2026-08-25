@@ -1463,6 +1463,58 @@ def add_ai_detailed_appendix(doc):
     page_break(doc)
 
 
+def add_int_detailed_appendix(doc):
+    heading(doc, "PHỤ LỤC L. Thiết kế chi tiết phân hệ tích hợp và tự động hóa dữ liệu", 1)
+    paragraph(doc, "Phụ lục này cụ thể hóa Mục 4 theo SRS cho FR-INT-001 đến FR-INT-005. Các bộ tiếp nhận dùng hợp đồng dữ liệu và vòng đời xử lý thống nhất, nhưng triển khai parser, mapping, đối soát và tiêu chí chất lượng riêng theo từng nguồn.")
+    heading(doc, "L.1. Kiến trúc tích hợp dùng chung", 2)
+    code_block(doc, "Source Adapter → Receiver/Inbox → Parser → Validator → Normalizer\n                         → Dedupe/Idempotency → Oracle Writer/Publisher\n                         → Reconcile + Audit + Monitor\n                         ↘ Retry Queue → Quarantine/Dead-letter → Replay")
+    table(doc, ["Thành phần", "Thiết kế bắt buộc", "Bằng chứng vận hành"], [
+        ("Source Adapter/Receiver", "Tách kết nối khỏi nghiệp vụ; hỗ trợ polling, upload hoặc callback; đặt timeout, credential và schema version theo nguồn.", "ReceiveId, SourceId, CorrelationId, adapter_version, receive log"),
+        ("Parser/Validator", "Lưu bản gốc; kiểm tra encoding, cấu trúc, trường bắt buộc, kiểu dữ liệu, địa chỉ và giới hạn kích thước trước khi ghi nghiệp vụ.", "Parse status, validation error, raw archive, row/message error"),
+        ("Normalizer", "Ánh xạ về DTO chuẩn của ATFM, chuẩn hóa ngày giờ/múi giờ, mã sân bay, trạng thái và đơn vị; không làm mất giá trị nguồn.", "schema_version, mapping_version, normalized payload"),
+        ("Dedupe/Idempotency", "Khóa theo SourceId/MessageId hoặc ContentHash + BusinessKey; chạy lại cùng đầu vào không tạo bản ghi trùng.", "duplicate decision, idempotency key, replay result"),
+        ("Oracle Writer/Publisher", "Ghi staging trước khi ghi bảng nghiệp vụ; transaction có commit/rollback; gọi package qua tham số bind và ghi row count.", "BatchId, package revision, source/target count, transaction log"),
+        ("Retry/Quarantine", "Lỗi tạm thời được retry có backoff; lỗi dữ liệu chuyển quarantine kèm lý do, không làm mất bản gốc; cho phép sửa và replay có kiểm soát.", "attempt, next_retry_at, quarantine id, replay audit"),
+        ("Audit/Monitor", "Theo dõi độ trễ, throughput, tỷ lệ lỗi, dữ liệu thiếu, backlog và tình trạng nguồn; che secret trong log.", "dashboard, alert, audit trail, health check"),
+    ])
+    heading(doc, "L.2. Hợp đồng dữ liệu, trạng thái và đối soát", 2)
+    table(doc, ["Nhóm", "Quy ước dùng chung"], [
+        ("Envelope", "SourceId, ReceiveId, CorrelationId, BatchId, SourceTimestamp, ReceivedAt, SchemaVersion, MappingVersion, ContentHash, PayloadUri."),
+        ("Trạng thái", "RECEIVED → VALIDATING → VALIDATED → NORMALIZED → PROCESSING → COMPLETED; nhánh RETRY_WAIT, QUARANTINED, DEAD_LETTER và CANCELLED."),
+        ("Retry", "Chỉ retry timeout, mất kết nối, HTTP 5xx hoặc lỗi khóa tạm thời; exponential backoff, giới hạn số lần và circuit breaker theo adapter."),
+        ("Đối soát", "So sánh source_count, parsed_count, accepted_count, rejected_count, written_count; chênh lệch vượt ngưỡng tạo cảnh báo và dừng publish."),
+        ("Replay/Rollback", "Replay theo ReceiveId/BatchId hoặc watermark; rollback chỉ đảo tác động của batch, giữ raw/audit và không xóa bằng chứng."),
+        ("Bảo mật", "TLS/allowlist, secret vault hoặc cấu hình mã hóa, RBAC theo adapter; không ghi password, token, payload nhạy cảm đầy đủ vào log."),
+    ])
+    heading(doc, "L.3. Phiếu thiết kế riêng theo từng mã FR-INT", 2)
+    cards = [
+        ("FR-INT-001", "Tích hợp Email/File và AeroSync", "Email, thư mục lưu trữ, AeroSync → Oracle ATFM; tiếp nhận điện văn/KHB theo polling hoặc lịch đồng bộ.", "IMAP/FileReceiver, AeroSyncAdapter, MIME/AttachmentParser, Normalizer, OracleWriter", "Nhận MIME/CSV/XML/JSON theo schema; giải mã encoding, kiểm tra attachment và trường bắt buộc; ánh xạ về message/flight/KHB chuẩn.", "Dedupe theo Message-Id, file hash và BusinessKey; lưu raw archive; parser lỗi vào quarantine theo từng file/điện văn.", "T_RECEIVE/Inbox, T_PLAN_MESSAGE và bảng nghiệp vụ liên quan; package ghi nhận batch/source revision.", "Retry kết nối và throttling; đối soát số email/file nhận–parse–ghi; dashboard lag, accepted, rejected, quarantine; rollback theo BatchId."),
+        ("FR-INT-002", "Tích hợp ADS-B O/F", "Flight Tracking API/PostgreSQL tracks → T_TRACKS_LOG và snapshot actual để đối chiếu KHB/FPL/finished flight.", "AdsBReceiver, WatermarkReader, TrackQuality, FlightMatcher, TracksRepository", "Đọc incremental theo watermark/timestamp; chuẩn hóa callsign, ICAO, tọa độ, O/F event và chất lượng; gắn BusinessDate theo timezone cấu hình.", "Khóa TrackId hoặc hash bản ghi + watermark; loại bản ghi trùng, đánh dấu late/out-of-order; match theo flight key và cửa sổ thời gian.", "T_TRACKS_LOG, ADS-B snapshot, bảng matcher/KPI; lưu source timestamp, quality status và match reason.", "Retry API/DB timeout; replay theo watermark; đối soát received/valid/matched/unmatched; cảnh báo nguồn trễ, match rate thấp, backlog và lỗi chất lượng."),
+        ("FR-INT-003", "Tích hợp SLOT/KHH từ Excel", "File Excel KHH/SLOT → staging → T_KHH/T_SLOT_AERO và kết quả so sánh.", "ExcelScanner, TemplateDetector, ImportStaging, RowValidator, SlotComparator, ResultRepository", "Nhận upload đúng định dạng/template; nhận diện header, merged cell, ngày giờ và mã chuyến; kiểm tra dòng lỗi trước khi publish.", "FileHash + ImportBatchId chống nạp lặp; khóa BusinessKey (flight/date/slot); lỗi lập danh sách theo dòng để người dùng sửa và import lại.", "Bảng staging, T_KHH/T_SLOT_AERO, bảng kết quả đối soát; lưu tên file, người tải, template/mapping version.", "Giới hạn dung lượng và extension; transaction publish theo batch; đối soát số dòng file–staging–accepted–rejected; hủy/replay batch không xóa file gốc."),
+        ("FR-INT-004", "Tích hợp AMHS/AFTN và Inbox/Outbox", "AMHS connector/AFTN queue ↔ Inbox/Outbox; nhận, phân tích, phát và theo dõi trạng thái điện văn.", "AmhsClient, AddressValidator, MessageParser, MessageStore, DeliveryTracker, MESSAGE_PKG/MESSAGE_FLIGHT_PKG", "Parse header, địa chỉ, priority, body/part và message type; chuẩn hóa nội dung, liên kết chuyến bay rồi ghi Inbox; Outbox có trạng thái gửi.", "MessageId hoặc ContentHash + originator/received time; không tạo bản sao khi reconnect; tách duplicate với điện văn thay đổi revision.", "Inbox/Outbox, message flight link, delivery log và package revision; lưu raw message, checksum và correlation.", "QUEUED → SENDING → SENT/FAILED/RETRY_WAIT; retry lỗi tạm thời, quarantine lỗi format/địa chỉ; đối soát queue–Inbox–delivery; cảnh báo backlog/failed/ACK timeout."),
+        ("FR-INT-005", "API Gateway và tự động hóa gọi dịch vụ", "REST/JSON qua route registry; OAuth/JWT hoặc API key, scope, rate limit và audit.", "RouteRegistry, AuthFilter, SchemaValidator, RateLimiter, ApiAudit, HealthProbe", "Version route và OpenAPI/schema; validate content-type, request size, bind parameter, correlation header; trả lỗi chuẩn 400/401/403/409/429/5xx.", "Idempotency-Key cho POST/import; request hash và version để chống gửi lặp; tương thích ngược qua v1/v2 hoặc adapter.", "API audit, route/config registry, integration job/batch log; không log secret hoặc payload nhạy cảm đầy đủ.", "Timeout, retry chỉ với endpoint idempotent/5xx; circuit breaker và dead-letter cho job; theo dõi p95 latency, 4xx/5xx, rate-limit, health và rollback route/config theo version."),
+    ]
+    for index, (code, title, scope, components, mapping, dedupe, data, controls) in enumerate(cards, 1):
+        heading(doc, f"L.3.{index}. {code} – {title}", 3)
+        table(doc, ["Trường thiết kế", "Đặc tả riêng cho mã FR"], [
+            ("Mục tiêu/phạm vi", scope),
+            ("Component", components),
+            ("Mapping/parser/validation", mapping),
+            ("Dedupe/idempotency", dedupe),
+            ("Dữ liệu/package", data),
+            ("Retry/quarantine/đối soát/NFR", controls),
+        ])
+    heading(doc, "L.4. Tiêu chí kiểm thử và nghiệm thu tích hợp", 2)
+    table(doc, ["Mã kiểm thử", "Kịch bản", "Bằng chứng đạt"], [
+        ("INT-TC-01", "Nguồn hợp lệ, nhiều batch và chạy lại cùng đầu vào", "Đủ bản ghi, không trùng, trạng thái COMPLETED, source/target count khớp"),
+        ("INT-TC-02", "Sai schema/encoding/trường bắt buộc hoặc file quá lớn", "Từ chối có lý do, raw/quarantine giữ được, không ghi dở bảng nghiệp vụ"),
+        ("INT-TC-03", "Timeout, mất kết nối, HTTP 5xx, AMHS/AFTN không ACK", "Backoff/retry đúng giới hạn, circuit breaker và cảnh báo; không retry vô hạn"),
+        ("INT-TC-04", "Replay/rollback một BatchId hoặc watermark", "Kết quả tái lập, không nhân đôi, rollback không xóa audit/raw"),
+        ("INT-TC-05", "Sai quyền, credential hết hạn, rate limit và payload nhạy cảm", "401/403/429 đúng; secret được che; audit đầy đủ và không rò rỉ dữ liệu"),
+    ])
+    page_break(doc)
+
+
 def add_change_annex(doc):
     heading(doc, "PHỤ LỤC H. Thiết kế quản lý phiên bản và thay đổi", 1)
     paragraph(doc, "Phụ lục này quy định cách giữ tính nhất quán giữa SRS, SDD, mã nguồn WebForms, package Oracle, adapter tích hợp và cấu hình triển khai. Mục tiêu là có thể nâng cấp từng phần mà không làm mất dữ liệu hoặc phá vỡ URL/hợp đồng hiện hữu.")
@@ -1580,6 +1632,7 @@ def build():
     add_opt_detailed_appendix(doc)
     add_report_detailed_appendix(doc)
     add_ai_detailed_appendix(doc)
+    add_int_detailed_appendix(doc)
     for item in doc.sections:
         add_page_number(item)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
