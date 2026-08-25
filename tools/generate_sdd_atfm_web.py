@@ -1351,6 +1351,55 @@ def add_opt_detailed_appendix(doc):
     page_break(doc)
 
 
+def add_report_detailed_appendix(doc):
+    heading(doc, "PHỤ LỤC J. Thiết kế chi tiết phân hệ báo cáo và phân tích", 1)
+    paragraph(doc, "Phụ lục này cụ thể hóa Mục 7 theo SRS thành một kiến trúc báo cáo dùng chung và 10 phiếu thiết kế riêng cho FR-RPT-001 đến FR-RPT-010. Mỗi báo cáo phải dùng cùng SnapshotId cho KPI, biểu đồ, bảng và drill-down; báo cáo chỉ đọc, còn thao tác sửa chuyển về màn hình nghiệp vụ có phân quyền riêng.")
+    heading(doc, "J.1. Kiến trúc báo cáo dùng chung", 2)
+    code_block(doc, "ReportPage → ReportMetadata → FilterValidator → SnapshotProvider → Query/KPI/Chart\n                                                ├─ DrillDownService\n                                                ├─ ExportWorker\n                                                └─ Audit + SourceStatus + Notification")
+    table(doc, ["Thành phần", "Thiết kế bắt buộc", "Đầu ra"], [
+        ("ReportMetadata", "Khai báo field/operator/type/default, dependency, column, công thức và quyền field", "Filter schema/version"),
+        ("FilterValidator", "Kiểm tra range ngày, timezone, data scope, giới hạn dòng và tổ hợp điều kiện", "VALIDATION_ERROR hoặc FilterDTO chuẩn hóa"),
+        ("SnapshotProvider", "Chọn nguồn theo kỳ, tạo SnapshotId, ghi source timestamp và schema/formula version", "SnapshotId dùng chung KPI/detail/export"),
+        ("KpiCalculator", "Tính tổng, tỷ lệ, delay, airport count, ADS-B O/F và discrepancy theo snapshot", "KPI dataset + formula version"),
+        ("Chart/DrillDown", "Sinh series/category, liên kết chi tiết theo cùng filter và snapshot", "Chart dataset, rows, deep-link"),
+        ("ExportWorker", "Stream Excel/CSV/PDF, ghi filter/source/time/checksum và tự hết hạn file", "ExportId, progress, file"),
+        ("Audit/SourceStatus", "Ghi user, query, export, nguồn trễ/thiếu và trạng thái xử lý", "Audit event, warning, source badge"),
+    ])
+    heading(doc, "J.2. Quy tắc dữ liệu, hiệu năng và nghiệm thu dùng chung", 2)
+    table(doc, ["Nhóm", "Yêu cầu thiết kế", "Bằng chứng"], [
+        ("Nhất quán", "KPI, chart, bảng và drill-down cùng SnapshotId/FilterHash; tổng chi tiết đối soát được", "Snapshot log, reconcile count"),
+        ("Ngày/múi giờ", "Chuẩn hóa BusinessDate và source timezone; hiển thị rõ kỳ dữ liệu và thời điểm cập nhật", "Source timestamp, timezone test"),
+        ("Hiệu năng", "P95 truy vấn thông thường ≤3 giây; khoảng lớn/export chuyển worker nền", "query_latency, export_elapsed"),
+        ("Nguồn thiếu/trễ", "Hiển thị SourceStatus; không âm thầm dùng snapshot cũ hoặc gộp NULL thành 0", "Warning/source badge"),
+        ("Phân quyền", "Role/action/data scope ở query, drill-down và export; báo cáo quân sự chỉ đọc", "Denied action/audit"),
+        ("Công thức", "Version hóa công thức KPI/anomaly; export ghi formula_version", "Metadata/config history"),
+    ])
+    heading(doc, "J.3. Phiếu thiết kế riêng theo từng mã FR-RPT", 2)
+    report_cards = [
+        ("FR-RPT-001", "Biểu đồ thông tin tổng quan khai thác bay", "http://localhost/ATFM_WEB/ReportNew/FlightOperationOverview.aspx?Menu_ID=908", "Quản lý/khai thác theo ngày, sân bay, hãng, loại chuyến và trạng thái.", "T_DAY_FLIGHTS_GOINGON/T_FINISHED_FLIGHTS, airport/airline dimension; snapshot theo kỳ.", "Tổng chuyến, đi/đến, quốc nội/quốc tế, theo sân bay/hãng; tỷ lệ và biến động so với kỳ trước.", "KPI cards + line/bar/donut; drill-down vào danh sách finished flight; export Excel/CSV.", "Refresh theo kỳ cấu hình; thiếu nguồn hiển thị badge; P95 ≤3 giây; chỉ đọc và audit export."),
+        ("FR-RPT-002", "Phân tích xu hướng khai thác theo thời gian", "http://localhost/ATFM_WEB/ReportNew/FlightTrendAnalysis.aspx?Menu_ID=909", "Phân tích xu hướng theo ngày/tuần/tháng, sân bay, hãng, loại chuyến và khung giờ.", "Finished flight snapshot, BusinessDate, airport/airline/status dimensions.", "Chuỗi tổng chuyến, moving/period comparison, peak/off-peak và tỷ lệ thay đổi; công thức version hóa.", "Line/area chart, chọn khoảng và granularity, drill-down ngày; export nền theo FilterHash.", "Không trộn timezone; khoảng lớn chạy nền; snapshot hết hạn yêu cầu tạo lại; audit bộ lọc."),
+        ("FR-RPT-003", "Phát hiện và cảnh báo dữ liệu bất thường", "http://localhost/ATFM_WEB/ReportNew/AnomalyWarning.aspx?Menu_ID=910", "Phát hiện KPI, tỷ lệ hoặc bản ghi vượt ngưỡng cấu hình và hỗ trợ xử lý cảnh báo.", "KPI snapshot, notification/anomaly store, flight/message/batch context.", "Rule/threshold theo sân bay, ngày, loại chuyến; NORMAL/WARN/CRITICAL; xác định nguyên nhân ứng viên.", "Bảng cảnh báo + severity/filter + deep-link chuyến/batch; acknowledge/resolve; export evidence.", "Dedupe theo rule/window/source; dữ liệu thiếu là REVIEW; threshold và thao tác phải audit."),
+        ("FR-RPT-004", "Tích hợp ADS-B cho báo cáo khai thác thực tế", "ADS-B snapshot/API và báo cáo khai thác thực tế; liên kết AdsBPerformanceReport.aspx?Menu_ID=923", "Bổ sung actual flight/tracks vào báo cáo, đối chiếu KHB/FPL và phân biệt chất lượng nguồn.", "T_TRACKS_LOG, ADS-B snapshot, matcher với KHB/FPL/finished flight, source quality.", "Actual departure/arrival, track coverage, match rate, delay và sai khác kế hoạch–thực tế.", "Bản đồ/series/KPI + drill-down track/flight; hiển thị SourceStatus; export snapshot có schema version.", "Không dùng raw full scan; tổng hợp theo ngày/sân bay/FIR; ADS-B trễ hoặc lỗi chuyển REVIEW, không tự coi là zero."),
+        ("FR-RPT-005", "Tổng hợp chỉ số hiệu suất bay từ ADS-B O/F", "http://localhost/ATFM_WEB/ReportNew/AdsBPerformanceReport.aspx?Menu_ID=923", "Tính chỉ số hiệu suất từ cất/hạ cánh ADS-B O/F theo kỳ và chiều khai thác.", "ADS-B O/F, T_TRACKS_LOG, KHB/FPL và airport dimension; snapshot actual.", "Count O/F, on-time/delay, thời gian thực tế, coverage, match rate và tỷ lệ thiếu bản ghi.", "KPI + bar/line theo sân bay/hãng/khung giờ; drill-down O/F; export ghi nguồn ADS-B và công thức.", "Chỉ tính bản ghi QUALITY_STATUS hợp lệ; không chia cho mẫu rỗng; timeout/export nền và audit."),
+        ("FR-RPT-006", "Biểu đồ thống kê trạng thái chuyến bay theo tỷ lệ phần trăm", "http://localhost/ATFM_WEB/ReportNew/FlightStatusRate.aspx?Menu_ID=907", "Hiển thị tỷ lệ từng trạng thái chuyến bay trên cùng tập lọc.", "Finished flight snapshot, status catalog, airport/airline/date filters.", "Tỷ lệ = số chuyến trạng thái / tổng chuyến hợp lệ; tổng tỷ lệ phải kiểm tra sai số làm tròn.", "Donut/stacked bar + bảng số tuyệt đối/tỷ lệ; click status mở danh sách chi tiết; export.", "Không tính bản ghi NULL vào mẫu nếu policy; ghi rõ denominator; filter/detail dùng cùng snapshot."),
+        ("FR-RPT-007", "Biểu đồ so sánh hoạt động bay giữa các sân bay", "http://localhost/ATFM_WEB/Common/ChartReportAirport.aspx?Menu_ID=906", "So sánh lưu lượng và chỉ số khai thác giữa nhiều sân bay.", "Airport dimension, finished flights, ADS-B/Bravo summary nếu chọn; snapshot kỳ.", "Tổng đi/đến, quốc nội/quốc tế, delay và chênh lệch theo sân bay; chuẩn hóa mã ICAO.", "Grouped bar/heatmap/ranking; drill-down từng sân bay; export giữ thứ tự/ranking.", "Không so sánh khác kỳ nếu chưa cảnh báo; sân bay thiếu dữ liệu hiển thị Unknown; giới hạn số sân bay."),
+        ("FR-RPT-008", "Báo cáo chuyến bay quân sự theo tiêu chí mở rộng", "http://localhost/ATFM_WEB/ReportNew/MilitaryFlightReport.aspx?Menu_ID=911", "Tra cứu và tổng hợp KHB quân sự/flight đã Accepted theo tiêu chí mở rộng.", "Military KHB, finished flights Accepted, unit/area/purpose/status dimension.", "Tổng theo đơn vị, khu vực, mục đích, ngày, trạng thái; phân biệt draft/Accepted/Dispatched.", "Bảng + biểu đồ + filter ngày/đơn vị/khu vực/purpose; drill-down readonly; export theo scope.", "Không hiển thị bản nháp ngoài quyền; dữ liệu Accepted khóa; audit truy vấn/export và masking trường nhạy cảm."),
+        ("FR-RPT-009", "Báo cáo tổng hợp hoạt động bay tại tất cả sân bay dân dụng", "http://localhost/ATFM_WEB/ReportNew/CivilFlightSummary.aspx?Menu_ID=912", "Tổng hợp hoạt động khai thác dân dụng toàn mạng lưới sân bay.", "Civil airport dimension, finished flights, status/airline/route and optional ADS-B summary.", "Tổng chuyến, đi/đến, hãng, route, quốc nội/quốc tế và biến động theo sân bay.", "Bảng tổng hợp + ranking/chart; drill-down sân bay/route; export toàn quốc chạy nền.", "Chuẩn hóa loại civil; không nhân đôi multi-leg; kiểm tra count toàn quốc và từng sân bay; snapshot bắt buộc."),
+        ("FR-RPT-010", "Báo cáo cất, hạ cánh tại các sân bay toàn quốc", "http://localhost/ATFM_WEB/ReportNew/AirportTakeoffLanding.aspx?Menu_ID=913", "Theo dõi số liệu takeoff/landing toàn quốc theo ngày, giờ và sân bay.", "Finished actual, ADS-B O/F, airport dimension, event/status source; snapshot actual.", "Số cất cánh/hạ cánh, tỷ lệ theo giờ/sân bay, sai khác O/F và tổng đối soát.", "Map/table/time-series; drill-down event/flight; export theo kỳ và source status.", "Phân biệt takeoff/landing và O/F; timezone sân bay; sự kiện thiếu gắn REVIEW; SLA query/export và audit."),
+    ]
+    for index, (code, title, screen, actor_scope, source, kpi, visual, controls) in enumerate(report_cards, 1):
+        heading(doc, f"J.3.{index}. {code} – {title}", 3)
+        table(doc, ["Trường thiết kế", "Đặc tả riêng cho báo cáo"], [
+            ("Mục tiêu/phạm vi", actor_scope),
+            ("Màn hình/URL", screen),
+            ("Nguồn dữ liệu/snapshot", source),
+            ("KPI/công thức", kpi),
+            ("Biểu đồ/bảng/drill-down/export", visual),
+            ("Làm mới, quy tắc, phân quyền và NFR", controls),
+        ])
+    page_break(doc)
+
+
 def add_change_annex(doc):
     heading(doc, "PHỤ LỤC H. Thiết kế quản lý phiên bản và thay đổi", 1)
     paragraph(doc, "Phụ lục này quy định cách giữ tính nhất quán giữa SRS, SDD, mã nguồn WebForms, package Oracle, adapter tích hợp và cấu hình triển khai. Mục tiêu là có thể nâng cấp từng phần mà không làm mất dữ liệu hoặc phá vỡ URL/hợp đồng hiện hữu.")
@@ -1466,6 +1515,7 @@ def build():
     add_design_annexes(doc)
     add_change_annex(doc)
     add_opt_detailed_appendix(doc)
+    add_report_detailed_appendix(doc)
     for item in doc.sections:
         add_page_number(item)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
