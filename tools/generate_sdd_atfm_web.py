@@ -1515,6 +1515,86 @@ def add_int_detailed_appendix(doc):
     page_break(doc)
 
 
+def add_alt_detailed_appendix(doc):
+    heading(doc, "PHỤ LỤC M. Thiết kế chi tiết phân hệ cảnh báo và tiện ích hỗ trợ", 1)
+    paragraph(doc, "Phụ lục này cụ thể hóa Mục 5 theo các đặc tả FR-ALT-001 và FR-ALT-002. Thiết kế bao phủ cơ chế cảnh báo cập nhật liên tục, quản lý Live Fire Message, Daily Statistic, KHB quân sự, tạo/phát QS Message và báo cáo khai thác chỉ đọc. Các luồng thay đổi dữ liệu đều dùng kiểm tra quyền phía máy chủ, kiểm soát phiên bản, nhật ký và khả năng đối soát.")
+
+    heading(doc, "M.1. Kiến trúc dùng chung", 2)
+    code_block(doc, """Nguồn sự kiện/quy trình → Rule/Event Evaluator → Alert Repository
+                                      → Scope Resolver → Header/Notification UI
+                                      → Deep link nghiệp vụ → Acknowledge/Resolve/Audit
+
+Live Fire/KHB → Validate → Submit → Approve → Message Builder → Outbox/AMHS-AFTN
+Daily Statistic → Export Finished → Review/Edit → Accepted → Accepted Report""")
+    table(doc, ["Thành phần", "Thiết kế bắt buộc", "Bằng chứng vận hành"], [
+        ("AlertRuleEngine", "Đánh giá NOPERM, phép hết hiệu lực, sai ngày bay, batch/integration lỗi, SLA và bất thường KPI theo rule version.", "RuleCode, RuleVersion, severity, source_id, evaluation log"),
+        ("NotificationRepository", "Lưu nội dung, mức độ, phạm vi user/role/đơn vị, trạng thái đọc và liên kết nghiệp vụ; dedupe theo rule/window/source.", "T_NOTIFICATION, T_NOTIFICATION_TARGET, T_NOTIFICATION_READ, notification package"),
+        ("NotificationPublisher", "Phân phối badge/header, popup, trang xem tất cả và kênh email được cấu hình; không làm gián đoạn trang đang mở.", "API response, event id, publish status, delivery log"),
+        ("ApprovalService", "Điều phối Submit, Accept, Reject, version check và audit cho Live Fire/Daily/Military; transaction nguyên tử.", "Before/after, actor, reason, version_no, correlation_id"),
+        ("MessageBuilder/Outbox", "Sinh điện văn chỉ từ dữ liệu đã duyệt, tạo MessageId/idempotency key, đưa vào hàng chờ và theo dõi phát.", "T_PLAN_MESSAGE, outbox status, content hash, delivery status"),
+        ("ReportReadService", "Cung cấp dữ liệu Accepted theo scope, filter, phân trang và export; không cho phép cập nhật từ màn hình báo cáo.", "Query filter hash, snapshot time, export audit"),
+    ])
+
+    heading(doc, "M.2. Hợp đồng cảnh báo, trạng thái và phân quyền", 2)
+    table(doc, ["Nhóm", "Quy tắc thiết kế"], [
+        ("Alert envelope", "ALERT_ID, RULE_CODE, SEVERITY, SOURCE_TYPE, SOURCE_ID, BUSINESS_DATE, TITLE, CONTENT, CREATED_AT, EXPIRES_AT, STATUS, DEEP_LINK, CORRELATION_ID, RULE_VERSION."),
+        ("Mức độ", "P1-CRITICAL: ảnh hưởng phát/duyệt; P2-HIGH: thiếu phép/KHB, sai ngày, batch lỗi; P3-MEDIUM: dữ liệu trễ/bất thường; P4-INFO: thông tin vận hành."),
+        ("Vòng đời", "NEW → ACKNOWLEDGED → RESOLVED hoặc DISMISSED; EXPIRED khi quá thời hạn. Acknowledge không xóa bản ghi và không làm mất cảnh báo của user khác."),
+        ("Dedupe", "Một rule chỉ tạo một cảnh báo cho cùng source/window/content hash; cảnh báo thay đổi severity hoặc nội dung phải tạo revision và giữ liên kết cảnh báo trước."),
+        ("Header runtime", "Mặc định polling 30 giây, hỗ trợ sự kiện atfm:notifications-changed, chống request chồng, hiển thị 99+ và giữ cache cuối khi mất kết nối."),
+        ("Phân quyền", "R_Add/R_Edit/R_Pub cho Live Fire; quyền nhập/sửa/xóa/Accepted/Export/Dispatch cho KHB quân sự; quyền báo cáo chỉ đọc theo data scope."),
+        ("Audit", "Ghi người dùng, thời gian, thao tác, trạng thái trước/sau, lý do, request/correlation và kết quả package; không ghi token/secret hoặc payload nhạy cảm đầy đủ."),
+    ])
+    table(doc, ["Trạng thái nghiệp vụ", "Ý nghĩa", "Chuyển tiếp hợp lệ"], [
+        ("DRAFT", "Bản nháp được phép sửa", "VALIDATED, SUBMITTED, DELETED"),
+        ("PENDING_APPROVAL/SUBMITTED", "Đã gửi chờ người có quyền duyệt", "ACCEPTED, REJECTED"),
+        ("ACCEPTED", "Bản ghi được chốt", "MESSAGE_QUEUED, EXPIRED; sửa phải tạo revision"),
+        ("REJECTED", "Bị từ chối kèm lý do", "DRAFT/RESUBMITTED"),
+        ("QUEUED/SENDING/SENT/FAILED", "Vòng đời phát điện văn", "SENDING, SENT, RETRY_WAIT, FAILED, DELIVERED"),
+    ])
+
+    heading(doc, "M.3. Phiếu thiết kế riêng theo từng mã chức năng", 2)
+    cards = [
+        ("FR-ALT-001", "Hệ thống cảnh báo thông minh đa kịch bản", "Common/ChartReport.aspx; ATFM_New.Master; SLOTS/Notifications.aspx; Handlers/Notification.ashx", "Phát hiện và phân phối cảnh báo runtime theo user/role/đơn vị, hiển thị liên tục tại ô thông báo trên header và cho phép mở chi tiết nghiệp vụ.", "NotificationRuleEngine, NotificationRepository, NotificationPublisher, NotificationQuery, NotificationAudit, NOTIFICATION_PKG", "T_NOTIFICATION/T_NOTIFICATION_TARGET/T_NOTIFICATION_READ; rule code, severity, source key, deep link, read state, source type/key.", "GET state/list kiểm tra identity và scope; đồng bộ Email API tối thiểu 15 giây/lần; polling 30 giây; POST acknowledge phải có CSRF/X-Requested-With; lỗi nguồn ngoài không làm mất thông báo nội bộ.", "TC-ALT-001: cảnh báo mới xuất hiện trong chu kỳ; TC-ALT-002: dedupe và phân phối đúng scope; TC-ALT-003: acknowledge độc lập từng user; TC-ALT-004: mất kết nối/cache/retry; TC-ALT-005: 401/403/XSS và audit."),
+        ("FR-ALT-002a", "Tạo và phê duyệt Live Fire Message", "MessManagement/LiveFireMessage.aspx?Menu_ID=989; MessManagement/LiveFireMessageAccepted.aspx?Menu_ID=990", "Cho phép lập điện văn sử dụng vùng trời, kiểm tra khu vực/thời gian/tọa độ và chuyển qua quy trình nháp → chờ duyệt → duyệt/từ chối.", "LiveFirePageAdapter, LiveFireApplicationService, VersionedRepository, ApprovalService, MESSAGE_PKG", "Ngày điện văn, mã/tiêu đề, địa điểm bắn, tọa độ D1-D4, phương vị/độ cao/cự ly, thời gian HH:mm, chỉ huy, hạn chế, người ký, status/version.", "R_Add/R_Edit chỉ tạo/sửa DRAFT hoặc REJECTED; R_Pub mới được Accept/Reject; từ chối bắt buộc lý do; VERSION_NO chống cập nhật trên bản cũ; không sửa ACCEPTED.", "TC-LF-01…18; chứng cứ gồm ảnh form, dữ liệu trước/sau, package log, audit người duyệt và bản nội dung đã duyệt."),
+        ("FR-ALT-002b", "Daily Statistic và Accepted", "Day_Flights/DaylyFlight.aspx?Menu_ID=89; FinishFlights/ListFinishedFlights.aspx?Menu_ID=71; FinishFlights/ListFinishedFlightAccepts.aspx?Menu_ID=905", "Chuyển chuyến bay hoàn thành từ Export Flight Finished sang danh sách thống kê, cho phép rà soát/chỉnh sửa trước khi Accepted và cung cấp danh sách Accepted chỉ đọc.", "DayFlightApplicationService, MAKE_FINISHED, FINISHED_STATUS_PKG, CANCELED_STATUS_PKG, FinishedFlightRepository", "Flight/permission number, callsign, registration, operator, aircraft, purpose, departure/arrival, ETD/ETA, ATD/ATA, route, BusinessDate, ISACCEPTED.", "Export phải xác nhận; chỉ bản ghi đủ điều kiện mới được chuyển; ISACCEPTED=0 ở Daily Statistic, ISACCEPTED=1 ở Accept; Accepted ghi actor/time và không tự động duyệt bản ghi thay đổi sau lúc tải.", "TC-DS-01…14; đối soát source count → finished count → accepted count; export Excel lấy toàn bộ kết quả theo filter, không chỉ trang hiện tại."),
+        ("FR-ALT-002c", "Nhập và Accepted KHB quân sự", "FinishFlights/ListFinishedFlightsMilitary.aspx?Menu_ID=843", "Quản lý KHB quân sự từ nhập mới, kiểm tra nhiều dòng, sửa/xóa trong phạm vi quyền đến Accepted theo khoảng ngày.", "MilitaryKHBPageAdapter, MilitaryKHBService, A_TEST_SEARCH, T_FINISHFLIGHTS_MILITARY", "OPER, flight date, callsign, registration, aircraft type, purpose, permit type, departure/arrival, VIA/FPL VIA, ETD/ETA, ATD/ATA, remark, ISACCEPTED.", "Bản ghi mới ISACCEPTED=0; Accepted yêu cầu From/To hợp lệ và xác nhận phạm vi; package ACCEPT_FIN_FLIGHTS_MILITARY xử lý bản ghi hợp lệ, ghi số lượng và audit; lỗi không được báo thành công.", "TC-MIL-01…07; kiểm tra thiếu ngày, đảo ngày, Accepted lô, lỗi API/Oracle, quyền và optimistic concurrency."),
+        ("FR-ALT-002d", "Tạo và phát QS Message", "ListFinishedFlightsMilitary.aspx; Message Management/Outbox; T_PLAN_MESSAGE", "Chỉ lấy KHB quân sự Accepted để sinh QS MESSAGE, đưa vào outbox, phát qua AMHS/AFTN và truy vết trạng thái delivery.", "MilitaryMessageBuilder, MessagePackageGateway, QlbOutBoxDAL, DeliveryTracker, MESSAGE_PKG/MESSAGE_FLIGHT_PKG", "Accepted flight ids, MessageId, MESS_TYPE='QS MESSAGE', canonical content/hash, source batch, correlation id, queued/sending/sent/failed.", "Nút Export chỉ bật khi filter Accepted; idempotency theo batch + content hash; không tạo bản tin từ DRAFT; lỗi retry có giới hạn/quarantine; phát thành công phải ghi actor/time/status.", "TC-MIL-08…12; đối chiếu số chuyến nguồn với QS Message, kiểm tra gửi lại không trùng và trạng thái ACK/FAILED."),
+        ("FR-ALT-002e", "Military Report chỉ đọc", "FinishFlights/ListFinishedFlightsMilitaryReport.aspx?Menu_ID=863; ReportNew/MilitaryFlightReport.aspx?Menu_ID=911", "Cung cấp dữ liệu KHB quân sự đã Accepted để người khai thác lọc, xem, lấy dữ liệu và xuất báo cáo mà không làm thay đổi nguồn.", "MilitaryReportQuery, ReportSnapshotProvider, ExportService", "Filter ngày/giờ, đơn vị, khu vực, mục đích, callsign, sân bay, trạng thái; snapshot timestamp, filter hash, data scope.", "Chỉ truy vấn ISACCEPTED=1; không có nút thêm/sửa/xóa/Accepted/Export Message; export lấy đủ kết quả theo quyền; dữ liệu phải nhất quán với màn hình quản lý.", "TC-MIL-13…16; kiểm tra scope, phân trang, export, không có thao tác ghi và đối chiếu màn hình quản lý–báo cáo."),
+    ]
+    for index, (code, title, screen, objective, components, data, rules, tests) in enumerate(cards, 1):
+        heading(doc, f"M.3.{index}. {code} – {title}", 3)
+        table(doc, ["Trường thiết kế", "Đặc tả riêng"], [
+            ("Màn hình/phạm vi", screen),
+            ("Mục tiêu", objective),
+            ("Component/package", components),
+            ("Dữ liệu/hợp đồng", data),
+            ("Luồng chính", "Receive/Input → Validate → Save/Submit → Approve/Accept → Publish/Dispatch → Report/Audit."),
+            ("Quy tắc/ngoại lệ", rules),
+            ("Kiểm thử/bằng chứng", tests),
+        ])
+
+    heading(doc, "M.4. Chỉ tiêu NFR và vận hành", 2)
+    table(doc, ["Mã", "Yêu cầu đo lường", "Bằng chứng"], [
+        ("NFR-ALT-01", "Header notification phản ánh cảnh báo mới trong tối đa 30 giây ở điều kiện bình thường; không tạo request chồng.", "Browser log, API timestamp, ảnh badge và event log"),
+        ("NFR-ALT-02", "P95 truy vấn danh sách cảnh báo/duyệt thông thường ≤ 3 giây; timeout Oracle/API có thông báo và retry có giới hạn.", "APM/query log, timeout/retry metric"),
+        ("NFR-ALT-03", "Không có duplicate khi retry, reconnect hoặc chạy lại cùng batch; tỷ lệ đối soát source/target đạt 100% hoặc có quarantine.", "Content hash, idempotency key, reconciliation report"),
+        ("NFR-ALT-04", "Mọi thao tác Accept/Reject/Accepted/Export/Dispatch có actor, timestamp, before/after, reason và correlation id.", "Audit trail và log package"),
+        ("NFR-ALT-05", "Dữ liệu DRAFT/REJECTED không xuất hiện ở báo cáo Accepted; dữ liệu nhạy cảm được mask theo data scope.", "RBAC test, report query evidence, security review"),
+        ("NFR-ALT-06", "Rollback theo revision/batch mà không xóa raw message, audit hoặc bằng chứng đã phát; feature flag cho rule cảnh báo.", "Rollback runbook, snapshot, feature flag history"),
+    ])
+
+    heading(doc, "M.5. Ma trận truy vết và nghiệm thu", 2)
+    table(doc, ["Nhóm", "Yêu cầu/đầu ra", "Test case/bằng chứng"], [
+        ("FR-ALT-001", "Runtime alert, scope, badge/header, acknowledge, email sync, audit", "TC-ALT-001…005; ảnh header, API JSON, NOTIFICATION_PKG log, audit"),
+        ("FR-LF", "Tạo, sửa, submit, approve/reject, version và nội dung Live Fire", "TC-LF-01…18; ảnh form, bản ghi trạng thái, nội dung điện văn, log duyệt"),
+        ("FR-DS", "Export Finished, Daily Statistic, Accepted và Accepted Report", "TC-DS-01…14; source/target count, Excel, ISACCEPTED trước/sau"),
+        ("FR-MIL", "Nhập/Accepted KHB, QS Message, phát và Military Report", "TC-MIL-01…16; T_FINISHFLIGHTS_MILITARY, T_PLAN_MESSAGE, delivery log, report export"),
+        ("NFR-ALT", "Hiệu năng, bảo mật, idempotency, rollback và audit", "Load/query log, RBAC/XSS/CSRF test, reconciliation, rollback record"),
+    ])
+    page_break(doc)
+
+
 def add_change_annex(doc):
     heading(doc, "PHỤ LỤC H. Thiết kế quản lý phiên bản và thay đổi", 1)
     paragraph(doc, "Phụ lục này quy định cách giữ tính nhất quán giữa SRS, SDD, mã nguồn WebForms, package Oracle, adapter tích hợp và cấu hình triển khai. Mục tiêu là có thể nâng cấp từng phần mà không làm mất dữ liệu hoặc phá vỡ URL/hợp đồng hiện hữu.")
@@ -1633,6 +1713,7 @@ def build():
     add_report_detailed_appendix(doc)
     add_ai_detailed_appendix(doc)
     add_int_detailed_appendix(doc)
+    add_alt_detailed_appendix(doc)
     for item in doc.sections:
         add_page_number(item)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
