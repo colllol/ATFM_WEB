@@ -367,8 +367,10 @@ def add_integration_design(doc):
 
 
 def add_message_design(doc):
-    heading(doc, "5. Thiết kế cảnh báo, điện văn và phê duyệt", 1)
-    heading(doc, "5.1. Kiến trúc cảnh báo runtime", 2)
+    heading(doc, "5. Phân Hệ Cảnh Báo Và Tiện Ích Hỗ Trợ", 1)
+    paragraph(doc, "Phân hệ này tập trung vào cảnh báo vận hành theo thời gian thực và các tiện ích hỗ trợ quản lý sử dụng vùng trời, KHB quân sự. Thiết kế tách riêng cơ chế phát hiện/thông báo khỏi quy trình nghiệp vụ có phê duyệt, đồng thời bảo đảm mọi thay đổi đều có trạng thái và nhật ký.")
+    heading(doc, "5.1. Hệ thống cảnh báo thông minh đa kịch bản", 2)
+    heading(doc, "5.1.1. Kiến trúc cảnh báo runtime", 3)
     table(doc, ["Thành phần", "Trách nhiệm", "Nguồn"], [
         ("NotificationRuleEngine", "Đánh giá NOPERM, sai ngày, hết hạn, batch lỗi và bất thường", "Oracle/query service, integration events"),
         ("NotificationRepository", "Lưu notification, trạng thái đọc và phạm vi user/role", "T_NOTIFICATION/notification package"),
@@ -376,7 +378,21 @@ def add_message_design(doc):
         ("NotificationQuery", "Phân trang, lọc mức độ, mở deep link", "WebMethod/API"),
         ("NotificationAudit", "Ghi acknowledge, dismiss, open và escalation", "AuditService"),
     ])
-    heading(doc, "5.2. Live Fire Message và Approve", 2)
+    heading(doc, "5.1.2. Kịch bản cảnh báo", 3)
+    table(doc, ["Kịch bản", "Điều kiện phát hiện", "Hiển thị và xử lý"], [
+        ("Không có phép/KHB", "Điện văn hoặc chuyến bay không tìm thấy phép bay/KHB ngày tương ứng", "Badge tại header, mức cảnh báo, deep link đến bản ghi; cho phép acknowledge và ghi audit"),
+        ("Phép bay hết hiệu lực", "PERMDATE, VALIDHOURS hoặc ENDDATE đã quá thời điểm nghiệp vụ", "Mức cao, liên kết danh sách phép; không tự động sửa dữ liệu nguồn"),
+        ("Sai ngày bay", "Ngày trên kế hoạch không khớp ngày thực tế sau khi chuẩn hóa múi giờ", "Hiển thị ngày nguồn/ngày tính được, yêu cầu người có quyền rà soát"),
+        ("Batch/integration lỗi", "ADS-B, Bravo, AMHS, Gen KHB hoặc job nền không đạt SLA/hoàn tất một phần", "Hiển thị số thành công/lỗi, chi tiết lỗi, retry có kiểm soát và correlation id"),
+        ("Bất thường báo cáo", "KPI hoặc tỷ lệ vượt ngưỡng cấu hình theo sân bay, ngày hoặc loại chuyến", "Mức độ, nguyên nhân dự kiến, drill-down, trạng thái xử lý và lịch sử"),
+    ])
+    heading(doc, "5.1.3. Luồng cập nhật tại header", 3)
+    code_block(doc, "Rule/Event → NotificationRepository → ScopeResolver → Header badge/list\n                                  ├─ acknowledge/dismiss → NotificationAudit\n                                  └─ deep link → màn hình nghiệp vụ có kiểm tra quyền")
+    paragraph(doc, "Header polling hoặc push phải có khoảng thời gian cấu hình, chống gọi chồng, chỉ trả thông báo thuộc user/role/đơn vị và phạm vi dữ liệu hiện hành. Khi mất kết nối, giao diện giữ thông báo cuối cùng, hiển thị thời điểm đồng bộ gần nhất và tự đồng bộ bù khi kết nối trở lại.")
+    heading(doc, "5.2. Quản lý thông tin KHB quân sự và sử dụng vùng trời", 2)
+    paragraph(doc, "Nội dung được tách thành hai phần nhỏ: (1) quản lý thông tin sử dụng vùng trời, bao gồm Live Fire Message và phê duyệt; (2) quản lý KHB quân sự từ nhập mới đến phát điện văn và tra cứu báo cáo sau duyệt.")
+    heading(doc, "5.2.1. Quản lý sử dụng vùng trời", 3)
+    paragraph(doc, "Live Fire Message ghi nhận khu vực, thời gian hiệu lực, điều kiện sử dụng, đơn vị đề nghị và nội dung điện văn. Hệ thống phải kiểm tra trường bắt buộc, giao thoa thời gian/khu vực, đối tượng nhận và quyền phê duyệt trước khi cho phép phát đi.")
     table(doc, ["Bước", "Tác nhân", "Kết quả"], [
         ("Create draft", "Người lập", "Tạo MessageId, nội dung, vùng trời, thời gian hiệu lực và trạng thái DRAFT"),
         ("Validate", "Application service", "Kiểm tra bắt buộc, xung đột thời gian, địa chỉ và format điện văn"),
@@ -386,8 +402,13 @@ def add_message_design(doc):
         ("Export/Dispatch", "Hệ thống/người phát", "Sinh điện văn, gửi AMHS/AFTN, theo dõi delivery"),
         ("Close", "Hệ thống", "EXPIRED/CANCELLED khi hết hiệu lực hoặc bị hủy có quyền"),
     ])
+    table(doc, ["Nhóm thông tin", "Dữ liệu chính", "Kiểm soát"], [
+        ("Vùng trời", "Mã/khu vực, tọa độ hoặc mô tả, độ cao, đơn vị quản lý", "Chuẩn hóa định dạng, kiểm tra vùng hợp lệ và quyền cập nhật"),
+        ("Điều kiện sử dụng", "Ngày/giờ bắt đầu-kết thúc, mục đích, hạn chế và liên hệ", "Không cho thời gian kết thúc trước bắt đầu; kiểm tra giao thoa"),
+        ("Xung đột", "Chuyến bay/KHB/điện văn bị ảnh hưởng và mức độ", "Cảnh báo trước submit; người duyệt xác nhận hoặc từ chối"),
+    ])
     code_block(doc, "DRAFT → VALIDATED → PENDING_APPROVAL → ACCEPTED → QUEUED → SENDING\n                                               ├──────────────→ REJECTED\n                                               └──────────────→ CANCELLED\nSENDING → SENT → DELIVERED\nSENDING → FAILED → RETRY_WAIT → SENDING")
-    heading(doc, "5.3. Thiết kế Message Management hiện hữu", 2)
+    heading(doc, "5.2.1.1. Thiết kế Message Management hiện hữu", 3)
     paragraph(doc, "Màn hình MessManagement.aspx hiện đang nạp dữ liệu qua DayFlightsDAL, nhận callback bằng chuỗi tham số và gọi MESSAGE_PKG/QlbOutBoxDAL trực tiếp. Thiết kế chuyển tiếp đề xuất giữ callback để tương thích nhưng đưa toàn bộ xử lý vào MessageApplicationService.")
     table(doc, ["Thành phần", "Thiết kế đề xuất", "Mã nguồn liên quan"], [
         ("MessagePageAdapter", "Chuyển callback/UI input thành Command DTO", "MessManagement.aspx.cs"),
@@ -397,7 +418,7 @@ def add_message_design(doc):
         ("OutboxStatusRepository", "Quản lý QUEUED/SENDING/SENT/FAILED", "QlbOutBoxDAL.cs"),
         ("MessageAuditService", "Ghi actor, before/after, correlation và lỗi", "WriteLogHistory2Database"),
     ])
-    heading(doc, "5.4. Quy tắc gửi an toàn", 2)
+    heading(doc, "5.2.1.2. Quy tắc gửi an toàn", 3)
     for item in [
         "Không chuyển trạng thái SENT trước khi package/AMHS trả kết quả thành công.",
         "Mỗi lần gửi có MessageId và IdempotencyKey; gửi lại không tạo bản tin trùng.",
@@ -406,7 +427,25 @@ def add_message_design(doc):
         "Gửi hàng loạt phải chạy nền; giao diện chỉ hiển thị progress và kết quả từng dòng.",
     ]:
         bullet(doc, item)
-    heading(doc, "5.5. Thiết kế dữ liệu điện văn", 2)
+    heading(doc, "5.2.2. Quản lý KHB quân sự", 3)
+    paragraph(doc, "Quy trình KHB quân sự gồm: Nhập mới KHB → Duyệt (Accepted) → Tạo điện văn (Export Message) → Phát đi. Sau khi duyệt, dữ liệu được cung cấp tại Daily Military Report ở chế độ chỉ xem và lấy dữ liệu cho người khai thác.")
+    table(doc, ["Giai đoạn", "Màn hình/thành phần", "Yêu cầu thiết kế"], [
+        ("Nhập mới", "ListFinishedFlightsMilitary.aspx", "Nhập và kiểm tra ngày bay, callsign, sân bay, mục đích, vùng trời; lưu DRAFT; không hiển thị như dữ liệu chính thức"),
+        ("Duyệt", "Military Accepted", "So sánh trước/sau, kiểm tra quyền và xung đột; ACCEPT hoặc REJECT kèm lý do; ghi audit"),
+        ("Export Message", "Message package/worker", "Chỉ tạo điện văn từ bản ghi ACCEPTED; sinh MessageId, batch và correlation id"),
+        ("Phát đi", "AMHS/AFTN adapter", "Đưa vào outbox, theo dõi QUEUED/SENDING/SENT/FAILED, retry và đối soát delivery"),
+        ("Báo cáo", "ListFinishedFlightsMilitaryReport.aspx", "Chỉ đọc dữ liệu đã duyệt; lọc theo ngày, đơn vị, khu vực, trạng thái; không cập nhật trực tiếp"),
+    ])
+    code_block(doc, "NEW/DRAFT → SUBMITTED → ACCEPTED → MESSAGE_QUEUED → SENT\n                         ├────────────────→ REJECTED\n                         └────────────────→ CANCELLED\nSENT → DELIVERED / FAILED → RETRY_WAIT")
+    heading(doc, "5.2.2.1. Quy tắc dữ liệu và phân quyền KHB quân sự", 3)
+    table(doc, ["Trạng thái", "Tác nhân", "Quyền và kiểm soát"], [
+        ("Bản nháp", "Người lập/đơn vị", "Được sửa trong phạm vi đơn vị; chưa phải dữ liệu báo cáo chính thức"),
+        ("Chờ duyệt", "Người lập/người duyệt", "Không sửa đồng thời; người duyệt xem bản trước/sau và lý do từ chối"),
+        ("Accepted", "Người duyệt/quản lý", "Khóa phiên bản được duyệt; sửa phải tạo revision và chạy lại quy trình"),
+        ("Đã phát", "Khai thác/tra cứu", "Chỉ đọc trạng thái phát và delivery; không chỉnh nội dung điện văn đã gửi"),
+        ("Military Report", "Người khai thác", "Chỉ đọc, lọc/xuất dữ liệu theo quyền; không cập nhật trực tiếp vào KHB"),
+    ])
+    heading(doc, "5.2.2.2. Thiết kế dữ liệu điện văn dùng chung", 3)
     table(doc, ["Trường", "Kiểu đề xuất", "Quy tắc"], [
         ("MESSAGE_ID", "VARCHAR2/NUMBER", "Khóa nghiệp vụ duy nhất"),
         ("PART_NO", "VARCHAR2", "Mã nhóm điện văn/chuyến"),
