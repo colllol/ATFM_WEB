@@ -1131,6 +1131,103 @@ def add_design_annexes(doc):
     paragraph(doc, "Kết thúc tài liệu thiết kế tổng thể. Các trang LLD tiếp theo phải giữ mã thành phần, mã quyết định, hợp đồng dữ liệu và nguyên tắc trạng thái đã nêu trong SDD này.")
 
 
+def add_opt_detailed_appendix(doc):
+    heading(doc, "PHỤ LỤC I. Thiết kế chi tiết phân hệ nâng cấp và tối ưu HTSLB", 1)
+    paragraph(doc, "Phụ lục này cụ thể hóa Mục 6 thành các luồng, component, dữ liệu, hợp đồng xử lý và điểm kiểm soát để lập LLD, script Oracle và kế hoạch triển khai. Phạm vi bao phủ FR-OPT-001 đến FR-OPT-032; URL và Menu_ID hiện hữu phải được giữ tương thích.")
+    heading(doc, "I.1. Phạm vi và ma trận component", 2)
+    table(doc, ["Nhóm", "FR-OPT", "Màn hình/nguồn chính", "Component thiết kế"], [
+        ("Tra cứu, cảnh báo", "001–013, 021, 024, 030", "SearchExtension, SearchPermissionAdv, Inbox, Permission lists, ListFlightOnMess, header", "SearchPageAdapter, FlightQueryService, NotificationRuleEngine, PermissionStatusService"),
+        ("Hiệu năng và batch", "014–018", "ExportBravo, Calendar Accepted, Gen KHB/AFTN, Inbox archive", "BatchOrchestrator, ChunkProcessor, ProgressRepository, RetryPolicy"),
+        ("Ngày bay và KHB", "019, 020, 022, 023, 025, 027", "DaylyFlight, Calendar, Daily Statistic, KHB quân sự", "BusinessDateService, FplMatcher, PurposeCatalog, RevisionService"),
+        ("Bravo và đối soát", "026, 028, 029", "Bravo export/sync, batch edit, conflict/reconcile", "BravoAdapter, MappingRegistry, ConflictQueue, ReconcileService"),
+        ("Báo cáo mở rộng", "031, 032", "ReportNew, preset/filter, compare KHBHĐBN, anomaly", "ReportMetadata, SnapshotProvider, KPI/AnomalyService"),
+    ])
+    heading(doc, "I.2. Kiến trúc xử lý dùng chung", 2)
+    code_block(doc, "WebForms/JS → PageAdapter → DTO → Application Service → Domain Rule → Oracle DAL/Package or External Adapter → Audit/Notification/Batch")
+    table(doc, ["Lớp", "Trách nhiệm", "Nguyên tắc"], [
+        ("PageAdapter", "Giữ callback, Menu_ID, filter và format hiện hữu", "Không để UI gọi SQL/package trực tiếp; kiểm tra CSRF và input size"),
+        ("Application Service", "Điều phối use case, transaction boundary và quyền", "Một use case một service; trả StandardResult/QueryResult"),
+        ("Domain Rule", "Ngày nghiệp vụ, match chuyến, cảnh báo, trạng thái batch", "Deterministic, có mã rule và version cấu hình"),
+        ("DAL/Package", "Truy vấn, ghi dữ liệu và gọi Oracle", "Bind parameter, timeout, execution plan và optimistic version"),
+        ("Worker/Adapter", "Batch lớn và tích hợp Bravo/ADS-B/AMHS", "Idempotency, retry, quarantine, correlation ID"),
+    ])
+    heading(doc, "I.3. Thiết kế tìm kiếm đa trường và tra cứu nâng cao", 2)
+    table(doc, ["Bước", "Xử lý", "Kết quả/kiểm soát"], [
+        ("Build filter", "Field/operator/value, ngày, page, sort và data scope", "Filter DTO có schema; bỏ field ngoài allowlist"),
+        ("Validate", "Kiểu ngày/giờ, khoảng tối đa, ký tự và quyền field", "VAL-001/VAL-002 hoặc AUTH-002; không query khi lỗi"),
+        ("Compile predicate", "Map field → cột/index; bind toàn bộ giá trị", "Không nối chuỗi SQL từ input; ghi FilterHash"),
+        ("Query", "Lọc phép bay, chuyến, KHB, điện văn theo snapshot/ngày", "Phân trang ổn định; trả total có giới hạn"),
+        ("Drill-down", "Mở View_PermSC/View_PermNo/Inbox/Military Report", "Kiểm tra lại ID và data scope trước khi đọc"),
+        ("Export", "Đưa truy vấn lớn vào ExportWorker", "Không giữ DataTable trong request; ghi BatchId/progress"),
+    ])
+    table(doc, ["Nhóm field", "Index/điều kiện đề xuất", "Ghi chú"], [
+        ("Phép bay", "PERMDATE, ENDDATE, PERM_ID, PERM_NUMBER", "Hết hiệu lực, số phép và khoảng ngày"),
+        ("Chuyến/KHB", "FLIGHTDATE, CALLSIGN, FROM_AIRP, TO_AIRP, STATUS", "Tách ngày nghiệp vụ và timestamp nguồn"),
+        ("Điện văn", "PART_NO, MESS_TYPE, RECEIVED_AT, CONTENT_HASH", "Tra cứu theo điện văn, chống trùng"),
+        ("Quân sự", "UNIT_ID, PURPOSE_CODE, AREA_CODE, ACCEPTED_AT", "Bảo vệ phạm vi theo đơn vị"),
+    ])
+    heading(doc, "I.4. Thiết kế cảnh báo và cập nhật runtime", 2)
+    table(doc, ["Rule", "Khóa chống trùng", "Mức độ", "Hành động"], [
+        ("Không có phép/KHB", "SOURCE_TYPE + FLIGHT_ID + BUSINESS_DATE", "Cao", "Deep link tra cứu, acknowledge"),
+        ("Phép hết hiệu lực", "PERM_ID + rule_version + date", "Cao", "Đánh dấu đỏ, không tự sửa"),
+        ("Sai ngày bay", "FLIGHT_ID + source_date + calculated_date", "Cao", "Rà soát và ghi before/after"),
+        ("Batch quá SLA/lỗi", "BATCH_ID + phase + error_code", "TB/Cao", "Progress, retry hoặc quarantine"),
+        ("Bất thường", "REPORT_CODE + FILTER_HASH + window", "Cấu hình", "Drill-down và trạng thái xử lý"),
+    ])
+    paragraph(doc, "Notification polling phải chống request chồng, lọc theo user/role/đơn vị, hỗ trợ chưa đọc/đã đọc và hiển thị thời điểm đồng bộ cuối. Dedupe key ổn định giữa retry nhưng thay đổi khi rule_version hoặc source event thay đổi.")
+    heading(doc, "I.5. Thiết kế batch và chỉ tiêu hiệu năng", 2)
+    code_block(doc, "CreateBatch → LockScope → SnapshotSource → ValidateChunks → ProcessChunks → PersistCounters → Reconcile → PublishNotification → Finalize")
+    table(doc, ["Batch", "Phân đoạn xử lý", "Chỉ tiêu/điều kiện đạt"], [
+        ("ExportBravo", "snapshot → mapping → chunk export → response → reconcile", "Mục tiêu dưới 180 giây; cảnh báo ở 80% SLA"),
+        ("Gen KHB/AFTN", "load KHB → validate → generate message → outbox → delivery", "Mục tiêu dưới 180 giây; không phát khi còn invalid"),
+        ("F8 Calendar Accepted", "chọn dòng → kiểm tra version → ép dòng → audit", "Không mất dữ liệu; conflict yêu cầu reload"),
+        ("Inbox mở rộng >7 ngày", "range query → archive index → page/export", "Không full scan; giới hạn theo quyền"),
+        ("Replay lỗi", "quarantine → sửa/duyệt → replay chunk", "Không duplicate; giữ source/correlation"),
+    ])
+    table(doc, ["Chỉ số", "Cách đo", "Ngưỡng vận hành"], [
+        ("Elapsed", "created_at đến finalized_at theo batch/phase", "<180 giây cho ExportBravo và Gen KHB"),
+        ("Throughput", "rows_processed / elapsed_seconds", "Theo baseline, theo dõi p50/p95"),
+        ("Error rate", "failed / total theo chunk", "Cảnh báo khi vượt ngưỡng cấu hình"),
+        ("Queue depth", "queued + retry_wait", "Throttle khi vượt capacity"),
+        ("Reconcile gap", "source - inserted - updated - skipped - failed", "Bằng 0 hoặc có discrepancy record"),
+    ])
+    heading(doc, "I.6. Thiết kế ngày bay, KHB và revision", 2)
+    table(doc, ["Quy tắc", "Thiết kế", "Lưu vết"], [
+        ("Ngày nghiệp vụ", "BusinessDateService nhận timestamp, source timezone và airport rule", "source_date, calculated_date, timezone, rule_version"),
+        ("Sai ngày thực tế", "FplMatcher so sánh KHB/permission với actual flight", "Không tự đổi ngày; yêu cầu xác nhận"),
+        ("KHB đã build", "RevisionService tạo revision mới và phát notification", "build_id, revision_no, actor, before/after"),
+        ("Mục đích bay", "PurposeCatalog chuẩn hóa mã/tên theo loại KHB", "purpose_code và label version"),
+        ("KHB quân sự", "Nhập mới → Accepted → Export Message → Dispatch → Military Report", "Accepted khóa phiên bản; báo cáo chỉ đọc"),
+    ])
+    heading(doc, "I.7. Thiết kế Bravo, conflict và đối soát", 2)
+    table(doc, ["Thành phần", "Trách nhiệm", "Dữ liệu bắt buộc"], [
+        ("MappingRegistry", "Quản lý mapping field/phiên bản payload Bravo", "schema_version, field_map, effective_from/to"),
+        ("BravoAdapter", "Gửi payload, timeout/circuit breaker, chuẩn hóa response", "request_id, idempotency_key, upstream_status"),
+        ("ConflictQueue", "Lưu bản ghi không match hoặc khác actual time/purpose", "conflict_type, source_value, target_value, owner"),
+        ("ReconcileService", "Đối chiếu count, key, trạng thái và thời điểm", "batch_id, source_count, result_count, discrepancy"),
+        ("RetryWorker", "Retry lỗi tạm thời, không retry lỗi nghiệp vụ", "attempt, next_retry_at, error_code"),
+    ])
+    heading(doc, "I.8. Bảo mật, rollback và kiểm thử thiết kế", 2)
+    table(doc, ["Kiểm soát", "Yêu cầu thiết kế"], [
+        ("Phân quyền", "Kiểm tra action, role, đơn vị và data scope ở mọi command/query"),
+        ("Audit", "Ghi actor, action, object, before/after, result, elapsed, correlation_id"),
+        ("Concurrency", "Optimistic version cho phép/KHB; lock theo batch; trả CONFLICT khi đổi version"),
+        ("Rollback", "Có script rollback package/index/config; snapshot để chạy bù"),
+        ("Kiểm thử", "Functional, boundary ngày, duplicate/retry, quyền, p95 và đối soát"),
+        ("Nghiệm thu", "Không mất/duplicate dữ liệu, cảnh báo đúng rule, batch đạt SLA, report khớp nguồn"),
+    ])
+    heading(doc, "I.9. Danh mục đầu ra LLD cần hoàn thiện", 2)
+    table(doc, ["Mã đầu ra", "Nội dung", "FR liên quan"], [
+        ("LLD-OPT-01", "Component/sequence cho Search và Notification", "001–013, 021, 024, 030"),
+        ("LLD-OPT-02", "Batch, chunk, progress, retry và benchmark", "014–018"),
+        ("LLD-OPT-03", "BusinessDate/FPL/KHB revision/purpose", "019, 020, 022, 023, 025, 027"),
+        ("LLD-OPT-04", "Bravo mapping, adapter, conflict, reconcile", "026, 028, 029"),
+        ("LLD-OPT-05", "Report metadata, snapshot, compare, anomaly", "031, 032"),
+        ("LLD-OPT-06", "Oracle DDL/index/package và rollback", "Toàn bộ FR-OPT"),
+    ])
+    page_break(doc)
+
+
 def add_change_annex(doc):
     heading(doc, "PHỤ LỤC H. Thiết kế quản lý phiên bản và thay đổi", 1)
     paragraph(doc, "Phụ lục này quy định cách giữ tính nhất quán giữa SRS, SDD, mã nguồn WebForms, package Oracle, adapter tích hợp và cấu hình triển khai. Mục tiêu là có thể nâng cấp từng phần mà không làm mất dữ liệu hoặc phá vỡ URL/hợp đồng hiện hữu.")
@@ -1245,6 +1342,7 @@ def build():
     add_appendices(doc)
     add_design_annexes(doc)
     add_change_annex(doc)
+    add_opt_detailed_appendix(doc)
     for item in doc.sections:
         add_page_number(item)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
