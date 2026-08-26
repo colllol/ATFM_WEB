@@ -1132,9 +1132,9 @@ def add_design_annexes(doc):
 
 
 def add_opt_detailed_appendix(doc):
-    heading(doc, "PHỤ LỤC I. Thiết kế chi tiết phân hệ nâng cấp và tối ưu HTSLB", 1)
+    heading(doc, "PHỤ LỤC 3. Thiết kế chi tiết phân hệ nâng cấp và tối ưu HTSLB", 1)
     paragraph(doc, "Phụ lục này cụ thể hóa Mục 6 thành các luồng, component, dữ liệu, hợp đồng xử lý và điểm kiểm soát để lập LLD, script Oracle và kế hoạch triển khai. Phạm vi bao phủ FR-OPT-001 đến FR-OPT-032; URL và Menu_ID hiện hữu phải được giữ tương thích.")
-    heading(doc, "I.1. Phạm vi và ma trận component", 2)
+    heading(doc, "3.1. Phạm vi và ma trận component", 2)
     table(doc, ["Nhóm", "FR-OPT", "Màn hình/nguồn chính", "Component thiết kế"], [
         ("Tra cứu, cảnh báo", "001–013, 021, 024, 030", "SearchExtension, SearchPermissionAdv, Inbox, Permission lists, ListFlightOnMess, header", "SearchPageAdapter, FlightQueryService, NotificationRuleEngine, PermissionStatusService"),
         ("Hiệu năng và batch", "014–018", "ExportBravo, Calendar Accepted, Gen KHB/AFTN, Inbox archive", "BatchOrchestrator, ChunkProcessor, ProgressRepository, RetryPolicy"),
@@ -1142,7 +1142,7 @@ def add_opt_detailed_appendix(doc):
         ("Bravo và đối soát", "026, 028, 029", "Bravo export/sync, batch edit, conflict/reconcile", "BravoAdapter, MappingRegistry, ConflictQueue, ReconcileService"),
         ("Báo cáo mở rộng", "031, 032", "ReportNew, preset/filter, compare KHBHĐBN, anomaly", "ReportMetadata, SnapshotProvider, KPI/AnomalyService"),
     ])
-    heading(doc, "I.2. Kiến trúc xử lý dùng chung", 2)
+    heading(doc, "3.2. Kiến trúc xử lý dùng chung", 2)
     code_block(doc, "WebForms/JS → PageAdapter → DTO → Application Service → Domain Rule → Oracle DAL/Package or External Adapter → Audit/Notification/Batch")
     table(doc, ["Lớp", "Trách nhiệm", "Nguyên tắc"], [
         ("PageAdapter", "Giữ callback, Menu_ID, filter và format hiện hữu", "Không để UI gọi SQL/package trực tiếp; kiểm tra CSRF và input size"),
@@ -1151,7 +1151,7 @@ def add_opt_detailed_appendix(doc):
         ("DAL/Package", "Truy vấn, ghi dữ liệu và gọi Oracle", "Bind parameter, timeout, execution plan và optimistic version"),
         ("Worker/Adapter", "Batch lớn và tích hợp Bravo/ADS-B/AMHS", "Idempotency, retry, quarantine, correlation ID"),
     ])
-    heading(doc, "I.3. Thiết kế tìm kiếm đa trường và tra cứu nâng cao", 2)
+    heading(doc, "3.3. Thiết kế tìm kiếm đa trường và tra cứu nâng cao", 2)
     table(doc, ["Bước", "Xử lý", "Kết quả/kiểm soát"], [
         ("Build filter", "Field/operator/value, ngày, page, sort và data scope", "Filter DTO có schema; bỏ field ngoài allowlist"),
         ("Validate", "Kiểu ngày/giờ, khoảng tối đa, ký tự và quyền field", "VAL-001/VAL-002 hoặc AUTH-002; không query khi lỗi"),
@@ -1166,7 +1166,7 @@ def add_opt_detailed_appendix(doc):
         ("Điện văn", "PART_NO, MESS_TYPE, RECEIVED_AT, CONTENT_HASH", "Tra cứu theo điện văn, chống trùng"),
         ("Quân sự", "UNIT_ID, PURPOSE_CODE, AREA_CODE, ACCEPTED_AT", "Bảo vệ phạm vi theo đơn vị"),
     ])
-    heading(doc, "I.4. Thiết kế cảnh báo và cập nhật runtime", 2)
+    heading(doc, "3.4. Thiết kế cảnh báo và cập nhật runtime", 2)
     table(doc, ["Rule", "Khóa chống trùng", "Mức độ", "Hành động"], [
         ("Không có phép/KHB", "SOURCE_TYPE + FLIGHT_ID + BUSINESS_DATE", "Cao", "Deep link tra cứu, acknowledge"),
         ("Phép hết hiệu lực", "PERM_ID + rule_version + date", "Cao", "Đánh dấu đỏ, không tự sửa"),
@@ -1175,7 +1175,7 @@ def add_opt_detailed_appendix(doc):
         ("Bất thường", "REPORT_CODE + FILTER_HASH + window", "Cấu hình", "Drill-down và trạng thái xử lý"),
     ])
     paragraph(doc, "Notification polling phải chống request chồng, lọc theo user/role/đơn vị, hỗ trợ chưa đọc/đã đọc và hiển thị thời điểm đồng bộ cuối. Dedupe key ổn định giữa retry nhưng thay đổi khi rule_version hoặc source event thay đổi.")
-    heading(doc, "I.5. Thiết kế batch và chỉ tiêu hiệu năng", 2)
+    heading(doc, "3.5. Thiết kế batch và chỉ tiêu hiệu năng", 2)
     code_block(doc, "CreateBatch → LockScope → SnapshotSource → ValidateChunks → ProcessChunks → PersistCounters → Reconcile → PublishNotification → Finalize")
     table(doc, ["Batch", "Phân đoạn xử lý", "Chỉ tiêu/điều kiện đạt"], [
         ("ExportBravo", "snapshot → mapping → chunk export → response → reconcile", "Mục tiêu dưới 180 giây; cảnh báo ở 80% SLA"),
@@ -1191,7 +1191,7 @@ def add_opt_detailed_appendix(doc):
         ("Queue depth", "queued + retry_wait", "Throttle khi vượt capacity"),
         ("Reconcile gap", "source - inserted - updated - skipped - failed", "Bằng 0 hoặc có discrepancy record"),
     ])
-    heading(doc, "I.6. Thiết kế ngày bay, KHB và revision", 2)
+    heading(doc, "3.6. Thiết kế ngày bay, KHB và revision", 2)
     table(doc, ["Quy tắc", "Thiết kế", "Lưu vết"], [
         ("Ngày nghiệp vụ", "BusinessDateService nhận timestamp, source timezone và airport rule", "source_date, calculated_date, timezone, rule_version"),
         ("Sai ngày thực tế", "FplMatcher so sánh KHB/permission với actual flight", "Không tự đổi ngày; yêu cầu xác nhận"),
@@ -1199,7 +1199,7 @@ def add_opt_detailed_appendix(doc):
         ("Mục đích bay", "PurposeCatalog chuẩn hóa mã/tên theo loại KHB", "purpose_code và label version"),
         ("KHB quân sự", "Nhập mới → Accepted → Export Message → Dispatch → Military Report", "Accepted khóa phiên bản; báo cáo chỉ đọc"),
     ])
-    heading(doc, "I.7. Thiết kế Bravo, conflict và đối soát", 2)
+    heading(doc, "3.7. Thiết kế Bravo, conflict và đối soát", 2)
     table(doc, ["Thành phần", "Trách nhiệm", "Dữ liệu bắt buộc"], [
         ("MappingRegistry", "Quản lý mapping field/phiên bản payload Bravo", "schema_version, field_map, effective_from/to"),
         ("BravoAdapter", "Gửi payload, timeout/circuit breaker, chuẩn hóa response", "request_id, idempotency_key, upstream_status"),
@@ -1207,7 +1207,7 @@ def add_opt_detailed_appendix(doc):
         ("ReconcileService", "Đối chiếu count, key, trạng thái và thời điểm", "batch_id, source_count, result_count, discrepancy"),
         ("RetryWorker", "Retry lỗi tạm thời, không retry lỗi nghiệp vụ", "attempt, next_retry_at, error_code"),
     ])
-    heading(doc, "I.8. Bảo mật, rollback và kiểm thử thiết kế", 2)
+    heading(doc, "3.8. Bảo mật, rollback và kiểm thử thiết kế", 2)
     table(doc, ["Kiểm soát", "Yêu cầu thiết kế"], [
         ("Phân quyền", "Kiểm tra action, role, đơn vị và data scope ở mọi command/query"),
         ("Audit", "Ghi actor, action, object, before/after, result, elapsed, correlation_id"),
@@ -1216,7 +1216,7 @@ def add_opt_detailed_appendix(doc):
         ("Kiểm thử", "Functional, boundary ngày, duplicate/retry, quyền, p95 và đối soát"),
         ("Nghiệm thu", "Không mất/duplicate dữ liệu, cảnh báo đúng rule, batch đạt SLA, report khớp nguồn"),
     ])
-    heading(doc, "I.9. Danh mục đầu ra LLD cần hoàn thiện", 2)
+    heading(doc, "3.9. Danh mục đầu ra LLD cần hoàn thiện", 2)
     table(doc, ["Mã đầu ra", "Nội dung", "FR liên quan"], [
         ("LLD-OPT-01", "Component/sequence cho Search và Notification", "001–013, 021, 024, 030"),
         ("LLD-OPT-02", "Batch, chunk, progress, retry và benchmark", "014–018"),
@@ -1225,8 +1225,8 @@ def add_opt_detailed_appendix(doc):
         ("LLD-OPT-05", "Report metadata, snapshot, compare, anomaly", "031, 032"),
         ("LLD-OPT-06", "Oracle DDL/index/package và rollback", "Toàn bộ FR-OPT"),
     ])
-    heading(doc, "I.10. Phiếu thiết kế riêng theo từng mã FR-OPT", 2)
-    paragraph(doc, "Mỗi phiếu dưới đây là baseline để lập LLD, API contract, script Oracle và test case riêng cho từng mã. Các nguyên tắc phân quyền, audit, ngày nghiệp vụ, retry và rollback dùng chung tại I.1–I.9 nhưng phải được kiểm tra lại trong từng phiếu.")
+    heading(doc, "3.10. Phiếu thiết kế riêng theo từng mã FR-OPT", 2)
+    paragraph(doc, "Mỗi phiếu dưới đây là baseline để lập LLD, API contract, script Oracle và test case riêng cho từng mã. Các nguyên tắc phân quyền, audit, ngày nghiệp vụ, retry và rollback dùng chung tại 3.1–3.9 nhưng phải được kiểm tra lại trong từng phiếu.")
     profiles = {
         "retention": {
             "actor": "Quản trị cấu hình và người khai thác INBOX; có phiên hợp lệ và phạm vi dữ liệu được cấp.",
@@ -1337,7 +1337,7 @@ def add_opt_detailed_appendix(doc):
     ]
     for index, (code, title, profile_key, screen, focus) in enumerate(cards, 1):
         profile = profiles[profile_key]
-        heading(doc, f"I.10.{index}. {code} – {title}", 3)
+        heading(doc, f"3.10.{index}. {code} – {title}", 3)
         table(doc, ["Trường thiết kế", "Đặc tả riêng cho mã FR"], [
             ("Mục tiêu/phạm vi", focus),
             ("Màn hình/nguồn", screen),
@@ -1352,9 +1352,9 @@ def add_opt_detailed_appendix(doc):
 
 
 def add_report_detailed_appendix(doc):
-    heading(doc, "PHỤ LỤC J. Thiết kế chi tiết phân hệ báo cáo và phân tích", 1)
+    heading(doc, "PHỤ LỤC 4. Thiết kế chi tiết phân hệ báo cáo và phân tích", 1)
     paragraph(doc, "Phụ lục này cụ thể hóa Mục 7 theo SRS thành một kiến trúc báo cáo dùng chung và 10 phiếu thiết kế riêng cho FR-RPT-001 đến FR-RPT-010. Mỗi báo cáo phải dùng cùng SnapshotId cho KPI, biểu đồ, bảng và drill-down; báo cáo chỉ đọc, còn thao tác sửa chuyển về màn hình nghiệp vụ có phân quyền riêng.")
-    heading(doc, "J.1. Kiến trúc báo cáo dùng chung", 2)
+    heading(doc, "4.1. Kiến trúc báo cáo dùng chung", 2)
     code_block(doc, "ReportPage → ReportMetadata → FilterValidator → SnapshotProvider → Query/KPI/Chart\n                                                ├─ DrillDownService\n                                                ├─ ExportWorker\n                                                └─ Audit + SourceStatus + Notification")
     table(doc, ["Thành phần", "Thiết kế bắt buộc", "Đầu ra"], [
         ("ReportMetadata", "Khai báo field/operator/type/default, dependency, column, công thức và quyền field", "Filter schema/version"),
@@ -1365,7 +1365,7 @@ def add_report_detailed_appendix(doc):
         ("ExportWorker", "Stream Excel/CSV/PDF, ghi filter/source/time/checksum và tự hết hạn file", "ExportId, progress, file"),
         ("Audit/SourceStatus", "Ghi user, query, export, nguồn trễ/thiếu và trạng thái xử lý", "Audit event, warning, source badge"),
     ])
-    heading(doc, "J.2. Quy tắc dữ liệu, hiệu năng và nghiệm thu dùng chung", 2)
+    heading(doc, "4.2. Quy tắc dữ liệu, hiệu năng và nghiệm thu dùng chung", 2)
     table(doc, ["Nhóm", "Yêu cầu thiết kế", "Bằng chứng"], [
         ("Nhất quán", "KPI, chart, bảng và drill-down cùng SnapshotId/FilterHash; tổng chi tiết đối soát được", "Snapshot log, reconcile count"),
         ("Ngày/múi giờ", "Chuẩn hóa BusinessDate và source timezone; hiển thị rõ kỳ dữ liệu và thời điểm cập nhật", "Source timestamp, timezone test"),
@@ -1374,7 +1374,7 @@ def add_report_detailed_appendix(doc):
         ("Phân quyền", "Role/action/data scope ở query, drill-down và export; báo cáo quân sự chỉ đọc", "Denied action/audit"),
         ("Công thức", "Version hóa công thức KPI/anomaly; export ghi formula_version", "Metadata/config history"),
     ])
-    heading(doc, "J.3. Phiếu thiết kế riêng theo từng mã FR-RPT", 2)
+    heading(doc, "4.3. Phiếu thiết kế riêng theo từng mã FR-RPT", 2)
     report_cards = [
         ("FR-RPT-001", "Biểu đồ thông tin tổng quan khai thác bay", "http://localhost/ATFM_WEB/ReportNew/FlightOperationOverview.aspx?Menu_ID=908", "Quản lý/khai thác theo ngày, sân bay, hãng, loại chuyến và trạng thái.", "T_DAY_FLIGHTS_GOINGON/T_FINISHED_FLIGHTS, airport/airline dimension; snapshot theo kỳ.", "Tổng chuyến, đi/đến, quốc nội/quốc tế, theo sân bay/hãng; tỷ lệ và biến động so với kỳ trước.", "KPI cards + line/bar/donut; drill-down vào danh sách finished flight; export Excel/CSV.", "Refresh theo kỳ cấu hình; thiếu nguồn hiển thị badge; P95 ≤3 giây; chỉ đọc và audit export."),
         ("FR-RPT-002", "Phân tích xu hướng khai thác theo thời gian", "http://localhost/ATFM_WEB/ReportNew/FlightTrendAnalysis.aspx?Menu_ID=909", "Phân tích xu hướng theo ngày/tuần/tháng, sân bay, hãng, loại chuyến và khung giờ.", "Finished flight snapshot, BusinessDate, airport/airline/status dimensions.", "Chuỗi tổng chuyến, moving/period comparison, peak/off-peak và tỷ lệ thay đổi; công thức version hóa.", "Line/area chart, chọn khoảng và granularity, drill-down ngày; export nền theo FilterHash.", "Không trộn timezone; khoảng lớn chạy nền; snapshot hết hạn yêu cầu tạo lại; audit bộ lọc."),
@@ -1388,7 +1388,7 @@ def add_report_detailed_appendix(doc):
         ("FR-RPT-010", "Báo cáo cất, hạ cánh tại các sân bay toàn quốc", "http://localhost/ATFM_WEB/ReportNew/AirportTakeoffLanding.aspx?Menu_ID=913", "Theo dõi số liệu takeoff/landing toàn quốc theo ngày, giờ và sân bay.", "Finished actual, ADS-B O/F, airport dimension, event/status source; snapshot actual.", "Số cất cánh/hạ cánh, tỷ lệ theo giờ/sân bay, sai khác O/F và tổng đối soát.", "Map/table/time-series; drill-down event/flight; export theo kỳ và source status.", "Phân biệt takeoff/landing và O/F; timezone sân bay; sự kiện thiếu gắn REVIEW; SLA query/export và audit."),
     ]
     for index, (code, title, screen, actor_scope, source, kpi, visual, controls) in enumerate(report_cards, 1):
-        heading(doc, f"J.3.{index}. {code} – {title}", 3)
+        heading(doc, f"4.3.{index}. {code} – {title}", 3)
         table(doc, ["Trường thiết kế", "Đặc tả riêng cho báo cáo"], [
             ("Mục tiêu/phạm vi", actor_scope),
             ("Màn hình/URL", screen),
@@ -1401,9 +1401,9 @@ def add_report_detailed_appendix(doc):
 
 
 def add_ai_detailed_appendix(doc):
-    heading(doc, "PHỤ LỤC K. Thiết kế chi tiết phân hệ AI hỗ trợ thống kê, tìm kiếm và tổng hợp", 1)
+    heading(doc, "PHỤ LỤC 5. Thiết kế chi tiết phân hệ AI hỗ trợ thống kê, tìm kiếm và tổng hợp", 1)
     paragraph(doc, "Phụ lục này cụ thể hóa Mục 8 theo SRS cho FR-AI-001 đến FR-AI-004. AI được triển khai như dịch vụ độc lập, chỉ truy vấn dữ liệu được cấp phép bằng tài khoản Oracle read-only; mọi câu hỏi, SQL, kết quả, phiên bản model/prompt và thao tác người dùng phải có thể truy vết.")
-    heading(doc, "K.1. Kiến trúc AI dùng chung", 2)
+    heading(doc, "5.1. Kiến trúc AI dùng chung", 2)
     code_block(doc, "Question/Voice → Session/Auth → Intent/Context Builder → LLM Draft\n                              → SQL Parser/Allowlist/Policy → Preview/Approval\n                              → OracleRunner(read-only) → Result Normalizer\n                              → Table/Chart/Summary → Audit/Feedback/Monitoring")
     table(doc, ["Thành phần", "Thiết kế", "Kiểm soát"], [
         ("Chat API", "Nhận câu hỏi, session, scope và trả intent/SQL/kết quả", "HTTPS, token/CSRF, rate limit, timeout"),
@@ -1414,7 +1414,7 @@ def add_ai_detailed_appendix(doc):
         ("Result Renderer", "Chuẩn hóa bảng, biểu đồ, tổng hợp và giải thích nguồn", "Mask dữ liệu nhạy cảm, không suy diễn khi NULL"),
         ("AI Monitor", "Đo latency, token/cost, lỗi, chất lượng, usage và health", "Dashboard, alert, audit và retention"),
     ])
-    heading(doc, "K.2. Vòng đời yêu cầu AI và chính sách an toàn", 2)
+    heading(doc, "5.2. Vòng đời yêu cầu AI và chính sách an toàn", 2)
     table(doc, ["Bước", "Xử lý", "Trạng thái/bằng chứng"], [
         ("Receive", "Nhận câu hỏi tiếng Việt/giọng nói, user/session/scope", "RECEIVED, request_id"),
         ("Understand", "Nhận diện intent, thực thể, kỳ dữ liệu và câu hỏi thiếu", "UNDERSTOOD/CLARIFY"),
@@ -1424,7 +1424,7 @@ def add_ai_detailed_appendix(doc):
         ("Present", "Trình bày bảng/biểu đồ/tóm tắt và nguồn dữ liệu", "PRESENTED, snapshot_id"),
         ("Learn/Monitor", "Phản hồi người dùng, đánh giá chất lượng và metric vận hành", "FEEDBACK/REVIEWED/AUDITED"),
     ])
-    heading(doc, "K.3. NFR và kiểm soát dùng chung", 2)
+    heading(doc, "5.3. NFR và kiểm soát dùng chung", 2)
     table(doc, ["Nhóm", "Yêu cầu", "Bằng chứng"], [
         ("Bảo mật", "RBAC/data scope ở API và Oracle; không nhận CREATED_BY/scope từ payload không tin cậy", "Denied action, read-only account, audit"),
         ("An toàn SQL", "Một SELECT hợp lệ; cấm DML/DDL/lock/INTO/SELECT * sản xuất; bind tham số", "SQL Guard decision, blocked query log"),
@@ -1433,7 +1433,7 @@ def add_ai_detailed_appendix(doc):
         ("Riêng tư", "Mask nội dung nhạy cảm, không log secret/prompt chứa dữ liệu cá nhân ngoài chính sách", "Log review, retention/masking test"),
         ("Rollback", "Có thể tắt model/prompt/route bằng feature flag và quay về bản đã phê duyệt", "Version registry, rollback runbook"),
     ])
-    heading(doc, "K.4. Phiếu thiết kế riêng theo từng mã FR-AI", 2)
+    heading(doc, "5.4. Phiếu thiết kế riêng theo từng mã FR-AI", 2)
     ai_cards = [
         ("FR-AI-001", "Xử lý ngôn ngữ tự nhiên cho truy vấn hàng không", "Nhận câu hỏi tiếng Việt/giọng nói, nhận diện ý định, thực thể, kỳ dữ liệu và sinh Oracle SQL có ngữ cảnh schema.", "Chat API, Intent/Context Builder, Prompt Store, LLM, SQL Guard.", "Question, user scope, schema_version, intent, entities, draft_sql, confidence, clarification.", "Câu hỏi mơ hồ phải hỏi lại; tên bảng/cột ngoài allowlist bị từ chối; SQL không được thực thi trước Guard/Preview; lưu model/prompt/version."),
         ("FR-AI-002", "Truy vấn và tổng hợp dữ liệu tự động theo yêu cầu", "Thực thi truy vấn đọc an toàn, chuẩn hóa dữ liệu, tính tổng hợp và trình bày bảng/biểu đồ theo câu hỏi.", "SQL Guard, OracleRunner, SnapshotProvider, ResultNormalizer, KPI/Chart Renderer.", "Approved SQL, bind params, snapshot_id, columns/rows, row_count, KPI formula, source timestamp.", "Giới hạn dòng/thời gian; kết quả lớn chuyển export; NULL/thiếu nguồn phải hiển thị rõ; KPI và chi tiết cùng snapshot."),
@@ -1441,7 +1441,7 @@ def add_ai_detailed_appendix(doc):
         ("FR-AI-004", "Báo cáo và giám sát hiệu năng của Trợ lý ảo", "Theo dõi hoạt động, audit, chất lượng, sức khỏe dịch vụ, hiệu năng truy vấn và chi phí sử dụng AI.", "AI Monitor, UsageRepository, AuditService, HealthProbe, Dashboard/Report API, AlertPublisher.", "Request/response latency, token/cost, model, prompt, SQL policy, error, row_count, user, feedback score, health state.", "Tách metric kỹ thuật và chất lượng; cảnh báo LLM/Oracle timeout, SQL reject, usage tăng bất thường; dữ liệu giám sát phải mask và có retention."),
     ]
     for index, (code, title, objective, components, data, rules) in enumerate(ai_cards, 1):
-        heading(doc, f"K.4.{index}. {code} – {title}", 3)
+        heading(doc, f"5.4.{index}. {code} – {title}", 3)
         table(doc, ["Trường thiết kế", "Đặc tả riêng cho mã FR"], [
             ("Mục tiêu/phạm vi", objective),
             ("Thành phần", components),
@@ -1450,7 +1450,7 @@ def add_ai_detailed_appendix(doc):
             ("Quy tắc/ngoại lệ", rules),
             ("Đầu ra/NFR/rollback", "Kết quả có request/correlation/snapshot hoặc health/metric tương ứng; audit đầy đủ; retry có giới hạn; tắt feature/model và quay về version trước khi phát hiện lỗi."),
         ])
-    heading(doc, "K.5. API, dữ liệu và kiểm thử AI", 2)
+    heading(doc, "5.5. API, dữ liệu và kiểm thử AI", 2)
     table(doc, ["Mã", "Endpoint/bằng chứng", "Kiểm tra tối thiểu"], [
         ("AI-API-01", "/api/ai/session, /api/ai/query/preview", "Scope, intent, SQL masked, clarification, policy decision"),
         ("AI-API-02", "/api/ai/query/execute, /api/ai/export", "Read-only, bind parameter, row/time limit, snapshot và export nền"),
@@ -1464,9 +1464,9 @@ def add_ai_detailed_appendix(doc):
 
 
 def add_int_detailed_appendix(doc):
-    heading(doc, "PHỤ LỤC L. Thiết kế chi tiết phân hệ tích hợp và tự động hóa dữ liệu", 1)
+    heading(doc, "PHỤ LỤC 1. Thiết kế chi tiết phân hệ tích hợp và tự động hóa dữ liệu", 1)
     paragraph(doc, "Phụ lục này cụ thể hóa Mục 4 theo SRS cho FR-INT-001 đến FR-INT-005. Các bộ tiếp nhận dùng hợp đồng dữ liệu và vòng đời xử lý thống nhất, nhưng triển khai parser, mapping, đối soát và tiêu chí chất lượng riêng theo từng nguồn.")
-    heading(doc, "L.1. Kiến trúc tích hợp dùng chung", 2)
+    heading(doc, "1.1. Kiến trúc tích hợp dùng chung", 2)
     code_block(doc, "Source Adapter → Receiver/Inbox → Parser → Validator → Normalizer\n                         → Dedupe/Idempotency → Oracle Writer/Publisher\n                         → Reconcile + Audit + Monitor\n                         ↘ Retry Queue → Quarantine/Dead-letter → Replay")
     table(doc, ["Thành phần", "Thiết kế bắt buộc", "Bằng chứng vận hành"], [
         ("Source Adapter/Receiver", "Tách kết nối khỏi nghiệp vụ; hỗ trợ polling, upload hoặc callback; đặt timeout, credential và schema version theo nguồn.", "ReceiveId, SourceId, CorrelationId, adapter_version, receive log"),
@@ -1477,7 +1477,7 @@ def add_int_detailed_appendix(doc):
         ("Retry/Quarantine", "Lỗi tạm thời được retry có backoff; lỗi dữ liệu chuyển quarantine kèm lý do, không làm mất bản gốc; cho phép sửa và replay có kiểm soát.", "attempt, next_retry_at, quarantine id, replay audit"),
         ("Audit/Monitor", "Theo dõi độ trễ, throughput, tỷ lệ lỗi, dữ liệu thiếu, backlog và tình trạng nguồn; che secret trong log.", "dashboard, alert, audit trail, health check"),
     ])
-    heading(doc, "L.2. Hợp đồng dữ liệu, trạng thái và đối soát", 2)
+    heading(doc, "1.2. Hợp đồng dữ liệu, trạng thái và đối soát", 2)
     table(doc, ["Nhóm", "Quy ước dùng chung"], [
         ("Envelope", "SourceId, ReceiveId, CorrelationId, BatchId, SourceTimestamp, ReceivedAt, SchemaVersion, MappingVersion, ContentHash, PayloadUri."),
         ("Trạng thái", "RECEIVED → VALIDATING → VALIDATED → NORMALIZED → PROCESSING → COMPLETED; nhánh RETRY_WAIT, QUARANTINED, DEAD_LETTER và CANCELLED."),
@@ -1486,7 +1486,7 @@ def add_int_detailed_appendix(doc):
         ("Replay/Rollback", "Replay theo ReceiveId/BatchId hoặc watermark; rollback chỉ đảo tác động của batch, giữ raw/audit và không xóa bằng chứng."),
         ("Bảo mật", "TLS/allowlist, secret vault hoặc cấu hình mã hóa, RBAC theo adapter; không ghi password, token, payload nhạy cảm đầy đủ vào log."),
     ])
-    heading(doc, "L.3. Phiếu thiết kế riêng theo từng mã FR-INT", 2)
+    heading(doc, "1.3. Phiếu thiết kế riêng theo từng mã FR-INT", 2)
     cards = [
         ("FR-INT-001", "Tích hợp Email/File và AeroSync", "Email, thư mục lưu trữ, AeroSync → Oracle ATFM; tiếp nhận điện văn/KHB theo polling hoặc lịch đồng bộ.", "IMAP/FileReceiver, AeroSyncAdapter, MIME/AttachmentParser, Normalizer, OracleWriter", "Nhận MIME/CSV/XML/JSON theo schema; giải mã encoding, kiểm tra attachment và trường bắt buộc; ánh xạ về message/flight/KHB chuẩn.", "Dedupe theo Message-Id, file hash và BusinessKey; lưu raw archive; parser lỗi vào quarantine theo từng file/điện văn.", "T_RECEIVE/Inbox, T_PLAN_MESSAGE và bảng nghiệp vụ liên quan; package ghi nhận batch/source revision.", "Retry kết nối và throttling; đối soát số email/file nhận–parse–ghi; dashboard lag, accepted, rejected, quarantine; rollback theo BatchId."),
         ("FR-INT-002", "Tích hợp ADS-B O/F", "Flight Tracking API/PostgreSQL tracks → T_TRACKS_LOG và snapshot actual để đối chiếu KHB/FPL/finished flight.", "AdsBReceiver, WatermarkReader, TrackQuality, FlightMatcher, TracksRepository", "Đọc incremental theo watermark/timestamp; chuẩn hóa callsign, ICAO, tọa độ, O/F event và chất lượng; gắn BusinessDate theo timezone cấu hình.", "Khóa TrackId hoặc hash bản ghi + watermark; loại bản ghi trùng, đánh dấu late/out-of-order; match theo flight key và cửa sổ thời gian.", "T_TRACKS_LOG, ADS-B snapshot, bảng matcher/KPI; lưu source timestamp, quality status và match reason.", "Retry API/DB timeout; replay theo watermark; đối soát received/valid/matched/unmatched; cảnh báo nguồn trễ, match rate thấp, backlog và lỗi chất lượng."),
@@ -1495,7 +1495,7 @@ def add_int_detailed_appendix(doc):
         ("FR-INT-005", "API Gateway và tự động hóa gọi dịch vụ", "REST/JSON qua route registry; OAuth/JWT hoặc API key, scope, rate limit và audit.", "RouteRegistry, AuthFilter, SchemaValidator, RateLimiter, ApiAudit, HealthProbe", "Version route và OpenAPI/schema; validate content-type, request size, bind parameter, correlation header; trả lỗi chuẩn 400/401/403/409/429/5xx.", "Idempotency-Key cho POST/import; request hash và version để chống gửi lặp; tương thích ngược qua v1/v2 hoặc adapter.", "API audit, route/config registry, integration job/batch log; không log secret hoặc payload nhạy cảm đầy đủ.", "Timeout, retry chỉ với endpoint idempotent/5xx; circuit breaker và dead-letter cho job; theo dõi p95 latency, 4xx/5xx, rate-limit, health và rollback route/config theo version."),
     ]
     for index, (code, title, scope, components, mapping, dedupe, data, controls) in enumerate(cards, 1):
-        heading(doc, f"L.3.{index}. {code} – {title}", 3)
+        heading(doc, f"1.3.{index}. {code} – {title}", 3)
         table(doc, ["Trường thiết kế", "Đặc tả riêng cho mã FR"], [
             ("Mục tiêu/phạm vi", scope),
             ("Component", components),
@@ -1504,7 +1504,7 @@ def add_int_detailed_appendix(doc):
             ("Dữ liệu/package", data),
             ("Retry/quarantine/đối soát/NFR", controls),
         ])
-    heading(doc, "L.4. Tiêu chí kiểm thử và nghiệm thu tích hợp", 2)
+    heading(doc, "1.4. Tiêu chí kiểm thử và nghiệm thu tích hợp", 2)
     table(doc, ["Mã kiểm thử", "Kịch bản", "Bằng chứng đạt"], [
         ("INT-TC-01", "Nguồn hợp lệ, nhiều batch và chạy lại cùng đầu vào", "Đủ bản ghi, không trùng, trạng thái COMPLETED, source/target count khớp"),
         ("INT-TC-02", "Sai schema/encoding/trường bắt buộc hoặc file quá lớn", "Từ chối có lý do, raw/quarantine giữ được, không ghi dở bảng nghiệp vụ"),
@@ -1516,10 +1516,10 @@ def add_int_detailed_appendix(doc):
 
 
 def add_alt_detailed_appendix(doc):
-    heading(doc, "PHỤ LỤC M. Thiết kế chi tiết phân hệ cảnh báo và tiện ích hỗ trợ", 1)
+    heading(doc, "PHỤ LỤC 2. Thiết kế chi tiết phân hệ cảnh báo và tiện ích hỗ trợ", 1)
     paragraph(doc, "Phụ lục này cụ thể hóa Mục 5 theo các đặc tả FR-ALT-001 và FR-ALT-002. Thiết kế bao phủ cơ chế cảnh báo cập nhật liên tục, quản lý Live Fire Message, Daily Statistic, KHB quân sự, tạo/phát QS Message và báo cáo khai thác chỉ đọc. Các luồng thay đổi dữ liệu đều dùng kiểm tra quyền phía máy chủ, kiểm soát phiên bản, nhật ký và khả năng đối soát.")
 
-    heading(doc, "M.1. Kiến trúc dùng chung", 2)
+    heading(doc, "2.1. Kiến trúc dùng chung", 2)
     code_block(doc, """Nguồn sự kiện/quy trình → Rule/Event Evaluator → Alert Repository
                                       → Scope Resolver → Header/Notification UI
                                       → Deep link nghiệp vụ → Acknowledge/Resolve/Audit
@@ -1535,7 +1535,7 @@ Daily Statistic → Export Finished → Review/Edit → Accepted → Accepted Re
         ("ReportReadService", "Cung cấp dữ liệu Accepted theo scope, filter, phân trang và export; không cho phép cập nhật từ màn hình báo cáo.", "Query filter hash, snapshot time, export audit"),
     ])
 
-    heading(doc, "M.2. Hợp đồng cảnh báo, trạng thái và phân quyền", 2)
+    heading(doc, "2.2. Hợp đồng cảnh báo, trạng thái và phân quyền", 2)
     table(doc, ["Nhóm", "Quy tắc thiết kế"], [
         ("Alert envelope", "ALERT_ID, RULE_CODE, SEVERITY, SOURCE_TYPE, SOURCE_ID, BUSINESS_DATE, TITLE, CONTENT, CREATED_AT, EXPIRES_AT, STATUS, DEEP_LINK, CORRELATION_ID, RULE_VERSION."),
         ("Mức độ", "P1-CRITICAL: ảnh hưởng phát/duyệt; P2-HIGH: thiếu phép/KHB, sai ngày, batch lỗi; P3-MEDIUM: dữ liệu trễ/bất thường; P4-INFO: thông tin vận hành."),
@@ -1553,7 +1553,7 @@ Daily Statistic → Export Finished → Review/Edit → Accepted → Accepted Re
         ("QUEUED/SENDING/SENT/FAILED", "Vòng đời phát điện văn", "SENDING, SENT, RETRY_WAIT, FAILED, DELIVERED"),
     ])
 
-    heading(doc, "M.3. Phiếu thiết kế riêng theo từng mã chức năng", 2)
+    heading(doc, "2.3. Phiếu thiết kế riêng theo từng mã chức năng", 2)
     cards = [
         ("FR-ALT-001", "Hệ thống cảnh báo thông minh đa kịch bản", "Common/ChartReport.aspx; ATFM_New.Master; SLOTS/Notifications.aspx; Handlers/Notification.ashx", "Phát hiện và phân phối cảnh báo runtime theo user/role/đơn vị, hiển thị liên tục tại ô thông báo trên header và cho phép mở chi tiết nghiệp vụ.", "NotificationRuleEngine, NotificationRepository, NotificationPublisher, NotificationQuery, NotificationAudit, NOTIFICATION_PKG", "T_NOTIFICATION/T_NOTIFICATION_TARGET/T_NOTIFICATION_READ; rule code, severity, source key, deep link, read state, source type/key.", "GET state/list kiểm tra identity và scope; đồng bộ Email API tối thiểu 15 giây/lần; polling 30 giây; POST acknowledge phải có CSRF/X-Requested-With; lỗi nguồn ngoài không làm mất thông báo nội bộ.", "TC-ALT-001: cảnh báo mới xuất hiện trong chu kỳ; TC-ALT-002: dedupe và phân phối đúng scope; TC-ALT-003: acknowledge độc lập từng user; TC-ALT-004: mất kết nối/cache/retry; TC-ALT-005: 401/403/XSS và audit."),
         ("FR-ALT-002a", "Tạo và phê duyệt Live Fire Message", "MessManagement/LiveFireMessage.aspx?Menu_ID=989; MessManagement/LiveFireMessageAccepted.aspx?Menu_ID=990", "Cho phép lập điện văn sử dụng vùng trời, kiểm tra khu vực/thời gian/tọa độ và chuyển qua quy trình nháp → chờ duyệt → duyệt/từ chối.", "LiveFirePageAdapter, LiveFireApplicationService, VersionedRepository, ApprovalService, MESSAGE_PKG", "Ngày điện văn, mã/tiêu đề, địa điểm bắn, tọa độ D1-D4, phương vị/độ cao/cự ly, thời gian HH:mm, chỉ huy, hạn chế, người ký, status/version.", "R_Add/R_Edit chỉ tạo/sửa DRAFT hoặc REJECTED; R_Pub mới được Accept/Reject; từ chối bắt buộc lý do; VERSION_NO chống cập nhật trên bản cũ; không sửa ACCEPTED.", "TC-LF-01…18; chứng cứ gồm ảnh form, dữ liệu trước/sau, package log, audit người duyệt và bản nội dung đã duyệt."),
@@ -1563,7 +1563,7 @@ Daily Statistic → Export Finished → Review/Edit → Accepted → Accepted Re
         ("FR-ALT-002e", "Military Report chỉ đọc", "FinishFlights/ListFinishedFlightsMilitaryReport.aspx?Menu_ID=863; ReportNew/MilitaryFlightReport.aspx?Menu_ID=911", "Cung cấp dữ liệu KHB quân sự đã Accepted để người khai thác lọc, xem, lấy dữ liệu và xuất báo cáo mà không làm thay đổi nguồn.", "MilitaryReportQuery, ReportSnapshotProvider, ExportService", "Filter ngày/giờ, đơn vị, khu vực, mục đích, callsign, sân bay, trạng thái; snapshot timestamp, filter hash, data scope.", "Chỉ truy vấn ISACCEPTED=1; không có nút thêm/sửa/xóa/Accepted/Export Message; export lấy đủ kết quả theo quyền; dữ liệu phải nhất quán với màn hình quản lý.", "TC-MIL-13…16; kiểm tra scope, phân trang, export, không có thao tác ghi và đối chiếu màn hình quản lý–báo cáo."),
     ]
     for index, (code, title, screen, objective, components, data, rules, tests) in enumerate(cards, 1):
-        heading(doc, f"M.3.{index}. {code} – {title}", 3)
+        heading(doc, f"2.3.{index}. {code} – {title}", 3)
         table(doc, ["Trường thiết kế", "Đặc tả riêng"], [
             ("Màn hình/phạm vi", screen),
             ("Mục tiêu", objective),
@@ -1574,7 +1574,7 @@ Daily Statistic → Export Finished → Review/Edit → Accepted → Accepted Re
             ("Kiểm thử/bằng chứng", tests),
         ])
 
-    heading(doc, "M.4. Chỉ tiêu NFR và vận hành", 2)
+    heading(doc, "2.4. Chỉ tiêu NFR và vận hành", 2)
     table(doc, ["Mã", "Yêu cầu đo lường", "Bằng chứng"], [
         ("NFR-ALT-01", "Header notification phản ánh cảnh báo mới trong tối đa 30 giây ở điều kiện bình thường; không tạo request chồng.", "Browser log, API timestamp, ảnh badge và event log"),
         ("NFR-ALT-02", "P95 truy vấn danh sách cảnh báo/duyệt thông thường ≤ 3 giây; timeout Oracle/API có thông báo và retry có giới hạn.", "APM/query log, timeout/retry metric"),
@@ -1584,7 +1584,7 @@ Daily Statistic → Export Finished → Review/Edit → Accepted → Accepted Re
         ("NFR-ALT-06", "Rollback theo revision/batch mà không xóa raw message, audit hoặc bằng chứng đã phát; feature flag cho rule cảnh báo.", "Rollback runbook, snapshot, feature flag history"),
     ])
 
-    heading(doc, "M.5. Ma trận truy vết và nghiệm thu", 2)
+    heading(doc, "2.5. Ma trận truy vết và nghiệm thu", 2)
     table(doc, ["Nhóm", "Yêu cầu/đầu ra", "Test case/bằng chứng"], [
         ("FR-ALT-001", "Runtime alert, scope, badge/header, acknowledge, email sync, audit", "TC-ALT-001…005; ảnh header, API JSON, NOTIFICATION_PKG log, audit"),
         ("FR-LF", "Tạo, sửa, submit, approve/reject, version và nội dung Live Fire", "TC-LF-01…18; ảnh form, bản ghi trạng thái, nội dung điện văn, log duyệt"),
@@ -1709,11 +1709,11 @@ def build():
     add_appendices(doc)
     add_design_annexes(doc)
     add_change_annex(doc)
+    add_int_detailed_appendix(doc)
+    add_alt_detailed_appendix(doc)
     add_opt_detailed_appendix(doc)
     add_report_detailed_appendix(doc)
     add_ai_detailed_appendix(doc)
-    add_int_detailed_appendix(doc)
-    add_alt_detailed_appendix(doc)
     for item in doc.sections:
         add_page_number(item)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
