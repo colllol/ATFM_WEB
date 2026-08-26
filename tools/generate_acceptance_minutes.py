@@ -146,9 +146,11 @@ def common_header(doc, title, date_line, subtitle=""):
 def technical_installation():
     doc = Document()
     configure(doc)
+    para(doc, "Mẫu số 5", True, WD_ALIGN_PARAGRAPH.RIGHT)
     common_header(doc, "BIÊN BẢN NGHIỆM THU KỸ THUẬT", "………, ngày 07 tháng 08 năm 2026", "CÀI ĐẶT PHẦN MỀM TRƯỚC KHI KIỂM THỬ")
     heading(doc, "I. Đối tượng nghiệm thu", 1)
-    para(doc, "Cài đặt phần mềm hệ thống, phần mềm nội bộ và cấu hình kỹ thuật cho môi trường ATFM_WEB trước khi thực hiện kiểm thử hệ thống. Phạm vi gồm mã ứng dụng, runtime/IIS, cơ sở dữ liệu Oracle, cấu hình kết nối, tài khoản/phân quyền, ghi nhật ký, đồng bộ thời gian, sao lưu và giám sát.")
+    para(doc, "Cài đặt phần mềm hệ thống, phần mềm nội bộ và cấu hình kỹ thuật cho môi trường ATFM_WEB trước khi thực hiện kiểm thử. Phạm vi nghiệm thu được xác định theo Sơ đồ ngữ cảnh hệ thống ATFM_WEB, gồm vùng DMZ, vùng ứng dụng IIS, các dịch vụ AI/tích hợp, Oracle ATFM/Audit, đầu ra báo cáo và các kết nối hệ thống bên ngoài.")
+    para(doc, "Biên bản xác nhận trạng thái cài đặt và khả năng kết nối kỹ thuật; chưa thay thế kết quả kiểm thử chức năng, kiểm thử hiệu năng hoặc nghiệm thu chạy thử được lập ở giai đoạn sau.")
     heading(doc, "II. Thành phần trực tiếp nghiệm thu", 1)
     add_signature_table(doc)
     heading(doc, "III. Thời gian, địa điểm", 1)
@@ -157,20 +159,76 @@ def technical_installation():
         ("Địa điểm", "………………………………………………………………"),
         ("Môi trường", "Máy chủ/VM triển khai ATFM_WEB: …………………………………"),
     ])
-    heading(doc, "IV. Nội dung và kết quả nghiệm thu", 1)
-    add_table(doc, ["STT", "Hạng mục", "Kết quả/ghi nhận", "Trạng thái"], [
-        ("1", "IIS, website và runtime", "Đã cài đặt, cấu hình binding, application pool và kiểm tra khởi động.", "Đạt/Không đạt"),
-        ("2", "Ứng dụng ATFM_WEB", "Đã triển khai đúng gói build/checksum: …………………………………", "Đạt/Không đạt"),
-        ("3", "Oracle/package/script", "Đã chạy script triển khai, kiểm tra package/schema và kết nối ứng dụng.", "Đạt/Không đạt"),
-        ("4", "Tài khoản và phân quyền", "Đã tạo/kiểm tra tài khoản kỹ thuật, role và data scope theo phê duyệt.", "Đạt/Không đạt"),
-        ("5", "Kết nối tích hợp", "Đã kiểm tra kết nối AMHS/AFTN, ADS-B, Bravo, API/Email theo phạm vi môi trường.", "Đạt/Không đạt"),
-        ("6", "Logging, backup, monitoring", "Đã kiểm tra log, lịch sao lưu, cảnh báo và phương án rollback.", "Đạt/Không đạt"),
+    heading(doc, "IV. Kiến trúc và phạm vi theo sơ đồ ngữ cảnh", 1)
+    add_table(doc, ["Lớp/vùng", "Thành phần", "Vai trò trong sơ đồ", "Phạm vi nghiệm thu cài đặt"], [
+        ("Tác nhân", "Khai thác viên; Người duyệt/Quản trị; API Consumer", "Truy cập hệ thống qua HTTPS.", "Kiểm tra URL, chứng thư số, xác thực, phân quyền ban đầu và khả năng truy cập."),
+        ("DMZ", "Reverse Proxy/API Gateway", "Điểm vào duy nhất, bảo vệ và chuyển tiếp yêu cầu.", "Cài đặt proxy/gateway, binding HTTPS, certificate, route, header, giới hạn truy cập và log."),
+        ("Application Zone", "ATFM_WEB trên IIS", "Cung cấp giao diện WebForms và API nội bộ.", "Application Pool, runtime, website, cấu hình, build/checksum, health check và quyền thư mục."),
+        ("Application Zone", "AI Service", "Hỗ trợ thống kê, tìm kiếm, tổng hợp/NL2SQL.", "Dịch vụ, endpoint, tài khoản read-only, SQL Guard, timeout, health và log."),
+        ("Application Zone", "Integration Workers", "Tiếp nhận/đồng bộ dữ liệu và gọi các hệ thống ngoài.", "Worker/service, lịch chạy, hàng chờ, retry/quarantine, secret và log trạng thái."),
+        ("Data/Audit", "Oracle ATFM/Audit", "Kho dữ liệu nghiệp vụ, package và nhật ký kiểm toán.", "Schema/package/script, service account, tablespace, audit, backup và kết nối từ IIS/worker."),
+        ("Tiện ích nội bộ", "Email/File; Reports/Exports", "Tiếp nhận file/email và sinh đầu ra báo cáo.", "Thư mục/SMTP-IMAP nếu có, quyền đọc ghi, dung lượng, mẫu export, retention và chống ghi đè."),
+        ("Hệ thống ngoài", "ADS-B/SLOT; AMHS/AFTN; Bravo 10", "Nguồn/đích tích hợp dữ liệu nghiệp vụ.", "Endpoint, giao thức, tài khoản, allowlist, timeout, kiểm tra kết nối và cơ chế xử lý khi nguồn chưa sẵn sàng."),
     ])
-    add_image_placeholder(doc, "IMG-INSTALL-01", "Ảnh sau cài đặt: máy chủ/IIS và trạng thái dịch vụ", "CHÈN ẢNH CHỤP THỰC TẾ TẠI ĐÂY")
-    add_image_placeholder(doc, "IMG-INSTALL-02", "Ảnh sau cài đặt: màn hình ATFM_WEB hoặc trang kiểm tra kết nối", "CHÈN ẢNH CHỤP THỰC TẾ TẠI ĐÂY")
-    heading(doc, "V. Kết luận", 1)
-    para(doc, "Căn cứ kết quả kiểm tra và các bằng chứng kèm theo, các bên thống nhất: môi trường cài đặt phần mềm trước kiểm thử đạt/không đạt điều kiện chuyển sang giai đoạn chạy thử. Các tồn tại (nếu có): ........................................................................................................................")
-    heading(doc, "VI. Xác nhận và chữ ký", 1)
+    heading(doc, "V. Danh mục thành phần cài đặt và cấu hình", 1)
+    add_table(doc, ["STT", "Thành phần", "Máy chủ/Zone", "Phiên bản/build", "Kiểm tra bắt buộc", "Kết quả"], [
+        ("1", "Reverse Proxy/API Gateway", "DMZ: ……………", "……………", "HTTPS 443; certificate; route đến IIS; access/error log; IP allowlist/WAF nếu áp dụng.", "Đạt/Không đạt"),
+        ("2", "ATFM_WEB/IIS", "Application: ……………", "Build/checksum: ……………", "Website/app pool RUNNING; binding; .NET/runtime; config; quyền thư mục; health URL.", "Đạt/Không đạt"),
+        ("3", "AI Service", "Application: ……………", "Model/service: ……………", "Service RUNNING; endpoint nội bộ; read-only Oracle; SQL Guard; timeout; log.", "Đạt/Không đạt/Không áp dụng"),
+        ("4", "Integration Workers", "Application: ……………", "Worker: ……………", "Service/scheduler; queue; retry; quarantine; kết nối ADS-B/SLOT, AMHS/AFTN, Bravo.", "Đạt/Không đạt"),
+        ("5", "Oracle ATFM/Audit", "Database: ……………", "Schema/package: ……………", "Kết nối; package VALID; script deploy; audit; tablespace; backup và kiểm tra phục hồi.", "Đạt/Không đạt"),
+        ("6", "Email/File", "Share/mail: ……………", "……………", "Quyền đọc/ghi; dung lượng; loại tệp; antivirus; lưu trữ raw và retention.", "Đạt/Không đạt/Không áp dụng"),
+        ("7", "Reports/Exports", "Application/share: ……………", "Template: ……………", "Sinh file thử; font tiếng Việt; quyền tải; cleanup/retention; không lộ dữ liệu ngoài scope.", "Đạt/Không đạt"),
+        ("8", "Monitoring/Logging", "Các zone", "Agent/config: ……………", "Log ứng dụng, IIS, gateway, worker, Oracle; đồng bộ thời gian; cảnh báo dịch vụ/dung lượng.", "Đạt/Không đạt"),
+    ])
+    heading(doc, "VI. Ma trận kết nối kỹ thuật", 1)
+    add_table(doc, ["STT", "Nguồn", "Đích", "Giao thức/cổng dự kiến", "Cách kiểm tra", "Kết quả"], [
+        ("1", "Khai thác viên/Người duyệt/API Consumer", "Reverse Proxy/API Gateway", "HTTPS/443", "Mở URL, kiểm tra TLS/certificate và xác thực.", "Đạt/Không đạt"),
+        ("2", "Reverse Proxy/API Gateway", "ATFM_WEB/IIS", "HTTPS hoặc HTTP nội bộ theo thiết kế", "Health check, route, forwarded headers và mã trả về.", "Đạt/Không đạt"),
+        ("3", "ATFM_WEB/IIS", "Oracle ATFM/Audit", "Oracle Net/1521 hoặc cổng cấu hình", "Mở kết nối bằng service account; SELECT/package smoke test.", "Đạt/Không đạt"),
+        ("4", "ATFM_WEB/IIS", "AI Service", "HTTPS/API nội bộ", "Health, auth, timeout và truy vấn read-only mẫu.", "Đạt/Không đạt/Không áp dụng"),
+        ("5", "ATFM_WEB/IIS", "Integration Workers", "API/queue/service nội bộ", "Gửi job thử, nhận BatchId và trạng thái.", "Đạt/Không đạt"),
+        ("6", "Integration Workers", "ADS-B/SLOT", "API/DB/SFTP theo hợp đồng", "Kết nối/đọc metadata hoặc bản ghi thử; không ghi dữ liệu thật.", "Đạt/Không đạt/Chờ nguồn"),
+        ("7", "Integration Workers", "AMHS/AFTN", "Connector/queue theo cấu hình", "Health/handshake; kiểm tra queue thử hoặc chế độ giả lập.", "Đạt/Không đạt/Chờ nguồn"),
+        ("8", "Integration Workers", "Bravo 10", "API/File theo hợp đồng", "Kết nối thử, kiểm tra schema và thư mục trao đổi.", "Đạt/Không đạt/Chờ nguồn"),
+        ("9", "ATFM_WEB/Oracle", "Email/File và Reports/Exports", "SMTP/IMAP/File share", "Ghi/đọc file thử, tạo báo cáo và kiểm tra quyền.", "Đạt/Không đạt"),
+    ])
+    heading(doc, "VII. Kiểm tra bảo mật, vận hành và khả năng hoàn nguyên", 1)
+    add_table(doc, ["Nhóm kiểm tra", "Yêu cầu", "Bằng chứng", "Kết quả"], [
+        ("Phân vùng mạng", "DMZ chỉ chuyển tiếp đến endpoint IIS được phép; Oracle và service nội bộ không mở trực tiếp cho người dùng Internet.", "Firewall/route/port test", "Đạt/Không đạt"),
+        ("Tài khoản kỹ thuật", "Tài khoản gateway, IIS, worker, AI và Oracle tách biệt; quyền tối thiểu; không ghi secret trong biên bản/log.", "Danh sách account đã che; RBAC test", "Đạt/Không đạt"),
+        ("TLS và cấu hình", "Certificate còn hiệu lực; protocol/cipher theo chính sách; cấu hình sản xuất không bật debug hoặc lộ stack trace.", "TLS scan/config review", "Đạt/Không đạt"),
+        ("Audit và thời gian", "Máy chủ đồng bộ thời gian; audit ghi actor, correlation và trạng thái dịch vụ/package.", "NTP/time check; audit sample", "Đạt/Không đạt"),
+        ("Sao lưu/phục hồi", "Có backup trước triển khai, backup cấu hình/package và kiểm tra khả năng đọc/phục hồi theo runbook.", "Backup ID/checksum; restore record", "Đạt/Không đạt"),
+        ("Rollback", "Có gói build/script rollback, thứ tự hoàn nguyên và tiêu chí dừng; không xóa audit/raw data.", "Runbook, checksum, người phê duyệt", "Đạt/Không đạt"),
+    ])
+    heading(doc, "VIII. Phụ lục hình ảnh và bằng chứng sau cài đặt", 1)
+    para(doc, "Sơ đồ ngữ cảnh ATFM_WEB do các bên thống nhất là căn cứ bố trí ảnh và kiểm tra. Mỗi ảnh phải thể hiện hoặc ghi kèm hostname/zone, URL hay dịch vụ, thời điểm chụp, người chụp và mã biên bản. Không dùng ảnh minh họa để thay cho bằng chứng hiện trường.")
+    add_table(doc, ["Mã ảnh", "Đối tượng theo sơ đồ", "Nội dung cần thể hiện"], [
+        ("IMG-INSTALL-01", "Sơ đồ ngữ cảnh ATFM_WEB", "DMZ, IIS, AI Service, Integration Workers, Oracle/Audit, Email/File, Reports/Exports và 3 hệ thống ngoài."),
+        ("IMG-INSTALL-02", "Reverse Proxy/API Gateway", "Binding HTTPS, certificate, route/health và trạng thái dịch vụ tại DMZ."),
+        ("IMG-INSTALL-03", "ATFM_WEB/IIS", "Website, application pool, build/checksum và health URL sau cài đặt."),
+        ("IMG-INSTALL-04", "Oracle ATFM/Audit", "Kết nối, schema/package VALID và kết quả script triển khai đã che thông tin nhạy cảm."),
+        ("IMG-INSTALL-05", "AI Service/Integration Workers", "Trạng thái service/worker, health, lịch chạy và queue/retry."),
+        ("IMG-INSTALL-06", "Kết nối hệ thống ngoài", "Kết quả kiểm tra ADS-B/SLOT, AMHS/AFTN và Bravo 10 hoặc ghi rõ Chờ nguồn."),
+    ])
+    for code, caption in [
+        ("IMG-INSTALL-01", "Sơ đồ ngữ cảnh hệ thống ATFM_WEB được phê duyệt"),
+        ("IMG-INSTALL-02", "Reverse Proxy/API Gateway tại DMZ sau cài đặt"),
+        ("IMG-INSTALL-03", "ATFM_WEB Application Zone – IIS sau cài đặt"),
+        ("IMG-INSTALL-04", "Oracle ATFM/Audit và package triển khai"),
+        ("IMG-INSTALL-05", "AI Service và Integration Workers"),
+        ("IMG-INSTALL-06", "Kết nối ADS-B/SLOT, AMHS/AFTN và Bravo 10"),
+    ]:
+        add_image_placeholder(doc, code, caption, "CHÈN ẢNH CHỤP THỰC TẾ TẠI ĐÂY")
+    heading(doc, "IX. Tồn tại và biện pháp xử lý", 1)
+    add_table(doc, ["STT", "Tồn tại/sai khác", "Ảnh hưởng", "Biện pháp", "Phụ trách", "Hạn xử lý"], [
+        ("1", "", "", "", "", ""),
+        ("2", "", "", "", "", ""),
+    ])
+    heading(doc, "X. Kết luận", 1)
+    para(doc, "Căn cứ sơ đồ ngữ cảnh, ma trận thành phần, kết nối, kiểm tra bảo mật/vận hành và các bằng chứng kèm theo, các bên thống nhất: môi trường cài đặt ATFM_WEB đạt/đạt có điều kiện/không đạt yêu cầu kỹ thuật để chuyển sang giai đoạn kiểm thử, chạy thử. Các điều kiện kèm theo (nếu có): ........................................................................................................................")
+    heading(doc, "XI. Xác nhận và chữ ký", 1)
     add_signature_table(doc)
     return doc
 
