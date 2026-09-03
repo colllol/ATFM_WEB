@@ -1230,6 +1230,7 @@
     <Content Include="Permission\SearchPermissionAdvExport.ashx" />
     <Content Include="Permission\SearchPermissionAdv.js" />
     <Content Include="PlanMessage\PlanMessage.aspx" />
+    <Content Include="PlanMessage\SendAMHSHistory.aspx" />
     <Content Include="QLBMB\ExportKHB.aspx" />
     <Content Include="QLBMB\ExportSchedule.aspx" />
     <Content Include="Receive_LogFile\FPLMessBox.aspx" />
@@ -2701,6 +2702,12 @@
     </Compile>
     <Compile Include="PlanMessage\PlanMessage.aspx.designer.cs">
       <DependentUpon>PlanMessage.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="PlanMessage\SendAMHSHistory.aspx.cs">
+      <DependentUpon>SendAMHSHistory.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="PlanMessage\SendAMHSHistory.aspx.designer.cs">
+      <DependentUpon>SendAMHSHistory.aspx</DependentUpon>
     </Compile>
     <Compile Include="QLBMB\ExportKHB.aspx.cs">
       <DependentUpon>ExportKHB.aspx</DependentUpon>
