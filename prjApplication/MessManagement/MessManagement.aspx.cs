@@ -144,7 +144,15 @@ namespace prjApplication.MessManagement
                     kq = btnSendOnclickAll(ThamSo[0], ThamSo[1], ThamSo[2],ThamSo[4], ThamSo[3], ThamSo[5]);
                     break;
                 case "btnOnAMHSclickAll":
-                    kq = btnSendAMHSOnclickAll(ThamSo[0], ThamSo[1], ThamSo[2], ThamSo[4], ThamSo[3], ThamSo[5]);
+                    kq = btnSendAMHSOnclickAll(
+                        ThamSo[0],
+                        ThamSo[1],
+                        ThamSo[2],
+                        ThamSo[4],
+                        ThamSo[3],
+                        ThamSo[5],
+                        ThamSo.Length > 6 ? ThamSo[6] : string.Empty
+                    );
                     break;
                     
             }
@@ -158,11 +166,66 @@ namespace prjApplication.MessManagement
              return ax ? "Sussess!" : "Error!";
            
         }
-        private string btnSendAMHSOnclickAll(string vn, string ld, string of, string toOrigin, string toAdd, string _date)
+        private string btnSendAMHSOnclickAll(
+            string vn,
+            string ld,
+            string of,
+            string toOrigin,
+            string toAdd,
+            string _date,
+            string messType)
         {
-            bool ax = Convert.ToBoolean(new clsResuftAPI().GetValueApiExtension("MESSAGE_PKG", "Khb_SendAllAMHS_MessageAll", new { P_VN = vn, P_LD = ld, P_OF = of, P_ORIGIN = toOrigin, P_TOADD = toAdd, P_DATE = DateTime.Parse(_date) }).ToString() == "1" ? true : false);
-            WriteLogHistory2Database.WriteHistory2Database(_user.UserID, _user.UserFullName, "[MESSAGE_PKG-Khb_SendAllAMHS_MessageAll]", 0, $"[Insert][{ax.ToString()}]", 0);
-            return ax ? "Sussess!" : "Error!";
+            if (string.IsNullOrWhiteSpace(messType))
+            {
+                return "Chưa xác định loại điện văn để tạo Subject AMHS.";
+            }
+
+            try
+            {
+                object apiResult = new clsResuftAPI().GetValueApiExtension(
+                    "MESSAGE_PKG",
+                    "Khb_SendAllAMHS_MessageAll",
+                    new
+                    {
+                        P_VN = vn,
+                        P_LD = ld,
+                        P_OF = of,
+                        P_ORIGIN = toOrigin,
+                        P_HEADER = messType.Trim(),
+                        P_TOADD = toAdd,
+                        P_DATE = DateTime.Parse(_date)
+                    });
+
+                string resultCode = Convert.ToString(apiResult);
+                bool isSuccess = string.Equals(resultCode, "1", StringComparison.Ordinal);
+
+                WriteLogHistory2Database.WriteHistory2Database(
+                    _user.UserID,
+                    _user.UserFullName,
+                    "[MESSAGE_PKG-Khb_SendAllAMHS_MessageAll]",
+                    0,
+                    string.Format(
+                        "[Insert][Result={0}][Subject={1}]",
+                        string.IsNullOrEmpty(resultCode) ? "NULL" : resultCode,
+                        messType.Trim()),
+                    0);
+
+                return isSuccess
+                    ? "Sussess!"
+                    : "Gửi tất cả AMHS không thành công. Mã kết quả: " +
+                      (string.IsNullOrEmpty(resultCode) ? "NULL" : resultCode) + ".";
+            }
+            catch (Exception ex)
+            {
+                WriteLogHistory2Database.WriteHistory2Database(
+                    _user.UserID,
+                    _user.UserFullName,
+                    "[MESSAGE_PKG-Khb_SendAllAMHS_MessageAll]",
+                    0,
+                    "[Insert][Exception] " + ex.Message,
+                    0);
+                return "Gửi tất cả AMHS không thành công: " + ex.Message;
+            }
 
         }
         
