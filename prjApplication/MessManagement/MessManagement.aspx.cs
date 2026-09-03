@@ -183,8 +183,8 @@ namespace prjApplication.MessManagement
             try
             {
                 object apiResult = new clsResuftAPI().GetValueApiExtension(
-                    "MESSAGE_PKG",
-                    "Khb_SendAllAMHS_MessageAll",
+                    "MESSAGE_AMHS_PKG",
+                    "SEND_ALL_AMHS",
                     new
                     {
                         P_VN = vn,
@@ -202,7 +202,7 @@ namespace prjApplication.MessManagement
                 WriteLogHistory2Database.WriteHistory2Database(
                     _user.UserID,
                     _user.UserFullName,
-                    "[MESSAGE_PKG-Khb_SendAllAMHS_MessageAll]",
+                    "[MESSAGE_AMHS_PKG-SEND_ALL_AMHS]",
                     0,
                     string.Format(
                         "[Insert][Result={0}][Subject={1}]",
@@ -211,7 +211,7 @@ namespace prjApplication.MessManagement
                     0);
 
                 return isSuccess
-                    ? "Sussess!"
+                    ? "Gửi tất cả AMHS thành công."
                     : "Gửi tất cả AMHS không thành công. Mã kết quả: " +
                       (string.IsNullOrEmpty(resultCode) ? "NULL" : resultCode) + ".";
             }
@@ -220,13 +220,44 @@ namespace prjApplication.MessManagement
                 WriteLogHistory2Database.WriteHistory2Database(
                     _user.UserID,
                     _user.UserFullName,
-                    "[MESSAGE_PKG-Khb_SendAllAMHS_MessageAll]",
+                    "[MESSAGE_AMHS_PKG-SEND_ALL_AMHS]",
                     0,
-                    "[Insert][Exception] " + ex.Message,
+                    "[Insert][Exception] " + GetExceptionMessage(ex),
                     0);
-                return "Gửi tất cả AMHS không thành công: " + ex.Message;
+                return "Gửi tất cả AMHS không thành công: " + GetExceptionMessage(ex);
             }
 
+        }
+
+        private static string GetExceptionMessage(Exception exception)
+        {
+            if (exception == null)
+                return "Lỗi không xác định.";
+
+            var messages = new List<string>();
+            Exception current = exception;
+            while (current != null)
+            {
+                if (!string.IsNullOrWhiteSpace(current.Message)
+                    && !messages.Contains(current.Message))
+                {
+                    messages.Add(current.Message);
+                }
+
+                var aggregate = current as AggregateException;
+                if (aggregate != null && aggregate.InnerExceptions.Count > 0)
+                {
+                    current = aggregate.InnerExceptions[0];
+                }
+                else
+                {
+                    current = current.InnerException;
+                }
+            }
+
+            return messages.Count == 0
+                ? "Lỗi không xác định."
+                : string.Join(" | ", messages);
         }
         
         private string btnOnclickAll(string[] thamso)
