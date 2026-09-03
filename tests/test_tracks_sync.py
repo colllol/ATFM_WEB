@@ -201,6 +201,8 @@ class TracksSyncTests(unittest.TestCase):
             candidate("2026-07-23 01:05:00", 20.1, 105.1, status=1),
             candidate("2026-07-23 01:10:00", 20.2, 105.2, status=2),
         ]
+        rows[0].is_boundary_contact = True
+        rows[2].is_boundary_contact = True
 
         result = main.dedupe_tracks(rows)
 
@@ -209,6 +211,19 @@ class TracksSyncTests(unittest.TestCase):
         self.assertEqual("2026-07-23 01:10:00", result[0].time_out)
         self.assertEqual(2, result[0].status)
         self.assertEqual(1, result[0].first_status)
+
+    def test_common_boundary_is_not_counted_as_contact(self):
+        rows = [
+            candidate("2026-07-23 01:00:00", 20.0, 105.0, status=1),
+            candidate("2026-07-23 01:05:00", 20.1, 105.1, status=1),
+            candidate("2026-07-23 01:10:00", 20.2, 105.2, status=2),
+        ]
+        rows[0].is_boundary_contact = True
+        rows[1].is_common_boundary = True
+        rows[2].is_boundary_contact = True
+        result = main.dedupe_tracks(rows)
+        self.assertEqual("2026-07-23 01:00:00", result[0].time_in)
+        self.assertEqual("2026-07-23 01:10:00", result[0].time_out)
 
     def test_missing_route_is_classified_as_other(self):
         key = ("HVN123", "23-07-2026")

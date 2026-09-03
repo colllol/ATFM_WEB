@@ -37,6 +37,8 @@ class TrackCandidate:
     time_in: str = ""
     time_out: str = ""
     first_status: int = 0
+    is_boundary_contact: bool = False
+    is_common_boundary: bool = False
 
 
 @dataclass
@@ -332,8 +334,13 @@ def point_in_polygon(point: Tuple[float, float], polygon: Sequence[Sequence[Tupl
 
 
 def classify_fir(lat: object, lon: object, polygons: Dict[str, List[List[List[Tuple[float, float]]]]]) -> Optional[int]:
+    status, _, _ = classify_fir_detail(lat, lon, polygons)
+    return status
+
+
+def classify_fir_detail(lat: object, lon: object, polygons: Dict[str, List[List[List[Tuple[float, float]]]]]) -> Tuple[Optional[int], bool, bool]:
     if lat is None or lon is None:
-        return None
+        return None, False, False
     point = (float(lon), float(lat))
     hits: Dict[str, bool] = {}
     boundaries: Dict[str, bool] = {}
@@ -348,15 +355,17 @@ def classify_fir(lat: object, lon: object, polygons: Dict[str, List[List[List[Tu
                 boundaries[fir_id] = True
             if hits[fir_id] and boundaries[fir_id]:
                 break
+    common_boundary = boundaries.get("VVHN") and boundaries.get("VVHM")
+    single_boundary = bool(boundaries.get("VVHN") ^ boundaries.get("VVHM"))
     if boundaries.get("VVHN") or (hits.get("VVHN") and hits.get("VVHM")):
-        return 1
+        return 1, single_boundary, bool(common_boundary)
     if boundaries.get("VVHM"):
-        return 2
+        return 2, single_boundary, bool(common_boundary)
     if hits.get("VVHN"):
-        return 1
+        return 1, False, False
     if hits.get("VVHM"):
-        return 2
-    return None
+        return 2, False, False
+    return None, False, False
 
 
 def import_postgres():
@@ -468,7 +477,7 @@ def read_tracks(cfg: Dict, polygons: Dict, sink: MessageSink, full: bool = False
                 if updated_dt is None:
                     continue
                 max_updated = updated_dt if max_updated is None or updated_dt > max_updated else max_updated
-                status = classify_fir(lat, lon, polygons)
+                status, is_boundary, is_common_boundary = classify_fir_detail(lat, lon, polygons)
                 if status is None:
                     continue
                 callsign = normalize_callsign(flight_id)
@@ -484,6 +493,8 @@ def read_tracks(cfg: Dict, polygons: Dict, sink: MessageSink, full: bool = False
                         lon=float(lon),
                         time_in=updated_dt.strftime(WATERMARK_FORMAT),
                         first_status=status,
+                        is_boundary_contact=is_boundary,
+                        is_common_boundary=is_common_boundary,
                     )
                 )
     sink.write(f"Doc public.tracks: {len(rows)} dong nam trong FIR can doi chieu.")
@@ -499,11 +510,13 @@ def dedupe_tracks(rows: Iterable[TrackCandidate]) -> List[TrackCandidate]:
         ordered = sorted(group, key=lambda item: item.update_text)
         latest = ordered[-1]
         first = ordered[0]
-        time_out = ""
-        for item in ordered[1:]:
-            if item.status != first.status:
-                time_out = item.update_text
-                break
+        contacts = []
+        was_contact = False
+        for item in ordered:
+            contact = item.is_boundary_contact and not item.is_common_boundary
+            if contact and not was_contact:
+                contacts.append(item.update_text)
+            was_contact = contact
         result.append(
             TrackCandidate(
                 callsign=latest.callsign,
@@ -512,9 +525,11 @@ def dedupe_tracks(rows: Iterable[TrackCandidate]) -> List[TrackCandidate]:
                 status=latest.status,
                 lat=latest.lat,
                 lon=latest.lon,
-                time_in=first.time_in or first.update_text,
-                time_out=time_out,
+                time_in=contacts[0] if contacts else "",
+                time_out=contacts[1] if len(contacts) > 1 else "",
                 first_status=first.status,
+                is_boundary_contact=first.is_boundary_contact,
+                is_common_boundary=first.is_common_boundary,
             )
         )
     return result

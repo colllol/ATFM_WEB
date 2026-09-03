@@ -215,7 +215,7 @@ Không nên xóa hoặc sửa watermark trong lúc Auto đang chạy. Trước k
 - Vị trí thuộc VVHN hoặc biên chung VVHN/VVHM có `STATUS = 1`; vị trí thuộc VVHM có `STATUS = 2`.
 - Mỗi khóa logic là `CALLSIGN + DATE`; bảng được bảo vệ bằng unique index trên hai trường này.
 - Nếu một callsign/ngày có nhiều vị trí, tọa độ và thời gian cập nhật mới nhất được giữ lại.
-- `TIME_IN` là lần đầu callsign chạm FIR; `TIME_OUT` là lần đầu sau đó chạm FIR còn lại. Không chuyển FIR thì `TIME_OUT` để trống.
+- `TIME_IN` là lần đầu callsign chạm đường biên của một FIR đơn; `TIME_OUT` là lần chạm đường biên đơn thứ hai. Điểm nằm trong FIR, ngoài FIR hoặc trên đường biên chung VVHN/VVHM không được tính là lần chạm. Các lần chạm đơn tiếp theo bị bỏ qua.
 - Không tìm thấy chuyến bay trong bảng đối chiếu vẫn ghi với `PERMTYPE = OTHER`; thông tin hành trình để trống.
 - Chuyến bay thiếu `FROM_AIRP` hoặc `TO_AIRP` cũng được ghi với `PERMTYPE = OTHER`.
 - Nếu có nhiều chuyến cùng callsign/ngày, công cụ chọn duy nhất dòng có khoảng `ETD-ETA` chứa `updated_at_utc`; khoảng qua nửa đêm được hỗ trợ. Không chọn được duy nhất thì bỏ qua khóa đó.
@@ -370,4 +370,3 @@ Start in: C:\ATFM
 - [ ] Watermark tiếp tục tăng.
 - [ ] Dung lượng bảng `T_TRACKS_LOG` và file log còn trong giới hạn vận hành.
 - [ ] Không có nhiều khóa bị bỏ qua do trùng khoảng `ETD-ETA`.
-
