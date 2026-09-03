@@ -523,10 +523,12 @@ PROCEDURE SP_INSERT_QLBINBOX(P_IN_ID number,P_ER_ID number, P_NT_ID number, P_IN
 	begin
 	    savepoint BAK;
 	    select count(0)+1 into nC from outbox_oracle;
+	    -- P_HEADER cua luong AMHS nhan messType tu MessManagement.aspx va duoc
+	    -- luu vao SUBJECT. Gia tri khac GG dung priority mac dinh 0.
 	    insert into outbox_oracle(ID,ATTACH,CONTENT,FROM_ADDRESS,PRIORITY,SUBJECT,TIME)
 		values (nC, 0, p_content, (select nvl(ADDRESS,'AXXCA') from address_oracle where name = 'VVVVZGZX' and scheme='C' and rownum<2)
-		    , (case when nvl(p_Header,'FF') = 'FF' then 0
-			when nvl(p_Header,'FF')='GG' then 1 end), 'object', sysdate);
+		    , (case when upper(trim(p_Header)) = 'GG' then 1 else 0 end),
+		      nvl(trim(p_Header), 'object'), sysdate);
 	    insert into Outbox_address_Oracle(address, outbox_oracle_id)
 	    select  address,nC from table(split_string(trim(replace(p_ToAdd,' ',',')),','))
 	    inner join Address_Oracle on column_value = name and scheme<>'C';
@@ -1048,4 +1050,3 @@ END GetInboxBySearch;
 	end Get_MessageDetailAirPort;
 END MESSAGE_PKG;
 /
-

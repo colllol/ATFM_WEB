@@ -257,6 +257,11 @@ namespace prjApplication.MessManagement
                 return "Chưa nhập địa chỉ nhận AMHS.";
             }
 
+            if (string.IsNullOrWhiteSpace(messType))
+            {
+                return "Chưa xác định loại điện văn để tạo Subject AMHS.";
+            }
+
             try
             {
                 // Luồng AMHS phải gọi message_send_one_amhs. Store này ghi dữ liệu vào
@@ -267,6 +272,8 @@ namespace prjApplication.MessManagement
                     new
                     {
                         P_ORIGIN = toOrigin,
+                        // MESSAGE_PKG dùng P_HEADER làm SUBJECT của OUTBOX_ORACLE.
+                        P_HEADER = messType.Trim(),
                         P_TOADD = toAdd,
                         P_CONTENT = content
                     });
