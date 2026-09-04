@@ -82,7 +82,7 @@ namespace prjApplication.PlanMessage
 
             grdSource.DataSource = table;
             grdSource.DataBind();
-            return RenderToHTML(grdSource);
+            return this.RenderToHTML(grdSource);
         }
 
         private void SaveSearchDates()
