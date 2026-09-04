@@ -17,8 +17,8 @@ WITH c AS (SELECT ROW_NUMBER() OVER(PARTITION BY UPPER(TRIM(FLIGHTNBR)),UPPER(TR
         [WebMethod, ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static object GetData(string currentDate, string compareDate, string category)
         {
-            DateTime d1 = Parse(currentDate), d2 = Parse(compareDate); var list = new List<Dictionary<string, object>>();
-            using (var cn = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString)) using (var cmd = new OracleCommand(Sql, cn))
+            DateTime d1 = Parse(currentDate), d2 = d1.AddDays(-7); var list = new List<Dictionary<string, object>>();
+            using (var cn = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString)) using (var cmd = new OracleCommand(Sql.Replace("T_FINISHED_FLIGHTS", "T_DAY_FLIGHTS"), cn))
             { cmd.BindByName=true; cmd.Parameters.Add("d1",OracleDbType.Date).Value=d1; cmd.Parameters.Add("d2",OracleDbType.Date).Value=d2; cmd.Parameters.Add("cat",OracleDbType.Varchar2).Value=String.IsNullOrWhiteSpace(category)?(object)DBNull.Value:category; cn.Open(); using(var rd=cmd.ExecuteReader()){while(rd.Read()){var o=new Dictionary<string,object>(); for(int i=0;i<rd.FieldCount;i++) o[rd.GetName(i)]=rd.IsDBNull(i)?null:rd.GetValue(i); list.Add(o);}} }
             return new { Code="00", ListValue=list };
         }
