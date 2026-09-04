@@ -1844,3 +1844,4 @@ Quy ước:
 2026-09-04 | Database/Oracle/20260904_T_MENUS_KHBHDBNCompare.sql, 20260904_T_MENUS_KHBHDBNCompare_rollback.sql | Tao menu va cap quyen admin cho bao cao doi chieu KHBHĐBN.
 2026-09-04 | Database/Oracle/20260904_T_MENUS_KHBHDBNCompare.sql | Sua lenh MERGE cap quyen thanh UPDATE/INSERT tuong thich Oracle 12c.
 2026-09-04 | prjApplication/ReportNew/KHBHDBNCompare.aspx.cs | Chuyen nguon doi chieu sang T_DAY_FLIGHTS va tu dong lay cung ngay tuan truoc (P_DATE - 7 ngay).
+2026-09-04 | Database/Oracle/20260904_KHBHDBN_COMPARE_PKG.sql, prjApplication/ReportNew/KHBHDBNCompare.js | Tach truy van sang package Oracle va goi API chung; bo sung tong hop theo hang, san bay, chang va chi tiet so sanh.
