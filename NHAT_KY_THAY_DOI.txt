@@ -1842,3 +1842,4 @@ Quy ước:
 2026-09-04 | Pm Số liệu điều hành bay - Phân hệ 5 (Mục 5.1-5.4).xlsx | Tao file Excel cho 4 chuc nang ung dung AI: xu ly NLP, truy van/tong hop tu dong, chatbot trong giao dien SLB va dashboard giam sat hieu nang.
 2026-09-04 | prjApplication/ReportNew/KHBHDBNCompare.aspx, KHBHDBNCompare.aspx.cs, KHBHDBNCompare.aspx.designer.cs, KHBHDBNCompare.js | Tao man hinh doi chieu KHBHĐBN theo hai ngay, phan loai NEW/MISSING/CHANGED/DUPLICATE/NORMAL/UNRESOLVED va export Excel; chi lay T_FINISHED_FLIGHTS ISACCEPTED=1, loai NOPERM, khong them loc quan su.
 2026-09-04 | Database/Oracle/20260904_T_MENUS_KHBHDBNCompare.sql, 20260904_T_MENUS_KHBHDBNCompare_rollback.sql | Tao menu va cap quyen admin cho bao cao doi chieu KHBHĐBN.
+2026-09-04 | Database/Oracle/20260904_T_MENUS_KHBHDBNCompare.sql | Sua lenh MERGE cap quyen thanh UPDATE/INSERT tuong thich Oracle 12c.
