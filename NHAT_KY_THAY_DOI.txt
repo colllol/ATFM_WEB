@@ -1846,3 +1846,4 @@ Quy ước:
 2026-09-04 | prjApplication/ReportNew/KHBHDBNCompare.aspx.cs | Chuyen nguon doi chieu sang T_DAY_FLIGHTS va tu dong lay cung ngay tuan truoc (P_DATE - 7 ngay).
 2026-09-04 | Database/Oracle/20260904_KHBHDBN_COMPARE_PKG.sql, prjApplication/ReportNew/KHBHDBNCompare.js | Tach truy van sang package Oracle va goi API chung; bo sung tong hop theo hang, san bay, chang va chi tiet so sanh.
 2026-09-04 | prjApplication/ReportNew/KHBHDBNCompare.js | Sua tham so API de gui dung ngay cung thu tuan truoc khi goi package.
+2026-09-04 | prjApplication/ReportNew/KHBHDBNCompare.aspx, KHBHDBNSummary.js, prjApplication/prjApplication.csproj | Bo sung bang tong hop so sanh theo chieu du lieu, hien tong ngay danh gia, tuan truoc, chenhlech tuyet doi va phan tram.

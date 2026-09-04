@@ -676,6 +676,7 @@
     <Content Include="ReportNew\FlightStatusRate.aspx" />
     <Content Include="ReportNew\KHBHDBNCompare.aspx" />
     <Content Include="ReportNew\KHBHDBNCompare.js" />
+    <Content Include="ReportNew\KHBHDBNSummary.js" />
     <Content Include="ReportNew\FlightStatusRate.js" />
     <Content Include="ReportNew\FlightTrendAnalysis.aspx" />
     <Content Include="ReportNew\FlightTrendAnalysis.js" />
