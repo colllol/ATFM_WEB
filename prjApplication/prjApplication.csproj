@@ -674,6 +674,8 @@
     <Content Include="ReportNew\FlightOperationOverview.aspx" />
     <Content Include="ReportNew\FlightOperationOverview.js" />
     <Content Include="ReportNew\FlightStatusRate.aspx" />
+    <Content Include="ReportNew\KHBHDBNCompare.aspx" />
+    <Content Include="ReportNew\KHBHDBNCompare.js" />
     <Content Include="ReportNew\FlightStatusRate.js" />
     <Content Include="ReportNew\FlightTrendAnalysis.aspx" />
     <Content Include="ReportNew\FlightTrendAnalysis.js" />
@@ -2081,6 +2083,8 @@
       <DependentUpon>FlightStatusRate.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="ReportNew\KHBHDBNCompare.aspx.cs"><DependentUpon>KHBHDBNCompare.aspx</DependentUpon></Compile>
+    <Compile Include="ReportNew\KHBHDBNCompare.aspx.designer.cs"><DependentUpon>KHBHDBNCompare.aspx</DependentUpon></Compile>
     <Compile Include="Common\ChartReportAirport.aspx.cs">
       <DependentUpon>ChartReportAirport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -2705,6 +2709,7 @@
     </Compile>
     <Compile Include="PlanMessage\SendAMHSHistory.aspx.cs">
       <DependentUpon>SendAMHSHistory.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="PlanMessage\SendAMHSHistory.aspx.designer.cs">
       <DependentUpon>SendAMHSHistory.aspx</DependentUpon>
