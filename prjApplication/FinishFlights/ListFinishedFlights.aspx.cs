@@ -45,7 +45,7 @@ namespace prjApplication.FinishFlights
                 default: routeCondition = "UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' AND UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%'"; break;
             }
             string selectedRegion = (region ?? "").Trim().ToUpperInvariant();
-            const string sql = @"SELECT UPPER(TRIM(f.OPER_ID)) AIRLINE, UPPER(TRIM(f.FROM_AIRP)) FROM_AIRP,
+            string sql = @"SELECT UPPER(TRIM(f.OPER_ID)) AIRLINE, UPPER(TRIM(f.FROM_AIRP)) FROM_AIRP,
                                         UPPER(TRIM(f.TO_AIRP)) TO_AIRP, TRUNC(f.FLIGHTDATE) FLIGHT_DATE,
                                         UPPER(TRIM(f.FLIGHTNBR)) CALLSIGN, COUNT(*) ORACLE_COUNT
                                    FROM T_FINISHED_FLIGHTS f
