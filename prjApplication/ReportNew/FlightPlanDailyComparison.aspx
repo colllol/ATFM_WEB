@@ -2,7 +2,7 @@
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportNew.css") %>" />
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260905-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/FlightPlanDailyComparison.css?v=20260905-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/FlightPlanDailyComparison.css?v=20260905-2") %>" />
     <section class="fpd-page" data-endpoint="<%= ResolveUrl("~/ReportNew/FlightPlanDailyComparison.aspx/GetComparison") %>">
         <header class="fpd-hero">
             <div>
