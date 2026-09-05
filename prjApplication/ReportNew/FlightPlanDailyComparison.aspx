@@ -17,9 +17,10 @@
             <div class="fpd-filter-heading"><span class="fpd-section-kicker">Phạm vi dữ liệu</span><strong>Chọn ngày để bắt đầu đối chiếu</strong></div>
             <div class="fpd-filters">
                 <label class="fpd-field"><span>Sân bay</span><select id="fpdAirport"><option value="ALL">Tất cả sân bay</option></select></label>
+                <label class="fpd-field"><span>Hãng khai thác</span><select id="fpdOperator"><option value="ALL">Tất cả hãng</option></select></label>
                 <label class="fpd-field"><span>Ngày so sánh 1</span><input id="fpdDate1" type="date" /></label>
                 <label class="fpd-field fpd-field-readonly"><span>Ngày so sánh 2 <em>Tự động -7 ngày</em></span><input id="fpdDate2" type="date" readonly aria-readonly="true" /></label>
-                <button type="button" id="fpdApply" class="fpd-apply"><span aria-hidden="true">↗</span> Đối chiếu dữ liệu</button>
+                <button type="button" id="fpdApply" class="fpd-apply"><span aria-hidden="true">↗</span> So sánh</button>
             </div>
             <p class="fpd-filter-note" id="fpdFilterNote">Ngày so sánh 2 được tự động lùi 7 ngày từ ngày so sánh 1.</p>
         </section>
