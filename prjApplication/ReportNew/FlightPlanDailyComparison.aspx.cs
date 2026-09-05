@@ -20,6 +20,16 @@ namespace prjApplication.ReportNew
             public string FlightType { get; set; }
         }
 
+        private sealed class DetailFlight
+        {
+            public string callsign { get; set; }
+            public string fromAirp { get; set; }
+            public string toAirp { get; set; }
+            public string etd { get; set; }
+            public string eta { get; set; }
+            public string flightType { get; set; }
+        }
+
         private sealed class ComparisonDay
         {
             public DateTime Date { get; set; }
@@ -47,7 +57,7 @@ namespace prjApplication.ReportNew
                 date1 = first.ToString("yyyy-MM-dd"), date2 = second.ToString("yyyy-MM-dd"), airport = selectedAirport ?? "ALL",
                 day1 = new { total = day1.Total, seasonal = day1.Seasonal, adHoc = day1.AdHoc },
                 day2 = new { total = day2.Total, seasonal = day2.Seasonal, adHoc = day2.AdHoc },
-                differences = new { total = only1.Count + only2.Count, onlyDate1 = only1.Count, onlyDate2 = only2.Count, date1 = only1, date2 = only2 }
+                differences = new { total = only1.Count + only2.Count, onlyDate1 = only1.Count, onlyDate2 = only2.Count, date1 = only1.Select(ToDetail).ToList(), date2 = only2.Select(ToDetail).ToList() }
             };
         }
 
@@ -95,6 +105,7 @@ namespace prjApplication.ReportNew
         private static OracleConnection CreateConnection() { return new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString); }
         private static string Text(object value) { return value == null || value == DBNull.Value ? String.Empty : Convert.ToString(value, CultureInfo.InvariantCulture).Trim(); }
         private static string Key(FlightRow row) { return String.Join("|", new[] { row.Callsign, row.FromAirp, row.ToAirp, row.Etd, row.Eta }.Select(x => (x ?? String.Empty).Trim().ToUpperInvariant())); }
+        private static DetailFlight ToDetail(FlightRow row) { return new DetailFlight { callsign = row.Callsign, fromAirp = row.FromAirp, toAirp = row.ToAirp, etd = row.Etd, eta = row.Eta, flightType = row.FlightType }; }
         private static string NormalizeFilter(string value) { string result = (value ?? String.Empty).Trim().ToUpperInvariant(); return result.Length == 0 || result == "ALL" ? null : result; }
         private static DateTime ParseDate(string value) { DateTime result; if (!DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) throw new ArgumentException("Ngày so sánh không hợp lệ."); return result.Date; }
     }
