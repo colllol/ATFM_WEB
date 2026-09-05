@@ -674,6 +674,9 @@
     <Content Include="ReportNew\FlightOperationOverview.aspx" />
     <Content Include="ReportNew\FlightOperationOverview.js" />
     <Content Include="ReportNew\FlightStatusRate.aspx" />
+    <Content Include="ReportNew\KHBHDBNCompare.aspx" />
+    <Content Include="ReportNew\KHBHDBNCompare.js" />
+    <Content Include="ReportNew\KHBHDBNSummary.js" />
     <Content Include="ReportNew\FlightStatusRate.js" />
     <Content Include="ReportNew\FlightTrendAnalysis.aspx" />
     <Content Include="ReportNew\FlightTrendAnalysis.js" />
@@ -1233,6 +1236,7 @@
     <Content Include="Permission\SearchPermissionAdvExport.ashx" />
     <Content Include="Permission\SearchPermissionAdv.js" />
     <Content Include="PlanMessage\PlanMessage.aspx" />
+    <Content Include="PlanMessage\SendAMHSHistory.aspx" />
     <Content Include="QLBMB\ExportKHB.aspx" />
     <Content Include="QLBMB\ExportSchedule.aspx" />
     <Content Include="Receive_LogFile\FPLMessBox.aspx" />
@@ -2087,6 +2091,8 @@
       <DependentUpon>FlightPlanDailyComparison.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="ReportNew\KHBHDBNCompare.aspx.cs"><DependentUpon>KHBHDBNCompare.aspx</DependentUpon></Compile>
+    <Compile Include="ReportNew\KHBHDBNCompare.aspx.designer.cs"><DependentUpon>KHBHDBNCompare.aspx</DependentUpon></Compile>
     <Compile Include="Common\ChartReportAirport.aspx.cs">
       <DependentUpon>ChartReportAirport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -2708,6 +2714,13 @@
     </Compile>
     <Compile Include="PlanMessage\PlanMessage.aspx.designer.cs">
       <DependentUpon>PlanMessage.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="PlanMessage\SendAMHSHistory.aspx.cs">
+      <DependentUpon>SendAMHSHistory.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PlanMessage\SendAMHSHistory.aspx.designer.cs">
+      <DependentUpon>SendAMHSHistory.aspx</DependentUpon>
     </Compile>
     <Compile Include="QLBMB\ExportKHB.aspx.cs">
       <DependentUpon>ExportKHB.aspx</DependentUpon>

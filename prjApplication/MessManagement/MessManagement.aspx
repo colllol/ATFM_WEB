@@ -258,7 +258,7 @@
                     P_CONTENT: $('#txtContent').val()
                 };
                 preloadImgAfterButton('btnSendAllAMHS', 'loaddingSendAllAMHS');
-                GetArgWithPostBack(vn + phanCach + ld + phanCach + of + phanCach + $('#txtAddress').val() + phanCach + $('#txtOrigin').val() + phanCach + (dd == '' ? new Date().format('yyyy/mm/dd') : dd.replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, '$3/$2/$1')) + phanCachArg + 'btnOnAMHSclickAll', 'btnOnAMHSclickAll');
+                GetArgWithPostBack(vn + phanCach + ld + phanCach + of + phanCach + $('#txtAddress').val() + phanCach + $('#txtOrigin').val() + phanCach + (dd == '' ? new Date().format('yyyy/mm/dd') : dd.replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, '$3/$2/$1')) + phanCach + messType + phanCachArg + 'btnOnAMHSclickAll', 'btnOnAMHSclickAll');
             }
             else {
                 return false;

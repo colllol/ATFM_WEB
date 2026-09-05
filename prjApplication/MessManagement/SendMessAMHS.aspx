@@ -389,7 +389,7 @@
                         <th>Ưu tiên</th>
                         <th>Địa chỉ gửi</th>
                         <th>Tiêu đề</th>
-                        <th>Số địa chỉ</th>
+                        <th>Địa chỉ nhận</th>
                         <th>Đính kèm</th>
                         <th>Nội dung</th>
                     </tr>
@@ -440,7 +440,7 @@
         var amhsOutboxTotalRecords = 0;
         var amhsOutboxLoading = false;
         var amhsOutboxUrl = (window.reportApiBase || '')
-            + 'api/ApiExtension/ExcuteTable?packageName=AMHS_OUTBOX_PKG&storeName=GET_OUTBOX_MESSAGES';
+            + 'api/ApiExtension/ExcuteTable?packageName=SEND_AMHS_HISTORY_PKG&storeName=GET_PAGE';
         var amhsAddressUrl = (window.reportApiBase || '')
             + 'api/ApiExtension/ExcuteTable?packageName=AMHS_OUTBOX_PKG&storeName=GET_OUTBOX_ADDRESSES';
         var amhsAddressTrigger = null;
@@ -556,8 +556,8 @@
                 P_FROM_DATE: fromText,
                 P_TO_DATE: toText,
                 P_CONTENT: $.trim($('#txtAmhsContent').val()),
-                P_PAGESIZE: exportAll ? 100000 : (parseInt($('#ddlAmhsPageSize').val(), 10) || 100),
-                P_PAGEINDEX: exportAll ? 0 : amhsOutboxPageIndex
+                P_PAGE_SIZE: exportAll ? 500 : (parseInt($('#ddlAmhsPageSize').val(), 10) || 100),
+                P_PAGE_INDEX: exportAll ? 0 : amhsOutboxPageIndex
             };
         }
 
@@ -588,19 +588,14 @@
                 html.push('<tr data-outbox-id="' + escapeAmhsHtml(row.ID) + '">');
                 html.push('<td>' + escapeAmhsHtml(row.RNUM) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.ID) + '</td>');
-                html.push('<td>' + escapeAmhsHtml(formatAmhsTimestamp(row.SENT_TIME)) + '</td>');
+                html.push('<td>' + escapeAmhsHtml(formatAmhsTimestamp(row.EXPORTED_AT)) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(getAmhsPriority(row.PRIORITY)) + '</td>');
                 html.push('<td class="amhs-text-left amhs-cell-ellipsis" title="'
                     + escapeAmhsHtml(fromAddress) + '">' + escapeAmhsHtml(fromAddress) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.SUBJECT) + '</td>');
-                var addressCount = parseInt(row.ADDRESS_COUNT, 10) || 0;
-                if (addressCount > 0) {
-                    html.push('<td><button type="button" class="amhs-address-link" data-outbox-id="'
-                        + escapeAmhsHtml(row.ID) + '" aria-label="Xem ' + addressCount
-                        + ' địa chỉ nhận">' + addressCount + '</button></td>');
-                } else {
-                    html.push('<td>0</td>');
-                }
+                html.push('<td class="amhs-text-left amhs-cell-ellipsis" title="'
+                    + escapeAmhsHtml(row.RECIPIENT_ADDRESS) + '">'
+                    + escapeAmhsHtml(row.RECIPIENT_ADDRESS) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.ATTACH) + '</td>');
                 html.push('<td class="amhs-text-left"><div class="amhs-content-cell">'
                     + escapeAmhsHtml(content) + '</div></td>');
@@ -749,7 +744,7 @@
                         ? data.Message
                         : 'API không trả về kết quả hợp lệ.';
 
-                    console.error('[GET_OUTBOX_MESSAGES] API error:', data);
+                    console.error('[GET_SEND_AMHS_HISTORY] API error:', data);
                     amhsOutboxTotalRecords = 0;
                     renderAmhsOutboxRows([]);
                     $('#amhsOutboxTotal').text('Tổng số: 0');
@@ -766,7 +761,7 @@
                 $('#amhsOutboxTotal').text('Tổng số: ' + amhsOutboxTotalRecords);
             }).fail(function (xhr) {
                 console.error(
-                    '[GET_OUTBOX_MESSAGES] Request failed:',
+                    '[GET_SEND_AMHS_HISTORY] Request failed:',
                     xhr.responseJSON || xhr.responseText
                 );
                 amhsOutboxTotalRecords = 0;
@@ -804,11 +799,11 @@
                 html.push('<tr>');
                 html.push('<td>' + escapeAmhsHtml(row.RNUM) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.ID) + '</td>');
-                html.push('<td>' + escapeAmhsHtml(formatAmhsTimestamp(row.SENT_TIME)) + '</td>');
+                html.push('<td>' + escapeAmhsHtml(formatAmhsTimestamp(row.EXPORTED_AT)) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(getAmhsPriority(row.PRIORITY)) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.FROM_ADDRESS) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.SUBJECT) + '</td>');
-                html.push('<td>' + escapeAmhsHtml(row.ADDRESS_COUNT) + '</td>');
+                html.push('<td>' + escapeAmhsHtml(row.RECIPIENT_ADDRESS) + '</td>');
                 html.push('<td>' + escapeAmhsHtml(row.ATTACH) + '</td>');
                 html.push('<td style="white-space:pre-wrap">' + escapeAmhsHtml(row.CONTENT) + '</td>');
                 html.push('</tr>');
