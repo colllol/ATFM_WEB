@@ -402,7 +402,7 @@
         <tbody>
             <asp:Repeater runat="server" ID="rptSource">
                 <ItemTemplate>
-                    <tr <%#  (DateTime.Parse(Eval("ENDDATE").ToString()) < DateTime.Now) ? "style='color: red!important;'" : ""   %>>
+                    <tr <%# IsPermissionExpired(Eval("ENDDATE")) ? "style='color: red!important;'" : "" %>>
                         <td style="width: 70px">
                             <div class="action-buttons" style="width: 70px" id="divattribute" runat="server">
                                 <a data-toggle="tooltip" title='<%# "Edit: " + Eval("PERM_ID") %>' runat="server"
@@ -416,7 +416,7 @@
                                     onclick="return ShowPermDetailActionHistory(this);">
                                     <i class="ace-icon fa fa-angle-double-down"></i>
                                 </a>
-                                <asp:LinkButton ID="lnkDelete" runat="server" data-id='<%# Eval("PERM_ID") %>' data-toggle="tooltip" title='<%# "Delete: " + Eval("PERMNBR_ID") %>' Visible='<%# _Role.R_Del %>' CssClass="ace-icon fa fa-trash-o bigger-130" OnClientClick="return confirm('Do you want delete?');" OnClick="lnkDelete_Click"></asp:LinkButton>
+                                <asp:LinkButton ID="lnkDelete" runat="server" data-id='<%# Eval("PERM_ID") %>' data-toggle="tooltip" title='<%# "Delete: " + Eval("PERMNBR_ID") %>' Visible='<%# IsAdminUser && _Role.R_Del %>' CssClass="ace-icon fa fa-trash-o bigger-130" OnClientClick="return confirm('Do you want delete?');" OnClick="lnkDelete_Click"></asp:LinkButton>
                             </div>
                         </td>
                         <td style="width: 200px;cursor:pointer;color:blue"><%# Eval("PERMNBR_ID") %></td>

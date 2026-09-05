@@ -65,6 +65,15 @@ namespace prjApplication.Permission {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlInputText txtSearchTYPE;
+
+        /// <summary>
+        /// txtSearchFLIGHTTYPE control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlInputText txtSearchFLIGHTTYPE;
         
         /// <summary>
         /// txtSearchNUMBER control.
@@ -119,24 +128,6 @@ namespace prjApplication.Permission {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlInputText txtSearchVALIDHOURS;
-        
-        /// <summary>
-        /// txtSearchBILLINGADDRESS control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlInputText txtSearchBILLINGADDRESS;
-        
-        /// <summary>
-        /// txtSearchPERMCONTENT control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlInputText txtSearchPERMCONTENT;
         
         /// <summary>
         /// rptSource control.

@@ -54,6 +54,99 @@
         textarea {
             text-transform: uppercase;
         }
+
+        .permission-flight-details {
+            margin: 18px 0 12px;
+            border: 1px solid #c5d9ea;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .permission-flight-details__header {
+            display: flex;
+            min-height: 42px;
+            padding: 9px 12px;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #c5d9ea;
+            background: #eef7fd;
+        }
+
+        .permission-flight-details__title {
+            margin: 0;
+            color: #1d5f91;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .permission-flight-details__total {
+            color: #234761;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .permission-flight-details__scroll {
+            width: 100%;
+            max-height: 520px;
+            overflow: auto;
+        }
+
+        .permission-flight-details__table {
+            width: 100%;
+            min-width: 1550px;
+            margin: 0;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .permission-flight-details__table th,
+        .permission-flight-details__table td {
+            padding: 7px 8px;
+            border: 1px solid #c5d9ea;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .permission-flight-details__table th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #337ab7;
+            color: #fff;
+            text-align: center;
+        }
+
+        .permission-flight-details__table tbody tr:nth-child(even) {
+            background: #f5faff;
+        }
+
+        .permission-flight-details__message,
+        .permission-flight-details__error {
+            padding: 20px !important;
+            text-align: center;
+        }
+
+        .permission-flight-details__error {
+            color: #c0392b;
+        }
+
+        .permission-content-panel {
+            margin: 12px 0 18px;
+            padding: 12px;
+            border: 1px solid #c5d9ea;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .permission-content-panel label {
+            display: block;
+            margin-bottom: 6px;
+            color: #234761;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
     </style>
      <style>
          .preloader {
@@ -182,13 +275,6 @@
                 
                 </fieldset>
                      </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <label for="txtPERMCONTENT" style="font-size:12px;">Perm content</label><br />
-                                      <textarea id="txtPERMCONTENT" maxlength="4000"  rows="25" data-control="update"
-                            class="wid_100" data-toggle="tooltip"  title="Limit 4000 character !" ></textarea>
-                </td>
             </tr>
         </table>
          
@@ -367,11 +453,30 @@
          </div>
     </div>
     -->
+    <section class="permission-flight-details" data-permission-type="SC">
+        <div class="permission-flight-details__header">
+            <h3 class="permission-flight-details__title">Flight details</h3>
+            <span id="permissionFlightDetailsTotalSC" class="permission-flight-details__total">TOTAL: 0</span>
+        </div>
+        <div class="permission-flight-details__scroll">
+            <table id="permissionFlightDetailsTableSC" class="permission-flight-details__table"
+                data-atfm-responsive-table="off">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+    <section class="permission-content-panel">
+        <label for="txtPERMCONTENT">Perm content</label>
+        <textarea id="txtPERMCONTENT" maxlength="4000" rows="25" data-control="update"
+            class="wid_100" data-toggle="tooltip" title="Limit 4000 character !"></textarea>
+    </section>
     <script src="<%=Global.ApplicationPath%>/Style/assets/js/jquery-2.1.4.min.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomDynamic.js"></script>
     <%--<script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js"></script>--%>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomPaging.js"></script>
+    <script src="<%= ResolveUrl("~/Scripts/PermissionFlightDetails.js?v=20260814-3") %>"></script>
     <script>
 
         function LoadShowHisEventClick(){   
@@ -705,28 +810,21 @@
             ClearValue();
         }
         function ClearValue() {
-            txtBEGINDATE_SC.value = '';
-            txtENDDATE_SC.value = '';
-            txtETA.value = '';
-            txtETD.value = '';
-           
-            txtFLIGHTNBR.value = '';            
-            txtREGISTRATION.value = '';
-            txtREMARK.value = '';
-            txtVIA.value = '';
+            var valueFields = [
+                txtBEGINDATE_SC, txtENDDATE_SC, txtETA, txtETD,
+                txtFLIGHTNBR, txtREGISTRATION, txtREMARK, txtVIA, txtLASTUSER
+            ];
+            $.each(valueFields, function (_, field) {
+                if (field) field.value = '';
+            });
             
             //ddlCRAFT_ID.value='';
             //ddlFROM_AIRP.value='';
             //ddlPURPOSE_ID.selectedIndex = 0;
             //ddlTO_AIRP.selectedIndex = 0;
-            txtLASTUSER.value='';
-            chkDAY1.checked = false;
-            chkDAY2.checked = false;
-            chkDAY3.checked = false;
-            chkDAY4.checked = false;
-            chkDAY5.checked = false;
-            chkDAY6.checked = false;
-            chkDAY7.checked = false;
+            $.each([chkDAY1, chkDAY2, chkDAY3, chkDAY4, chkDAY5, chkDAY6, chkDAY7], function (_, checkbox) {
+                if (checkbox) checkbox.checked = false;
+            });
             IdSelectDT = '0';
         }
         function CRAFT_ID_Onchange() {
@@ -1340,9 +1438,6 @@
             alert('Update susser: '+ c + 'flight permission.');
             LoadDataAjax();
         }
-        window.onbeforeunload = function() {
-            return "Leaving this page will reset the wizard";
-        };
         window.onkeydown = function(e) {
             var charCode = (e.which) ? e.which : e.keyCode;      
             var c= $('#tblSource tr').length;
@@ -1471,7 +1566,15 @@
         }
     </script>
     <script>
-        LoadDataAjax();
+        PermissionFlightDetails.init({
+            permissionType: 'SC',
+            permissionId: '<%= _ID %>',
+            flightNbr: '<%= System.Web.HttpUtility.JavaScriptStringEncode(Request.QueryString["FlightNbr"] ?? string.Empty) %>',
+            apiBase: '<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>',
+            pageMethod: '<%= ResolveUrl("~/Permission/View_PermSC.aspx/GetFlightDetails") %>',
+            tableId: 'permissionFlightDetailsTableSC',
+            totalId: 'permissionFlightDetailsTotalSC'
+        });
     </script>
     <script>
         function getMessageFullByRefence(){

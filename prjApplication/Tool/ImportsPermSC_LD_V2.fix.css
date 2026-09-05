@@ -1,0 +1,266 @@
+.impv2__loading[hidden] {
+    display: none !important;
+}
+
+.impv2__format-field {
+    position: relative;
+}
+
+.impv2 label small {
+    min-height: 14px;
+    color: #7b4f00;
+    font-size: 10px;
+    font-weight: normal;
+}
+
+.impv2 label small.is-auto {
+    color: #16703b;
+}
+
+.impv2 select:disabled {
+    background: #edf3f7;
+    color: #708290;
+    cursor: not-allowed;
+}
+
+.impv2 .impv2__format-help {
+    min-height: 0;
+    align-self: flex-start;
+    padding: 2px 0;
+    background: transparent;
+    color: #12659a;
+    font-size: 11px;
+}
+
+.impv2__guide[hidden] {
+    display: none !important;
+}
+
+.impv2__guide {
+    position: fixed;
+    z-index: 99999;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(12, 39, 58, .55);
+}
+
+.impv2__guide-card {
+    width: min(900px, 96vw);
+    max-height: 90vh;
+    overflow: auto;
+    padding: 20px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, .3);
+}
+
+.impv2__guide-header,
+.impv2__guide-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.impv2__result-text {
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #f3f7fa;
+    font-weight: 700;
+    white-space: pre-line;
+}
+
+.impv2__result-text.is-error {
+    border: 1px solid #efb3b3;
+    background: #fff0f0;
+    color: #c62828;
+}
+
+.impv2__result-text.is-success {
+    border: 1px solid #a9d9b8;
+    background: #eefaf2;
+    color: #16733a;
+}
+
+#confirmPanel h4 {
+    margin: 16px 0 8px;
+    color: #175f92;
+}
+
+#confirmPanel table {
+    min-width: 1100px;
+}
+
+.impv2__cancelled-card {
+    width: min(1150px, calc(100vw - 32px));
+    padding: 16px;
+}
+
+#cancelledTable {
+    width: 100%;
+    min-width: 1100px;
+    table-layout: fixed;
+}
+
+.impv2.impv2__guide {
+    max-width: none;
+    margin: 0;
+}
+
+#cancelledTable th,
+#cancelledTable td {
+    padding: 5px 4px;
+}
+
+#cancelledTable th:nth-child(1),
+#cancelledTable td:nth-child(1) {
+    width: 36px;
+}
+
+#cancelledTable th:nth-child(2),
+#cancelledTable td:nth-child(2) {
+    width: 78px;
+}
+
+#cancelledTable th:nth-child(3),
+#cancelledTable td:nth-child(3) {
+    width: 155px;
+}
+
+#cancelledTable th:nth-child(4),
+#cancelledTable td:nth-child(4),
+#cancelledTable th:nth-child(5),
+#cancelledTable td:nth-child(5) {
+    width: 95px;
+    white-space: nowrap;
+}
+
+#cancelledTable th:nth-child(13),
+#cancelledTable td:nth-child(13) {
+    width: 135px;
+}
+
+#cancelledTable th:nth-child(14),
+#cancelledTable td:nth-child(14) {
+    width: 65px;
+}
+
+#cancelledTable th:last-child,
+#cancelledTable td:last-child {
+    width: 52px;
+    min-width: 52px;
+    max-width: 52px;
+    text-align: center;
+    white-space: normal;
+}
+
+.impv2 button.is-danger {
+    background: #d9534f;
+}
+
+.impv2__guide-header h3 {
+    margin-bottom: 3px;
+}
+
+.impv2__guide-header > button {
+    min-width: 38px;
+    padding: 3px 10px;
+    font-size: 24px;
+}
+
+.impv2__guide-note {
+    margin: 12px 0;
+    padding: 10px;
+    border-left: 4px solid #2787c4;
+    background: #edf7fc;
+}
+
+.impv2__guide-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.impv2__guide-columns span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 9px;
+    border: 1px solid #bad3e3;
+    border-radius: 5px;
+    background: #f5fafc;
+}
+
+.impv2__guide-columns b {
+    display: inline-grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: #2787c4;
+    color: #fff;
+}
+
+.impv2__guide-card pre {
+    max-height: none;
+    user-select: all;
+}
+
+.impv2__guide-card li {
+    margin: 6px 0;
+}
+
+.impv2__guide-actions {
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+.impv2__pending {
+    border-left: 4px solid #2787c4;
+}
+
+.impv2__pending-note {
+    margin: -4px 0 12px;
+    color: #59758a;
+}
+
+.impv2__pending-count {
+    padding: 6px 10px;
+    border-radius: 14px;
+    background: #e4f4fc;
+    color: #075a8c;
+    font-weight: 700;
+}
+
+.impv2__pending-filter {
+    display: grid;
+    grid-template-columns: 150px 180px 160px 160px auto;
+    align-items: end;
+    gap: 9px;
+    margin-bottom: 12px;
+}
+
+#pendingTable {
+    min-width: 1350px;
+}
+
+#pendingTable td:last-child {
+    min-width: 260px;
+    color: #b12626;
+}
+
+.impv2__empty {
+    padding: 18px !important;
+    text-align: center !important;
+    color: #6b7f8d !important;
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .impv2__pending-filter {
+        grid-template-columns: 1fr 1fr;
+    }
+}

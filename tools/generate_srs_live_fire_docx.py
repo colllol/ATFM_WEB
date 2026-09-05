@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from docx import Document
@@ -9,7 +10,10 @@ from docx.shared import Cm, Pt
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "TaiLieu" / "SRS_Live_Fire_Message.docx"
+OUTPUT = Path(os.environ.get(
+    "SRS_LIVE_FIRE_OUTPUT",
+    ROOT / "TaiLieu" / "SRS_Live_Fire_Message.docx",
+))
 
 
 def set_font(style, size, bold=False):
@@ -379,6 +383,139 @@ def build_document():
         ("FR-DS-09…FR-DS-14", "Accepted dữ liệu", "TC-DS-06…TC-DS-10, TC-DS-12"),
         ("FR-DS-15…FR-DS-18", "Daily Statistic Accept", "TC-DS-11…TC-DS-13"),
         ("NFR-DS-01", "Phân quyền", "TC-DS-14"),
+    ])
+
+    document.add_page_break()
+    document.add_heading("PHẦN III. QUẢN LÝ THÔNG TIN KHB QUÂN SỰ", level=1)
+
+    document.add_heading("18. Thông tin chung và phạm vi", level=1)
+    add_table(document, ["Nội dung", "Giá trị"], [
+        ("Tên chức năng", "Quản lý thông tin KHB quân sự"),
+        ("Màn hình quản lý", "/FinishFlights/ListFinishedFlightsMilitary.aspx?Menu_ID=843"),
+        ("Màn hình khai thác báo cáo", "/FinishFlights/ListFinishedFlightsMilitaryReport.aspx?Menu_ID=863"),
+        ("Bảng dữ liệu nghiệp vụ", "T_FINISHFLIGHTS_MILITARY"),
+        ("Gói xử lý", "A_TEST_SEARCH"),
+        ("Loại điện văn", "QS MESSAGE"),
+        ("Kho điện văn chờ phát", "T_PLAN_MESSAGE"),
+    ])
+    document.add_paragraph(
+        "Chức năng quản lý vòng đời thông tin kế hoạch bay (KHB) quân sự, "
+        "từ khi nhập mới, kiểm tra và Accepted, tạo điện văn QS MESSAGE cho đến khi "
+        "điện văn được phát đi. Sau khi Accepted, dữ liệu được cung cấp trên màn hình "
+        "Military Report để người khai thác chỉ xem, tra cứu và lấy dữ liệu."
+    )
+
+    document.add_heading("19. Vai trò và luồng xử lý", level=1)
+    add_table(document, ["Vai trò", "Trách nhiệm"], [
+        ("Người nhập KHB quân sự", "Tạo mới, kiểm tra, sửa, lưu hoặc xóa KHB chưa Accepted."),
+        ("Người duyệt", "Kiểm tra danh sách theo khoảng ngày và thực hiện Accepted."),
+        ("Người tạo điện văn", "Chọn dữ liệu đã Accepted và Export Message thành QS MESSAGE."),
+        ("Người phát điện văn", "Kiểm tra điện văn đã tạo và thực hiện phát đi theo phân hệ điện văn."),
+        ("Người khai thác báo cáo", "Chỉ xem, tra cứu và xuất/lấy dữ liệu KHB quân sự đã Accepted."),
+    ])
+    document.add_paragraph(
+        "Luồng chính: Nhập mới KHB → Chưa Accepted → Accepted → Export Message "
+        "→ Tạo QS MESSAGE trong T_PLAN_MESSAGE → Phát đi. Dữ liệu sau Accepted đồng thời "
+        "xuất hiện trên Military Report để khai thác theo chế độ chỉ xem."
+    )
+    add_table(document, ["Giai đoạn", "Trạng thái/điều kiện", "Kết quả"], [
+        ("Nhập mới", "ISACCEPTED = 0", "KHB được phép hiệu chỉnh trước duyệt"),
+        ("Accepted", "ISACCEPTED = 1", "KHB được chốt và hiển thị trên Military Report"),
+        ("Export Message", "Chỉ lấy KHB ISACCEPTED = 1", "Tạo QS MESSAGE trong T_PLAN_MESSAGE"),
+        ("Phát đi", "QS MESSAGE hợp lệ và chờ phát", "Điện văn được chuyển qua quy trình phát"),
+    ])
+
+    document.add_heading("20. Chức năng nhập và quản lý KHB quân sự", level=1)
+    document.add_heading("20.1. Dữ liệu KHB", level=2)
+    add_table(document, ["Nhóm", "Trường dữ liệu chính"], [
+        ("Nhận dạng chuyến bay", "Hãng khai thác (OPER), ngày bay, callsign, số đăng ký"),
+        ("Tàu bay và mục đích", "Loại tàu bay thực tế, loại tàu bay kế hoạch, mục đích, loại phép"),
+        ("Hành trình", "Sân bay đi, sân bay đến, VIA, FPL VIA"),
+        ("Thời gian", "ETD, ETA, ATD, ATA"),
+        ("Thông tin bổ sung", "Remark và người tạo/cập nhật"),
+    ])
+    document.add_heading("20.2. Yêu cầu chức năng", level=2)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-MIL-01", "Cho phép tạo một hoặc nhiều dòng KHB quân sự mới và lưu vào dữ liệu nghiệp vụ."),
+        ("FR-MIL-02", "Kiểm tra tối thiểu các trường nhận dạng, ngày bay, callsign, sân bay và thời gian theo quy tắc của biểu mẫu."),
+        ("FR-MIL-03", "Cho phép tra cứu theo khoảng ngày, khung giờ, Accepted, callsign, đăng ký, sân bay, mục đích, tàu bay, VIA, remark và thời gian."),
+        ("FR-MIL-04", "Cho phép sửa, lưu hàng loạt hoặc xóa KHB theo quyền và trạng thái nghiệp vụ."),
+        ("FR-MIL-05", "Hiển thị tổng số bản ghi, phân trang và cho phép Export Excel theo bộ lọc."),
+        ("FR-MIL-06", "KHB mới phải có ISACCEPTED = 0 và không được đưa vào QS MESSAGE trước khi Accepted."),
+    ])
+
+    document.add_heading("21. Chức năng Accepted KHB quân sự", level=1)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-MIL-07", "Người dùng phải chọn đủ Từ ngày và Đến ngày; Từ ngày không được lớn hơn Đến ngày."),
+        ("FR-MIL-08", "Trước khi Accepted, hệ thống hiển thị xác nhận rõ khoảng ngày sẽ xử lý."),
+        ("FR-MIL-09", "A_TEST_SEARCH.ACCEPT_FIN_FLIGHTS_MILITARY Accepted toàn bộ KHB quân sự hợp lệ chưa Accepted trong khoảng ngày và ghi nhận tài khoản thực hiện."),
+        ("FR-MIL-10", "Sau khi thành công, hệ thống thông báo số chuyến đã Accepted, chuyển bộ lọc về Chưa Accepted và tải lại danh sách."),
+        ("FR-MIL-11", "KHB đã Accepted phải hiển thị khi lọc Đã Accepted và trên Military Report."),
+        ("FR-MIL-12", "Nếu API hoặc Oracle lỗi, không hiển thị thông báo thành công; phải mở lại nút thao tác để người dùng thử lại."),
+    ])
+
+    document.add_heading("22. Chức năng Export Message và phát đi", level=1)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-MIL-13", "Nút Export Message chỉ được bật khi người dùng đang lọc trạng thái Đã Accepted."),
+        ("FR-MIL-14", "Người dùng phải chọn khoảng ngày hợp lệ và xác nhận trước khi tạo điện văn."),
+        ("FR-MIL-15", "A_TEST_SEARCH.EXPORT_QS_PLAN_MESSAGE chỉ lấy KHB quân sự ISACCEPTED = 1 trong khoảng ngày đã chọn."),
+        ("FR-MIL-16", "Hệ thống tạo nội dung điện văn và ghi vào T_PLAN_MESSAGE với MESS_TYPE = 'QS MESSAGE', kèm danh sách chuyến bay nguồn."),
+        ("FR-MIL-17", "Sau khi export, thông báo chính xác số chuyến bay đã được tạo thành QS MESSAGE."),
+        ("FR-MIL-18", "QS MESSAGE được chuyển sang phân hệ quản lý/phát điện văn; chỉ người có quyền mới được phát đi."),
+        ("FR-MIL-19", "Khi phát thành công, hệ thống phải ghi nhận trạng thái, người thực hiện và thời điểm phát để truy vết."),
+        ("FR-MIL-20", "Không được phát điện văn khi nội dung rỗng, dữ liệu nguồn không hợp lệ hoặc người dùng không có quyền."),
+    ])
+
+    document.add_heading("23. Chức năng Military Report", level=1)
+    add_table(document, ["Mã", "Yêu cầu"], [
+        ("FR-MIL-21", "Màn hình ListFinishedFlightsMilitaryReport chỉ truy vấn KHB quân sự đã Accepted (P_ISACCEPTED = 1)."),
+        ("FR-MIL-22", "Người khai thác được tra cứu theo khoảng ngày, khung giờ và các trường KHB chính; danh sách hỗ trợ phân trang."),
+        ("FR-MIL-23", "Màn hình chỉ cho phép xem và lấy dữ liệu; không cho phép thêm, sửa, xóa, Accepted hoặc Export Message."),
+        ("FR-MIL-24", "Cho phép Export Excel toàn bộ kết quả theo bộ lọc, không chỉ các dòng của trang hiện tại."),
+        ("FR-MIL-25", "Dữ liệu hiển thị trên Report phải nhất quán với bản ghi Đã Accepted trên màn hình quản lý."),
+    ])
+
+    document.add_heading("24. Quy tắc nghiệp vụ và phi chức năng", level=1)
+    add_table(document, ["Mã", "Quy tắc/yêu cầu"], [
+        ("BR-MIL-01", "KHB mới luôn bắt đầu ở trạng thái Chưa Accepted."),
+        ("BR-MIL-02", "Accepted áp dụng cho toàn bộ KHB hợp lệ trong khoảng ngày người dùng đã xác nhận."),
+        ("BR-MIL-03", "Chỉ KHB Đã Accepted mới được tạo QS MESSAGE và hiển thị tại Military Report."),
+        ("BR-MIL-04", "Military Report là nguồn chỉ đọc dành cho khai thác, không làm thay đổi dữ liệu gốc."),
+        ("BR-MIL-05", "Không tạo trùng QS MESSAGE chưa phát cho cùng phạm vi dữ liệu, trừ khi nghiệp vụ cho phép tạo lại."),
+        ("BR-MIL-06", "Việc phát điện văn không được làm mất liên kết với danh sách KHB nguồn."),
+        ("NFR-MIL-01", "Kiểm tra đăng nhập và phân quyền cho Nhập, Sửa, Xóa, Accepted, Export Message và Phát đi."),
+        ("NFR-MIL-02", "Ghi nhật ký ít nhất cho Accepted, Export Message và Phát đi, gồm người thực hiện, thời gian và kết quả."),
+        ("NFR-MIL-03", "Khi API/Oracle lỗi, không thay đổi sai trạng thái và phải thông báo thao tác không thành công."),
+        ("NFR-MIL-04", "Danh sách hỗ trợ phân trang; truy vấn export phải lấy đủ dữ liệu theo bộ lọc."),
+        ("NFR-MIL-05", "Dữ liệu đã Accepted và điện văn đã phát phải truy vết được khi kiểm tra/kiểm định."),
+    ])
+
+    document.add_heading("25. Tiêu chí nghiệm thu và truy vết", level=1)
+    military_tests = [
+        ("TC-MIL-01", "Nhập mới KHB hợp lệ", "Lưu thành công với ISACCEPTED = 0"),
+        ("TC-MIL-02", "Thiếu trường bắt buộc hoặc ngày/giờ sai", "Không lưu; hiển thị cảnh báo"),
+        ("TC-MIL-03", "Sửa và lưu nhiều dòng chưa Accepted", "Cập nhật đúng các dòng hợp lệ"),
+        ("TC-MIL-04", "Accepted khi thiếu Từ ngày/Đến ngày", "Không thực hiện; yêu cầu chọn đủ ngày"),
+        ("TC-MIL-05", "Accepted với Từ ngày lớn hơn Đến ngày", "Không thực hiện; cảnh báo khoảng ngày"),
+        ("TC-MIL-06", "Accepted khoảng ngày hợp lệ", "Chuyển KHB phù hợp sang ISACCEPTED = 1 và báo số lượng"),
+        ("TC-MIL-07", "API Accepted bị lỗi", "Không báo thành công; cho phép thử lại"),
+        ("TC-MIL-08", "Export Message khi đang lọc Chưa Accepted", "Nút bị khóa hoặc thao tác bị từ chối"),
+        ("TC-MIL-09", "Export Message KHB đã Accepted", "Tạo QS MESSAGE trong T_PLAN_MESSAGE và báo đúng số chuyến"),
+        ("TC-MIL-10", "Export Message gặp lỗi API/Oracle", "Không báo thành công và không tạo dữ liệu dở dang"),
+        ("TC-MIL-11", "Phát QS MESSAGE hợp lệ", "Ghi nhận trạng thái, người và thời điểm phát"),
+        ("TC-MIL-12", "Người không có quyền phát", "Hệ thống từ chối thao tác"),
+        ("TC-MIL-13", "Tra cứu Military Report", "Chỉ hiển thị KHB ISACCEPTED = 1 phù hợp bộ lọc"),
+        ("TC-MIL-14", "Thử thêm/sửa/xóa tại Military Report", "Không có thao tác hoặc máy chủ từ chối"),
+        ("TC-MIL-15", "Export Excel từ Military Report", "File chứa đủ dữ liệu theo bộ lọc"),
+        ("TC-MIL-16", "Đối chiếu màn hình quản lý và Report", "Dữ liệu Đã Accepted nhất quán"),
+    ]
+    add_table(document, ["Mã kiểm thử", "Nội dung", "Kết quả mong đợi"], military_tests)
+    add_table(document, ["Mã yêu cầu", "Nội dung", "Kiểm thử"], [
+        ("FR-MIL-01…FR-MIL-06", "Nhập và quản lý KHB", "TC-MIL-01…TC-MIL-03"),
+        ("FR-MIL-07…FR-MIL-12", "Accepted KHB quân sự", "TC-MIL-04…TC-MIL-07"),
+        ("FR-MIL-13…FR-MIL-20", "Export Message và Phát đi", "TC-MIL-08…TC-MIL-12"),
+        ("FR-MIL-21…FR-MIL-25", "Military Report chỉ xem", "TC-MIL-13…TC-MIL-16"),
+        ("NFR-MIL-01…NFR-MIL-05", "Bảo mật, nhật ký, hiệu năng và truy vết", "TC-MIL-07, TC-MIL-10…TC-MIL-16"),
     ])
 
     for item in document.sections:

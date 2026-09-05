@@ -14,6 +14,7 @@ using Newtonsoft.Json.Converters;
 using System.Data;
 using TuesPechkin;
 using System.Web.UI.HtmlControls;
+using System.Globalization;
 
 namespace prjApplication.Permission
 {
@@ -23,6 +24,56 @@ namespace prjApplication.Permission
         public string _phanCach = "::::";
         public string _IdSelect = "0";
         private string _AliasSession = "ListPermissionSC";
+        protected bool IsAdminUser
+        {
+            get
+            {
+                return _user != null
+                    && String.Equals(
+                        (_user.UserName ?? String.Empty).Trim(),
+                        "admin",
+                        StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        protected bool IsPermissionExpired(object endDateValue)
+        {
+            if (endDateValue == null || endDateValue == DBNull.Value)
+                return false;
+
+            DateTime endDate;
+            if (endDateValue is DateTime)
+            {
+                endDate = (DateTime)endDateValue;
+            }
+            else
+            {
+                string value = Convert.ToString(endDateValue, CultureInfo.InvariantCulture);
+                string[] formats =
+                {
+                    "dd/MM/yyyy", "dd-MM-yyyy", "yyyy-MM-dd",
+                    "dd/MM/yyyy HH:mm:ss", "dd-MM-yyyy HH:mm:ss",
+                    "yyyy-MM-dd HH:mm:ss"
+                };
+
+                if (!DateTime.TryParseExact(
+                        value,
+                        formats,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out endDate)
+                    && !DateTime.TryParse(
+                        value,
+                        CultureInfo.CurrentCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out endDate))
+                {
+                    return false;
+                }
+            }
+
+            return endDate.Date < DateTime.Today;
+        }
 
         #region newList
         public string _ListAero
@@ -205,7 +256,9 @@ namespace prjApplication.Permission
 
         public string GetWhereConditionInGrid()
         {
-            string where = " 1=1 ";
+            string where = @" 1=1
+                AND PERMDATE >= ADD_MONTHS(TRUNC(SYSDATE), -12)
+                AND PERMDATE < TRUNC(SYSDATE) + 1 ";
             
                     
 
@@ -729,6 +782,12 @@ namespace prjApplication.Permission
 
         protected void lnkDelete_Click(object sender, EventArgs e)
         {
+            if (!IsAdminUser || !_Role.R_Del)
+            {
+                this.AlertMessage("Only admin can delete permission!");
+                return;
+            }
+
             var kq = new PermMasterScDAL().DeleteObject(((LinkButton)sender).Attributes["data-id"].ToString());
             if (kq) { 
                 this.AlertMessage("Delete sussess!");

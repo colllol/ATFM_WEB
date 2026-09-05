@@ -1413,6 +1413,7 @@
     <Content Include="Scripts\CustomDynamic.js" />
     <Content Include="Scripts\CustomPaging.js" />
     <Content Include="Scripts\CustumStaticdata.js" />
+    <Content Include="Scripts\PermissionFlightDetails.js" />
     <Content Include="Scripts\datepicker.js" />
     <Content Include="Scripts\DateTimeFomat.js" />
     <Content Include="Scripts\DateTimeJQ\jquery-1.8.3.js" />
@@ -1632,6 +1633,10 @@
     <Content Include="Tool\Imports.aspx" />
     <Content Include="Tool\ImportsPermSC_LDQ.aspx" />
     <Content Include="Tool\ImportsPermSC_LD.aspx" />
+    <Content Include="Tool\ImportsPermSC_LD_V2.aspx" />
+    <Content Include="Tool\ImportsPermSC_LD_V2.css" />
+    <Content Include="Tool\ImportsPermSC_LD_V2.fix.css" />
+    <Content Include="Tool\ImportsPermSC_LD_V2.js" />
     <Content Include="Until\FlashFileUpload.swf" />
     <Content Include="Until\ViewImages.aspx" />
     <Content Include="UploadMulti\Autocoplete.asmx" />
@@ -4192,6 +4197,13 @@
     </Compile>
     <Compile Include="Tool\ImportsPermSC_LD.aspx.designer.cs">
       <DependentUpon>ImportsPermSC_LD.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Tool\ImportsPermSC_LD_V2.aspx.cs">
+      <DependentUpon>ImportsPermSC_LD_V2.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Tool\ImportsPermSC_LD_V2.aspx.designer.cs">
+      <DependentUpon>ImportsPermSC_LD_V2.aspx</DependentUpon>
     </Compile>
     <Compile Include="Until\CropImage.ashx.cs">
       <DependentUpon>CropImage.ashx</DependentUpon>

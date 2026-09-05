@@ -1310,31 +1310,43 @@
             $('#txtZZ').val('');
             btnSearch_OnClick();
         }
+        function parseCalendarDateUtc(value) {
+            var match = /^(\d{2})-(\d{2})-(\d{4})$/.exec($.trim(value || ''));
+            if (!match) return null;
+
+            var day = parseInt(match[1], 10);
+            var month = parseInt(match[2], 10);
+            var year = parseInt(match[3], 10);
+            var utcTimestamp = Date.UTC(year, month - 1, day);
+            var parsedDate = new Date(utcTimestamp);
+
+            if (parsedDate.getUTCFullYear() !== year
+                || parsedDate.getUTCMonth() !== month - 1
+                || parsedDate.getUTCDate() !== day) {
+                return null;
+            }
+
+            return utcTimestamp;
+        }
+
         function btnAccess_OnClick() {
+            var selectedUtcStart = parseCalendarDateUtc($('#txtFromDate').val());
+            if (selectedUtcStart === null) {
+                alert('Invalid date. Required format: DD-MM-YYYY.');
+                return;
+            }
 
-            //Cap nhat Status zen dien van
+            // Chi chap nhan den dung 00:00:00 UTC cua NGAY XU LY.
+            // Vi du: NGAY XU LY 14-08-2026 co moc kiem tra la
+            // 2026-08-14T00:00:00Z; sau thoi diem nay se khong duoc Access.
+            if (Date.now() > selectedUtcStart) {
+                alert('Not accepted! Current UTC time is later than 00:00:00 of the processing date.');
+                return;
+            }
+
+            // Chi cap nhat trang thai sau khi ngay xu ly da duoc chap nhan.
             btnUpdateStatus();
-
             AccessDate();
-
-            <%--var c = checkValidCustomMinlenght('checkAccess');
-            if (!c) return;
-            var cf = confirm('Do you want Access date: ' + $('#txtFromDate').val() + '?');
-            if (cf) {
-                var $request = $.ajax({
-                    async: true,
-                    method: "GET",
-                    url: urlApi + "api/KeHoachBay/AccessKeHoachBayNgayNew?user=" + '<%= _user.UserName%>' + "&date=" + new Date($('#txtFromDate').val().replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1')).format('yyyy-mm-dd'),                    
-                    complete: function () {
-                        unLoadingData('loadingAccess');
-                    },
-                    beforeSend: function () {
-                        preloadImgAfterButton('btnAccess', 'loadingAccess');
-                    }
-                }).always(function (data) {
-                    alert(data.Value == -1 ? 'Error!' : 'Sussess!');
-                });
-            }--%>
         }
 		
 		function LogDelete(id) {            

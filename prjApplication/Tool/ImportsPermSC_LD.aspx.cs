@@ -224,18 +224,24 @@ namespace prjApplication.Tool
                     if (d.Length == 9)
                     {
                         _fromDate = d[1]; _toDate = d[2]; _daily = clsChuanHoaImport.ChuanHoaDayly(d[3]);
-                        _craft = d[8].Split('/')[0]; _from = d[4]; _etd = d[5]; _eta = d[7];
+                        //_craft = d[8].Split('/')[0];
+                        _craft = txtCraft.Value;
+
+                        _from = d[4]; _etd = d[5]; _eta = d[7].Trim();
                         _to = d[6]; _route = txtRoutes.Value; _remark = clsChuanHoaImport.Remark_Craft(d[8]);
                     }
                     else if (d.Length == 10)
                     {
                         _fromDate = d[1]; _toDate = d[2]; _daily = clsChuanHoaImport.ChuanHoaDayly(d[3]);
-                        _craft = d[8].Split('/')[0]; _from = d[4]; _etd = d[5]; _eta = d[7]; _to = d[6]; _route = d[9];
+                        //_craft = d[8].Split('/')[0]; QUYNX SUA
+                        _craft = txtCraft.Value;
+                        _from = d[4]; _etd = d[5]; _eta = d[7].Trim(); _to = d[6]; _route = d[9];
                     }
                     else
                     {
                         _fromDate = d[1]; _toDate = d[2]; _daily = clsChuanHoaImport.ChuanHoaDayly(d[3]);
-                        _craft = txtCraft.Value; _from = d[4]; _etd = d[5]; _eta = d[7]; _to = d[6]; _route = txtRoutes.Value;
+                        _craft = txtCraft.Value;
+                        _from = d[4]; _etd = d[5]; _eta = d[7].Trim(); _to = d[6]; _route = txtRoutes.Value;
                     }
                     int kq = Convert.ToInt32(new clsResuftAPI().GetPostValueApiExtension("PERM_IMP_PKG", "PERMSC_IMP_INSERT_ALL_OPER"
                         , new
@@ -259,7 +265,9 @@ namespace prjApplication.Tool
                             P_PERMDATE = clsChuanHoaImport.ChuanHoaDateTime(txtENDDATE.Value),
                             P_PURPOSE = ddlPURPOSE.SelectedValue,
                             P_VERSION = txtVersion.Value.ToUpper(),
-                            P_REGISTRATION = txtReg.Value
+                            P_REGISTRATION = txtReg.Value,
+                            //QUYNX SỬA 12082026
+                            P_ACTION = ddlAction.Value
                         }).ToString());
                     if (kq > 0) iCount++; else _error += $"{"Insert lỗi " + "CallSign " + _callSign + "<br />"}";
                 }

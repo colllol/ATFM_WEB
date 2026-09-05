@@ -48,6 +48,82 @@
             .cssHetHan input {
                 color: red!important;
             }
+
+        .permission-flight-details {
+            margin: 18px 0 12px;
+            border: 1px solid #c5d9ea;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .permission-flight-details__header {
+            display: flex;
+            min-height: 42px;
+            padding: 9px 12px;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #c5d9ea;
+            background: #eef7fd;
+        }
+
+        .permission-flight-details__title {
+            margin: 0;
+            color: #1d5f91;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .permission-flight-details__total {
+            color: #234761;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .permission-flight-details__scroll {
+            width: 100%;
+            max-height: 520px;
+            overflow: auto;
+        }
+
+        .permission-flight-details__table {
+            width: 100%;
+            min-width: 1350px;
+            margin: 0;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .permission-flight-details__table th,
+        .permission-flight-details__table td {
+            padding: 7px 8px;
+            border: 1px solid #c5d9ea;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .permission-flight-details__table th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #337ab7;
+            color: #fff;
+            text-align: center;
+        }
+
+        .permission-flight-details__table tbody tr:nth-child(even) {
+            background: #f5faff;
+        }
+
+        .permission-flight-details__message,
+        .permission-flight-details__error {
+            padding: 20px !important;
+            text-align: center;
+        }
+
+        .permission-flight-details__error {
+            color: #c0392b;
+        }
     </style>
 
 
@@ -377,6 +453,19 @@
 
     <%--</div>--%>
         -->
+    <section class="permission-flight-details" data-permission-type="NO">
+        <div class="permission-flight-details__header">
+            <h3 class="permission-flight-details__title">Flight details - NO</h3>
+            <span id="permissionFlightDetailsTotalNO" class="permission-flight-details__total">TOTAL: 0</span>
+        </div>
+        <div class="permission-flight-details__scroll">
+            <table id="permissionFlightDetailsTableNO" class="permission-flight-details__table"
+                data-atfm-responsive-table="off">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
     <script src="../Style/assets/js/jquery-2.1.4.min.js"></script>
 
     <script src="../Style/assets/js/wizard.min.js"></script>
@@ -385,6 +474,7 @@
     <script src="../Scripts/CustomDynamic.js"></script>
     <script src="../Scripts/CustumStaticdata.js"></script>
     <script src="../Scripts/CustomPaging.js"></script>
+    <script src="../Scripts/PermissionFlightDetails.js?v=20260814-2"></script>
     <script type="text/javascript">
         jQuery(function($) {
             var $validation = false;
@@ -1138,7 +1228,13 @@
             $h.children().remove();
             $h.append($html);--%>
         }
-        LoadDataAjax();
+        PermissionFlightDetails.init({
+            permissionType: 'NO',
+            permissionId: '<%= _ID %>',
+            apiBase: '<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>',
+            tableId: 'permissionFlightDetailsTableNO',
+            totalId: 'permissionFlightDetailsTotalNO'
+        });
         function checkIsUpdate(id) {
             if ($(id).attr('data-isInsert') != undefined) return;
             $inputs = $(id).closest('tr').find('[data-oldValue]');

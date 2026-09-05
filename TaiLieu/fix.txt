@@ -1,0 +1,21 @@
+- Billing address: lấy từ tên hãng bay ( ô name).( chưa có cho tiếng việt cần kiểm tra kỹ lại)
+
+- perm content: lấy full thông tin từ file và phần bảng cần copy theo dòng không được nhảy dòng như kiểu mỗi ô 1 dòng mà phải là 1 dòng có nhiều ô theo chiều ngang giống bảng. ( các file tiếng việt chưa được)
+
+- khi đối chiếu với database mà vẫn không tìm thấy đường bay thì vẫn insert bình thường nhưng phần đường bay thì để trống.
+
+- không tra ra đường bay tìm ở phép bay gốc ( cần có phép bay gốc để lấy).
+
+- các phép bay mới cần insert theo phép bay mới nhưng phép bay đó có revision thì insert thêm phần mã chuyến bay mới vào bên dưới trong phép bay đó ( không xoá, không update và mã chuyến bay cũ)
+
+- các phép có 3 ký tự REV; RVS thì IATA - ICAO để trống hoặc không có thì vẫn insert bình thường dựa vào phép bay và callsign ( trong file nếu có dòng các thông tin khác giữ nguyên thì tự động lấy thông tin còn thiếu đó từ phép gốc nhập vào).
+
+- đối với các phép bay mới mà không có dòng IATA và ICAO thì dựa vào mã callsign và dòng tên hãng bay để lấy ra thông tin ICAO ( dùng đối chiếu với format và thay đổi callsign). 
+So sánh 3 ký tự đầu với OPER_ICAO trước nếu không có thì chuyển qua so sánh 2 ký tự đầu với OPER_IATA đồng thời lấy tên hãng bay so sánh với OPER_NAME để tìm ra ICAO ( không tìm thấy ICAO thì để PRV).
+
+- đối với các phép bay mới mà IATA và ICAO để trống thì dựa vào mã callsign và dòng tên hãng bay để lấy ra thông tin ICAO ( dùng đối chiếu với format và thay đổi callsign). 
+So sánh 3 ký tự đầu với OPER_ICAO trước nếu không có thì chuyển qua so sánh 2 ký tự đầu với OPER_IATA đồng thời lấy tên hãng bay so sánh với OPER_NAME để tìm ra ICAO ( không tìm thấy ICAO thì để PRV).
+
+- phép bay mùa thì phần phép sửa đổi thêm R(n) vào sau số phép ví dụ: LD-01R1, LD-01R2
+
+- phải đảm bảo trong file  phải có số phép nếu không có thì bị bỏ qua và thông báo không tìm thấy số phép bay có trong bay.

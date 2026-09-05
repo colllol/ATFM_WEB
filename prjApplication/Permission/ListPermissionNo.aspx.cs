@@ -14,6 +14,7 @@ using Newtonsoft.Json.Converters;
 using System.Data;
 using TuesPechkin;
 using System.Web.UI.HtmlControls;
+using System.Globalization;
 
 namespace prjApplication.Permission
 {
@@ -73,6 +74,77 @@ namespace prjApplication.Permission
         public string _phanCach = "::::";
         public string _IdSelect = "0";
         private string _AliasSession = "ListPermissionNo";
+        protected bool IsAdminUser
+        {
+            get
+            {
+                return _user != null
+                    && String.Equals(
+                        (_user.UserName ?? String.Empty).Trim(),
+                        "admin",
+                        StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        protected bool IsPermissionExpired(object permDateValue, object validHoursValue)
+        {
+            if (permDateValue == null || permDateValue == DBNull.Value)
+                return false;
+
+            DateTime permDate;
+            if (permDateValue is DateTime)
+            {
+                permDate = (DateTime)permDateValue;
+            }
+            else
+            {
+                string value = Convert.ToString(permDateValue, CultureInfo.InvariantCulture);
+                string[] formats =
+                {
+                    "dd/MM/yyyy", "dd-MM-yyyy", "yyyy-MM-dd",
+                    "dd/MM/yyyy HH:mm:ss", "dd-MM-yyyy HH:mm:ss",
+                    "yyyy-MM-dd HH:mm:ss"
+                };
+
+                if (!DateTime.TryParseExact(
+                        value,
+                        formats,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out permDate)
+                    && !DateTime.TryParse(
+                        value,
+                        CultureInfo.CurrentCulture,
+                        DateTimeStyles.AllowWhiteSpaces,
+                        out permDate))
+                {
+                    return false;
+                }
+            }
+
+            double validHours;
+            if (!Double.TryParse(
+                    Convert.ToString(validHoursValue, CultureInfo.InvariantCulture),
+                    NumberStyles.Number,
+                    CultureInfo.InvariantCulture,
+                    out validHours))
+            {
+                validHours = 0;
+            }
+
+            DateTime expiryDate;
+            try
+            {
+                expiryDate = permDate.AddHours(Math.Max(validHours, 0)).Date;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return false;
+            }
+
+            return expiryDate < DateTime.Today;
+        }
+
         public string _ObjRender
         {
             get
@@ -162,33 +234,38 @@ namespace prjApplication.Permission
         
         public string GetWhereConditionInGrid()
         {
-            string where = " 1=1 ";
+            string where = @" 1=1
+                AND PERMDATE >= ADD_MONTHS(TRUNC(SYSDATE), -12)
+                AND PERMDATE < TRUNC(SYSDATE) + 1 ";
 
-                    if (!String.IsNullOrEmpty(txtSearchPERMNBR_ID.Value.Trim()))
-                        where += " AND " + string.Format(" UPPER(PERMNBR_ID) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchPERMNBR_ID.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchAUTHOR.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(AUTHOR_NAME) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchAUTHOR.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchTYPE.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(PERMTYPE) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchTYPE.Value.Trim()));
-                    if (!String.IsNullOrEmpty(txtSearchNUMBER.Value.Trim()))
-                        where += " AND " + string.Format(" UPPER(PERMNBR) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchNUMBER.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchVERSION.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(VERSION) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchVERSION.Value.Trim()));
-                    if (!String.IsNullOrEmpty(txtSearchDATE.Value.Trim()))
-                        where += " AND PERMDATE =" + whereDateHelper(txtSearchDATE.Value.Trim()) + "";
-                    if (!String.IsNullOrEmpty(txtSearchOPER.Value.Trim()))
-                        where += " AND " + string.Format(" UPPER(OPER_ID) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchOPER.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchREFERENCE.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(REFERENCE) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchREFERENCE.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchVALIDHOURS.Value.Trim()))
-                    //    where += " AND VALIDHOURS = " + Convert.ToInt32(txtSearchVALIDHOURS.Value.Trim());                  
-                    //if (!String.IsNullOrEmpty(txtSearchBILLINGADDRESS.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(BILLINGADDRESS) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchBILLINGADDRESS.Value.Trim()));
-                    //if (!String.IsNullOrEmpty(txtSearchPERMCONTENT.Value.Trim()))
-                    //    where += " AND " + string.Format(" UPPER(PERMCONTENT) like N'%{0}%'", UltilFunc.SqlFormatText(txtSearchPERMCONTENT.Value.Trim()));
+            where = AppendContainsCondition(where, "PERMNBR_ID", txtSearchPERMNBR_ID.Value);
+            where = AppendContainsCondition(where, "AUTHOR_NAME", txtSearchAUTHOR.Value);
+            where = AppendContainsCondition(where, "PERMTYPE", txtSearchTYPE.Value);
+            where = AppendContainsCondition(where, "FLIGHTTYPE", txtSearchFLIGHTTYPE.Value);
+            where = AppendContainsCondition(where, "PERMNBR", txtSearchNUMBER.Value);
+            where = AppendContainsCondition(where, "VERSION", txtSearchVERSION.Value);
 
-                
+            if (!String.IsNullOrWhiteSpace(txtSearchDATE.Value))
+                where += " AND PERMDATE = " + whereDateHelper(txtSearchDATE.Value.Trim());
+
+            where = AppendContainsCondition(where, "OPER_ID", txtSearchOPER.Value);
+            where = AppendContainsCondition(where, "REFERENCE", txtSearchREFERENCE.Value);
+
+            int validHours;
+            if (!String.IsNullOrWhiteSpace(txtSearchVALIDHOURS.Value)
+                && Int32.TryParse(txtSearchVALIDHOURS.Value.Trim(), out validHours))
+                where += " AND VALIDHOURS = " + validHours;
+
             return HttpUtility.UrlEncode(where.ToUpper());
+        }
+
+        private static string AppendContainsCondition(string where, string columnName, string value)
+        {
+            if (String.IsNullOrWhiteSpace(value))
+                return where;
+
+            string safeValue = UltilFunc.SqlFormatText(value.Trim().ToUpperInvariant());
+            return where + String.Format(" AND UPPER({0}) LIKE '%{1}%'", columnName, safeValue);
         }
         private string whereDateHelper(string value)
         {
@@ -614,6 +691,12 @@ namespace prjApplication.Permission
 
         protected void lnkDelete_Click(object sender, EventArgs e)
         {
+            if (!IsAdminUser || !_Role.R_Del)
+            {
+                this.AlertMessage("Only admin can delete permission!");
+                return;
+            }
+
             var ax = new PermMasterNoDAL().DeleteObject(((LinkButton)sender).Attributes["data-id"].ToString());
             if (ax)
             {

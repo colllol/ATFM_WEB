@@ -3358,26 +3358,43 @@
             return deferred.promise();
         }
 
+        function getSelectedFinishedFlightDate() {
+            var selectedText = $.trim($('#ddlDateFlight option:selected').text() || '');
+            var dateParts = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(selectedText);
+
+            if (!dateParts) return null;
+            return dateParts[1] + '-' + dateParts[2] + '-' + dateParts[3];
+        }
+
         function LoadDataGrid_Finished() {
             var cf = confirm('Do you want export finished ?');
             if (!cf) return;
+
+            var selectedFlightDate = getSelectedFinishedFlightDate();
+            if (!selectedFlightDate) {
+                alert('Flight date is invalid. Required format: DD-MM-YYYY.');
+                return;
+            }
 
             showFinishedExportLoading();
 
             // Nhường một nhịp render để overlay hiển thị trước khi bắt đầu xử lý.
             window.setTimeout(function () {
-                var url = urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=MAKE_FINISHED&storeName=make_finished_flights_news";
+                var url = urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=MAKE_FINISHED&storeName=make_finished_flights_news4day";
 
                 $.ajax({
                     method: "PUT",
                     url: url,
-                    data: JSON.stringify({ P_STRING: '<%= _user.UserName%>' })
+                    data: JSON.stringify({
+                        P_STRING: '<%= _user.UserName%>',
+                        P_DATE: selectedFlightDate
+                    })
                 }).then(function (data) {
                     if (!data || data.ListValue == null || data.ListValue == -1) {
                         return rejectFinishedExport('MAKE_FINISHED', data);
                     }
 
-                    return LoadDataGrid_ExportFinish();
+                    return LoadDataGrid_ExportFinish(selectedFlightDate);
                 }).done(function () {
                     // Ba file được tạo cách nhau 300 ms; thông báo sau khi đã kích hoạt đủ lượt tải.
                     window.setTimeout(function () {
@@ -3971,10 +3988,16 @@
             });
         }
 
-		function LoadDataGrid_ExportFinish() {
-            var _date = $('#ddlDateFlight option:selected').text() == '' ? new Date().format('dd-MM-yyyy') : $('#ddlDateFlight option:selected').text().replace(/\//gi, '-').replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$1/$2/$3').replace('/','-').replace('/','-');
-           			
-			var _obj = {P_USER:'<%= _user.UserName%>',P_DATE: _date};
+		function LoadDataGrid_ExportFinish(selectedFlightDate) {
+            selectedFlightDate = selectedFlightDate || getSelectedFinishedFlightDate();
+            if (!selectedFlightDate) {
+                return rejectFinishedExport('INVALID_FLIGHT_DATE', selectedFlightDate);
+            }
+
+			var _obj = {
+                P_USER: '<%= _user.UserName%>',
+                P_DATE: selectedFlightDate
+            };
 			
 			var _urlPath = "";
 			_urlPath= "api/ApiExtension/ExcuteTable?packageName=A_TEST_SEARCH&storeName=GetExportMOVEFINISH"
