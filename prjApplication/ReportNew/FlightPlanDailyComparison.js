@@ -1,0 +1,29 @@
+(function () {
+    'use strict';
+    function esc(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : value; return node.innerHTML; }
+    function dateText(value) { var parts = String(value || '').split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value; }
+    function number(value) { return Number(value || 0).toLocaleString('vi-VN'); }
+    function post(url, data) { return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(data) }).then(function (response) { return response.json().then(function (body) { if (!response.ok) throw new Error('Không thể tải dữ liệu.'); return body.d !== undefined ? body.d : body; }); }); }
+    function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+    function shift(value, days) { var d = new Date(value + 'T00:00:00'); d.setDate(d.getDate() + days); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+    function init() {
+        var page = document.querySelector('.fpd-page'); if (!page) return;
+        var endpoint = page.getAttribute('data-endpoint'), airport = document.getElementById('fpdAirport'), date1 = document.getElementById('fpdDate1'), date2 = document.getElementById('fpdDate2'), apply = document.getElementById('fpdApply'), status = document.getElementById('fpdStatus'), body = document.getElementById('fpdBody'), error = document.getElementById('fpdError');
+        date1.max = today(); date1.value = today(); date2.value = shift(date1.value, -7);
+        function setStatus(message, loading) { status.innerHTML = loading ? '<span class="fpd-spinner" aria-hidden="true"></span> ' + esc(message) : esc(message); status.className = 'fpd-status' + (loading ? '' : ' is-ready'); }
+        function renderAirports(values) { airport.innerHTML = '<option value="ALL">Tất cả sân bay</option>' + (values || []).map(function (x) { return '<option value="' + esc(x) + '">' + esc(x) + '</option>'; }).join(''); }
+        function render(data) {
+            document.getElementById('fpdHeadDate1').textContent = dateText(data.date1); document.getElementById('fpdHeadDate2').textContent = dateText(data.date2);
+            var rows = [['Tổng số chuyến bay', data.day1.total, data.day2.total, data.differences.total], ['Tổng số chuyến bay mùa (SC)', data.day1.seasonal, data.day2.seasonal, null], ['Tổng số chuyến bay đột xuất (NO)', data.day1.adHoc, data.day2.adHoc, null]];
+            body.innerHTML = rows.map(function (row, i) { var diff = row[3] == null ? '<span class="fpd-muted">—</span>' : '<div class="fpd-diff"><strong>' + number(row[3]) + '</strong><button class="fpd-detail-btn" type="button" data-detail="' + i + '">Chi tiết</button></div>'; return '<tr><td>' + (i + 1) + '</td><td>' + esc(row[0]) + '</td><td>' + number(row[1]) + '</td><td>' + number(row[2]) + '</td><td>' + diff + '</td></tr>'; }).join('');
+            Array.prototype.forEach.call(body.querySelectorAll('[data-detail]'), function (button) { button.addEventListener('click', function () { openDetails(data); }); });
+            setStatus('Đã cập nhật lúc ' + new Date().toLocaleTimeString('vi-VN'), false);
+        }
+        function renderDetails(target, rows) { target.innerHTML = rows.length ? rows.map(function (row) { return '<tr><td>' + esc(row.callsign) + '</td><td>' + esc(row.fromAirp) + '</td><td>' + esc(row.toAirp) + '</td><td>' + esc(row.etd) + '</td><td>' + esc(row.eta) + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="fpd-detail-empty">Không có chuyến bay khác.</td></tr>'; }
+        function openDetails(data) { var modal = document.getElementById('fpdModal'); document.getElementById('fpdModalDate1').textContent = dateText(data.date1) + ' · chỉ có ở ngày 1'; document.getElementById('fpdModalDate2').textContent = dateText(data.date2) + ' · chỉ có ở ngày 2'; document.getElementById('fpdModalInfo').textContent = 'Tổng cộng ' + number(data.differences.total) + ' chuyến bay khác theo khóa CALLSIGN / FROM / TO / ETD / ETA.'; renderDetails(document.getElementById('fpdDetails1'), data.differences.date1 || []); renderDetails(document.getElementById('fpdDetails2'), data.differences.date2 || []); modal.hidden = false; document.getElementById('fpdClose').focus(); }
+        function load() { error.hidden = true; body.innerHTML = '<tr><td colspan="5" class="fpd-empty">Đang tải dữ liệu...</td></tr>'; setStatus('Đang tải dữ liệu...', true); post(endpoint, { date1: date1.value, airport: airport.value }).then(render).catch(function (e) { error.textContent = e.message || 'Không thể tải dữ liệu.'; error.hidden = false; setStatus('Không tải được dữ liệu', false); body.innerHTML = '<tr><td colspan="5" class="fpd-empty">Không có dữ liệu để hiển thị.</td></tr>'; }); }
+        date1.addEventListener('change', function () { date2.value = shift(date1.value, -7); }); apply.addEventListener('click', load); document.getElementById('fpdClose').addEventListener('click', function () { document.getElementById('fpdModal').hidden = true; }); document.getElementById('fpdModal').addEventListener('click', function (e) { if (e.target === this) this.hidden = true; }); document.addEventListener('keydown', function (e) { if (e.key === 'Escape') document.getElementById('fpdModal').hidden = true; });
+        post(endpoint.replace(/GetComparison$/, 'GetAirports'), {}).then(renderAirports).catch(function () { renderAirports([]); }); load();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+}());

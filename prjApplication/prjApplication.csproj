@@ -677,6 +677,9 @@
     <Content Include="ReportNew\FlightStatusRate.js" />
     <Content Include="ReportNew\FlightTrendAnalysis.aspx" />
     <Content Include="ReportNew\FlightTrendAnalysis.js" />
+    <Content Include="ReportNew\FlightPlanDailyComparison.aspx" />
+    <Content Include="ReportNew\FlightPlanDailyComparison.css" />
+    <Content Include="ReportNew\FlightPlanDailyComparison.js" />
     <Content Include="ReportNew\MilitaryFlightReport.aspx" />
     <Content Include="ReportNew\MilitaryFlightReport.js" />
     <Content Include="ReportNew\ReportNew.css" />
@@ -2078,6 +2081,10 @@
     </Compile>
     <Compile Include="ReportNew\FlightStatusRate.aspx.cs">
       <DependentUpon>FlightStatusRate.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ReportNew\FlightPlanDailyComparison.aspx.cs">
+      <DependentUpon>FlightPlanDailyComparison.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Common\ChartReportAirport.aspx.cs">
