@@ -31,6 +31,13 @@ namespace prjApplication.ReportNew
             public string flightType { get; set; }
         }
 
+        private sealed class AirportCount
+        {
+            public string airport { get; set; }
+            public int date1 { get; set; }
+            public int date2 { get; set; }
+        }
+
         private sealed class ComparisonDay
         {
             public DateTime Date { get; set; }
@@ -59,6 +66,7 @@ namespace prjApplication.ReportNew
                 date1 = first.ToString("yyyy-MM-dd"), date2 = second.ToString("yyyy-MM-dd"), airport = selectedAirport ?? "ALL", oper = selectedOper ?? "ALL",
                 day1 = new { total = day1.Total, seasonal = day1.Seasonal, adHoc = day1.AdHoc },
                 day2 = new { total = day2.Total, seasonal = day2.Seasonal, adHoc = day2.AdHoc },
+                airportChart = BuildAirportChart(day1.Flights, day2.Flights),
                 differences = new { total = only1.Count + only2.Count, onlyDate1 = only1.Count, onlyDate2 = only2.Count, date1 = only1.Select(ToDetail).ToList(), date2 = only2.Select(ToDetail).ToList() }
             };
         }
@@ -123,6 +131,26 @@ namespace prjApplication.ReportNew
         private static OracleConnection CreateConnection() { return new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString); }
         private static string Text(object value) { return value == null || value == DBNull.Value ? String.Empty : Convert.ToString(value, CultureInfo.InvariantCulture).Trim(); }
         private static string Key(FlightRow row) { return String.Join("|", new[] { row.Callsign, row.FromAirp, row.ToAirp, row.Etd, row.Eta }.Select(x => (x ?? String.Empty).Trim().ToUpperInvariant())); }
+        private static List<AirportCount> BuildAirportChart(IEnumerable<FlightRow> first, IEnumerable<FlightRow> second)
+        {
+            Dictionary<string, int> firstCounts = CountAirports(first);
+            Dictionary<string, int> secondCounts = CountAirports(second);
+            return firstCounts.Keys.Union(secondCounts.Keys, StringComparer.OrdinalIgnoreCase)
+                .Select(code => new AirportCount { airport = code, date1 = firstCounts.ContainsKey(code) ? firstCounts[code] : 0, date2 = secondCounts.ContainsKey(code) ? secondCounts[code] : 0 })
+                .OrderByDescending(x => x.date1 + x.date2).ThenBy(x => x.airport).Take(24).ToList();
+        }
+        private static Dictionary<string, int> CountAirports(IEnumerable<FlightRow> flights)
+        {
+            Dictionary<string, int> counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (FlightRow flight in flights)
+            {
+                HashSet<string> airports = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (!String.IsNullOrWhiteSpace(flight.FromAirp)) airports.Add(flight.FromAirp.Trim().ToUpperInvariant());
+                if (!String.IsNullOrWhiteSpace(flight.ToAirp)) airports.Add(flight.ToAirp.Trim().ToUpperInvariant());
+                foreach (string airport in airports) counts[airport] = counts.ContainsKey(airport) ? counts[airport] + 1 : 1;
+            }
+            return counts;
+        }
         private static DetailFlight ToDetail(FlightRow row) { return new DetailFlight { callsign = row.Callsign, fromAirp = row.FromAirp, toAirp = row.ToAirp, etd = row.Etd, eta = row.Eta, flightType = row.FlightType }; }
         private static string NormalizeFilter(string value) { string result = (value ?? String.Empty).Trim().ToUpperInvariant(); return result.Length == 0 || result == "ALL" ? null : result; }
         private static DateTime ParseDate(string value) { DateTime result; if (!DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) throw new ArgumentException("Ngày so sánh không hợp lệ."); return result.Date; }

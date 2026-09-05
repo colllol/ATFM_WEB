@@ -26,6 +26,10 @@
         </section>
 
         <div class="fpd-status" id="fpdStatus" role="status" aria-live="polite"><span class="fpd-spinner" aria-hidden="true"></span> Đang tải dữ liệu...</div>
+        <section class="fpd-chart-panel" aria-labelledby="fpdChartTitle">
+            <div class="fpd-chart-heading"><div><span class="fpd-section-kicker">Phân bố theo sân bay</span><h2 id="fpdChartTitle">Số chuyến bay theo sân bay</h2><p>Hai cột thể hiện số chuyến bay của từng ngày so sánh.</p></div><div class="fpd-chart-legend"><span><i class="fpd-legend-day1"></i><b id="fpdLegendDate1">Ngày 1</b></span><span><i class="fpd-legend-day2"></i><b id="fpdLegendDate2">Ngày 2</b></span></div></div>
+            <div class="fpd-chart-scroll"><div id="fpdAirportChart" class="fpd-airport-chart"><div class="fpd-empty">Đang tải biểu đồ...</div></div></div>
+        </section>
         <section class="fpd-table-panel" aria-labelledby="fpdTableTitle">
             <div class="fpd-table-heading"><div><span class="fpd-section-kicker">Kết quả đối chiếu</span><h2 id="fpdTableTitle">Tổng hợp thay đổi kế hoạch bay</h2></div><span class="fpd-source">Nguồn: T_DAY_FLIGHTS</span></div>
             <div class="fpd-table-wrap">
@@ -45,5 +49,5 @@
             <div class="fpd-modal-grid"><section><h3 id="fpdModalDate1">Ngày so sánh 1</h3><div class="fpd-detail-wrap"><table><thead><tr><th>CALLSIGN</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th></tr></thead><tbody id="fpdDetails1"></tbody></table></div></section><section><h3 id="fpdModalDate2">Ngày so sánh 2</h3><div class="fpd-detail-wrap"><table><thead><tr><th>CALLSIGN</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th></tr></thead><tbody id="fpdDetails2"></tbody></table></div></section></div>
         </div>
     </div>
-    <script src="<%= ResolveUrl("~/ReportNew/FlightPlanDailyComparison.js?v=20260905-1") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/FlightPlanDailyComparison.js?v=20260905-2") %>"></script>
 </asp:Content>
