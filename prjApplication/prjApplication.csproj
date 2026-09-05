@@ -705,6 +705,7 @@
     <Content Include="FinishFlights\FinishedFlightsV3.aspx" />
     <Content Include="FinishFlights\ListFinishedFlights.aspx" />
     <Content Include="FinishFlights\ListFinishedFlightAccepts.aspx" />
+    <Content Include="FinishFlights\BravoComparison.ashx" />
     <Content Include="FinishFlights\ListVia.aspx" />
     <Content Include="FinishFlights\NotCompletedFlights.aspx" />
     <Content Include="FlightManagement\EmergencyFlight.aspx" />
@@ -2353,6 +2354,9 @@
     <Compile Include="FinishFlights\ListFinishedFlights.aspx.cs">
       <DependentUpon>ListFinishedFlights.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FinishFlights\BravoComparison.ashx.cs">
+      <DependentUpon>BravoComparison.ashx</DependentUpon>
     </Compile>
     <Compile Include="FinishFlights\ListFinishedFlights.aspx.designer.cs">
       <DependentUpon>ListFinishedFlights.aspx</DependentUpon>

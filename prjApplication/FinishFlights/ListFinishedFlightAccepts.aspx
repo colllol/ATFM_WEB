@@ -1633,12 +1633,12 @@
             if (!fromDate || !toDate) { message.textContent = 'Vui lòng chọn khoảng ngày.'; return; }
             body.innerHTML = '<tr><td colspan="8" class="text-center">Đang đối chiếu...</td></tr>';
             message.textContent = '';
-            $.ajax({ type: 'POST', url: 'ListFinishedFlightAccepts.aspx/GetBravoComparison', contentType: 'application/json; charset=utf-8', dataType: 'json', data: JSON.stringify({ fromDate: fromDate, toDate: toDate, comparisonType: $('#bravoCompareType').val(), region: region }) }).done(function (response) {
-                var rows = response.d || [];
+            $.ajax({ type: 'POST', url: '<%= ResolveUrl("~/FinishFlights/BravoComparison.ashx") %>', dataType: 'json', headers: { 'X-Requested-With': 'XMLHttpRequest' }, data: { fromDate: fromDate, toDate: toDate, comparisonType: $('#bravoCompareType').val(), region: region } }).done(function (response) {
+                var rows = response || [];
                 if (!rows.length) { body.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu đối chiếu.</td></tr>'; message.textContent = '0 dòng'; return; }
                 body.innerHTML = rows.map(function (row, index) { return '<tr><td>' + (index + 1) + '</td><td>' + escapeBravo(row.airline) + '</td><td>' + escapeBravo(row.fromAirp) + '</td><td>' + escapeBravo(row.toAirp) + '</td><td>' + escapeBravo(row.flightDate) + '</td><td>' + escapeBravo(row.callsign) + '</td><td class="text-right">' + row.oracleCount + '</td><td></td></tr>'; }).join('');
                 message.textContent = rows.length + ' dòng';
-            }).fail(function (xhr) { body.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu đối chiếu.</td></tr>'; message.textContent = xhr.responseJSON && xhr.responseJSON.Message ? xhr.responseJSON.Message : 'Lỗi API'; });
+            }).fail(function (xhr) { body.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu đối chiếu.</td></tr>'; message.textContent = xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.Message) ? (xhr.responseJSON.message || xhr.responseJSON.Message) : 'Lỗi API (' + xhr.status + ')'; });
         }
         function escapeBravo(value) { return $('<div>').text(value == null ? '' : value).html(); }
         function UpdateMoveDateCHOT() {
