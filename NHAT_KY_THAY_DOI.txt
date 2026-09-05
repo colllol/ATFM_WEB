@@ -1873,4 +1873,5 @@ Quy ước:
 2026-09-04 | prjApplication/ReportNew/KHBHDBNCompare.aspx, KHBHDBNSummary.js, prjApplication/prjApplication.csproj | Bo sung bang tong hop so sanh theo chieu du lieu, hien tong ngay danh gia, tuan truoc, chenhlech tuyet doi va phan tram.
 2026-09-04 | prjApplication/ReportNew/KHBHDBNSummary.js | Bo sung bang tong so chuyen bay cua hai ngay, chenh lech tuyet doi va ty le tang giam.
 2026-09-05 | NHAT_KY_THAY_DOI.txt; prjApplication/prjApplication.csproj | Giai quyet xung dot khi dong bo 25 commit moi tu origin/agent/initial-atfm-import, bao toan lich su local va cac file KHBHDBNCompare tu remote.
+2026-09-05 | prjApplication/FinishFlights/ListFinishedFlightAccepts.aspx; prjApplication/FinishFlights/ListFinishedFlights.aspx.cs | Thêm nút Đ/C BRAVO cạnh EXPORT BRAVO, popup chọn loại đối chiếu và miền, lọc sân bay theo M_AERO.MIEN, trả bảng số lượng Oracle theo chuyến bay/ngày và chừa trống số lượng Bravo qua WebMethod.
 >>>>>>> origin/agent/initial-atfm-import

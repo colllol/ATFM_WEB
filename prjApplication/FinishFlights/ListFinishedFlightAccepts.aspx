@@ -159,6 +159,27 @@
         .export-field-grid input, .export-select-all input { margin: 0 7px 0 0; vertical-align: middle; }
         .export-popup-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e4e9ef; border-bottom: 0; }
 
+        .bravo-compare-backdrop { position: fixed; inset: 0; z-index: 2100; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(12,30,50,.58); }
+        .bravo-compare-backdrop[hidden] { display: none; }
+        .bravo-compare-popup { width: min(1180px, 100%); max-height: calc(100vh - 36px); overflow: hidden; border-radius: 10px; background: #fff; box-shadow: 0 18px 50px rgba(0,0,0,.3); }
+        .bravo-compare-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #dbe5ec; background: linear-gradient(100deg,#e7f4fd,#f8fcff); color: #155f94; }
+        .bravo-compare-header h4 { margin: 0; font-weight: 700; }
+        .bravo-compare-close { border: 0; background: transparent; color: #667; font-size: 24px; line-height: 1; }
+        .bravo-compare-body { max-height: calc(100vh - 110px); overflow: auto; padding: 18px; }
+        .bravo-compare-fields { display: grid; grid-template-columns: minmax(300px,1fr) minmax(330px,1.15fr); gap: 16px; align-items: end; }
+        .bravo-compare-fields label, .bravo-compare-fields legend { color: #315a77; font-size: 12px; font-weight: 700; text-transform: none; }
+        .bravo-compare-fields select { display: block; width: 100%; height: 38px; margin-top: 6px; padding: 0 10px; border: 1px solid #b9d0de; border-radius: 4px; background: #fff; color: #23465a; text-transform: none; }
+        .bravo-compare-fields fieldset { min-height: 65px; margin: 0; padding: 8px 12px 6px; border: 1px solid #d4e2ea; border-radius: 5px; }
+        .bravo-compare-fields fieldset label { display: inline-flex; align-items: center; margin: 7px 16px 0 0; font-weight: 500; }
+        .bravo-compare-fields fieldset input { margin: 0 5px 0 0; }
+        #btnBravoCompareRun { margin-top: 16px; }
+        .bravo-compare-message { display: inline-block; margin-left: 12px; color: #587382; font-size: 12px; }
+        .bravo-compare-table-wrap { margin-top: 16px; overflow: auto; border: 1px solid #dbe5ec; }
+        .bravo-compare-table { margin: 0; min-width: 920px; font-size: 12px; }
+        .bravo-compare-table thead th { background: #eaf4f9; color: #315a77; white-space: nowrap; }
+        .bravo-compare-table td, .bravo-compare-table th { padding: 8px 10px; vertical-align: middle; }
+        @media (max-width: 720px) { .bravo-compare-fields { grid-template-columns: 1fr; } .bravo-compare-body { padding: 12px; } }
+
         @media (max-width: 767px) {
             .export-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             #tblSource { font-size: 7px; }
@@ -493,6 +514,7 @@
         <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
         <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
         <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>EXPORT BRAVO</button>
+        <button type="button" id="btnBravoCompare" class="btn btn-sm btn-primary" onclick="openBravoComparePopup()"><i class="fa fa-balance-scale"></i>Đ/C BRAVO</button>
         <button type="button" id="btnSearch" class="btn btn-sm btn-primary finished-search-button" onclick="btnSearch_OnClick()"><i class="fa fa-search"></i>SREACH</button>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
         </div>
@@ -514,6 +536,16 @@
             <div class="export-popup-footer">
                 <button type="button" class="btn btn-default" onclick="closeExportPopup()">HUỶ</button>
                 <button type="button" class="btn btn-primary" onclick="executeSelectedExport()"><i class="fa fa-download"></i> EXPORT EXCEL</button>
+            </div>
+        </div>
+    </div>
+    <div id="bravoCompareBackdrop" class="bravo-compare-backdrop" role="dialog" aria-modal="true" aria-labelledby="bravoCompareTitle" hidden>
+        <div class="bravo-compare-popup">
+            <div class="bravo-compare-header"><h4 id="bravoCompareTitle"><i class="fa fa-balance-scale"></i> ĐỐI CHIẾU BRAVO</h4><button type="button" class="bravo-compare-close" onclick="closeBravoComparePopup()" aria-label="Đóng">&times;</button></div>
+            <div class="bravo-compare-body">
+                <div class="bravo-compare-fields"><label>Đối chiếu sản lượng<select id="bravoCompareType"><option value="QN_QN">Hãng quốc nội bay quốc nội (VV - VV)</option><option value="QN_QT">Hãng quốc nội bay quốc tế (VV - #VV)</option><option value="QT_QN">Hãng quốc tế bay quốc nội (#VV - VV)</option><option value="QT_QT">Hãng quốc tế bay quốc tế (#VV - #VV)</option></select></label><fieldset><legend>Miền</legend><label><input type="radio" name="bravoRegion" value="MB" checked /> Miền Bắc</label><label><input type="radio" name="bravoRegion" value="MT" /> Miền Trung</label><label><input type="radio" name="bravoRegion" value="MN" /> Miền Nam</label></fieldset></div>
+                <button type="button" id="btnBravoCompareRun" class="btn btn-primary" onclick="runBravoComparison()"><i class="fa fa-search"></i> Đối chiếu kết quả</button><div id="bravoCompareMessage" class="bravo-compare-message" role="status"></div>
+                <div class="bravo-compare-table-wrap"><table class="table table-bordered bravo-compare-table"><thead><tr><th>STT</th><th>Hãng</th><th>Sân bay cất cánh</th><th>Sân bay hạ cánh</th><th>Ngày bay</th><th>Số hiệu chuyến bay</th><th>Số lượng Oracle</th><th>Số lượng Bravo</th></tr></thead><tbody id="bravoCompareBody"><tr><td colspan="8" class="text-center">Chọn bộ lọc và nhấn đối chiếu kết quả.</td></tr></tbody></table></div>
             </div>
         </div>
     </div>
@@ -1584,6 +1616,31 @@
             }
         
         }
+
+        function openBravoComparePopup() {
+            var popup = document.getElementById('bravoCompareBackdrop');
+            popup.hidden = false;
+            document.getElementById('bravoCompareType').focus();
+            document.getElementById('bravoCompareMessage').textContent = '';
+        }
+        function closeBravoComparePopup() { document.getElementById('bravoCompareBackdrop').hidden = true; }
+        function runBravoComparison() {
+            var fromDate = $('#txtFromDatePicker').val() || $('#txtFromDate').val();
+            var toDate = $('#txtToDatePicker').val() || $('#txtToDate').val();
+            var region = $('input[name="bravoRegion"]:checked').val();
+            var body = document.getElementById('bravoCompareBody');
+            var message = document.getElementById('bravoCompareMessage');
+            if (!fromDate || !toDate) { message.textContent = 'Vui lòng chọn khoảng ngày.'; return; }
+            body.innerHTML = '<tr><td colspan="8" class="text-center">Đang đối chiếu...</td></tr>';
+            message.textContent = '';
+            $.ajax({ type: 'POST', url: 'ListFinishedFlightAccepts.aspx/GetBravoComparison', contentType: 'application/json; charset=utf-8', dataType: 'json', data: JSON.stringify({ fromDate: fromDate, toDate: toDate, comparisonType: $('#bravoCompareType').val(), region: region }) }).done(function (response) {
+                var rows = response.d || [];
+                if (!rows.length) { body.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu đối chiếu.</td></tr>'; message.textContent = '0 dòng'; return; }
+                body.innerHTML = rows.map(function (row, index) { return '<tr><td>' + (index + 1) + '</td><td>' + escapeBravo(row.airline) + '</td><td>' + escapeBravo(row.fromAirp) + '</td><td>' + escapeBravo(row.toAirp) + '</td><td>' + escapeBravo(row.flightDate) + '</td><td>' + escapeBravo(row.callsign) + '</td><td class="text-right">' + row.oracleCount + '</td><td></td></tr>'; }).join('');
+                message.textContent = rows.length + ' dòng';
+            }).fail(function (xhr) { body.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu đối chiếu.</td></tr>'; message.textContent = xhr.responseJSON && xhr.responseJSON.Message ? xhr.responseJSON.Message : 'Lỗi API'; });
+        }
+        function escapeBravo(value) { return $('<div>').text(value == null ? '' : value).html(); }
         function UpdateMoveDateCHOT() {
             var result = confirm("Do you want move date?");
             if (result) {
