@@ -1875,4 +1875,5 @@ Quy ước:
 2026-09-05 | NHAT_KY_THAY_DOI.txt; prjApplication/prjApplication.csproj | Giai quyet xung dot khi dong bo 25 commit moi tu origin/agent/initial-atfm-import, bao toan lich su local va cac file KHBHDBNCompare tu remote.
 2026-09-05 | prjApplication/FinishFlights/ListFinishedFlightAccepts.aspx; prjApplication/FinishFlights/ListFinishedFlights.aspx.cs | Thêm nút Đ/C BRAVO cạnh EXPORT BRAVO, popup chọn loại đối chiếu và miền, lọc sân bay theo M_AERO.MIEN, trả bảng số lượng Oracle theo chuyến bay/ngày và chừa trống số lượng Bravo qua WebMethod.
 2026-09-05 | prjApplication/FinishFlights/ListFinishedFlights.aspx.cs | Sửa lỗi biên dịch WebMethod đối chiếu Bravo do câu SQL động không thể khai báo const string.
+2026-09-05 | prjApplication/FinishFlights/ListFinishedFlights.aspx.cs | Chuẩn hóa phân loại bốn nhóm chặng Đ/C BRAVO theo hai ký tự đầu của M_AERO.AE_CODE; chỉ nhận sân bay ánh xạ được trong M_AERO và trả mã AE_CODE chuẩn.
 >>>>>>> origin/agent/initial-atfm-import

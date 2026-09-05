@@ -39,18 +39,18 @@ namespace prjApplication.FinishFlights
             string routeCondition;
             switch ((comparisonType ?? "").Trim().ToUpperInvariant())
             {
-                case "QN_QT": routeCondition = "UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' AND UPPER(TRIM(f.TO_AIRP)) NOT LIKE 'VV%'"; break;
-                case "QT_QN": routeCondition = "UPPER(TRIM(f.FROM_AIRP)) NOT LIKE 'VV%' AND UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%'"; break;
-                case "QT_QT": routeCondition = "UPPER(TRIM(f.FROM_AIRP)) NOT LIKE 'VV%' AND UPPER(TRIM(f.TO_AIRP)) NOT LIKE 'VV%'"; break;
-                default: routeCondition = "UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' AND UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%'"; break;
+                case "QN_QT": routeCondition = "SUBSTR(UPPER(TRIM(af.AE_CODE)), 1, 2) = 'VV' AND SUBSTR(UPPER(TRIM(at.AE_CODE)), 1, 2) <> 'VV'"; break;
+                case "QT_QN": routeCondition = "SUBSTR(UPPER(TRIM(af.AE_CODE)), 1, 2) <> 'VV' AND SUBSTR(UPPER(TRIM(at.AE_CODE)), 1, 2) = 'VV'"; break;
+                case "QT_QT": routeCondition = "SUBSTR(UPPER(TRIM(af.AE_CODE)), 1, 2) <> 'VV' AND SUBSTR(UPPER(TRIM(at.AE_CODE)), 1, 2) <> 'VV'"; break;
+                default: routeCondition = "SUBSTR(UPPER(TRIM(af.AE_CODE)), 1, 2) = 'VV' AND SUBSTR(UPPER(TRIM(at.AE_CODE)), 1, 2) = 'VV'"; break;
             }
             string selectedRegion = (region ?? "").Trim().ToUpperInvariant();
-            string sql = @"SELECT UPPER(TRIM(f.OPER_ID)) AIRLINE, UPPER(TRIM(f.FROM_AIRP)) FROM_AIRP,
-                                        UPPER(TRIM(f.TO_AIRP)) TO_AIRP, TRUNC(f.FLIGHTDATE) FLIGHT_DATE,
+            string sql = @"SELECT UPPER(TRIM(f.OPER_ID)) AIRLINE, UPPER(TRIM(af.AE_CODE)) FROM_AIRP,
+                                        UPPER(TRIM(at.AE_CODE)) TO_AIRP, TRUNC(f.FLIGHTDATE) FLIGHT_DATE,
                                         UPPER(TRIM(f.FLIGHTNBR)) CALLSIGN, COUNT(*) ORACLE_COUNT
                                    FROM T_FINISHED_FLIGHTS f
-                                   LEFT JOIN M_AERO af ON UPPER(TRIM(af.AE_CODE)) = UPPER(TRIM(f.FROM_AIRP))
-                                   LEFT JOIN M_AERO at ON UPPER(TRIM(at.AE_CODE)) = UPPER(TRIM(f.TO_AIRP))
+                                   INNER JOIN M_AERO af ON UPPER(TRIM(af.AE_CODE)) = UPPER(TRIM(f.FROM_AIRP))
+                                   INNER JOIN M_AERO at ON UPPER(TRIM(at.AE_CODE)) = UPPER(TRIM(f.TO_AIRP))
                                   WHERE f.FLIGHTDATE >= :fromDate AND f.FLIGHTDATE < :toDate
                                     AND f.ISACCEPTED = 1
                                     AND f.FLIGHTNBR IS NOT NULL AND f.FROM_AIRP IS NOT NULL AND f.TO_AIRP IS NOT NULL
@@ -58,7 +58,7 @@ namespace prjApplication.FinishFlights
                                     AND UPPER(TRIM(f.PERMNBR)) <> 'NOPERM'
                                     AND ( :region IS NULL OR UPPER(TRIM(af.MIEN)) = :region OR UPPER(TRIM(at.MIEN)) = :region )
                                     AND (" + routeCondition + @")
-                                  GROUP BY UPPER(TRIM(f.OPER_ID)), UPPER(TRIM(f.FROM_AIRP)), UPPER(TRIM(f.TO_AIRP)), TRUNC(f.FLIGHTDATE), UPPER(TRIM(f.FLIGHTNBR))
+                                  GROUP BY UPPER(TRIM(f.OPER_ID)), UPPER(TRIM(af.AE_CODE)), UPPER(TRIM(at.AE_CODE)), TRUNC(f.FLIGHTDATE), UPPER(TRIM(f.FLIGHTNBR))
                                   ORDER BY TRUNC(f.FLIGHTDATE), UPPER(TRIM(f.OPER_ID)), UPPER(TRIM(f.FLIGHTNBR))";
             List<BravoComparisonRow> rows = new List<BravoComparisonRow>();
             using (OracleConnection connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
