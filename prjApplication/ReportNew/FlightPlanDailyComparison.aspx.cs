@@ -84,7 +84,7 @@ namespace prjApplication.ReportNew
                 date1 = first.ToString("yyyy-MM-dd"), date2 = second.ToString("yyyy-MM-dd"), airport = selectedAirport ?? "ALL", oper = selectedOper ?? "ALL",
                 day1 = new { total = day1.Total, seasonal = day1.Seasonal, adHoc = day1.AdHoc, seasonalPermits = day1.SeasonalPermits, adHocPermits = day1.AdHocPermits },
                 day2 = new { total = day2.Total, seasonal = day2.Seasonal, adHoc = day2.AdHoc, seasonalPermits = day2.SeasonalPermits, adHocPermits = day2.AdHocPermits },
-                permits = new { date1 = DistinctPermitDetails(day1.Flights), date2 = DistinctPermitDetails(day2.Flights) },
+                permits = new { scDate1 = DistinctPermitDetails(day1.Flights, "SC"), scDate2 = DistinctPermitDetails(day2.Flights, "SC"), noDate1 = DistinctPermitDetails(day1.Flights, "NO"), noDate2 = DistinctPermitDetails(day2.Flights, "NO") },
                 airportChart = BuildAirportChart(day1.Flights, day2.Flights),
                 differences = new { total = only1.Count + only2.Count, onlyDate1 = only1.Count, onlyDate2 = only2.Count, date1 = only1.Select(ToDetail).ToList(), date2 = only2.Select(ToDetail).ToList() }
             };
@@ -171,9 +171,9 @@ namespace prjApplication.ReportNew
             return counts;
         }
         private static DetailFlight ToDetail(FlightRow row) { return new DetailFlight { callsign = row.Callsign, fromAirp = row.FromAirp, toAirp = row.ToAirp, etd = row.Etd, eta = row.Eta, flightType = row.FlightType, permNbr = row.PermNbr }; }
-        private static List<DetailFlight> DistinctPermitDetails(IEnumerable<FlightRow> flights)
+        private static List<DetailFlight> DistinctPermitDetails(IEnumerable<FlightRow> flights, string flightType)
         {
-            return flights.Where(x => String.Equals(x.FlightType, "SC", StringComparison.OrdinalIgnoreCase) || String.Equals(x.FlightType, "NO", StringComparison.OrdinalIgnoreCase))
+            return flights.Where(x => String.Equals(x.FlightType, flightType, StringComparison.OrdinalIgnoreCase))
                 .GroupBy(x => (x.PermId ?? String.Empty).Trim(), StringComparer.OrdinalIgnoreCase)
                 .Where(x => x.Key.Length > 0)
                 .Select(x => ToDetail(x.First()))
