@@ -20,6 +20,7 @@ namespace prjApplication.ReportNew
             public string FlightType { get; set; }
             public string OperId { get; set; }
             public string PermId { get; set; }
+            public string PermNbr { get; set; }
         }
 
         private sealed class DetailFlight
@@ -141,7 +142,7 @@ namespace prjApplication.ReportNew
                 connection.Open();
                 using (OracleDataReader reader = command.ExecuteReader())
                 {
-                    while (reader.Read()) flights.Add(new FlightRow { Callsign = Text(reader["FLIGHTNBR"]), FromAirp = Text(reader["FROM_AIRP"]), ToAirp = Text(reader["TO_AIRP"]), Etd = Text(reader["ETD"]), Eta = Text(reader["ETA"]), FlightType = Text(reader["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(reader["OPER_ID"]).ToUpperInvariant(), PermId = Text(reader["PERM_ID"]) });
+                    while (reader.Read()) flights.Add(new FlightRow { Callsign = Text(reader["FLIGHTNBR"]), FromAirp = Text(reader["FROM_AIRP"]), ToAirp = Text(reader["TO_AIRP"]), Etd = Text(reader["ETD"]), Eta = Text(reader["ETA"]), FlightType = Text(reader["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(reader["OPER_ID"]).ToUpperInvariant(), PermNbr = Text(reader["PERMNBR"]), PermId = Text(reader["PERM_ID"]) });
                 }
             }
             return new ComparisonDay { Date = date, Flights = flights };

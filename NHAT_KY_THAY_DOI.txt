@@ -1885,3 +1885,4 @@ Quy ước:
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs | Doi logic dem phep bay SC/NO sang PERM_ID duy nhat theo cau truc that cua T_DAY_FLIGHTS.
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.js | Bo sung nut Chi tiet STT 4-5, popup chia doi hien STT va PERMNBR theo tung ngay; tra danh sach PERM_ID duy nhat.
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.js | Sua popup STT 4-5 bang danh sach PERM_ID/PERMNBR SC va NO tach rieng theo tung ngay, tranh loc client bi rong du lieu.
+2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs | Sua loi bien dich do giu lai PermNbr cho popup dong thoi voi PermId dung de gom dem.
