@@ -19,7 +19,7 @@ namespace prjApplication.ReportNew
             public string Eta { get; set; }
             public string FlightType { get; set; }
             public string OperId { get; set; }
-            public string PermNbr { get; set; }
+            public string PermId { get; set; }
         }
 
         private sealed class DetailFlight
@@ -57,7 +57,7 @@ namespace prjApplication.ReportNew
             private int CountDistinctPermitsByType(string flightType)
             {
                 return Flights.Where(x => String.Equals(x.FlightType, flightType, StringComparison.OrdinalIgnoreCase))
-                    .Select(x => (x.PermNbr ?? String.Empty).Trim().ToUpperInvariant())
+                    .Select(x => (x.PermId ?? String.Empty).Trim().ToUpperInvariant())
                     .Where(x => x.Length > 0)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .Count();
@@ -121,7 +121,7 @@ namespace prjApplication.ReportNew
 
         private static ComparisonDay LoadDay(DateTime date, string airport, string oper)
         {
-            const string sql = @"SELECT FLIGHTNBR, FROM_AIRP, TO_AIRP, ETD, ETA, FLIGHT_TYPE, OPER_ID, PERMNBR
+            const string sql = @"SELECT FLIGHTNBR, FROM_AIRP, TO_AIRP, ETD, ETA, FLIGHT_TYPE, OPER_ID, PERMNBR, PERM_ID
                                    FROM T_DAY_FLIGHTS
                                   WHERE FLIGHTDATE >= :flightDate AND FLIGHTDATE < :nextDate
                                     AND PERMNBR IS NOT NULL AND UPPER(TRIM(PERMNBR)) <> 'NOPERM'
@@ -139,7 +139,7 @@ namespace prjApplication.ReportNew
                 connection.Open();
                 using (OracleDataReader reader = command.ExecuteReader())
                 {
-                    while (reader.Read()) flights.Add(new FlightRow { Callsign = Text(reader["FLIGHTNBR"]), FromAirp = Text(reader["FROM_AIRP"]), ToAirp = Text(reader["TO_AIRP"]), Etd = Text(reader["ETD"]), Eta = Text(reader["ETA"]), FlightType = Text(reader["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(reader["OPER_ID"]).ToUpperInvariant(), PermNbr = Text(reader["PERMNBR"]) });
+                    while (reader.Read()) flights.Add(new FlightRow { Callsign = Text(reader["FLIGHTNBR"]), FromAirp = Text(reader["FROM_AIRP"]), ToAirp = Text(reader["TO_AIRP"]), Etd = Text(reader["ETD"]), Eta = Text(reader["ETA"]), FlightType = Text(reader["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(reader["OPER_ID"]).ToUpperInvariant(), PermId = Text(reader["PERM_ID"]) });
                 }
             }
             return new ComparisonDay { Date = date, Flights = flights };

@@ -1882,3 +1882,4 @@ Quy ước:
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs | Sua cach tinh tong so phep bay SC/NO theo khoa chuy?n bay duy nhat, tranh dem trung ban ghi.
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.js | Sap xep bang tong hop thanh 5 dong, dat tong so phep bay mua SC o STT 4 va dot xuat NO o STT 5.
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.js | Sua bang theo mau 5 dong: STT 2-3 la tong so chuyen bay SC/NO, STT 4-5 la tong so phep bay SC/NO; dem phep duy nhat theo PERMNBR.
+2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs | Doi logic dem phep bay SC/NO sang PERM_ID duy nhat theo cau truc that cua T_DAY_FLIGHTS.
