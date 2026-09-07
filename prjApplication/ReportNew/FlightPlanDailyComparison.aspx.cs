@@ -19,6 +19,7 @@ namespace prjApplication.ReportNew
             public string Eta { get; set; }
             public string FlightType { get; set; }
             public string OperId { get; set; }
+            public string PermNbr { get; set; }
         }
 
         private sealed class DetailFlight
@@ -44,6 +45,7 @@ namespace prjApplication.ReportNew
             public List<FlightRow> Flights { get; set; }
             public int Total { get { return Flights.Count; } }
             public int Seasonal { get { return Flights.Count(x => String.Equals(x.FlightType, "SC", StringComparison.OrdinalIgnoreCase)); } }
+            public int SeasonalPerms { get { return CountSeasonalPerms(Flights); } }
             public int AdHoc { get { return Flights.Count(x => String.Equals(x.FlightType, "NO", StringComparison.OrdinalIgnoreCase)); } }
         }
 
@@ -64,8 +66,8 @@ namespace prjApplication.ReportNew
             return new
             {
                 date1 = first.ToString("yyyy-MM-dd"), date2 = second.ToString("yyyy-MM-dd"), airport = selectedAirport ?? "ALL", oper = selectedOper ?? "ALL",
-                day1 = new { total = day1.Total, seasonal = day1.Seasonal, adHoc = day1.AdHoc },
-                day2 = new { total = day2.Total, seasonal = day2.Seasonal, adHoc = day2.AdHoc },
+                day1 = new { total = day1.Total, seasonal = day1.Seasonal, seasonalPerms = day1.SeasonalPerms, adHoc = day1.AdHoc },
+                day2 = new { total = day2.Total, seasonal = day2.Seasonal, seasonalPerms = day2.SeasonalPerms, adHoc = day2.AdHoc },
                 airportChart = BuildAirportChart(day1.Flights, day2.Flights),
                 differences = new { total = only1.Count + only2.Count, onlyDate1 = only1.Count, onlyDate2 = only2.Count, date1 = only1.Select(ToDetail).ToList(), date2 = only2.Select(ToDetail).ToList() }
             };
@@ -104,7 +106,7 @@ namespace prjApplication.ReportNew
 
         private static ComparisonDay LoadDay(DateTime date, string airport, string oper)
         {
-            const string sql = @"SELECT FLIGHTNBR, FROM_AIRP, TO_AIRP, ETD, ETA, FLIGHT_TYPE, OPER_ID
+            const string sql = @"SELECT FLIGHTNBR, FROM_AIRP, TO_AIRP, ETD, ETA, FLIGHT_TYPE, OPER_ID, PERMNBR
                                    FROM T_DAY_FLIGHTS
                                   WHERE FLIGHTDATE >= :flightDate AND FLIGHTDATE < :nextDate
                                     AND PERMNBR IS NOT NULL AND UPPER(TRIM(PERMNBR)) <> 'NOPERM'
@@ -122,7 +124,7 @@ namespace prjApplication.ReportNew
                 connection.Open();
                 using (OracleDataReader reader = command.ExecuteReader())
                 {
-                    while (reader.Read()) flights.Add(new FlightRow { Callsign = Text(reader["FLIGHTNBR"]), FromAirp = Text(reader["FROM_AIRP"]), ToAirp = Text(reader["TO_AIRP"]), Etd = Text(reader["ETD"]), Eta = Text(reader["ETA"]), FlightType = Text(reader["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(reader["OPER_ID"]).ToUpperInvariant() });
+                    while (reader.Read()) flights.Add(new FlightRow { Callsign = Text(reader["FLIGHTNBR"]), FromAirp = Text(reader["FROM_AIRP"]), ToAirp = Text(reader["TO_AIRP"]), Etd = Text(reader["ETD"]), Eta = Text(reader["ETA"]), FlightType = Text(reader["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(reader["OPER_ID"]).ToUpperInvariant(), PermNbr = Text(reader["PERMNBR"]) });
                 }
             }
             return new ComparisonDay { Date = date, Flights = flights };
@@ -152,6 +154,12 @@ namespace prjApplication.ReportNew
             return counts;
         }
         private static DetailFlight ToDetail(FlightRow row) { return new DetailFlight { callsign = row.Callsign, fromAirp = row.FromAirp, toAirp = row.ToAirp, etd = row.Etd, eta = row.Eta, flightType = row.FlightType }; }
+        private static int CountSeasonalPerms(IEnumerable<FlightRow> flights)
+        {
+            return flights.Where(x => String.Equals(x.FlightType, "SC", StringComparison.OrdinalIgnoreCase))
+                .Select(x => String.IsNullOrWhiteSpace(x.PermNbr) ? null : x.PermNbr.Trim().ToUpperInvariant())
+                .Where(x => !String.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        }
         private static string NormalizeFilter(string value) { string result = (value ?? String.Empty).Trim().ToUpperInvariant(); return result.Length == 0 || result == "ALL" ? null : result; }
         private static DateTime ParseDate(string value) { DateTime result; if (!DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out result)) throw new ArgumentException("Ngày so sánh không hợp lệ."); return result.Date; }
     }
