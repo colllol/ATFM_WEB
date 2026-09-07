@@ -43,8 +43,14 @@ namespace prjApplication.ReportNew
             public DateTime Date { get; set; }
             public List<FlightRow> Flights { get; set; }
             public int Total { get { return Flights.Count; } }
-            public int Seasonal { get { return Flights.Count(x => String.Equals(x.FlightType, "SC", StringComparison.OrdinalIgnoreCase)); } }
-            public int AdHoc { get { return Flights.Count(x => String.Equals(x.FlightType, "NO", StringComparison.OrdinalIgnoreCase)); } }
+            public int Seasonal { get { return CountDistinctByType("SC"); } }
+            public int AdHoc { get { return CountDistinctByType("NO"); } }
+            private int CountDistinctByType(string flightType)
+            {
+                return Flights.Where(x => String.Equals(x.FlightType, flightType, StringComparison.OrdinalIgnoreCase))
+                    .GroupBy(Key, StringComparer.OrdinalIgnoreCase)
+                    .Count();
+            }
         }
 
         [WebMethod]
