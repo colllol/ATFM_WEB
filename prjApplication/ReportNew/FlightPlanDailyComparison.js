@@ -17,7 +17,13 @@
             document.getElementById('fpdHeadDate1').textContent = dateText(data.date1); document.getElementById('fpdHeadDate2').textContent = dateText(data.date2);
             document.getElementById('fpdLegendDate1').textContent = dateText(data.date1); document.getElementById('fpdLegendDate2').textContent = dateText(data.date2); renderChart(data.airportChart || []);
             var allDifferent = (data.differences.date1 || []).concat(data.differences.date2 || []);
-            var rows = [['Tổng số chuyến bay', data.day1.total, data.day2.total, allDifferent.length, null], ['Tổng số chuyến bay mùa (SC)', data.day1.seasonal, data.day2.seasonal, allDifferent.filter(function (x) { return String(x.flightType).toUpperCase() === 'SC'; }).length, 'SC'], ['Tổng số chuyến bay đột xuất (NO)', data.day1.adHoc, data.day2.adHoc, allDifferent.filter(function (x) { return String(x.flightType).toUpperCase() === 'NO'; }).length, 'NO']];
+            var rows = [
+                ['Tổng số chuyến bay', data.day1.total, data.day2.total, allDifferent.length, null],
+                ['Số chuyến bay chỉ có ở ngày so sánh 1', data.differences.onlyDate1, 0, data.differences.onlyDate1, null],
+                ['Số chuyến bay chỉ có ở ngày so sánh 2', 0, data.differences.onlyDate2, data.differences.onlyDate2, null],
+                ['Tổng số phép bay mùa (SC)', data.day1.seasonal, data.day2.seasonal, allDifferent.filter(function (x) { return String(x.flightType).toUpperCase() === 'SC'; }).length, 'SC'],
+                ['Tổng số phép bay đột xuất (NO)', data.day1.adHoc, data.day2.adHoc, allDifferent.filter(function (x) { return String(x.flightType).toUpperCase() === 'NO'; }).length, 'NO']
+            ];
             body.innerHTML = rows.map(function (row, i) { var diff = '<div class="fpd-diff"><strong>' + number(row[3]) + '</strong><button class="fpd-detail-btn" type="button" data-detail="' + i + '">Chi tiết</button></div>'; return '<tr><td>' + (i + 1) + '</td><td>' + esc(row[0]) + '</td><td>' + number(row[1]) + '</td><td>' + number(row[2]) + '</td><td>' + diff + '</td></tr>'; }).join('');
             Array.prototype.forEach.call(body.querySelectorAll('[data-detail]'), function (button) { button.addEventListener('click', function () { openDetails(data, rows[Number(button.getAttribute('data-detail'))][4]); }); });
             setStatus('Đã cập nhật lúc ' + new Date().toLocaleTimeString('vi-VN'), false);

@@ -1880,3 +1880,4 @@ Quy ước:
 2026-09-05 | prjApplication/Web.config | Giữ cấu hình môi trường local ngoài Git, chỉ đưa location cho BravoComparison.ashx vào bản theo dõi để tránh commit nhầm thông tin kết nối và thông tin xác thực cục bộ.
 >>>>>>> origin/agent/initial-atfm-import
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs | Sua cach tinh tong so phep bay SC/NO theo khoa chuy?n bay duy nhat, tranh dem trung ban ghi.
+2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.js | Sap xep bang tong hop thanh 5 dong, dat tong so phep bay mua SC o STT 4 va dot xuat NO o STT 5.
