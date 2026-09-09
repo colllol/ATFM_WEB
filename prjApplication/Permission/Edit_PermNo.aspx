@@ -869,10 +869,9 @@
         function formatPermNoDayFlight(date) {
             var day = date.getDate();
             var month = date.getMonth() + 1;
-            var year = date.getFullYear() % 100;
             return (day < 10 ? '0' : '') + day
                 + '/' + (month < 10 ? '0' : '') + month
-                + '/' + (year < 10 ? '0' : '') + year;
+                + '/' + date.getFullYear();
         }
 
         function normalizePermNoDayFlightInput(ele) {
@@ -906,7 +905,7 @@
 
             for (var index = 0; index < dayFlights.length; index++) {
                 var dayFlight = dayFlights[index].trim();
-                if (!/^\d{2}\/\d{2}\/\d{2}$/.test(dayFlight)) return false;
+                if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dayFlight)) return false;
                 if (parsePermNoFlightDate(dayFlight) == null) return false;
             }
 
@@ -921,7 +920,7 @@
             }
 
             $(mDAYSFLIGHT).css('border', '1px solid red');
-            alert('Ngày bay không đúng định dạng. Chỉ chấp nhận dd/MM/yy (ví dụ: 09/09/26).');
+            alert('Ngày bay không đúng định dạng. Chỉ chấp nhận dd/MM/yyyy (ví dụ: 09/09/2026).');
             mDAYSFLIGHT.focus();
             return false;
         }
@@ -1580,7 +1579,7 @@
                 if (!isValidPermNoDayFlight($dayFlight.val())) {
                     invalidRow = {
                         input: $dayFlight,
-                        message: 'Ngày bay không đúng định dạng dd/MM/yy (ví dụ: 09/09/26).'
+                        message: 'Ngày bay không đúng định dạng dd/MM/yyyy (ví dụ: 09/09/2026).'
                     };
                     return false;
                 }
