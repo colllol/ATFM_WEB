@@ -854,22 +854,50 @@
         <%--var mLastUser = document.getElementById('<%= txtLASTUSER.ClientID%>');--%>
         //var mMAX_DATE = document.getElementById('txtMAX_DATE');
 
+        var PERMNO_FLIGHT_MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+            'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+        function permNoFlightMonthIndex(monthToken) {
+            return PERMNO_FLIGHT_MONTHS.indexOf(monthToken.toUpperCase());
+        }
+
+        function permNoFlightRRYear(twoDigitYear) {
+            var currentCentury = Math.floor(new Date().getFullYear() / 100) * 100;
+            return twoDigitYear < 50 ? currentCentury + twoDigitYear : currentCentury - 100 + twoDigitYear;
+        }
+
+        function formatPermNoDayFlight(date) {
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            var year = date.getFullYear() % 100;
+            return (day < 10 ? '0' : '') + day
+                + '/' + (month < 10 ? '0' : '') + month
+                + '/' + (year < 10 ? '0' : '') + year;
+        }
+
         function normalizePermNoDayFlightInput(ele) {
-            var value = (ele.value || '').trim();
-            if (!/^\d{8}$/.test(value)) return;
+            var tokens = (ele.value || '').split(',');
+            var normalized = [];
+            var trailingSeparator = false;
 
-            var day = parseInt(value.substring(0, 2), 10);
-            var month = parseInt(value.substring(2, 4), 10);
-            var year = parseInt(value.substring(4, 8), 10);
-            var parsedDate = new Date(year, month - 1, day);
+            for (var index = 0; index < tokens.length; index++) {
+                var token = tokens[index].trim();
+                if (token === '') {
+                    if (index === tokens.length - 1) {
+                        trailingSeparator = true;
+                        continue;
+                    }
+                    return;
+                }
 
-            if (parsedDate.getFullYear() !== year
-                || parsedDate.getMonth() !== month - 1
-                || parsedDate.getDate() !== day) return;
+                var parsedDate = parsePermNoFlightDate(token);
+                if (parsedDate == null) return;
 
-            ele.value = value.substring(0, 2)
-                + '-' + value.substring(2, 4)
-                + '-' + value.substring(4, 8);
+                normalized.push(formatPermNoDayFlight(parsedDate));
+            }
+
+            if (normalized.length === 0) return;
+            ele.value = normalized.join(',') + (trailingSeparator ? ',' : '');
         }
 
         function isValidPermNoDayFlight(value) {
@@ -878,19 +906,8 @@
 
             for (var index = 0; index < dayFlights.length; index++) {
                 var dayFlight = dayFlights[index].trim();
-                if (dayFlight === '') return false;
-
-                var match = dayFlight.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-                if (match == null) return false;
-
-                var day = parseInt(match[1], 10);
-                var month = parseInt(match[2], 10);
-                var year = parseInt(match[3], 10);
-                var parsedDate = new Date(year, month - 1, day);
-
-                if (parsedDate.getFullYear() !== year
-                    || parsedDate.getMonth() !== month - 1
-                    || parsedDate.getDate() !== day) return false;
+                if (!/^\d{2}\/\d{2}\/\d{2}$/.test(dayFlight)) return false;
+                if (parsePermNoFlightDate(dayFlight) == null) return false;
             }
 
             return true;
@@ -904,7 +921,7 @@
             }
 
             $(mDAYSFLIGHT).css('border', '1px solid red');
-            alert('Ngày bay không đúng định dạng. Chỉ chấp nhận dd-MM-yyyy (ví dụ: 28-07-2026).');
+            alert('Ngày bay không đúng định dạng. Chỉ chấp nhận dd/MM/yy (ví dụ: 09/09/26).');
             mDAYSFLIGHT.focus();
             return false;
         }
@@ -1563,7 +1580,7 @@
                 if (!isValidPermNoDayFlight($dayFlight.val())) {
                     invalidRow = {
                         input: $dayFlight,
-                        message: 'Ngày bay không đúng định dạng dd-MM-yyyy.'
+                        message: 'Ngày bay không đúng định dạng dd/MM/yy (ví dụ: 09/09/26).'
                     };
                     return false;
                 }
@@ -1939,7 +1956,8 @@
                         if (c == 0) {
                             $ele.val('');
                             $(_new).each(function () {
-                                $ele.val($ele.val() + this + ',');
+                                var parsedDate = parsePermNoFlightDate(this);
+                                $ele.val($ele.val() + (parsedDate == null ? this : formatPermNoDayFlight(parsedDate)) + ',');
                             })
                             $ele.val($ele.val().substring(0, $ele.val().length - 1));
                             $(this).attr('data-contenttip', '');
@@ -2009,7 +2027,8 @@
                     if (c == 0) {
                         $ele.val('');
                         $(_new).each(function () {
-                            $ele.val($ele.val() + new Date(this.replace(/^(\d{2})-(\d{2})-(\d{4})$/, '$3-$2-$1')).format('dd-mmm-yyyy') + ',');
+                            var parsedDate = parsePermNoFlightDate(this);
+                            $ele.val($ele.val() + (parsedDate == null ? this : formatPermNoDayFlight(parsedDate)) + ',');
                         })
                         $ele.val($ele.val().substring(0, $ele.val().length - 1));
                         $(this).attr('data-contenttip', '');
@@ -2065,11 +2084,21 @@
                     parsedMilliseconds.getDate());
             }
 
-            var dayFirst = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/.exec(value);
+            var dayFirst = /^(\d{1,2})[\/-](\d{1,2}|[A-Za-z]{3})[\/-](\d{2}|\d{4})$/.exec(value);
+            if (dayFirst == null)
+                dayFirst = /^(\d{2})(\d{2})(\d{2}|\d{4})$/.exec(value);
             if (dayFirst) {
                 var day = parseInt(dayFirst[1], 10);
-                var month = parseInt(dayFirst[2], 10) - 1;
-                var year = parseInt(dayFirst[3], 10);
+                var monthToken = dayFirst[2];
+                var month = /^\d+$/.test(monthToken)
+                    ? parseInt(monthToken, 10) - 1
+                    : permNoFlightMonthIndex(monthToken);
+                if (month < 0) return null;
+
+                var yearToken = dayFirst[3];
+                var year = yearToken.length === 4
+                    ? parseInt(yearToken, 10)
+                    : permNoFlightRRYear(parseInt(yearToken, 10));
                 var parsedDate = new Date(year, month, day);
 
                 if (parsedDate.getFullYear() === year
