@@ -1,6 +1,6 @@
 <%@ Page Title="Báo cáo Email" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="EmailReports.aspx.cs" Inherits="prjApplication.SLOTS.EmailReports" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/EmailReports.css?v=20260809-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/EmailReports.css?v=20260910-1") %>" />
     <section id="emailReportsPage" class="email-reports-page"
         data-email-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmails") %>"
         data-incoming-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetIncoming") %>"
@@ -20,6 +20,7 @@
             <div class="email-filters">
                 <label>Tìm kiếm<input id="emailSearch" type="search" placeholder="Tiêu đề, người gửi, nội dung..." /></label>
                 <label>Trạng thái<select id="emailStatus"><option value="">Tất cả trạng thái</option><option>DISCOVERED</option><option>DOWNLOADED</option><option>PROCESSING</option><option>SAVED</option><option>FAILED</option><option>QUARANTINED</option><option>SKIPPED</option><option>NO_ATTACHMENT</option><option>BLOCKED</option></select></label>
+                <label>Loại file<select id="emailFileType"><option value="word" selected>Word</option><option value="excel">Excel</option><option value="pdf">PDF</option><option value="image">Image</option><option value="none">No attachment</option></select></label>
                 <label>Từ ngày<input id="emailFrom" type="date" /></label>
                 <label>Đến ngày<input id="emailTo" type="date" /></label>
                 <button id="emailApply" type="button"><i class="fa fa-search"></i> Tìm kiếm</button>
@@ -62,5 +63,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260812-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260910-1") %>"></script>
 </asp:Content>
