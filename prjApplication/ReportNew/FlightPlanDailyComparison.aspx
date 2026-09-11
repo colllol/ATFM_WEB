@@ -46,7 +46,7 @@
     <div id="fpdModal" class="fpd-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fpdModalTitle">
         <div class="fpd-modal-panel">
             <div class="fpd-modal-head"><div><span class="fpd-section-kicker">Chi tiết sai khác</span><h2 id="fpdModalTitle">Các chuyến bay không trùng</h2><p id="fpdModalInfo"></p></div><button type="button" id="fpdClose" class="fpd-close" aria-label="Đóng cửa sổ">×</button></div>
-            <div class="fpd-modal-grid"><section><h3 id="fpdModalDate1">Ngày so sánh 1</h3><div class="fpd-detail-wrap"><table><thead><tr><th>CALLSIGN</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th></tr></thead><tbody id="fpdDetails1"></tbody></table></div></section><section><h3 id="fpdModalDate2">Ngày so sánh 2</h3><div class="fpd-detail-wrap"><table><thead><tr><th>CALLSIGN</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th></tr></thead><tbody id="fpdDetails2"></tbody></table></div></section></div>
+            <div class="fpd-modal-grid"><section><h3 id="fpdModalDate1">Ngày so sánh 1</h3><div class="fpd-detail-wrap"><table><thead><tr><th>STT</th><th>CALLSIGN</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th></tr></thead><tbody id="fpdDetails1"></tbody></table></div></section><section><h3 id="fpdModalDate2">Ngày so sánh 2</h3><div class="fpd-detail-wrap"><table><thead><tr><th>STT</th><th>CALLSIGN</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th></tr></thead><tbody id="fpdDetails2"></tbody></table></div></section></div>
         </div>
     </div>
     <script src="<%= ResolveUrl("~/ReportNew/FlightPlanDailyComparison.js?v=20260905-2") %>"></script>
