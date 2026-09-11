@@ -247,6 +247,11 @@
     <Compile Include="Controllers\Receive_LogFile\ReceiveLogFileController.cs" />
     <Compile Include="Controllers\Report\MenuReportController.cs" />
     <Compile Include="Controllers\Report\AdsBPerformanceController.cs" />
+    <Compile Include="Controllers\ReportNew\FlightStatusController.cs" />
+    <Compile Include="Controllers\ReportNew\DelayAlertController.cs" />
+    <Compile Include="Controllers\ReportNew\DayPlanCompareController.cs" />
+    <Compile Include="Controllers\ReportNew\TrackingMapController.cs" />
+    <Compile Include="Controllers\ReportNew\SlotCompareController.cs" />
     <Compile Include="Controllers\Report\FlightAnalyticsController.cs" />
     <Compile Include="Controllers\Report\ReportAirportController.cs" />
     <Compile Include="Controllers\SLOTS\SlotComparisonController.cs" />
@@ -315,6 +320,7 @@
     <Compile Include="Data\Receive_LogFile\ReceiveLogFileRepository.cs" />
     <Compile Include="Data\Report\MenuReportRepository.cs" />
     <Compile Include="Data\Report\AdsBPerformanceRepository.cs" />
+    <Compile Include="Data\ReportNew\ReportNewRepository.cs" />
     <Compile Include="Data\Report\FlightAnalyticsRepository.cs" />
     <Compile Include="Data\Report\ReportAirportRepository.cs" />
     <Compile Include="Data\SLOTS\SlotsRepository.cs" />

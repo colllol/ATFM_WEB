@@ -77,6 +77,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Report\AdsBPerformance.cs" />
+    <Compile Include="ReportNew\ReportNewRequests.cs" />
     <Compile Include="Report\FlightAnalytics.cs" />
     <Compile Include="Report\ReportAirportModels.cs" />
     <Compile Include="SLOTS\SlotsApi.cs" />
