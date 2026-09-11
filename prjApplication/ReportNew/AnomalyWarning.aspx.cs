@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Web.Services;
-using Oracle.ManagedDataAccess.Client;
+using prjBusinessLogic;
 
 namespace prjApplication.ReportNew
 {
@@ -27,69 +27,46 @@ namespace prjApplication.ReportNew
         [WebMethod]
         public static object GetDelayAlerts()
         {
-            const string sql = @"
-                SELECT TRUNC(SYSDATE) REPORT_DAY,
-                       f.FLIGHTDATE,
-                       f.FLIGHTNBR,
-                       f.OPER_ID,
-                       f.REGISTRATION,
-                       f.PERMTYPE,
-                       f.FROM_AIRP,
-                       f.TO_AIRP,
-                       TRIM(f.ETD) ETD,
-                       TRIM(f.ATD) ATD
-                  FROM T_DAY_FLIGHTS_GOINGON f
-                 WHERE f.FLIGHTDATE >= TRUNC(SYSDATE)
-                   AND f.FLIGHTDATE < TRUNC(SYSDATE) + 1
-                   AND f.ETD IS NOT NULL
-                   AND f.ATD IS NOT NULL
-                 ORDER BY f.FLIGHTDATE, f.FLIGHTNBR";
+            DataTable data = new clsResuftAPI().GetTableApiExtension(
+                "DELAY_ALERT_PKG", "GET_TODAY_FLIGHTS", new { });
+            if (data == null)
+                throw new InvalidOperationException("Không lấy được dữ liệu cảnh báo delay từ API.");
 
             DateTime reportDay = DateTime.Today;
             var alerts = new List<DelayAlert>();
-            using (var connection = new OracleConnection(
-                ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = new OracleCommand(sql, connection))
+            foreach (DataRow row in data.Rows)
             {
-                command.CommandTimeout = 120;
-                connection.Open();
-                using (OracleDataReader reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        if (reader["REPORT_DAY"] != DBNull.Value)
-                            reportDay = Convert.ToDateTime(reader["REPORT_DAY"]).Date;
+                if (row["REPORT_DAY"] != DBNull.Value)
+                    reportDay = Convert.ToDateTime(row["REPORT_DAY"]).Date;
 
-                        DateTime flightDate;
-                        DateTime etdTimestamp;
-                        DateTime atdTimestamp;
-                        string etd = NormalizeFlightTime(reader["ETD"], 4);
-                        string atd = NormalizeFlightTime(reader["ATD"], 6);
-                        if (!TryGetFlightDate(reader["FLIGHTDATE"], out flightDate) ||
-                            !TryParseEtd(etd, flightDate, out etdTimestamp) ||
-                            !TryParseAtd(atd, flightDate, out atdTimestamp))
-                            continue;
+                DateTime flightDate;
+                DateTime etdTimestamp;
+                DateTime atdTimestamp;
+                string etd = NormalizeFlightTime(row["ETD"], 4);
+                string atd = NormalizeFlightTime(row["ATD"], 6);
+                if (!TryGetFlightDate(row["FLIGHTDATE"], out flightDate) ||
+                    !TryParseEtd(etd, flightDate, out etdTimestamp) ||
+                    !TryParseAtd(atd, flightDate, out atdTimestamp))
+                    continue;
 
-                        long delayMinutes = Convert.ToInt64(
-                            (atdTimestamp - etdTimestamp).TotalMinutes);
-                        int level = GetDelayAlertLevel(delayMinutes);
-                        if (level == 0)
-                            continue;
+                long delayMinutes = Convert.ToInt64(
+                    (atdTimestamp - etdTimestamp).TotalMinutes);
+                int level = GetDelayAlertLevel(delayMinutes);
+                if (level == 0)
+                    continue;
 
-                        alerts.Add(new DelayAlert {
-                            Level = level,
-                            FlightNumber = Convert.ToString(reader["FLIGHTNBR"]).Trim(),
-                            Operator = Convert.ToString(reader["OPER_ID"]).Trim(),
-                            Registration = Convert.ToString(reader["REGISTRATION"]).Trim(),
-                            PermitType = Convert.ToString(reader["PERMTYPE"]).Trim(),
-                            FromAirport = Convert.ToString(reader["FROM_AIRP"]).Trim(),
-                            ToAirport = Convert.ToString(reader["TO_AIRP"]).Trim(),
-                            Etd = etd,
-                            Atd = atd,
-                            DelayMinutes = delayMinutes
-                        });
-                    }
-                }
+                alerts.Add(new DelayAlert {
+                    Level = level,
+                    FlightNumber = Convert.ToString(row["FLIGHTNBR"]).Trim(),
+                    Operator = Convert.ToString(row["OPER_ID"]).Trim(),
+                    Registration = Convert.ToString(row["REGISTRATION"]).Trim(),
+                    PermitType = Convert.ToString(row["PERMTYPE"]).Trim(),
+                    FromAirport = Convert.ToString(row["FROM_AIRP"]).Trim(),
+                    ToAirport = Convert.ToString(row["TO_AIRP"]).Trim(),
+                    Etd = etd,
+                    Atd = atd,
+                    DelayMinutes = delayMinutes
+                });
             }
 
             List<DelayAlert> sorted = alerts

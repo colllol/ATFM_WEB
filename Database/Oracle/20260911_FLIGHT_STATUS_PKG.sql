@@ -64,11 +64,13 @@ CREATE OR REPLACE PACKAGE FLIGHT_STATUS_PKG AS
     );
 
     -- Danh sach chuyen huy tu T_DAY_FLIGHTS_CANCEL cho ky qua khu.
+    -- P_FILTER_PERMTYPE: 1 = chi lay LD/O-F lien quan VN (mac dinh), 0 = lay tat ca.
     PROCEDURE GET_CANCELLED
     (
-        P_FROM_DATE  IN VARCHAR2,
-        P_TO_DATE    IN VARCHAR2,
-        P_OUT_CURSOR OUT T_CURSOR
+        P_FROM_DATE       IN VARCHAR2,
+        P_TO_DATE         IN VARCHAR2,
+        P_FILTER_PERMTYPE IN NUMBER DEFAULT 1,
+        P_OUT_CURSOR      OUT T_CURSOR
     );
 
     -- Danh sach hang khai thac cho dropdown loc (union 3 bang bay + T_KHH).
@@ -452,26 +454,30 @@ CREATE OR REPLACE PACKAGE BODY FLIGHT_STATUS_PKG AS
 
     PROCEDURE GET_CANCELLED
     (
-        P_FROM_DATE  IN VARCHAR2,
-        P_TO_DATE    IN VARCHAR2,
-        P_OUT_CURSOR OUT T_CURSOR
+        P_FROM_DATE       IN VARCHAR2,
+        P_TO_DATE         IN VARCHAR2,
+        P_FILTER_PERMTYPE IN NUMBER DEFAULT 1,
+        P_OUT_CURSOR      OUT T_CURSOR
     )
     IS
-        V_FROM  DATE;
-        V_TO_EX DATE;
+        V_FROM   DATE;
+        V_TO_EX  DATE;
+        V_FILTER PLS_INTEGER;
     BEGIN
         V_FROM := PARSE_DATE(P_FROM_DATE, 'P_FROM_DATE');
         V_TO_EX := PARSE_DATE(P_TO_DATE, 'P_TO_DATE');
         VALIDATE_RANGE(V_FROM, V_TO_EX);
         V_TO_EX := V_TO_EX + 1;
+        V_FILTER := NVL(P_FILTER_PERMTYPE, 1);
 
         OPEN P_OUT_CURSOR FOR
-            SELECT FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
+            SELECT FLIGHTDATE, FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
                    NULLIF(TRIM(ATD),'') ATDDAY, NULLIF(TRIM(ATA),'') ATADAY,
                    NULLIF(TRIM(ETD),'') EOBTDAY
               FROM T_DAY_FLIGHTS_CANCEL
              WHERE (
-                    UPPER(TRIM(PERMTYPE))='LD'
+                    V_FILTER = 0
+                    OR UPPER(TRIM(PERMTYPE))='LD'
                     OR (
                          UPPER(TRIM(PERMTYPE))='O/F'
                          AND (UPPER(TRIM(FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(TO_AIRP)) LIKE 'VV%')

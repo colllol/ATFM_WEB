@@ -39,35 +39,25 @@ namespace prjApplication.SLOTS
 
         public DateTime GetDefaultDate()
         {
-            object value = provider.ExecuteScalar(
-                "SELECT MAX(COMPARE_DATE) FROM (" +
-                "SELECT TRUNC(\"Date\") COMPARE_DATE FROM T_KHH " +
-                "INTERSECT SELECT TRUNC(FLIGHT_DATE) FROM T_SLOT_AERO)");
+            DataTable data = CallPackage("GET_DEFAULT_DATE", new { });
+            object value = data.Rows.Count > 0 ? data.Rows[0]["COMPARE_DATE"] : null;
             return value == null || value == DBNull.Value ? DateTime.Today : Convert.ToDateTime(value, CultureInfo.InvariantCulture);
         }
 
         public IList<string> GetOperators()
         {
-            DataTable table = provider.ExecuteQuery(
-                "SELECT DISTINCT CASE WHEN UPPER(\"OPER\") = 'VNA' THEN 'HVN' ELSE UPPER(\"OPER\") END OPER " +
-                "FROM T_KHH WHERE \"OPER\" IS NOT NULL ORDER BY OPER");
+            DataTable table = CallPackage("GET_OPERATORS", new { });
             return table.AsEnumerable().Select(row => row["OPER"].ToString()).ToList();
         }
 
         public IDictionary<string, int> GetSummary(DateTime date, string oper)
         {
             Dictionary<string, int> summary = ResultTypes.ToDictionary(type => type, type => 0);
-            string operClause = IsAllOperators(oper) ? string.Empty : " AND r.OPER = :P_OPER";
-            List<OracleParameter> parameters = new List<OracleParameter>
+            DataTable table = CallPackage("GET_SUMMARY", new
             {
-                new OracleParameter("P_DATE", OracleDbType.Date) { Value = date.Date }
-            };
-            if (!IsAllOperators(oper)) parameters.Add(new OracleParameter("P_OPER", OracleDbType.Varchar2) { Value = NormalizeText(oper) });
-            DataTable table = provider.ExecuteQuery(
-                "SELECT r.RESULT_TYPE, COUNT(*) TOTAL FROM T_SLOT_COMPARE_RESULT r " +
-                "INNER JOIN T_SLOT_COMPARE_RUN h ON h.ID = r.RUN_ID " +
-                "WHERE h.COMPARE_DATE = :P_DATE" + operClause + " GROUP BY r.RESULT_TYPE",
-                parameters.ToArray());
+                P_COMPARE_DATE = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                P_OPER = IsAllOperators(oper) ? null : NormalizeText(oper)
+            });
             foreach (DataRow row in table.Rows) summary[row["RESULT_TYPE"].ToString()] = Convert.ToInt32(row["TOTAL"], CultureInfo.InvariantCulture);
             return summary;
         }
@@ -114,26 +104,15 @@ namespace prjApplication.SLOTS
             resultType = ValidateResultType(resultType);
             pageIndex = Math.Max(1, pageIndex);
             pageSize = Math.Max(1, Math.Min(500000, pageSize));
-            string operClause = IsAllOperators(oper) ? string.Empty : " AND r.OPER = :P_OPER";
-            List<OracleParameter> baseParameters = new List<OracleParameter>
+            DataTable data = CallPackage("GET_RESULTS", new
             {
-                new OracleParameter("P_DATE", OracleDbType.Date) { Value = date.Date },
-                new OracleParameter("P_TYPE", OracleDbType.Varchar2) { Value = resultType }
-            };
-            if (!IsAllOperators(oper)) baseParameters.Add(new OracleParameter("P_OPER", OracleDbType.Varchar2) { Value = NormalizeText(oper) });
-            string fromClause = " FROM T_SLOT_COMPARE_RESULT r INNER JOIN T_SLOT_COMPARE_RUN h ON h.ID = r.RUN_ID " +
-                                "WHERE h.COMPARE_DATE = :P_DATE AND r.RESULT_TYPE = :P_TYPE" + operClause;
-            totalRecords = Convert.ToInt32(provider.ExecuteScalar("SELECT COUNT(*)" + fromClause, CloneParameters(baseParameters)) ?? 0, CultureInfo.InvariantCulture);
-            int rowStart = ((pageIndex - 1) * pageSize) + 1;
-            int rowEnd = pageIndex * pageSize;
-            List<OracleParameter> queryParameters = CloneParameters(baseParameters).ToList();
-            queryParameters.Add(new OracleParameter("P_START", OracleDbType.Int32) { Value = rowStart });
-            queryParameters.Add(new OracleParameter("P_END", OracleDbType.Int32) { Value = rowEnd });
-            DataTable data = provider.ExecuteQuery(
-                "SELECT ID, RESULT_TYPE, FLIGHT_DATE, OPER, CALLSIGN, FROM_AIRP, TO_AIRP, ETD, REMARK, SOURCE_REF FROM (" +
-                "SELECT r.ID, r.RESULT_TYPE, r.FLIGHT_DATE, r.OPER, r.CALLSIGN, r.FROM_AIRP, r.TO_AIRP, r.ETD, r.REMARK, r.SOURCE_REF, " +
-                "ROW_NUMBER() OVER (ORDER BY r.OPER, r.CALLSIGN, r.FROM_AIRP, r.TO_AIRP, r.ID) RN" + fromClause +
-                ") WHERE RN BETWEEN :P_START AND :P_END", queryParameters.ToArray());
+                P_COMPARE_DATE = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                P_RESULT_TYPE = resultType,
+                P_OPER = IsAllOperators(oper) ? null : NormalizeText(oper),
+                P_PAGE_SIZE = pageSize,
+                P_PAGE_INDEX = pageIndex - 1
+            });
+            totalRecords = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["SUMRECORD"], CultureInfo.InvariantCulture) : 0;
             return MapResults(data);
         }
 
@@ -148,20 +127,10 @@ namespace prjApplication.SLOTS
             Dictionary<string, OperatorInfo> operatorMap = LoadOperatorMap();
             Dictionary<string, string> airportMap = LoadAirportMap();
             HashSet<string> allowedOperators = new HashSet<string>(GetOperators(), StringComparer.OrdinalIgnoreCase);
-            OracleParameter[] dateParameters =
-            {
-                new OracleParameter("P_FROM", OracleDbType.Date) { Value = date },
-                new OracleParameter("P_TO", OracleDbType.Date) { Value = date.AddDays(1) }
-            };
-            DataTable khh = provider.ExecuteQuery(
-                "SELECT ID, \"Date\" FLIGHT_DATE, \"CALLSIGN\" CALLSIGN, \"From\" FROM_AIRP, \"To\" TO_AIRP, \"ETD\" ETD, \"OPER\" OPER_HINT " +
-                "FROM T_KHH WHERE \"Date\" >= :P_FROM AND \"Date\" < :P_TO", CloneParameters(dateParameters));
-            DataTable slot = provider.ExecuteQuery(
-                "SELECT ID, FLIGHT_DATE, CALLSIGN, FROM_AIRP, TO_AIRP, ETD_ETA ETD, NVL(AERO, CARRIE) OPER_HINT " +
-                "FROM T_SLOT_AERO WHERE FLIGHT_DATE >= :P_FROM AND FLIGHT_DATE < :P_TO AND CALLSIGN IS NOT NULL", CloneParameters(dateParameters));
-            DataTable permission = provider.ExecuteQuery(
-                "SELECT FLIGHT_ID ID, FLIGHTDATE FLIGHT_DATE, FLIGHTNBR CALLSIGN, FROM_AIRP, TO_AIRP, ETD, OPER_ID OPER_HINT " +
-                "FROM T_DAY_FLIGHTS WHERE FLIGHTDATE >= :P_FROM AND FLIGHTDATE < :P_TO", CloneParameters(dateParameters));
+            string compareDate = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            DataTable khh = CallPackage("GET_SOURCE_KHH", new { P_COMPARE_DATE = compareDate });
+            DataTable slot = CallPackage("GET_SOURCE_SLOT", new { P_COMPARE_DATE = compareDate });
+            DataTable permission = CallPackage("GET_SOURCE_PERM", new { P_COMPARE_DATE = compareDate });
             return new SourceData
             {
                 AirlinePlan = NormalizeRows(khh, operatorMap, airportMap, allowedOperators, oper, "KHH"),
@@ -172,9 +141,7 @@ namespace prjApplication.SLOTS
 
         private Dictionary<string, OperatorInfo> LoadOperatorMap()
         {
-            DataTable data = provider.ExecuteQuery(
-                "SELECT UPPER(OPER_ICAO) OPER_ICAO, UPPER(OPER_IATA) OPER_IATA FROM M_OPER " +
-                "WHERE IS_DOMESTIC = '1' AND OPER_ICAO IS NOT NULL");
+            DataTable data = CallPackage("GET_OPERATOR_MAP", new { });
             Dictionary<string, OperatorInfo> map = new Dictionary<string, OperatorInfo>(StringComparer.OrdinalIgnoreCase);
             foreach (DataRow row in data.Rows)
             {
@@ -188,7 +155,7 @@ namespace prjApplication.SLOTS
 
         private Dictionary<string, string> LoadAirportMap()
         {
-            DataTable data = provider.ExecuteQuery("SELECT UPPER(AE_CODE) AE_CODE, UPPER(AE_IATA) AE_IATA FROM M_AERO WHERE AE_CODE IS NOT NULL");
+            DataTable data = CallPackage("GET_AIRPORT_MAP", new { });
             Dictionary<string, string> map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (DataRow row in data.Rows)
             {
@@ -198,6 +165,15 @@ namespace prjApplication.SLOTS
                 if (!string.IsNullOrEmpty(iata) && !map.ContainsKey(iata)) map[iata] = icao;
             }
             return map;
+        }
+
+        private static DataTable CallPackage(string storeName, object parameters)
+        {
+            DataTable data = new global::clsResuftAPI().GetTableApiExtension(
+                "SLOT_COMPARE_PKG", storeName, parameters);
+            if (data == null)
+                throw new InvalidOperationException("Không lấy được dữ liệu " + storeName + " từ API.");
+            return data;
         }
 
         private static List<SourceFlight> NormalizeRows(DataTable data, Dictionary<string, OperatorInfo> operators,

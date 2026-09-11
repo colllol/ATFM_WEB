@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Web.Services;
-using Oracle.ManagedDataAccess.Client;
 
 namespace prjApplication.ReportNew
 {
@@ -26,25 +25,17 @@ namespace prjApplication.ReportNew
             string selectedAirport = NormalizeAirport(airport, true);
             var metrics = new Dictionary<string, AirportMetric>(StringComparer.OrdinalIgnoreCase);
 
-            using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = CreateCommand(connection, from, to, selectedAirport))
+            foreach (DataRow row in LoadStatusRows(fromDate, toDate, selectedAirport))
             {
-                connection.Open();
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        string state = Convert.ToString(reader["FLIGHT_STATE"]);
-                        if (!IsCompletedOrDelayed(state)) continue;
+                string state = Convert.ToString(row["FLIGHT_STATE"]);
+                if (!IsCompletedOrDelayed(state)) continue;
 
-                        string fromAirport = NormalizeAirport(Convert.ToString(reader["FROM_AIRP"]), false);
-                        string toAirport = NormalizeAirport(Convert.ToString(reader["TO_AIRP"]), false);
-                        if (IsVietnamAirport(fromAirport) && (selectedAirport == null || fromAirport == selectedAirport))
-                            GetMetric(metrics, fromAirport).Departures++;
-                        if (IsVietnamAirport(toAirport) && (selectedAirport == null || toAirport == selectedAirport))
-                            GetMetric(metrics, toAirport).Arrivals++;
-                    }
-                }
+                string fromAirport = NormalizeAirport(Convert.ToString(row["FROM_AIRP"]), false);
+                string toAirport = NormalizeAirport(Convert.ToString(row["TO_AIRP"]), false);
+                if (IsVietnamAirport(fromAirport) && (selectedAirport == null || fromAirport == selectedAirport))
+                    GetMetric(metrics, fromAirport).Departures++;
+                if (IsVietnamAirport(toAirport) && (selectedAirport == null || toAirport == selectedAirport))
+                    GetMetric(metrics, toAirport).Arrivals++;
             }
 
             var airports = metrics.Values
@@ -91,42 +82,34 @@ namespace prjApplication.ReportNew
             int total = 0;
             var rows = new List<object>(pageSize);
 
-            using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = CreateCommand(connection, from, to, selectedAirport))
+            foreach (DataRow row in LoadStatusRows(fromDate, toDate, selectedAirport))
             {
-                connection.Open();
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        string state = Convert.ToString(reader["FLIGHT_STATE"]);
-                        if (!IsCompletedOrDelayed(state)) continue;
-                        string fromAirport = NormalizeAirport(Convert.ToString(reader["FROM_AIRP"]), false);
-                        string toAirport = NormalizeAirport(Convert.ToString(reader["TO_AIRP"]), false);
-                        bool matches = movementKey == "departure"
-                            ? fromAirport == selectedAirport
-                            : toAirport == selectedAirport;
-                        if (!matches) continue;
+                string state = Convert.ToString(row["FLIGHT_STATE"]);
+                if (!IsCompletedOrDelayed(state)) continue;
+                string fromAirport = NormalizeAirport(Convert.ToString(row["FROM_AIRP"]), false);
+                string toAirport = NormalizeAirport(Convert.ToString(row["TO_AIRP"]), false);
+                bool matches = movementKey == "departure"
+                    ? fromAirport == selectedAirport
+                    : toAirport == selectedAirport;
+                if (!matches) continue;
 
-                        if (total >= start && rows.Count < pageSize)
-                        {
-                            rows.Add(new {
-                                stt = total + 1,
-                                callsign = Convert.ToString(reader["FLIGHTNBR"]),
-                                oper = Convert.ToString(reader["OPER_ID"]),
-                                registration = Convert.ToString(reader["REGISTRATION"]),
-                                permType = Convert.ToString(reader["PERMTYPE"]),
-                                fromAirp = fromAirport,
-                                toAirp = toAirport,
-                                atdDay = Convert.ToString(reader["ATDDAY"]),
-                                ataDay = Convert.ToString(reader["ATADAY"]),
-                                eobtDay = Convert.ToString(reader["EOBTDAY"]),
-                                status = state
-                            });
-                        }
-                        total++;
-                    }
+                if (total >= start && rows.Count < pageSize)
+                {
+                    rows.Add(new {
+                        stt = total + 1,
+                        callsign = Convert.ToString(row["FLIGHTNBR"]),
+                        oper = Convert.ToString(row["OPER_ID"]),
+                        registration = Convert.ToString(row["REGISTRATION"]),
+                        permType = Convert.ToString(row["PERMTYPE"]),
+                        fromAirp = fromAirport,
+                        toAirp = toAirport,
+                        atdDay = Convert.ToString(row["ATDDAY"]),
+                        ataDay = Convert.ToString(row["ATADAY"]),
+                        eobtDay = Convert.ToString(row["EOBTDAY"]),
+                        status = state
+                    });
                 }
+                total++;
             }
 
             int totalPages = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize));
@@ -141,16 +124,10 @@ namespace prjApplication.ReportNew
             };
         }
 
-        private static OracleCommand CreateCommand(OracleConnection connection, DateTime from, DateTime to, string airport)
+        // Bao cao nay chi thong ke ky qua khu nen luon dung nhanh T_FINISHED_FLIGHTS.
+        private static DataRowCollection LoadStatusRows(string fromDate, string toDate, string airport)
         {
-            var command = new OracleCommand(FlightStatusRate.BuildHistoricalStatusSql(), connection);
-            command.BindByName = true;
-            command.CommandTimeout = 120;
-            command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-            command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
-            command.Parameters.Add("oper", OracleDbType.Varchar2).Value = DBNull.Value;
-            command.Parameters.Add("airport", OracleDbType.Varchar2).Value = airport == null ? (object)DBNull.Value : airport;
-            return command;
+            return FlightStatusRate.LoadStatus(fromDate, toDate, null, airport, false).Rows;
         }
 
         private static void ParseDateRange(string fromDate, string toDate, out DateTime from, out DateTime to)
