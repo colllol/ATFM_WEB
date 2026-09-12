@@ -1,0 +1,3 @@
+# Local SQL*Plus configuration for password authentication to the ATFM database.
+# Point TNS_ADMIN to this directory only for the deployment session.
+SQLNET.AUTHENTICATION_SERVICES = (NONE)

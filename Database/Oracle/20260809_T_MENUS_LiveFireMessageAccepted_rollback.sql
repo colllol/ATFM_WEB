@@ -1,0 +1,14 @@
+DECLARE
+    v_menu_id T_MENUS.ID%TYPE;
+BEGIN
+    SELECT ID INTO v_menu_id
+      FROM T_MENUS
+     WHERE LOWER(TRIM(MENUURL)) = LOWER('MessManagement/LiveFireMessageAccepted.aspx')
+       AND ROWNUM = 1;
+    DELETE FROM T_USERMENU WHERE MENU_ID = v_menu_id;
+    DELETE FROM T_GROUPMENU WHERE MENU_ID = v_menu_id;
+    DELETE FROM T_MENUS WHERE ID = v_menu_id;
+    COMMIT;
+EXCEPTION WHEN NO_DATA_FOUND THEN NULL;
+END;
+/

@@ -1,0 +1,2353 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="ATFM.Master.cs" Inherits="prjApplication.Masters.ATFM" %>
+
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="cc2" %>
+<%@ Register Assembly="prjComponents" Namespace="prjComponents" TagPrefix="cc1" %>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <meta http-equiv="REFRESH" content="5400" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="robots" content="noindex, nofollow" />
+    <script>window.reportApiBase = ('<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>' || '').replace(/\/?$/, '/');</script>
+    <title>VIETNAM AIR TRAFFIC MANAGEMENT CORPORATION</title>
+
+    <meta name="description" content="AIR TRAFFIC FLOW MANAGEMENT" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <asp:ContentPlaceHolder ID="Scripts" runat="server">
+        <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/bootstrap.min.css" />
+
+        <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/font-awesome/4.5.0/css/font-awesome.min.css" />
+
+        <!-- page specific plugin styles; trang Reports khong su dung Select2 -->
+        <% if (!Request.AppRelativeCurrentExecutionFilePath.Equals("~/Common/Reports.aspx", StringComparison.OrdinalIgnoreCase)) { %>
+        <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/select2.min.css" />
+        <% } %>
+
+        <!-- text fonts -->
+        <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/fonts.googleapis.com.css?v=20260713.1" />
+
+        <!-- ace styles -->
+        <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/ace.min.css" class="ace-main-stylesheet" />
+
+        <!--[if lte IE 9]>
+			<link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/ace-part2.min.css" class="ace-main-stylesheet" />
+		<![endif]-->
+        <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/ace-skins.min.css" />
+        <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/ace-rtl.min.css" />
+
+        <!--[if lte IE 9]>
+		  <link rel="stylesheet" href="<%=Global.ApplicationPath%>/Style/assets/css/ace-ie.min.css" />
+		<![endif]-->
+
+        <!-- inline styles related to this page -->
+
+        <!-- ace settings handler -->
+        <script src="<%=Global.ApplicationPath%>/Style/assets/js/ace-extra.min.js"></script>
+
+        <!-- HTML5shiv and Respond.js for IE8 to support HTML5 elements and media queries -->
+
+        <!--[if lte IE 8]>
+		<script src="<%=Global.ApplicationPath%>/Style/assets/js/html5shiv.min.js"></script>
+		<script src="<%=Global.ApplicationPath%>/Style/assets/js/respond.min.js"></script>
+		<![endif]-->
+        <!--[if !IE]> -->
+        <script src="<%=Global.ApplicationPath%>/Style/assets/js/jquery-2.1.4.min.js"></script>
+        <link href="<%=Global.ApplicationPath%>/Style/style.css?v=20260713.1" rel="stylesheet" />
+        <script src="<%=Global.ApplicationPath%>/Scripts/Lib.js"></script>
+        
+
+        <!--Get automatic-->
+
+        <script type="text/javascript">
+            $(function () {
+                ExcuteFunction();
+            });
+            function ExcuteFunction() {
+                var t = setTimeout("Get_Totals()", 1000);
+            }
+            function Get_Totals() {
+                $.ajax({
+                    type: "POST",
+                    url: "<%=Global.ApplicationPath%>/Ajax/WebServiceLoadData.asmx/UpdateOnline",
+                data: "{}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                   // var data = msg.d;
+                   // $("#loadTotals").html(data);
+                   // $("#loadTotalsReport").html(data);
+
+                },
+                error: function (msg) { }
+            });
+
+        }
+
+        </script>
+        <!--End Get automatic-->
+
+    </asp:ContentPlaceHolder>
+
+    <style type="text/css">
+        /* Menu riêng cho ATFM_New.Master; giữ nguyên cấu trúc do BindNavigation sinh ra. */
+        .atfm-modern-menu {
+            min-height: 58px;
+            border: 0;
+            border-bottom: 1px solid #d7e2ed;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(30, 60, 90, .10);
+        }
+
+        .atfm-modern-menu .sidebar-shortcuts {
+            display: none;
+        }
+
+        .atfm-modern-menu .atfm-menu-list {
+            display: flex;
+            align-items: stretch;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 8px 16px;
+            border: 0;
+            background: transparent;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li {
+            position: relative;
+            flex: 0 0 auto;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            transition: transform .2s ease;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a {
+            display: flex;
+            min-height: 42px;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border: 0;
+            border-radius: 7px;
+            color: #34495e;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 20px;
+            box-shadow: 0 1px 0 rgba(31,55,78,.03);
+            transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a:hover,
+        .atfm-modern-menu .atfm-menu-list > li.hover:hover > a {
+            background: #edf6ff;
+            color: #1769aa;
+            box-shadow: inset 0 0 0 1px #d4e9fb;
+            transform: translateY(-2px);
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li.active > a,
+        .atfm-modern-menu .atfm-menu-list > li.active.open > a {
+            background: linear-gradient(135deg, #1686c8, #11639d);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(17, 99, 157, .24);
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li.active > a:before,
+        .atfm-modern-menu .atfm-menu-list > li.open > a:before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            bottom: 5px;
+            left: 0;
+            width: 4px;
+            border-radius: 0 4px 4px 0;
+            background: #8ed2ff;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a:hover .menu-icon,
+        .atfm-modern-menu .atfm-menu-list > li.active > a .menu-icon {
+            filter: drop-shadow(0 2px 3px rgba(20, 92, 143, .28));
+            transform: scale(1.08);
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a .menu-icon,
+        .atfm-modern-menu .atfm-menu-list > li > a > .arrow {
+            transition: transform .18s ease, filter .18s ease;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li.open > a > .arrow,
+        .atfm-modern-menu .atfm-menu-list > li.active.open > a > .arrow {
+            transform: rotate(180deg);
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a .menu-icon {
+            width: 28px;
+            margin: 0;
+            color: inherit;
+            font-size: 17px;
+            text-align: center;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a .menu-icon img {
+            width: 24px !important;
+            height: 24px !important;
+            object-fit: contain;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a .menu-text {
+            white-space: nowrap;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > a > .arrow {
+            position: static;
+            margin-left: 2px;
+            color: inherit;
+            font-size: 12px;
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > .submenu {
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 240px;
+            padding: 7px;
+            border: 1px solid #dce7f0;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 12px 28px rgba(35, 62, 89, .18);
+        }
+
+        .atfm-modern-menu .atfm-menu-list > li > .submenu:before,
+        .atfm-modern-menu .atfm-menu-list > li > .submenu:after {
+            display: none;
+        }
+
+        .atfm-modern-menu .atfm-menu-list .submenu > li > a {
+            padding: 9px 12px;
+            border: 0;
+            border-radius: 6px;
+            color: #475b6f;
+            line-height: 20px;
+        }
+
+        .atfm-modern-menu .atfm-menu-list .submenu > li > a:hover {
+            background: #edf6ff;
+            color: #1769aa;
+        }
+
+        .atfm-modern-menu .atfm-menu-list .submenu > li > a > .menu-icon {
+            color: #1686c8;
+        }
+
+        @media (max-width: 991px) {
+            .atfm-modern-menu {
+                max-height: calc(100vh - 48px);
+                overflow-y: auto;
+                box-shadow: 0 8px 20px rgba(30, 60, 90, .16);
+            }
+
+            .atfm-modern-menu .atfm-menu-list {
+                display: block;
+                padding: 10px;
+            }
+
+            .atfm-modern-menu .atfm-menu-list > li {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+
+            .atfm-modern-menu .atfm-menu-list > li > a {
+                width: 100%;
+            }
+
+            .atfm-modern-menu .atfm-menu-list > li > a > .arrow {
+                margin-left: auto;
+            }
+
+            .atfm-modern-menu .atfm-menu-list > li > .submenu {
+                position: static;
+                width: auto;
+                margin: 4px 0 6px 36px;
+                border-radius: 7px;
+                box-shadow: none;
+            }
+        }
+
+        /* Cụm thông báo và tài khoản trên header. */
+        #navbar.atfm-header .atfm-header-action {
+            position: relative;
+        }
+
+        #navbar.atfm-header .atfm-header-action:has(> .atfm-ai-link),
+        #navbar.atfm-header .atfm-header-action.user-min,
+        #navbar.atfm-header .atfm-ai-link,
+        #navbar.atfm-header .atfm-ai-link:hover,
+        #navbar.atfm-header .atfm-ai-link:focus,
+        #navbar.atfm-header .atfm-user-button,
+        #navbar.atfm-header .atfm-user-button:hover,
+        #navbar.atfm-header .atfm-user-button:focus,
+        #navbar.atfm-header .atfm-header-action.is-open > .atfm-user-button {
+            border-color: transparent !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        #navbar.atfm-header .atfm-notification-button,
+        #navbar.atfm-header .atfm-user-button {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, .20);
+            background: rgba(255, 255, 255, .08);
+        }
+
+        #navbar.atfm-header .atfm-notification-badge {
+            position: absolute;
+            top: -7px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 5px;
+            border: 2px solid #1d3f7d;
+            border-radius: 10px;
+            background: #ef4444;
+            color: #fff;
+            font: 700 11px/16px Arial, sans-serif;
+            text-align: center;
+        }
+
+        #navbar.atfm-header .atfm-notification-badge.is-empty {
+            display: none;
+        }
+
+        #navbar.atfm-header .atfm-user-button {
+            gap: 8px;
+            border-color: transparent;
+            background: transparent;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        #navbar.atfm-header .atfm-user-button:hover,
+        #navbar.atfm-header .atfm-user-button:focus,
+        #navbar.atfm-header .atfm-header-action.is-open > .atfm-user-button {
+            border-color: transparent;
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+        }
+
+        #navbar.atfm-header .atfm-user-button .user-info {
+            max-width: 150px;
+            text-align: left;
+        }
+
+        #navbar.atfm-header .atfm-header-popup {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            z-index: 1100;
+            display: none;
+            overflow: hidden;
+            border: 1px solid #d8e1eb;
+            border-radius: 10px;
+            background: #fff;
+            color: #26384a;
+            box-shadow: 0 14px 38px rgba(15, 37, 65, .24);
+        }
+
+        #navbar.atfm-header .atfm-header-action.is-open > .atfm-header-popup {
+            display: block;
+            animation: atfmPopupIn .18s ease-out;
+        }
+
+        @keyframes atfmPopupIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #navbar.atfm-header .atfm-notification-panel {
+            width: 390px;
+            max-width: calc(100vw - 24px);
+            overflow-x: hidden;
+        }
+
+        #navbar.atfm-header .atfm-popup-header {
+            display: flex;
+            min-height: 48px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            border-bottom: 1px solid #e5ebf1;
+            font-weight: 700;
+        }
+
+        #navbar.atfm-header .atfm-popup-title i {
+            margin-right: 7px;
+            color: #1686c8;
+        }
+
+        #navbar.atfm-header .atfm-popup-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        #navbar.atfm-header .atfm-view-all,
+        #navbar.atfm-header .atfm-mark-read {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 0;
+            border: 0;
+            background: transparent;
+            color: #2879b9;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        #navbar.atfm-header .atfm-view-all:hover,
+        #navbar.atfm-header .atfm-view-all:focus,
+        #navbar.atfm-header .atfm-mark-read:hover,
+        #navbar.atfm-header .atfm-mark-read:focus { color: #145f98; }
+
+        #navbar.atfm-header .atfm-mark-read:disabled { color: #9aa8b5; cursor: default; }
+
+        #navbar.atfm-header .atfm-notification-list {
+            max-height: 390px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        #navbar.atfm-header .atfm-notification-item {
+            display: grid;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding: 12px;
+            border: 1px solid #e0e8f0;
+            border-left: 3px solid #f0ad4e;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #34495e;
+            text-decoration: none;
+            transform: translateX(0);
+            transition: opacity .22s ease, transform .22s ease, max-height .26s ease,
+                margin .26s ease, padding .26s ease, border-width .26s ease;
+        }
+
+        #navbar.atfm-header .atfm-notification-item.is-removing {
+            overflow: hidden;
+            max-height: 0 !important;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-top-width: 0;
+            border-bottom-width: 0;
+            opacity: 0;
+            transform: translateX(18px);
+        }
+
+        #navbar.atfm-header .atfm-notification-item.is-unread {
+            background: #f1f7fd;
+            border-left-color: #1686c8;
+        }
+
+        #navbar.atfm-header .atfm-notification-copy { min-width: 0; }
+
+        #navbar.atfm-header .atfm-notification-title {
+            display: block;
+            max-width: 100%;
+            margin: 0 0 6px;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 18px;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        #navbar.atfm-header .atfm-notification-message,
+        #navbar.atfm-header .atfm-notification-time {
+            display: block;
+            color: #66788a;
+            font-size: 12px;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        #navbar.atfm-header .atfm-notification-message { white-space: pre-line; }
+        #navbar.atfm-header .atfm-notification-time { margin-top: 7px; color: #98a6b5; }
+
+        #navbar.atfm-header .atfm-notification-read-one {
+            align-self: end;
+            display: inline-flex;
+            min-width: 54px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 0 8px;
+            border: 1px solid #8fc3e4;
+            border-radius: 6px;
+            background: #fff;
+            color: #2078b2;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #navbar.atfm-header .atfm-notification-read-one:hover,
+        #navbar.atfm-header .atfm-notification-read-one:focus { border-color: #1686c8; background: #eaf5fc; }
+        #navbar.atfm-header .atfm-notification-read-one:disabled { opacity: .55; cursor: wait; }
+
+        #navbar.atfm-header .atfm-empty-notification {
+            padding: 46px 20px;
+            color: #7d8b99;
+            text-align: center;
+        }
+
+        #navbar.atfm-header .atfm-empty-notification i {
+            display: block;
+            margin-bottom: 10px;
+            color: #b4c1cd;
+            font-size: 32px;
+        }
+
+        #navbar.atfm-header .atfm-user-panel { width: 260px; }
+        #navbar.atfm-header .atfm-user-summary { padding: 16px; background: #f6f9fc; }
+        #navbar.atfm-header .atfm-user-name { display: block; font-size: 15px; font-weight: 700; }
+        #navbar.atfm-header .atfm-user-role { display: block; margin-top: 3px; color: #8795a3; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+        #navbar.atfm-header .atfm-user-links { margin: 0; padding: 6px 0; list-style: none; }
+        #navbar.atfm-header .atfm-user-links > li { border-bottom: 1px solid #edf1f5; }
+        #navbar.atfm-header .atfm-user-links > li:last-child { border-bottom: 0; }
+        #navbar.atfm-header .atfm-user-links a {
+            display: block;
+            padding: 11px 16px;
+            color: #34495e;
+            text-decoration: none;
+        }
+        #navbar.atfm-header .atfm-user-links a:hover { background: #edf6ff; color: #1769aa; }
+        #navbar.atfm-header .atfm-user-links i { width: 24px; color: #5776a3; text-align: center; }
+        #navbar.atfm-header .atfm-user-links .atfm-logout a,
+        #navbar.atfm-header .atfm-user-links .atfm-logout i { color: #d73737; }
+
+        @media (max-width: 767px) {
+            #navbar.atfm-header .atfm-user-button .user-info { display: none; }
+            #navbar.atfm-header .atfm-user-button { padding: 5px !important; }
+            #navbar.atfm-header .atfm-notification-panel { position: fixed; top: 76px; right: 8px; }
+        }
+
+        /* Giao diện chung cho các trang danh sách mở từ menu cấp 2. */
+        #main-container .main-content,
+        #main-container .page-content {
+            background: #fff;
+        }
+
+        #main-container .page-content {
+            padding: 18px 20px 26px;
+        }
+
+        #main-container .page-content .page-header {
+            margin: 0 0 14px !important;
+            padding: 0 0 10px;
+            border-bottom: 1px solid #dbe4ed;
+        }
+
+        #main-container .page-content .col-xs-12 > table,
+        #main-container .page-content form > table {
+            overflow: hidden;
+            border: 1px solid #dce5ee !important;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 5px 18px rgba(31, 55, 78, .10);
+        }
+
+        #main-container .page-content .classSearchHeader {
+            margin: 0;
+            padding: 12px 14px;
+            border: 1px solid #e1e8ef;
+            border-radius: 8px;
+            background: #f8fafc;
+            box-shadow: none;
+        }
+
+        #main-container .page-content .Grid,
+        #main-container .page-content table.Grid {
+            overflow: hidden;
+            border: 1px solid #dbe4ec !important;
+            border-collapse: separate !important;
+            border-spacing: 0;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(31, 55, 78, .08);
+        }
+
+        #main-container .page-content .Grid th {
+            height: 38px;
+            padding: 9px 10px !important;
+            border-color: #3281bc !important;
+            background: #287fbd !important;
+            color: #fff !important;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        #main-container .page-content .Grid td {
+            padding: 9px 10px !important;
+            border-color: #e4eaf0 !important;
+            color: #35475a;
+            vertical-align: middle;
+        }
+
+        #main-container .page-content .Grid tr:nth-child(even) td { background: #f8fafc; }
+        #main-container .page-content .Grid tr:hover td { background: #edf6fd; }
+
+        #main-container .page-content .btn,
+        #main-container .page-content input[type="submit"],
+        #main-container .page-content input[type="button"] {
+            min-height: 34px;
+            padding: 7px 14px;
+            border: 0;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(31, 78, 121, .18);
+            font-weight: 600;
+            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+        }
+
+        #main-container .page-content .btn:hover,
+        #main-container .page-content input[type="submit"]:hover,
+        #main-container .page-content input[type="button"]:hover {
+            opacity: .92;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 9px rgba(31, 78, 121, .24);
+        }
+
+        #main-container .page-content input[type="text"],
+        #main-container .page-content select,
+        #main-container .page-content textarea {
+            min-height: 36px;
+            border: 1px solid #cfdbe7;
+            border-radius: 6px !important;
+            background: #fff;
+            box-shadow: inset 0 1px 2px rgba(31, 55, 78, .05);
+        }
+
+        #main-container .page-content input[type="text"]:focus,
+        #main-container .page-content select:focus,
+        #main-container .page-content textarea:focus {
+            border-color: #4b9bd3;
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(75, 155, 211, .14);
+        }
+
+        #main-container .page-content .pageNavTotal {
+            padding: 12px 10px !important;
+            background: #fff;
+        }
+
+        @media (max-width: 767px) {
+            #main-container .page-content { padding: 12px 8px 20px; }
+            #main-container .page-content .col-xs-12 { overflow-x: auto; }
+            #main-container .page-content .Grid { min-width: 720px; }
+        }
+    </style>
+
+    <style type="text/css">
+        /* Bố cục menu hai vùng: chức năng bên trái, danh sách con bên phải. */
+        @media (min-width: 992px) {
+            #main-container {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                height: auto !important;
+                overflow: visible !important;
+                min-height: calc(100vh - 96px);
+                background: #fff;
+            }
+
+            #main-container > .atfm-workspace {
+                --atfm-sidebar-width: 340px;
+                position: relative;
+                display: flex;
+                flex: 1 0 auto;
+                height: auto !important;
+                overflow: visible !important;
+                align-items: stretch;
+                min-height: calc(100vh - 186px);
+            }
+
+            #sidebar.atfm-modern-menu {
+                position: relative;
+                z-index: 200;
+                float: none;
+                flex: 0 0 var(--atfm-sidebar-width);
+                width: var(--atfm-sidebar-width);
+                margin-right: calc(72px - var(--atfm-sidebar-width));
+                min-height: 100%;
+                border: 0;
+                background: transparent;
+                box-shadow: none;
+                box-sizing: border-box;
+                pointer-events: none;
+            }
+
+            #sidebar.atfm-modern-menu:before {
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 0;
+                width: 100%;
+                border-right: 1px solid #d8e3ed;
+                background: #f7f9fc;
+                box-shadow: 3px 0 12px rgba(35, 62, 89, .07);
+                pointer-events: none;
+                transition: width .2s cubic-bezier(.4, 0, .2, 1), box-shadow .18s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-sidebar-toggle {
+                position: absolute;
+                top: 12px;
+                right: -15px;
+                z-index: 45;
+                display: flex;
+                width: 30px;
+                height: 30px;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                border: 1px solid #c9dbe9;
+                border-radius: 50%;
+                outline: 0;
+                background: #fff;
+                color: #1769aa;
+                box-shadow: 0 3px 9px rgba(35, 62, 89, .18);
+                cursor: pointer;
+                pointer-events: auto;
+                transition: color .2s ease, background-color .2s ease, transform .28s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-sidebar-toggle:hover,
+            #sidebar.atfm-modern-menu .atfm-sidebar-toggle:focus {
+                background: #1769aa;
+                color: #fff;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-sidebar-toggle .fa {
+                font-size: 15px;
+                transition: transform .28s ease;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu {
+                box-shadow: none;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu:before {
+                width: 72px;
+                box-shadow: 2px 0 8px rgba(35, 62, 89, .06);
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-sidebar-toggle {
+                transform: translateX(calc(72px - var(--atfm-sidebar-width)));
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-transitioning #sidebar.atfm-modern-menu {
+                pointer-events: none;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed .atfm-sidebar-toggle .fa {
+                transform: rotate(180deg);
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list {
+                width: 72px;
+                padding: 10px 7px;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list > li {
+                border-right: 1px solid #e1e9f0;
+                border-left: 1px solid #e1e9f0;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list > li > a {
+                justify-content: center;
+                padding: 10px 8px;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list > li > a .menu-icon {
+                margin: 0;
+            }
+
+            /* Làm nổi bật icon menu cấp 1 đang được chọn khi sidebar thu gọn. */
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-menu-list > li.atfm-panel-active > a .menu-icon,
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-menu-list:not(.atfm-has-open-panel) > li.active > a .menu-icon {
+                position: relative;
+                z-index: 1;
+                width: 38px;
+                min-width: 38px;
+                height: 38px;
+                margin: -5px 0;
+                border: 1px solid rgba(255, 255, 255, .78);
+                border-radius: 11px;
+                background: linear-gradient(145deg, #24a5e4 0%, #116aa8 100%);
+                box-shadow: 0 0 0 3px rgba(37, 149, 211, .18), 0 6px 14px rgba(17, 91, 145, .34);
+                transform: scale(1.04);
+                transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-menu-list > li.atfm-panel-active > a .menu-icon img,
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-menu-list:not(.atfm-has-open-panel) > li.active > a .menu-icon img {
+                filter: drop-shadow(0 2px 3px rgba(5, 45, 76, .45));
+                transform: scale(1.08);
+                transition: transform .2s ease, filter .2s ease;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-menu-list > li.atfm-panel-active > a .menu-icon:after,
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar.atfm-modern-menu .atfm-menu-list:not(.atfm-has-open-panel) > li.active > a .menu-icon:after {
+                content: "";
+                position: absolute;
+                inset: -4px;
+                border: 1px solid rgba(102, 204, 255, .48);
+                border-radius: 14px;
+                pointer-events: none;
+                animation: atfmActiveMenuGlow 2.2s ease-in-out infinite;
+            }
+
+            @keyframes atfmActiveMenuGlow {
+                0%, 100% { opacity: .35; transform: scale(.96); }
+                50% { opacity: .95; transform: scale(1.04); }
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list > li > a .menu-text,
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed #sidebar .atfm-menu-list > li > a > .arrow {
+                max-width: 0;
+                margin: 0;
+                opacity: 0;
+                visibility: hidden;
+            }
+
+            #main-container > .atfm-workspace.atfm-sidebar-collapsed > .main-content {
+                width: auto;
+            }
+
+            #sidebar.atfm-modern-menu .sidebar-shortcuts {
+                display: none !important;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list {
+                display: block;
+                width: var(--atfm-sidebar-width);
+                margin: 0;
+                padding: 10px;
+                border: 0;
+                background: transparent;
+                box-sizing: border-box;
+                position: relative;
+                z-index: 1;
+                pointer-events: auto;
+                transition: width .16s ease, padding .16s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li {
+                position: static !important;
+                display: block;
+                width: 100%;
+                margin: 0;
+                border: 1px solid #e1e9f0;
+                border-bottom: 0;
+                background: #fff;
+                overflow: hidden;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li:first-child {
+                border-radius: 10px 10px 0 0;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li:last-child {
+                border-bottom: 1px solid #e1e9f0;
+                border-radius: 0 0 10px 10px;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a {
+                display: flex;
+                width: 100%;
+                min-height: 48px;
+                align-items: center;
+                padding: 10px 16px;
+                border: 0;
+                border-radius: 0;
+                color: #34495e;
+                background: transparent;
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a:hover {
+                background: #eaf4fc;
+                color: #12679e;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li.atfm-panel-active > a,
+            #sidebar.atfm-modern-menu .atfm-menu-list:not(.atfm-has-open-panel) > li.active > a {
+                background: linear-gradient(135deg, #1686c8, #11639d);
+                color: #fff;
+                box-shadow: 0 4px 10px rgba(17, 99, 157, .22);
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list.atfm-has-open-panel > li.active:not(.atfm-panel-active) > a {
+                background: transparent;
+                color: #34495e;
+                box-shadow: none;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-icon {
+                display: inline-flex !important;
+                flex: 0 0 30px;
+                width: 30px;
+                min-width: 30px;
+                height: 30px;
+                align-items: center;
+                justify-content: center;
+                margin: 0 9px 0 0;
+                color: inherit;
+                line-height: 1;
+                text-align: center;
+                vertical-align: middle;
+                overflow: visible;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-icon img {
+                display: block !important;
+                width: 28px !important;
+                height: 28px !important;
+                max-width: 28px !important;
+                max-height: 28px !important;
+                margin: 0 !important;
+                border: 0;
+                object-fit: contain;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-icon.fa:before {
+                margin: 0;
+                line-height: 1;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a .menu-text {
+                flex: 1;
+                max-width: 100%;
+                overflow: hidden;
+                opacity: 1;
+                visibility: visible;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                text-align: left;
+                transition: opacity .12s ease, max-width .18s ease, visibility 0s linear 0s;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > a > .arrow {
+                position: static;
+                max-width: 20px;
+                overflow: hidden;
+                margin-left: auto;
+                color: inherit;
+                opacity: 1;
+                visibility: visible;
+                transform: rotate(-90deg);
+                transition: opacity .12s ease, max-width .18s ease, visibility 0s linear 0s;
+            }
+
+            /* ACE tự sinh thêm tam giác cho li.active; giao diện mới đã có arrow riêng. */
+            #sidebar.atfm-modern-menu .atfm-menu-list > li.active:after,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li.active > a:after,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li.atfm-panel-active:after,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li.atfm-panel-active > a:after {
+                display: none !important;
+                content: none !important;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list li > b.arrow {
+                display: none !important;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu {
+                position: absolute !important;
+                top: 12px !important;
+                right: auto !important;
+                bottom: auto !important;
+                left: calc(100% + 12px) !important;
+                z-index: 40;
+                display: none !important;
+                width: var(--atfm-submenu-width, 884px);
+                max-width: calc(100vw - var(--atfm-sidebar-width) - 36px);
+                height: auto;
+                min-height: 0;
+                max-height: calc(100vh - 132px);
+                overflow-y: auto;
+                padding: 72px 20px 20px;
+                border: 1px solid #cfe0ed;
+                border-radius: 16px;
+                background: rgba(255, 255, 255, .98);
+                box-shadow: 0 18px 42px rgba(24, 67, 102, .2);
+                box-sizing: border-box;
+                pointer-events: auto;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu.atfm-submenu-visible {
+                display: grid !important;
+                grid-template-columns: repeat(var(--atfm-submenu-columns, 3), minmax(0, 1fr));
+                align-content: start;
+                gap: 12px;
+                pointer-events: auto;
+                animation: atfmSubmenuOpen .2s ease-out;
+            }
+
+            @keyframes atfmSubmenuOpen {
+                from {
+                    opacity: 0;
+                    transform: translateX(-8px) scale(.985);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0) scale(1);
+                }
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu:before {
+                content: attr(data-menu-title);
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                bottom: auto;
+                left: 20px;
+                display: block;
+                height: auto;
+                padding: 0 42px 13px 2px;
+                border-bottom: 1px solid #dce7f0;
+                border-left: 0;
+                color: #155f91;
+                font-size: 20px;
+                font-weight: 700;
+                line-height: 28px;
+                pointer-events: none;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu:after {
+                content: "\f00a";
+                position: absolute;
+                top: 20px;
+                right: 22px;
+                display: flex;
+                width: 30px;
+                height: 30px;
+                align-items: center;
+                justify-content: center;
+                border-radius: 9px;
+                background: #eaf5fc;
+                color: #1686c8;
+                font-family: FontAwesome;
+                font-size: 14px;
+                pointer-events: none;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li {
+                position: relative;
+                z-index: 2;
+                display: flex;
+                border: 0;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a {
+                position: relative;
+                display: flex;
+                width: 100%;
+                min-height: 62px;
+                align-items: center;
+                padding: 12px 48px 12px 18px;
+                overflow: hidden;
+                border: 1px solid #d7e4ee;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #fff 0%, #f7fbff 100%);
+                color: #314c64;
+                font-weight: 600;
+                line-height: 20px;
+                box-sizing: border-box;
+                box-shadow: 0 4px 12px rgba(35, 78, 112, .08);
+                cursor: pointer;
+                pointer-events: auto;
+                transition: transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:before {
+                content: "";
+                position: absolute;
+                top: 10px;
+                bottom: 10px;
+                left: 0;
+                width: 4px;
+                border-radius: 0 4px 4px 0;
+                background: #337ab7;
+                transition: width .2s ease, background .2s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:after {
+                content: "\f105";
+                position: absolute;
+                right: 14px;
+                display: flex;
+                width: 28px;
+                height: 28px;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background: #e8f3fb;
+                color: #337ab7;
+                font-family: FontAwesome;
+                font-size: 16px;
+                transition: transform .2s ease, background .2s ease, color .2s ease;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:hover,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:focus {
+                border-color: #337ab7;
+                outline: 0;
+                background: linear-gradient(135deg, #337ab7 0%, #24689f 100%);
+                color: #fff;
+                text-decoration: none;
+                transform: translateY(-3px);
+                box-shadow: 0 10px 22px rgba(36, 104, 159, .25);
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:hover:before,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:focus:before {
+                width: 6px;
+                background: #8ed2ff;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:hover:after,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:focus:after {
+                background: rgba(255, 255, 255, .2);
+                color: #fff;
+                transform: translateX(3px);
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a:active {
+                transform: translateY(-1px);
+                box-shadow: 0 5px 12px rgba(36, 104, 159, .2);
+            }
+
+            /* Không hiển thị arrow/caret của ACE khi hover menu cấp 2. */
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > b.arrow,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > b.arrow:before,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > b.arrow:after,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li:hover > b.arrow {
+                display: none !important;
+                content: none !important;
+                border: 0 !important;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu > li > a > .menu-icon.fa-caret-right {
+                display: none !important;
+            }
+
+            #main-container > .main-content {
+                display: none;
+            }
+
+            #main-container > .atfm-workspace > .main-content {
+                position: relative;
+                z-index: 1;
+                flex: 1 1 auto;
+                width: auto;
+                min-width: 0;
+                min-height: 100%;
+                height: auto !important;
+                overflow: visible !important;
+                margin-left: 0 !important;
+                padding: 20px;
+                background: #fff;
+                box-sizing: border-box;
+            }
+
+            #main-container > .footer {
+                position: relative !important;
+                flex: 0 0 auto;
+                width: 100%;
+                height: auto;
+                margin: 0;
+                padding: 18px 20px;
+                border-top: 1px solid #dce5ec;
+                background: #fff;
+                box-sizing: border-box;
+            }
+
+            #main-container > .atfm-workspace .page-content,
+            #main-container > .atfm-workspace .main-content-inner {
+                height: auto !important;
+                min-height: 0;
+                overflow: visible !important;
+            }
+
+            #main-container > .footer .footer-inner,
+            #main-container > .footer .footer-content {
+                position: static;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                border: 0;
+                line-height: 24px;
+                text-align: center;
+                box-sizing: border-box;
+            }
+        }
+
+        @media (max-width: 991px) {
+            #sidebar.atfm-modern-menu .atfm-sidebar-toggle {
+                display: none;
+            }
+
+            #sidebar.atfm-modern-menu {
+                width: 100%;
+            }
+
+            #main-container > .atfm-workspace {
+                display: block;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu.atfm-submenu-visible {
+                position: static;
+                display: block !important;
+                width: auto;
+                max-width: none;
+                max-height: none;
+                overflow: visible;
+                margin: 4px 0 8px 34px;
+                padding: 7px;
+                border-radius: 8px;
+                box-shadow: none;
+                animation: none;
+            }
+
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu:before,
+            #sidebar.atfm-modern-menu .atfm-menu-list > li > .submenu:after {
+                display: none;
+            }
+
+            #main-container > .atfm-workspace > .main-content {
+                margin-left: 0 !important;
+            }
+
+            #main-container > .footer,
+            #main-container > .footer .footer-inner,
+            #main-container > .footer .footer-content {
+                position: static;
+                width: 100%;
+                height: auto;
+                overflow: visible !important;
+            }
+        }
+    </style>
+
+    <style type="text/css">
+        /* Header nhận diện VATM dành riêng cho master page mới. */
+        #navbar.atfm-header {
+            min-height: 96px;
+            border: 0;
+            background: #1d3f7d;
+            box-shadow: 0 2px 8px rgba(19, 45, 86, .20);
+        }
+
+        #navbar.atfm-header .navbar-container {
+            display: flex;
+            height: 96px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+        }
+
+        #navbar.atfm-header .navbar-header {
+            float: none !important;
+        }
+
+        #navbar.atfm-header .atfm-brand {
+            display: flex;
+            height: 96px;
+            align-items: center;
+            padding: 0;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        #navbar.atfm-header .atfm-brand-logo {
+            width: 76px;
+            height: 76px;
+            flex: 0 0 76px;
+            object-fit: contain;
+        }
+
+        #navbar.atfm-header .atfm-brand-vatm {
+            margin: 0 18px 0 13px;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 43px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        #navbar.atfm-header .atfm-brand-name {
+            padding-left: 18px;
+            border-left: 1px solid rgba(255, 255, 255, .40);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.45;
+            text-transform: uppercase;
+        }
+
+        #navbar.atfm-header .navbar-buttons {
+            float: none !important;
+            margin-left: auto;
+        }
+
+        #navbar.atfm-header .ace-nav {
+            display: flex;
+            height: 96px;
+            align-items: center;
+        }
+
+        #navbar.atfm-header .ace-nav > li {
+            height: auto;
+            border: 0;
+            background: transparent;
+        }
+
+        #navbar.atfm-header .atfm-notification-button {
+            display: flex;
+            width: 42px;
+            height: 42px;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, .32);
+            border-radius: 50%;
+            outline: 0;
+            background: rgba(255, 255, 255, .10);
+            color: #fff;
+            cursor: pointer;
+            transition: background-color .2s ease, transform .2s ease;
+        }
+
+        #navbar.atfm-header .atfm-notification-button:hover,
+        #navbar.atfm-header .atfm-notification-button:focus {
+            background: rgba(255, 255, 255, .22);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        #navbar.atfm-header .atfm-notification-button .fa-bell {
+            font-size: 19px;
+        }
+
+        #navbar.atfm-header .user-min > a.dropdown-toggle {
+            display: flex;
+            min-height: 52px;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: transparent;
+        }
+
+        #navbar.atfm-header .nav-user-photo {
+            width: 40px;
+            height: 40px;
+        }
+
+        @media (max-width: 991px) {
+            #navbar.atfm-header,
+            #navbar.atfm-header .navbar-container,
+            #navbar.atfm-header .atfm-brand {
+                min-height: 72px;
+                height: 72px;
+            }
+
+            #navbar.atfm-header .navbar-container {
+                padding: 0 12px;
+            }
+
+            #navbar.atfm-header .atfm-brand-logo {
+                width: 54px;
+                height: 54px;
+                flex-basis: 54px;
+            }
+
+            #navbar.atfm-header .atfm-brand-vatm {
+                margin-right: 0;
+                font-size: 30px;
+            }
+
+            #navbar.atfm-header .atfm-brand-name {
+                display: none;
+            }
+        }
+    </style>
+
+
+
+</head>
+<body id="Body1" class="no-skin" runat="server">
+    <form id="form1" runat="server">
+        <cc2:ToolkitScriptManager runat="Server" EnablePartialRendering="true" ID="ScriptManager1" />
+        <div id="navbar" class="navbar navbar-default navbar-collapse h-navbar ace-save-state atfm-header">
+            <div class="navbar-container ace-save-state" id="navbar-container">
+                <div class="navbar-header pull-left">
+                    <a href="<%=Global.ApplicationPath%>/Common/ChartReport.aspx" class="navbar-brand atfm-brand">
+                        <img class="atfm-brand-logo" src="<%=Global.ApplicationPath%>/images/Logo.png" alt="VATM" />
+                        <span class="atfm-brand-vatm">VATM</span>
+                        <span class="atfm-brand-name">
+                            TỔNG CÔNG TY QUẢN LÝ BAY VIỆT NAM<br />
+                            VIET NAM AIR TRAFFIC MANAGEMENT CORPORATION
+                        </span>
+                    </a>
+
+                    <button class="pull-right navbar-toggle navbar-toggle-img collapsed" type="button" data-toggle="collapse" data-target=".navbar-buttons,.navbar-menu">
+                        <span class="sr-only">Toggle user menu</span>
+
+                        <img src="<%=Global.ApplicationPath%>/Style/assets/images/avatars/Login-Manager.png" alt="Login" />
+                    </button>
+
+                    <button class="pull-right navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+
+                        <span class="icon-bar"></span>
+
+                        <span class="icon-bar"></span>
+
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+
+                <div class="navbar-buttons navbar-header pull-right  collapse navbar-collapse" role="navigation">
+                    <ul class="nav ace-nav">
+                        <li class="atfm-header-action atfm-ai-action"><a class="atfm-ai-link" href="https://backwash-january-glare.ngrok-free.dev" target="_blank" rel="noopener noreferrer" title="Trợ lý AI"><span class="atfm-ai-orb">AI</span></a></li>
+                        <li class="atfm-notification atfm-header-action" id="atfmNotification">
+                            <button type="button" class="atfm-notification-button atfm-popup-toggle" title="Thông báo" aria-label="Thông báo" aria-expanded="false">
+                                <i class="ace-icon fa fa-bell" aria-hidden="true"></i>
+                                <span class="atfm-notification-badge is-empty" id="atfmNotificationBadge">0</span>
+                            </button>
+                            <div class="atfm-header-popup atfm-notification-panel" role="dialog" aria-label="Danh sách thông báo">
+                                <div class="atfm-popup-header">
+                                    <span class="atfm-popup-title"><i class="fa fa-bell-o"></i>THÔNG BÁO</span>
+                                    <span class="atfm-popup-actions">
+                                        <a class="atfm-view-all" href="<%= ResolveUrl("~/SLOTS/Notifications.aspx") %>"><i class="fa fa-list"></i>Xem tất cả</a>
+                                        <button type="button" class="atfm-mark-read" id="atfmMarkAllRead"><i class="fa fa-check"></i>Đọc hết</button>
+                                    </span>
+                                </div>
+                                <div class="atfm-notification-list" id="atfmNotificationList">
+                                    <div class="atfm-empty-notification"><i class="fa fa-bell-slash-o"></i>Chưa có thông báo</div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="user-min atfm-header-action" id="atfmUserMenu">
+                            <a href="#" class="atfm-user-button atfm-popup-toggle" aria-expanded="false">
+                                <img class="nav-user-photo" src="<%=Global.ApplicationPath%>/Style/assets/images/avatars/Login-Manager.png" alt="Tài khoản" />
+                                <span class="user-info">
+                                    <small>Xin chào,</small>
+                                    <asp:Literal ID="literFullName" runat="server"></asp:Literal>
+                                </span>
+
+                                <i class="ace-icon fa fa-caret-down"></i>
+                            </a>
+
+                            <div class="atfm-header-popup atfm-user-panel">
+                                <div class="atfm-user-summary">
+                                    <span class="atfm-user-name" id="atfmUserNamePopup"></span>
+                                    <span class="atfm-user-role">USER</span>
+                                </div>
+                                <ul class="atfm-user-links">
+                                <li>
+                                    <asp:Literal ID="literChangPass" runat="server"></asp:Literal>
+                                </li>
+                                <li>
+                                    <asp:Literal ID="literEditProfile" runat="server"></asp:Literal>
+                                </li>
+                                <li class="atfm-logout">
+                                    <asp:LinkButton runat="server" CausesValidation="false" ID="lb_Exit"
+                                        OnClick="lb_Exit_Click" Text="<%$ Resources:Strings, BUTTON_SIGOUT %>"></asp:LinkButton>
+                                </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+
+            </div>
+            <!-- /.navbar-container -->
+        </div>
+
+        <div class="main-container ace-save-state" id="main-container">
+            <script type="text/javascript">
+                try { ace.settings.loadState('main-container') } catch (e) { }
+            </script>
+
+            <div class="atfm-workspace atfm-sidebar-collapsed">
+
+            <div id="sidebar" class="sidebar navbar-collapse collapse ace-save-state atfm-modern-menu">
+                <script type="text/javascript">
+                    try { ace.settings.loadState('sidebar') } catch (e) { }
+                </script>
+
+                <div class="sidebar-shortcuts" id="sidebar-shortcuts">
+                    <div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
+                       <%-- <button class="btn btn-success">
+                            <i class="ace-icon fa fa-signal"></i>
+                        </button>--%>
+
+                        <%--<button class="btn btn-info">
+                            <i class="ace-icon fa fa-pencil"></i>
+                        </button>
+
+                        <button class="btn btn-warning">
+                            <i class="ace-icon fa fa-users"></i>
+                        </button>--%>
+
+                        <%--<button class="btn btn-danger" onclick="btnSend_Onclick()">
+                             <a href="#" onclick="window.open('<%= Page.ResolveUrl("~/SendMessage/InboxMessage.aspx") + "?Menu_Id=" + Request.Params["Menu_ID"] %>','_blank','toolbar=yes,scrollbars=yes,resizable=yes').resizeTo(window.screen.availWidth, window.screen.availHeight).moveTo(0,0)" data-toggle="tooltip" title="Send message">
+                            <i class="ace-icon fa fa-cogs"></i>
+                                 </a>
+                        </button>--%>
+                    </div>
+
+                    <div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">
+
+                        <span class="btn btn-success"></span>
+
+                        <span class="btn btn-info"></span>
+
+                        <span class="btn btn-warning"></span>
+
+                        <span class="btn btn-danger"></span>
+                    </div>
+                </div>
+                <!-- /.sidebar-shortcuts -->
+
+                <button type="button" class="atfm-sidebar-toggle" aria-label="Thu gọn menu" title="Thu gọn menu">
+                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
+                </button>
+
+                <ul class="nav nav-list atfm-menu-list">
+
+                    <asp:Literal runat="server" ID="litMenu"></asp:Literal>
+
+                </ul>
+
+                <!-- /.nav-list -->
+            </div>
+
+            <div class="main-content">
+                <div class="main-content-inner">
+                    <div class="page-content">
+
+                        <!-- /.ace-settings-container -->
+
+                        <div class="page-header" style="margin-top:5px;">
+                            <asp:Literal runat="server" ID="litTitleMenuName"></asp:Literal>
+                        </div>
+                        <!-- /.page-header -->
+
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <!-- PAGE CONTENT BEGINS -->
+                                <asp:ContentPlaceHolder ID="MainContent" runat="server">
+
+                                </asp:ContentPlaceHolder>
+
+                                <!-- PAGE CONTENT ENDS -->
+                            </div>
+                            <!-- /.col -->
+                        </div>
+                        <!-- /.row -->
+                    </div>
+                    <!-- /.page-content -->
+                </div>
+            </div>
+            <!-- /.main-content -->
+            </div>
+            <!-- /.atfm-workspace -->
+
+            <div class="footer">
+                <div class="footer-inner">
+                    <div class="footer-content" style="font-family: 'Roboto', Arial, sans-serif; font-size: 14px;">
+                        <span class="bigger-120">
+                            <span class="blue bolder">Copyrights 2017 © <b>-----</b>
+                            </span>
+                            <br />
+                            Support: <a href="mailto:htkh@gmail.com">Hỗ trợ khách hàng</a>
+                            - Tel:(84-24) 3716 3914 
+                        </span>
+
+                        &nbsp; &nbsp;
+						<span class="action-buttons"></span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
+                <i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
+            </a>
+        </div>
+        <!-- /.main-container -->
+
+        <!-- basic scripts -->
+
+
+
+        <!-- <![endif]-->
+
+        <!--[if IE]>
+<script src="<%=Global.ApplicationPath%>/Style/assets/js/jquery-1.11.3.min.js"></script>
+<![endif]-->
+        <script type="text/javascript">
+            if ('ontouchstart' in document.documentElement) document.write("<script src='<%=Global.ApplicationPath%>/Style/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
+        </script>
+        <script src="<%=Global.ApplicationPath%>/Style/assets/js/bootstrap.min.js"></script>
+
+        <!-- page specific plugin scripts -->
+
+        <!-- ace scripts -->
+        <script src="<%=Global.ApplicationPath%>/Style/assets/js/ace-elements.min.js"></script>
+        <script src="<%=Global.ApplicationPath%>/Style/assets/js/ace.min.js"></script>
+
+        <!-- inline scripts related to this page -->
+        <script type="text/javascript">
+            function btnSend_Onclick() {
+                var obj = {
+                    P_OT_CONT: $('#txtContent').val()
+                };
+                GetArgWithPostBack(JSON.stringify(obj) + phanCachArg + 'btnSend_Onclick', 'btnSend_Onclick');
+            }
+
+            jQuery(function ($) {
+                var $sidebar = $('.sidebar').eq(0);
+                if (!$sidebar.hasClass('h-sidebar')) return;
+                try {
+                    $(document).on('settings.ace.top_menu', function (ev, event_name, fixed) {
+                        if (event_name !== 'sidebar_fixed') return;
+
+                        var sidebar = $sidebar.get(0);
+                        var $window = $(window);
+
+                        //return if sidebar is not fixed or in mobile view mode
+                        var sidebar_vars = $sidebar.ace_sidebar('vars');
+                        if (!fixed || (sidebar_vars['mobile_view'] || sidebar_vars['collapsible'])) {
+                            $sidebar.removeClass('lower-highlight');
+                            //restore original, default marginTop
+                            sidebar.style.marginTop = '';
+
+                            $window.off('scroll.ace.top_menu')
+                            return;
+                        }
+
+
+                        var done = false;
+                        $window.on('scroll.ace.top_menu', function (e) {
+
+                            var scroll = $window.scrollTop();
+                            scroll = parseInt(scroll / 4);//move the menu up 1px for every 4px of document scrolling
+                            if (scroll > 17) scroll = 17;
+
+
+                            if (scroll > 16) {
+                                if (!done) {
+                                    $sidebar.addClass('lower-highlight');
+                                    done = true;
+                                }
+                            }
+                            else {
+                                if (done) {
+                                    $sidebar.removeClass('lower-highlight');
+                                    done = false;
+                                }
+                            }
+
+                            sidebar.style['marginTop'] = (17 - scroll) + 'px';
+                        }).triggerHandler('scroll.ace.top_menu');
+
+                    }).triggerHandler('settings.ace.top_menu', ['sidebar_fixed', $sidebar.hasClass('sidebar-fixed')]);
+
+                    $(window).on('resize.ace.top_menu', function () {
+                        $(document).triggerHandler('settings.ace.top_menu', ['sidebar_fixed', $sidebar.hasClass('sidebar-fixed')]);
+                    });
+                } catch (e) {
+
+                }
+
+
+
+            });
+        </script>
+        <script type="text/javascript">
+            (function () {
+                function directChildByClass(element, className) {
+                    for (var i = 0; i < element.children.length; i++) {
+                        if ((' ' + element.children[i].className + ' ').indexOf(' ' + className + ' ') >= 0) {
+                            return element.children[i];
+                        }
+                    }
+                    return null;
+                }
+
+                function closeMenuPanels(menu) {
+                    var items = menu.children;
+                    for (var i = 0; i < items.length; i++) {
+                        items[i].classList.remove('atfm-panel-active');
+                        items[i].classList.remove('open');
+                        var submenu = directChildByClass(items[i], 'submenu');
+                        if (submenu) submenu.classList.remove('atfm-submenu-visible');
+                    }
+                    menu.classList.remove('atfm-has-open-panel');
+                }
+
+                function initializeVerticalMenu() {
+                    var menu = document.querySelector('#sidebar .atfm-menu-list');
+                    if (!menu || menu.getAttribute('data-atfm-ready') === '1') return;
+                    menu.setAttribute('data-atfm-ready', '1');
+
+                    var workspace = document.querySelector('#main-container > .atfm-workspace');
+                    var toggleButton = document.querySelector('#sidebar .atfm-sidebar-toggle');
+
+                    function fitSidebarToMenuText() {
+                        if (!workspace || window.innerWidth < 992) return;
+                        var widest = 0;
+                        for (var i = 0; i < menu.children.length; i++) {
+                            var link = directChildByClass(menu.children[i], 'dropdown-toggle') || menu.children[i].querySelector('a');
+                            var textNode = link ? link.querySelector('.menu-text') : null;
+                            if (textNode) widest = Math.max(widest, textNode.scrollWidth);
+                        }
+                        // Phần dư dành cho icon, arrow và padding hai bên.
+                        var fittedWidth = Math.max(300, Math.min(440, widest + 105));
+                        workspace.style.setProperty('--atfm-sidebar-width', fittedWidth + 'px');
+                    }
+
+                    var sidebarWidthReady = false;
+                    var transitionTimer = null;
+
+                    function ensureSidebarWidth() {
+                        if (sidebarWidthReady) return;
+                        fitSidebarToMenuText();
+                        sidebarWidthReady = true;
+                    }
+
+                    function setSidebarCollapsed(collapsed, saveState) {
+                        if (!workspace || !toggleButton) return;
+                        if (collapsed) closeMenuPanels(menu);
+                        else ensureSidebarWidth();
+
+                        workspace.classList.add('atfm-sidebar-transitioning');
+                        workspace.classList.toggle('atfm-sidebar-collapsed', collapsed);
+                        toggleButton.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                        toggleButton.setAttribute('aria-label', collapsed ? 'Mở rộng menu' : 'Thu gọn menu');
+                        toggleButton.setAttribute('title', collapsed ? 'Mở rộng menu' : 'Thu gọn menu');
+
+                        window.clearTimeout(transitionTimer);
+                        transitionTimer = window.setTimeout(function () {
+                            workspace.classList.remove('atfm-sidebar-transitioning');
+                        }, 240);
+
+                        if (saveState) {
+                            try {
+                                window.localStorage.setItem('atfm-sidebar-collapsed', collapsed ? '1' : '0');
+                            } catch (e) { }
+                        }
+                    }
+
+                    if (toggleButton) {
+                        /* Mỗi lần tải trang luôn bắt đầu ở trạng thái thu gọn. */
+                        setSidebarCollapsed(true, false);
+                        try { window.localStorage.setItem('atfm-sidebar-collapsed', '1'); } catch (e) { }
+
+                        toggleButton.addEventListener('click', function (event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                            setSidebarCollapsed(!workspace.classList.contains('atfm-sidebar-collapsed'), true);
+                        }, true);
+                    }
+
+                    menu.addEventListener('click', function (event) {
+                        var link = event.target;
+                        while (link && link.tagName !== 'A') link = link.parentNode;
+                        if (!link) return;
+
+                        var parentList = link.parentNode ? link.parentNode.parentNode : null;
+                        var isSubmenuLink = parentList && (' ' + parentList.className + ' ').indexOf(' submenu ') >= 0;
+
+                        if (isSubmenuLink) {
+                            var targetUrl = link.getAttribute('href');
+                            if (!targetUrl || targetUrl === '#') return;
+
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                            setSidebarCollapsed(true, true);
+                            window.location.assign(targetUrl);
+                            return;
+                        }
+
+                        if (!parentList || parentList !== menu) return;
+
+                        var item = link.parentNode;
+                        var submenu = directChildByClass(item, 'submenu');
+                        if (!submenu) return;
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+
+                        if (workspace && workspace.classList.contains('atfm-sidebar-collapsed')) {
+                            setSidebarCollapsed(false, true);
+                        }
+
+                        var isOpen = submenu.classList.contains('atfm-submenu-visible');
+                        closeMenuPanels(menu);
+                        var title = link.querySelector('.menu-text');
+                        submenu.setAttribute('data-menu-title', title ? title.textContent.trim() : 'Danh sách chức năng');
+
+                        var submenuItemCount = submenu.children.length;
+                        var submenuColumns = submenuItemCount === 4 ? 2 : Math.min(Math.max(submenuItemCount, 1), 3);
+                        var submenuWidth = (submenuColumns * 292) + ((submenuColumns - 1) * 12) + 40;
+                        submenu.style.setProperty('--atfm-submenu-columns', submenuColumns);
+                        submenu.style.setProperty('--atfm-submenu-width', submenuWidth + 'px');
+
+                        if (!isOpen) {
+                            item.classList.add('atfm-panel-active');
+                            submenu.classList.add('atfm-submenu-visible');
+                            menu.classList.add('atfm-has-open-panel');
+                        }
+                    }, true);
+
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape' || event.keyCode === 27) closeMenuPanels(menu, null);
+                    });
+
+                    document.addEventListener('click', function (event) {
+                        if (!document.querySelector('#sidebar .submenu.atfm-submenu-visible')) return;
+                        if (!document.getElementById('sidebar').contains(event.target)) closeMenuPanels(menu);
+                    });
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initializeVerticalMenu);
+                } else {
+                    initializeVerticalMenu();
+                }
+            })();
+        </script>
+        <script type="text/javascript">
+            (function () {
+                var NOTIFICATION_API_URL = '<%= ResolveUrl("~/Handlers/Notification.ashx") %>';
+                var notificationRequestInFlight = false;
+                var notificationReloadPending = false;
+                var notificationsLoadedOnce = false;
+                var currentUnreadCount = 0;
+
+                function closeHeaderPopups(except) {
+                    var actions = document.querySelectorAll('#navbar .atfm-header-action');
+                    for (var i = 0; i < actions.length; i++) {
+                        if (actions[i] !== except) actions[i].classList.remove('is-open');
+                        var button = actions[i].querySelector('.atfm-popup-toggle');
+                        if (button && actions[i] !== except) button.setAttribute('aria-expanded', 'false');
+                    }
+                }
+
+                function parseNotificationDate(value) {
+                    if (!value) return null;
+                    var match = /\/Date\((\d+)/.exec(value);
+                    var date = match ? new Date(parseInt(match[1], 10)) : new Date(value);
+                    return isNaN(date.getTime()) ? null : date;
+                }
+
+                function formatNotificationDate(value) {
+                    var date = parseNotificationDate(value);
+                    if (!date) return '';
+                    var pad = function (number) { return number < 10 ? '0' + number : String(number); };
+                    return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear()
+                        + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+                }
+
+                function setUnreadCount(value) {
+                    var badge = document.getElementById('atfmNotificationBadge');
+                    var markRead = document.getElementById('atfmMarkAllRead');
+                    currentUnreadCount = Math.max(0, parseInt(value, 10) || 0);
+                    if (badge) {
+                        badge.textContent = currentUnreadCount > 99 ? '99+' : String(currentUnreadCount);
+                        badge.classList.toggle('is-empty', currentUnreadCount === 0);
+                        badge.setAttribute('aria-label', currentUnreadCount + ' thông báo chưa đọc');
+                    }
+                    if (markRead) markRead.disabled = currentUnreadCount === 0;
+                }
+
+                function appendNotificationText(parent, className, value) {
+                    var element = document.createElement('span');
+                    element.className = className;
+                    element.textContent = value == null ? '' : String(value);
+                    parent.appendChild(element);
+                }
+
+                function renderEmptyNotification(list) {
+                    var empty = document.createElement('div');
+                    empty.className = 'atfm-empty-notification';
+                    empty.textContent = 'Chưa có thông báo chưa đọc';
+                    list.appendChild(empty);
+                }
+
+                function animateNotificationRemoval(elements, callback) {
+                    elements = Array.prototype.slice.call(elements || []);
+                    if (!elements.length) {
+                        if (callback) callback();
+                        return;
+                    }
+
+                    for (var i = 0; i < elements.length; i++) {
+                        elements[i].style.maxHeight = elements[i].offsetHeight + 'px';
+                    }
+                    window.setTimeout(function () {
+                        for (var j = 0; j < elements.length; j++) elements[j].classList.add('is-removing');
+                    }, 10);
+                    window.setTimeout(function () {
+                        for (var k = 0; k < elements.length; k++) {
+                            if (elements[k].parentNode) elements[k].parentNode.removeChild(elements[k]);
+                        }
+                        if (callback) callback();
+                    }, 280);
+                }
+
+                function renderNotifications(items, unreadCount) {
+                    var list = document.getElementById('atfmNotificationList');
+                    if (!list) return;
+
+                    items = Object.prototype.toString.call(items) === '[object Array]' ? items : [];
+                    while (list.firstChild) list.removeChild(list.firstChild);
+                    for (var i = 0; i < items.length && i < 50; i++) {
+                        var item = items[i] || {};
+                        var entry = document.createElement('div');
+                        entry.className = 'atfm-notification-item is-unread';
+                        entry.setAttribute('data-notification-id', item.ID);
+                        var copy = document.createElement('div');
+                        copy.className = 'atfm-notification-copy';
+                        appendNotificationText(copy, 'atfm-notification-title', item.TITLE || 'Thông báo');
+                        appendNotificationText(copy, 'atfm-notification-message', item.CONTENT || '');
+                        appendNotificationText(copy, 'atfm-notification-message', 'Type: ' + (item.SOURCE_TYPE || 'Không có'));
+                        appendNotificationText(copy, 'atfm-notification-time', formatNotificationDate(item.DATETIME));
+                        entry.appendChild(copy);
+                        var readButton = document.createElement('button');
+                        readButton.type = 'button';
+                        readButton.className = 'atfm-notification-read-one';
+                        readButton.setAttribute('data-notification-id', item.ID);
+                        readButton.setAttribute('title', 'Đánh dấu đã đọc');
+                        readButton.innerHTML = '<i class="fa fa-check" aria-hidden="true"></i><span>Đọc</span>';
+                        entry.appendChild(readButton);
+                        list.appendChild(entry);
+                    }
+
+                    if (!items.length) {
+                        renderEmptyNotification(list);
+                    }
+                    setUnreadCount(unreadCount);
+                }
+
+                function sendNotificationRequest(options) {
+                    options = $.extend({}, options, {
+                        global: false,
+                        xhr: function () {
+                            var xhr = $.ajaxSettings.xhr();
+                            xhr.atfmSuppressLoading = true;
+                            return xhr;
+                        }
+                    });
+                    return $.ajax(options);
+                }
+
+                function loadNotifications(force) {
+                    if (notificationRequestInFlight) {
+                        notificationReloadPending = true;
+                        return;
+                    }
+                    if (!force && document.hidden) return;
+                    notificationRequestInFlight = true;
+                    sendNotificationRequest({
+                        type: 'GET',
+                        url: NOTIFICATION_API_URL,
+                        cache: false,
+                        dataType: 'json'
+                    }).done(function (response) {
+                        if (!response || response.Code !== '00') return;
+                        notificationsLoadedOnce = true;
+                        renderNotifications(response.ListValue || [], response.Value);
+                    }).fail(function () {
+                        if (!notificationsLoadedOnce) {
+                            var list = document.getElementById('atfmNotificationList');
+                            if (list) list.textContent = 'Không thể tải thông báo.';
+                        }
+                    }).always(function () {
+                        notificationRequestInFlight = false;
+                        if (notificationReloadPending) {
+                            notificationReloadPending = false;
+                            loadNotifications(true);
+                        }
+                    });
+                }
+
+                function initializeHeaderPopups() {
+                    var actions = document.querySelectorAll('#navbar .atfm-header-action');
+                    for (var i = 0; i < actions.length; i++) {
+                        (function (action) {
+                            var toggle = action.querySelector('.atfm-popup-toggle');
+                            if (!toggle) return;
+                            toggle.addEventListener('click', function (event) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                var willOpen = !action.classList.contains('is-open');
+                                closeHeaderPopups(action);
+                                action.classList.toggle('is-open', willOpen);
+                                toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                                if (willOpen && action.id === 'atfmNotification') loadNotifications(true);
+                            });
+                        })(actions[i]);
+                    }
+
+                    var popupName = document.getElementById('atfmUserNamePopup');
+                    var headerName = document.querySelector('#atfmUserMenu .user-info');
+                    if (popupName && headerName) {
+                        var small = headerName.querySelector('small');
+                        popupName.textContent = headerName.textContent.replace(small ? small.textContent : '', '').replace(/^\s+|\s+$/g, '');
+                    }
+
+                    var markRead = document.getElementById('atfmMarkAllRead');
+                    var notificationList = document.getElementById('atfmNotificationList');
+                    if (notificationList) notificationList.addEventListener('click', function (event) {
+                        var button = event.target;
+                        while (button && button !== notificationList && !button.classList.contains('atfm-notification-read-one')) {
+                            button = button.parentNode;
+                        }
+                        if (!button || button === notificationList || button.disabled) return;
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var id = parseInt(button.getAttribute('data-notification-id'), 10);
+                        if (!id) return;
+                        button.disabled = true;
+                        sendNotificationRequest({
+                            type: 'POST',
+                            url: NOTIFICATION_API_URL + '?action=markRead&id=' + encodeURIComponent(id),
+                            dataType: 'json',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        }).done(function (response) {
+                            if (!response || response.Code !== '00') {
+                                button.disabled = false;
+                                return;
+                            }
+                            setUnreadCount(Math.max(0, currentUnreadCount - 1));
+                            var entry = button.parentNode;
+                            animateNotificationRemoval([entry], function () {
+                                if (!notificationList.querySelector('.atfm-notification-item')) {
+                                    renderEmptyNotification(notificationList);
+                                }
+                                loadNotifications(true);
+                            });
+                        }).fail(function () {
+                            button.disabled = false;
+                        });
+                    });
+
+                    if (markRead) markRead.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (markRead.disabled || currentUnreadCount === 0) return;
+                        markRead.disabled = true;
+                        sendNotificationRequest({
+                            type: 'POST',
+                            url: NOTIFICATION_API_URL + '?action=markAllRead',
+                            dataType: 'json',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        }).done(function (response) {
+                            if (response && response.Code === '00') {
+                                setUnreadCount(0);
+                                var unreadItems = document.querySelectorAll('#atfmNotificationList .atfm-notification-item');
+                                animateNotificationRemoval(unreadItems, function () {
+                                    renderNotifications([], 0);
+                                    loadNotifications(true);
+                                });
+                            }
+                        }).fail(function () {
+                            loadNotifications(true);
+                        }).always(function () {
+                            markRead.disabled = currentUnreadCount === 0;
+                        });
+                    });
+
+                    document.addEventListener('click', function () { closeHeaderPopups(null); });
+                    document.addEventListener('keydown', function (event) {
+                        if (event.key === 'Escape' || event.keyCode === 27) closeHeaderPopups(null);
+                    });
+                    document.addEventListener('atfm:notifications-changed', function () { loadNotifications(true); });
+                    loadNotifications(true);
+                    window.setInterval(function () { loadNotifications(false); }, 30000);
+                }
+
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeHeaderPopups);
+                else initializeHeaderPopups();
+            })();
+        </script>
+        <style type="text/css">
+            .atfm-loading-overlay {
+                position: fixed;
+                z-index: 999999;
+                inset: 0;
+                display: flex;
+                visibility: hidden;
+                align-items: center;
+                justify-content: center;
+                background: rgba(235, 243, 249, .72);
+                opacity: 0;
+                pointer-events: none;
+                -webkit-backdrop-filter: blur(3px);
+                backdrop-filter: blur(3px);
+                transition: opacity .18s ease, visibility .18s ease;
+            }
+            .atfm-loading-overlay.is-visible { visibility: visible; opacity: 1; pointer-events: all; }
+            .atfm-loading-box { min-width: 150px; padding: 22px 28px; border: 1px solid rgba(51, 122, 183, .18); border-radius: 14px; background: rgba(255, 255, 255, .94); text-align: center; box-shadow: 0 15px 40px rgba(31, 65, 92, .18); }
+            .atfm-loading-spinner { position: relative; width: 48px; height: 48px; margin: 0 auto 13px; }
+            .atfm-loading-spinner:before, .atfm-loading-spinner:after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 4px solid transparent; }
+            .atfm-loading-spinner:before { border-top-color: #337ab7; border-right-color: #337ab7; animation: atfmLoadingSpin .8s linear infinite; }
+            .atfm-loading-spinner:after { inset: 8px; border-bottom-color: #20b486; border-left-color: #20b486; animation: atfmLoadingSpinReverse .65s linear infinite; }
+            .atfm-loading-text { color: #31536e; font-size: 13px; font-weight: 700; letter-spacing: .2px; }
+            @keyframes atfmLoadingSpin { to { transform: rotate(360deg); } }
+            @keyframes atfmLoadingSpinReverse { to { transform: rotate(-360deg); } }
+            @media (prefers-reduced-motion: reduce) { .atfm-loading-spinner:before, .atfm-loading-spinner:after { animation-duration: 1.8s; } }
+        </style>
+        <div id="atfmGlobalLoading" class="atfm-loading-overlay" role="status" aria-live="polite" aria-hidden="true">
+            <div class="atfm-loading-box"><div class="atfm-loading-spinner"></div><div id="atfmLoadingText" class="atfm-loading-text">Đang tải dữ liệu...</div></div>
+        </div>
+        <script type="text/javascript">
+            (function () {
+                var overlay = document.getElementById('atfmGlobalLoading');
+                var textNode = document.getElementById('atfmLoadingText');
+                var pendingTasks = 0;
+                var safetyTimer = null;
+                var exportDownloadPending = false;
+                var exportFallbackTimer = null;
+                var suppressDateLoadingUntil = 0;
+
+                function isDateFilterControl(control) {
+                    if (!control || control.nodeType !== 1) return false;
+                    var type = String(control.type || '').toLowerCase();
+                    if (control.tagName === 'INPUT' && /^(date|datetime-local|month|week)$/.test(type)) return true;
+                    var identity = [control.id, control.name, control.className,
+                        control.getAttribute && control.getAttribute('placeholder'),
+                        control.getAttribute && control.getAttribute('aria-label')].join(' ').toLowerCase();
+                    return control.tagName === 'INPUT' && /(datepicker|date-picker|flightdate|fromdate|todate|ngay|ngày)/.test(identity);
+                }
+
+                function suppressDateLoading() {
+                    suppressDateLoadingUntil = Date.now() + 350;
+                }
+
+                function shouldSuppressLoading() {
+                    return Date.now() <= suppressDateLoadingUntil;
+                }
+
+                // Chọn ngày chỉ thay đổi điều kiện lọc; không khóa toàn trang bằng overlay.
+                document.addEventListener('input', function (event) {
+                    if (isDateFilterControl(event.target)) suppressDateLoading();
+                    else suppressDateLoadingUntil = 0;
+                }, true);
+                document.addEventListener('change', function (event) {
+                    if (isDateFilterControl(event.target)) suppressDateLoading();
+                    else suppressDateLoadingUntil = 0;
+                }, true);
+                // Một nút thao tác thực sự (Search/Áp dụng/Lưu...) luôn được phép hiển thị loading.
+                document.addEventListener('click', function (event) {
+                    var action = event.target && event.target.closest ? event.target.closest('button,input[type="button"],input[type="submit"],a') : null;
+                    if (action && !isDateFilterControl(action)) suppressDateLoadingUntil = 0;
+                }, true);
+
+                function showLoading(message) {
+                    pendingTasks++;
+                    if (message && textNode) textNode.textContent = message;
+                    overlay.classList.add('is-visible');
+                    overlay.setAttribute('aria-hidden', 'false');
+                    clearTimeout(safetyTimer);
+                    safetyTimer = setTimeout(function () { pendingTasks = 0; hideLoading(true); }, 60000);
+                }
+
+                function hideLoading(force) {
+                    pendingTasks = force ? 0 : Math.max(0, pendingTasks - 1);
+                    if (pendingTasks > 0) return;
+                    clearTimeout(safetyTimer);
+                    overlay.classList.remove('is-visible');
+                    overlay.setAttribute('aria-hidden', 'true');
+                    if (textNode) textNode.textContent = 'Đang tải dữ liệu...';
+                }
+
+                // Request hoàn tất chưa đồng nghĩa dữ liệu đã được vẽ. Chờ callback cập nhật DOM
+                // và hai nhịp render của trình duyệt rồi mới giảm đúng một tác vụ loading.
+                function hideAfterRender(force) {
+                    var complete = function () {
+                        hideLoading(force === true);
+                    };
+                    if (window.requestAnimationFrame) {
+                        window.requestAnimationFrame(function () {
+                            window.requestAnimationFrame(complete);
+                        });
+                    } else {
+                        window.setTimeout(complete, 32);
+                    }
+                }
+
+                window.ATFMLoading = {
+                    show: showLoading,
+                    hide: function () { hideAfterRender(false); },
+                    hideAfterRender: function () { hideAfterRender(false); },
+                    forceHide: function () { hideLoading(true); }
+                };
+                window.addEventListener('load', function () { hideLoading(true); });
+                window.addEventListener('pageshow', function () { hideLoading(true); });
+                window.addEventListener('beforeunload', function () {
+                    if (!shouldSuppressLoading()) showLoading('Đang chuyển trang...');
+                });
+
+                function isExportAction(id, text) {
+                    return /export|excel|xuất/i.test((id || '') + ' ' + (text || ''));
+                }
+
+                function beginExportDownload() {
+                    exportDownloadPending = true;
+                    showLoading('Đang chuẩn bị file...');
+                    clearTimeout(exportFallbackTimer);
+                    exportFallbackTimer = setTimeout(function () { exportDownloadPending = false; hideLoading(true); }, 30000);
+                }
+
+                window.addEventListener('blur', function () {
+                    if (!exportDownloadPending) return;
+                    exportDownloadPending = false;
+                    clearTimeout(exportFallbackTimer);
+                    hideLoading(true);
+                });
+
+                document.addEventListener('submit', function (event) {
+                    if (shouldSuppressLoading()) return;
+                    var submitter = event.submitter;
+                    if (submitter && isExportAction(submitter.id || submitter.name, submitter.value || submitter.textContent)) beginExportDownload();
+                    else showLoading('Đang xử lý yêu cầu...');
+                }, true);
+                document.addEventListener('click', function (event) {
+                    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                    var link = event.target;
+                    while (link && link.tagName !== 'A') link = link.parentNode;
+                    if (!link || link.hasAttribute('download') || link.getAttribute('target') === '_blank') return;
+                    var href = link.getAttribute('href');
+                    if (!href || /^javascript:/i.test(href)) return;
+                    if (href === '#') return;
+                    showLoading('Đang chuyển trang...');
+                }, true);
+
+                if (window.jQuery) {
+                    window.jQuery(document).ajaxStart(function () {
+                        if (!shouldSuppressLoading()) showLoading('Đang tải dữ liệu...');
+                    });
+                    // ajaxStop chạy sau các callback AJAX; chờ thêm render trước khi đóng.
+                    window.jQuery(document).ajaxStop(function () { hideAfterRender(false); });
+                }
+
+                if (window.fetch) {
+                    var originalFetch = window.fetch;
+                    window.fetch = function () {
+                        var options = arguments.length > 1 ? arguments[1] : null;
+                        if ((options && options.atfmSilent === true) || shouldSuppressLoading()) return originalFetch.apply(this, arguments);
+                        showLoading('Đang tải dữ liệu...');
+                        return originalFetch.apply(this, arguments).then(function (response) {
+                            hideAfterRender(false);
+                            return response;
+                        }, function (error) {
+                            hideAfterRender(false);
+                            throw error;
+                        });
+                    };
+                }
+
+                // Bao phủ các lời gọi XMLHttpRequest thuần không đi qua jQuery.
+                if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+                    var originalXhrSend = window.XMLHttpRequest.prototype.send;
+                    window.XMLHttpRequest.prototype.send = function () {
+                        if (this.atfmSuppressLoading === true || shouldSuppressLoading()) return originalXhrSend.apply(this, arguments);
+                        showLoading('Đang tải dữ liệu...');
+                        var xhr = this;
+                        var finishLoading = function () {
+                            xhr.removeEventListener('loadend', finishLoading, false);
+                            hideAfterRender(false);
+                        };
+                        this.addEventListener('loadend', finishLoading, false);
+                        try { return originalXhrSend.apply(this, arguments); }
+                        catch (error) { hideAfterRender(false); throw error; }
+                    };
+                }
+
+                // ASP.NET Web Forms: postback có thể gọi form.submit() trực tiếp nên không phát sinh DOM submit event.
+                if (window.HTMLFormElement && window.HTMLFormElement.prototype && window.HTMLFormElement.prototype.submit) {
+                    var originalFormSubmit = window.HTMLFormElement.prototype.submit;
+                    window.HTMLFormElement.prototype.submit = function () {
+                        if (!shouldSuppressLoading()) showLoading('Đang xử lý yêu cầu...');
+                        return originalFormSubmit.apply(this, arguments);
+                    };
+                }
+
+                function hookWebFormsLoading() {
+                    if (typeof window.__doPostBack === 'function' && !window.__doPostBack.atfmLoadingHooked) {
+                        var originalDoPostBack = window.__doPostBack;
+                        var wrappedDoPostBack = function (eventTarget) {
+                            var controlId = (eventTarget || '').replace(/\$/g, '_');
+                            var control = controlId ? document.getElementById(controlId) : null;
+                            if (isDateFilterControl(control) || shouldSuppressLoading()) return originalDoPostBack.apply(this, arguments);
+                            if (isExportAction(eventTarget, control ? (control.value || control.textContent) : '')) beginExportDownload();
+                            else showLoading('Đang xử lý yêu cầu...');
+                            return originalDoPostBack.apply(this, arguments);
+                        };
+                        wrappedDoPostBack.atfmLoadingHooked = true;
+                        window.__doPostBack = wrappedDoPostBack;
+                    }
+                    if (window.Sys && window.Sys.WebForms && window.Sys.WebForms.PageRequestManager) {
+                        var manager = window.Sys.WebForms.PageRequestManager.getInstance();
+                        if (manager && !manager._atfmLoadingHooked) {
+                            manager.add_beginRequest(function (sender, args) {
+                                var source = args && args.get_postBackElement ? args.get_postBackElement() : null;
+                                manager._atfmDateRequest = isDateFilterControl(source) || shouldSuppressLoading();
+                                if (!manager._atfmDateRequest) showLoading('Đang xử lý yêu cầu...');
+                            });
+                            manager.add_endRequest(function () {
+                                if (!manager._atfmDateRequest) hideAfterRender(false);
+                                manager._atfmDateRequest = false;
+                            });
+                            manager._atfmLoadingHooked = true;
+                        }
+                    }
+                }
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookWebFormsLoading);
+                else hookWebFormsLoading();
+                window.addEventListener('load', hookWebFormsLoading);
+            })();
+        </script>
+        <script src="<%=Global.ApplicationPath%>/Scripts/ResponsiveTable.js"></script>
+    </form>
+</body>
+</html>
+

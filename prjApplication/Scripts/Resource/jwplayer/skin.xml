@@ -1,0 +1,9 @@
+﻿<skin version="2.0" name="huymanh" author="huymanh" target="6.0">
+  <components>
+    <component name="controlbar">
+      <elements>
+        <element name="fullscreenButton" value="false" />
+      </elements>
+    </component>
+  </components>
+</skin>

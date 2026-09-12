@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D29A43CC-5078-420F-BBF9-2E760796DF74}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>prjInfo</RootNamespace>
+    <AssemblyName>prjInfo</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>http://localhost/HPCInfo/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Aero.cs" />
+    <Compile Include="Aftn.cs" />
+    <Compile Include="Airlines.cs" />
+    <Compile Include="AirportRoute.cs" />
+    <Compile Include="Alarm.cs" />
+    <Compile Include="Atkl\Atkl.cs" />
+    <Compile Include="CancelFlights\CancelFlights.cs" />
+    <Compile Include="Cant\CantRealize.cs" />
+    <Compile Include="Cant\CantSplit.cs" />
+    <Compile Include="Cant\Errors.cs" />
+    <Compile Include="classSearchValueForReport\clsSearchValue.cs" />
+    <Compile Include="CraftType.cs" />
+    <Compile Include="Ctry.cs" />
+    <Compile Include="Document\Document.cs" />
+    <Compile Include="FinishFlights\FinishedFlights.cs" />
+    <Compile Include="FinishFlights\NotCompletedFlights.cs" />
+    <Compile Include="Flight\FlightPemission.cs" />
+    <Compile Include="Flight\FlightPemissionDetail.cs" />
+    <Compile Include="Flight\FlightPemissionDetailHistory.cs" />
+    <Compile Include="Flight_DayFlight\DayFlights.cs" />
+    <Compile Include="FlyPlanType\FlyplanType.cs" />
+    <Compile Include="FlyPurpose.cs" />
+    <Compile Include="FpAuthor.cs" />
+    <Compile Include="AddressAftn.cs" />
+    <Compile Include="M_FLIGHT_FIXES.cs" />
+    <Compile Include="M_VIA_ARIPORT.cs" />
+    <Compile Include="PermissionInbox\PermissionInbox.cs" />
+    <Compile Include="Perm\Oper.cs" />
+    <Compile Include="Perm\PermDetailNo.cs" />
+    <Compile Include="Perm\PermDetailSc.cs" />
+    <Compile Include="Perm\PermMasterNo.cs" />
+    <Compile Include="Perm\PermMasterSc.cs" />
+    <Compile Include="Perm\PermNoIMP.cs" />
+    <Compile Include="Perm\PermScIMP.cs" />
+    <Compile Include="PlanMessage\PlanMessageNew.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Receive_LogFile\ReceiveLogFile.cs" />
+    <Compile Include="ReportingPoint.cs" />
+    <Compile Include="ReportingRoute.cs" />
+    <Compile Include="RouteList.cs" />
+    <Compile Include="ScheduleFlight\ScheduleDayFlights.cs" />
+    <Compile Include="SectorRoute.cs" />
+    <Compile Include="Sectors.cs" />
+    <Compile Include="SendMessage\QlbInBox.cs" />
+    <Compile Include="SendMessage\QlbOutBox.cs" />
+    <Compile Include="Static\AREODROME.cs" />
+    <Compile Include="Static\AtsFIR.cs" />
+    <Compile Include="Static\ATSROUTE.cs" />
+    <Compile Include="Static\ATSWAYPOINT.cs" />
+    <Compile Include="Static\ReportNameStatic.cs" />
+    <Compile Include="Static\ReportStatic.cs" />
+    <Compile Include="Subdivision.cs" />
+    <Compile Include="System\ActionHistory.cs" />
+    <Compile Include="T_ActionHistory.cs" />
+    <Compile Include="T_GroupMenu.cs" />
+    <Compile Include="T_Groups.cs" />
+    <Compile Include="T_ImageFiles.cs" />
+    <Compile Include="T_Info.cs" />
+    <Compile Include="T_Languages.cs" />
+    <Compile Include="T_Logfiles.cs" />
+    <Compile Include="T_Menus.cs" />
+    <Compile Include="T_RolePermission.cs" />
+    <Compile Include="T_UserMenu.cs" />
+    <Compile Include="T_Users.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="Via.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

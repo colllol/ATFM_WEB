@@ -1,0 +1,404 @@
+﻿/*Add by nvthai*/
+ table {
+  font-family: 'Arial';
+  margin: 5px auto;
+  border-collapse: collapse;
+  border: 1px solid #eee;
+  border-bottom: 0px solid #00cccc;
+  
+}
+
+table th, table td {
+  color: #777777;
+  border: 1px solid #eee;
+  padding: 1px 0px;
+  border-collapse: collapse;
+}
+
+table th {
+  background: #fff;
+  color: black;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+table th.last {
+  border-right: none;
+}
+
+
+.tblHeader {
+            /*border-collapse: collapse;*/
+            border: none;
+            border-spacing: 0;
+            width: 100%;
+        }
+
+            .tblHeader td {
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 0px;
+                overflow: hidden;
+                word-break: normal;
+            }
+
+            .tblHeader th {
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                font-weight: normal;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 0px;
+                overflow: hidden;
+                word-break: normal;
+                color: black;
+                background: white;
+            }
+
+            .tblHeader .tg-s6z2 {
+                text-align: center;
+            }
+
+            .tblHeader .tg-asmn {
+                font-weight: bold;
+                font-size: 18px;
+                text-align: center;
+            }
+
+            .tblHeader .tg-hgcj {
+                font-weight: bold;
+                text-align: center;
+            }
+
+            .tblHeader .tg-yw4l {
+                vertical-align: top;
+            }
+
+            .tblNoidung {
+                        border-collapse: collapse;
+                        border-spacing: 0;
+                    }
+
+                        .tblNoidung td {
+                            font-family: Arial, sans-serif;
+                            font-size: 14px;
+                            padding: 10px 5px;
+                            border-style: solid;
+                            border-width: 1px;
+                            overflow: hidden;
+                            word-break: normal;
+                        }
+
+                        .tblNoidung th {
+                            font-family: Arial, sans-serif;
+                            font-size: 14px;
+                            font-weight: normal;
+                            padding: 10px 5px;
+                            border-style: solid;
+                            border-width: 1px;
+                            overflow: hidden;
+                            word-break: normal;
+                        }
+
+                        .tblNoidung .tg-s6z2 {
+                            text-align: center;
+                        }
+
+                        .tblNoidung .tg-baqh {
+                            text-align: center;
+                            vertical-align: top;
+                        }
+
+                        .tblNoidung .tg-hgcj {
+                            font-weight: bold;
+                            text-align: center;
+                        }
+
+                        .tblNoidung .tg-amwm {
+                            font-weight: bold;
+                            text-align: center;
+                            vertical-align: top;
+                        }
+
+                        .tblNoidung .tg-yw4l {
+                            vertical-align: top;
+                        }
+
+
+                        .tgNoiDung {
+                            border-collapse: collapse;
+                            border-spacing: 0;
+                        }
+
+                            .tgNoiDung td {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgNoiDung th {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                font-weight: normal;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgNoiDung .tg-hgcj {
+                                font-weight: bold;
+                                text-align: center;
+                            }
+
+                            .tgNoiDung .tg-amwm {
+                                font-weight: bold;
+                                text-align: center;
+                                vertical-align: top;
+                            }
+
+                            .tgNoiDung .tg-yw4l {
+                                vertical-align: top;
+                            }
+
+                            .tgNoiDung .tg-9hbo {
+                                font-weight: bold;
+                                vertical-align: top;
+                            }
+
+                            .tg {
+                            border-collapse: collapse;
+                            border-spacing: 0;
+                        }
+
+                            .tg td {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tg th {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                font-weight: normal;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tg .tg-s6z2 {
+                                text-align: center;
+                            }
+
+                            .tg .tg-baqh {
+                                text-align: center;
+                                vertical-align: top;
+                            }
+
+                            .tg .tg-yw4l {
+                                vertical-align: top;
+                            }
+
+
+                            .tgBCQTDD {
+                            border-collapse: collapse;
+                            border-spacing: 0;
+                        }
+
+                            .tgBCQTDD td {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgBCQTDD th {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                font-weight: normal;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgBCQTDD .tg-baqh {
+                                text-align: center;
+                                vertical-align: top;
+                            }
+
+                            .tgBCQTDD .tg-hgcj {
+                                font-weight: bold;
+                                text-align: center;
+                            }
+
+                            .tgBCQTDD .tg-amwm {
+                                font-weight: bold;
+                                text-align: center;
+                                vertical-align: top;
+                            }
+
+                            .tgBCQTDD .tg-yw4l {
+                                vertical-align: top;
+                            }
+
+
+                            .tgHearderList {
+                            border-collapse: collapse;
+                            border-spacing: 0;
+                        }
+
+                            .tgHearderList td {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 0px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgHearderList th {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                font-weight: normal;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 0px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgHearderList .tg-e3zv {
+                                font-weight: bold;
+                                width:30%;
+                            }
+
+                            .tgHearderList .tg-hgcj {
+                                font-weight: bold;
+                                text-align: center;
+                            }
+
+                            .tgListContent {
+                            border-collapse: collapse;
+                            border-spacing: 0;
+                        }
+
+                            .tgListContent td {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgListContent th {
+                                font-family: Arial, sans-serif;
+                                font-size: 14px;
+                                font-weight: normal;
+                                padding: 10px 5px;
+                                border-style: solid;
+                                border-width: 1px;
+                                overflow: hidden;
+                                word-break: normal;
+                            }
+
+                            .tgListContent .tg-baqh {
+                                text-align: center;
+                                vertical-align: top;
+                            }
+
+                            .tgListContent .tg-e3zv {
+                                font-weight: bold;
+                            }
+
+                            .tgListContent .tg-hgcj {
+                                font-weight: bold;
+                                text-align: center;
+                            }
+
+                            .tgListContent .tg-amwm {
+                                font-weight: bold;
+                                text-align: center;
+                                vertical-align: top;
+                            }
+
+                            .tgListContent .tg-yw4l {
+                                vertical-align: top;
+                            }
+                            
+                            .tgscheduled  {border-collapse:collapse;border-spacing:0;}
+.tgscheduled td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tgscheduled th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tgscheduled .tg-ac6y{font-weight:bold;background-color:#38fff8;color:#000000;text-align:center;vertical-align:top}
+.tgscheduled .tg-882i{background-color:#38fff8;color:#000000}
+.tgscheduled .tg-8otv{font-weight:bold;background-color:#38fff8;color:#000000;text-align:center}
+.tgscheduled .tg-u6sz{background-color:#38fff8;color:#000000;vertical-align:top}
+.tgscheduled .tg-yw4l{vertical-align:top}
+
+
+.btn {
+    padding: 14px 24px;
+    border: 0 none;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+ 
+.btn:focus, .btn:active:focus, .btn.active:focus {
+    outline: 0 none;
+    
+}
+ 
+.btn-primary {
+    background: #0099cc;
+    color: #ffffff;
+    text-decoration:none;
+}
+ 
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primary {
+    background: #33a6cc;
+}
+ 
+.btn-primary:active, .btn-primary.active {
+    background: #007299;
+    box-shadow: none;
+}
+ /*End*/
+
+ .tgHearderNews  {border-spacing:0;}
+.tgHearderNews td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-width:0px;overflow:hidden;word-break:normal;}
+.tgHearderNews th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-width:0px;overflow:hidden;word-break:normal;}
+.tgHearderNews .tg-e3zv{font-weight:bold}
+.tgHearderNews .tg-yw4l{vertical-align:top}
+.tgHearderNews .tg-fbrz{font-weight:bold;font-size:20px;text-align:center;vertical-align:top}
+.tgHearderNews .tg-9hbo{font-weight:bold;text-align:center;vertical-align:top}
+
+.tgContentNews  {border-collapse:collapse;border-spacing:0;}
+.tgContentNews td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tgContentNews th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tgContentNews .tg-s6z2{text-align:center}
+.tgContentNews .tg-baqh{text-align:center;vertical-align:top}
+.tgContentNews .tg-e3zv{font-weight:bold}
+.tgContentNews .tg-hgcj{font-weight:bold;text-align:center}
+.tgContentNews .tg-amwm{font-weight:bold;text-align:center;vertical-align:top}
+.tgContentNews .tg-yw4l{vertical-align:top}
+.tgContentNews .tg-9hbo{font-weight:bold;text-align:left;}

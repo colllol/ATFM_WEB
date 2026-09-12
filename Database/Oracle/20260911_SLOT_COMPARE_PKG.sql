@@ -1,0 +1,357 @@
+-- ============================================================================
+-- Store package cho trang SLOTS/SlotComparison.aspx (SlotComparisonService.cs).
+-- API:
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_DEFAULT_DATE
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_OPERATORS
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_SUMMARY
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_RESULTS
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_SOURCE_KHH
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_SOURCE_SLOT
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_SOURCE_PERM
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_OPERATOR_MAP
+--   packageName=SLOT_COMPARE_PKG&storeName=GET_AIRPORT_MAP
+--
+-- Phan doc du lieu cua SlotComparisonService; logic so sanh va luu ket qua
+-- (CompareAndSave/MERGE/INSERT) van nam trong code C# nhu cu.
+-- Chi doc du lieu. Script chay lai nhieu lan duoc.
+-- ============================================================================
+
+SET SERVEROUTPUT ON SIZE UNLIMITED
+SET DEFINE OFF
+
+DECLARE
+    v_missing VARCHAR2(4000);
+    v_count   PLS_INTEGER;
+
+    PROCEDURE require_table(p_name IN VARCHAR2) IS
+    BEGIN
+        SELECT COUNT(*) INTO v_count FROM USER_TABLES WHERE TABLE_NAME = UPPER(p_name);
+        IF v_count = 0 THEN
+            v_missing := v_missing || ', TABLE ' || UPPER(p_name);
+        END IF;
+    END require_table;
+BEGIN
+    require_table('T_KHH');
+    require_table('T_SLOT_AERO');
+    require_table('T_DAY_FLIGHTS');
+    require_table('T_SLOT_COMPARE_RUN');
+    require_table('T_SLOT_COMPARE_RESULT');
+    require_table('M_OPER');
+    require_table('M_AERO');
+
+    IF v_missing IS NOT NULL THEN
+        RAISE_APPLICATION_ERROR(-21001, 'Thieu doi tuong phu thuoc:' || LTRIM(v_missing, ','));
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('SLOT_COMPARE_PKG precheck: OK');
+END;
+/
+
+CREATE OR REPLACE PACKAGE SLOT_COMPARE_PKG AS
+    TYPE T_CURSOR IS REF CURSOR;
+
+    -- Ngay gan nhat co du lieu ca T_KHH lan T_SLOT_AERO.
+    PROCEDURE GET_DEFAULT_DATE(P_OUT_CURSOR OUT T_CURSOR);
+
+    -- Danh sach hang tu T_KHH (VNA -> HVN).
+    PROCEDURE GET_OPERATORS(P_OUT_CURSOR OUT T_CURSOR);
+
+    -- Tong so ket qua theo RESULT_TYPE cua mot ngay so sanh.
+    PROCEDURE GET_SUMMARY
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OPER         IN VARCHAR2 DEFAULT NULL,
+        P_OUT_CURSOR   OUT T_CURSOR
+    );
+
+    -- Ket qua so sanh phan trang (SUMRECORD = tong so dong).
+    PROCEDURE GET_RESULTS
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_RESULT_TYPE  IN VARCHAR2,
+        P_OPER         IN VARCHAR2 DEFAULT NULL,
+        P_PAGE_SIZE    IN NUMBER DEFAULT 100,
+        P_PAGE_INDEX   IN NUMBER DEFAULT 0,
+        P_OUT_CURSOR   OUT T_CURSOR
+    );
+
+    -- 3 nguon du lieu tho cho phan so sanh.
+    PROCEDURE GET_SOURCE_KHH
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OUT_CURSOR   OUT T_CURSOR
+    );
+    PROCEDURE GET_SOURCE_SLOT
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OUT_CURSOR   OUT T_CURSOR
+    );
+    PROCEDURE GET_SOURCE_PERM
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OUT_CURSOR   OUT T_CURSOR
+    );
+
+    -- Bang ma hang noi dia va ma san bay ICAO/IATA.
+    PROCEDURE GET_OPERATOR_MAP(P_OUT_CURSOR OUT T_CURSOR);
+    PROCEDURE GET_AIRPORT_MAP(P_OUT_CURSOR OUT T_CURSOR);
+END SLOT_COMPARE_PKG;
+/
+
+CREATE OR REPLACE PACKAGE BODY SLOT_COMPARE_PKG AS
+
+    FUNCTION PARSE_DATE(P_VALUE IN VARCHAR2, P_NAME IN VARCHAR2) RETURN DATE
+    IS
+        V_VALUE VARCHAR2(40) := TRIM(P_VALUE);
+    BEGIN
+        IF REGEXP_LIKE(V_VALUE, '^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN
+            RETURN TO_DATE(V_VALUE, 'FXYYYY-MM-DD');
+        ELSIF REGEXP_LIKE(V_VALUE, '^[0-9]{2}-[0-9]{2}-[0-9]{4}$') THEN
+            RETURN TO_DATE(V_VALUE, 'FXDD-MM-YYYY');
+        ELSIF REGEXP_LIKE(V_VALUE, '^[0-9]{2}/[0-9]{2}/[0-9]{4}$') THEN
+            RETURN TO_DATE(V_VALUE, 'FXDD/MM/YYYY');
+        END IF;
+        RAISE_APPLICATION_ERROR(-21002, P_NAME || ' phai dung dinh dang YYYY-MM-DD hoac DD-MM-YYYY');
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE = -21002 THEN RAISE; END IF;
+            RAISE_APPLICATION_ERROR(-21002, P_NAME || ' khong phai la ngay hop le');
+    END PARSE_DATE;
+
+    FUNCTION NORMALIZE_FILTER(P_VALUE IN VARCHAR2) RETURN VARCHAR2
+    IS
+        V_VALUE VARCHAR2(4000) := UPPER(TRIM(P_VALUE));
+    BEGIN
+        IF V_VALUE IS NULL OR V_VALUE = 'ALL' THEN RETURN NULL; END IF;
+        RETURN V_VALUE;
+    END NORMALIZE_FILTER;
+
+    PROCEDURE WRITE_ERROR(P_ACTION IN VARCHAR2) IS
+    BEGIN
+        PROCESS_PKG.ADD_ERROR_LOG
+        (
+            P_ACTION,
+            SQLCODE,
+            SUBSTR(SQLERRM || CHR(10) || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE, 1, 200)
+        );
+    EXCEPTION
+        WHEN OTHERS THEN NULL;
+    END WRITE_ERROR;
+
+    PROCEDURE GET_DEFAULT_DATE(P_OUT_CURSOR OUT T_CURSOR)
+    IS
+    BEGIN
+        OPEN P_OUT_CURSOR FOR
+            SELECT MAX(COMPARE_DATE) COMPARE_DATE FROM (
+                SELECT TRUNC("Date") COMPARE_DATE FROM T_KHH
+                INTERSECT
+                SELECT TRUNC(FLIGHT_DATE) FROM T_SLOT_AERO
+            );
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_DEFAULT_DATE');
+            RAISE;
+    END GET_DEFAULT_DATE;
+
+    PROCEDURE GET_OPERATORS(P_OUT_CURSOR OUT T_CURSOR)
+    IS
+    BEGIN
+        OPEN P_OUT_CURSOR FOR
+            SELECT DISTINCT CASE WHEN UPPER("OPER") = 'VNA' THEN 'HVN' ELSE UPPER("OPER") END OPER
+              FROM T_KHH
+             WHERE "OPER" IS NOT NULL
+             ORDER BY OPER;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_OPERATORS');
+            RAISE;
+    END GET_OPERATORS;
+
+    PROCEDURE GET_SUMMARY
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OPER         IN VARCHAR2 DEFAULT NULL,
+        P_OUT_CURSOR   OUT T_CURSOR
+    )
+    IS
+        V_DATE DATE;
+        V_OPER VARCHAR2(100);
+    BEGIN
+        V_DATE := PARSE_DATE(P_COMPARE_DATE, 'P_COMPARE_DATE');
+        V_OPER := NORMALIZE_FILTER(P_OPER);
+
+        OPEN P_OUT_CURSOR FOR
+            SELECT r.RESULT_TYPE, COUNT(*) TOTAL
+              FROM T_SLOT_COMPARE_RESULT r
+              JOIN T_SLOT_COMPARE_RUN h ON h.ID = r.RUN_ID
+             WHERE h.COMPARE_DATE = V_DATE
+               AND (V_OPER IS NULL OR r.OPER = V_OPER)
+             GROUP BY r.RESULT_TYPE;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_SUMMARY');
+            RAISE;
+    END GET_SUMMARY;
+
+    PROCEDURE GET_RESULTS
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_RESULT_TYPE  IN VARCHAR2,
+        P_OPER         IN VARCHAR2 DEFAULT NULL,
+        P_PAGE_SIZE    IN NUMBER DEFAULT 100,
+        P_PAGE_INDEX   IN NUMBER DEFAULT 0,
+        P_OUT_CURSOR   OUT T_CURSOR
+    )
+    IS
+        V_DATE       DATE;
+        V_OPER       VARCHAR2(100);
+        V_TYPE       VARCHAR2(10);
+        V_PAGE_SIZE  PLS_INTEGER;
+        V_PAGE_INDEX PLS_INTEGER;
+        V_FIRST_ROW  PLS_INTEGER;
+        V_LAST_ROW   PLS_INTEGER;
+    BEGIN
+        V_DATE := PARSE_DATE(P_COMPARE_DATE, 'P_COMPARE_DATE');
+        V_OPER := NORMALIZE_FILTER(P_OPER);
+        V_TYPE := UPPER(TRIM(P_RESULT_TYPE));
+        IF V_TYPE NOT IN ('KQ1', 'KQ2', 'KQ3', 'KQ4') THEN
+            RAISE_APPLICATION_ERROR(-21003, 'P_RESULT_TYPE phai la KQ1..KQ4');
+        END IF;
+        V_PAGE_SIZE := LEAST(GREATEST(NVL(TRUNC(P_PAGE_SIZE), 100), 1), 500000);
+        V_PAGE_INDEX := GREATEST(NVL(TRUNC(P_PAGE_INDEX), 0), 0);
+        V_FIRST_ROW := V_PAGE_SIZE * V_PAGE_INDEX + 1;
+        V_LAST_ROW := V_PAGE_SIZE * (V_PAGE_INDEX + 1);
+
+        OPEN P_OUT_CURSOR FOR
+            SELECT SUMRECORD, ID, RESULT_TYPE, FLIGHT_DATE, OPER, CALLSIGN,
+                   FROM_AIRP, TO_AIRP, ETD, REMARK, SOURCE_REF
+              FROM (
+                SELECT COUNT(*) OVER () SUMRECORD,
+                       ROW_NUMBER() OVER (ORDER BY r.OPER, r.CALLSIGN, r.FROM_AIRP, r.TO_AIRP, r.ID) RN,
+                       r.ID, r.RESULT_TYPE, r.FLIGHT_DATE, r.OPER, r.CALLSIGN,
+                       r.FROM_AIRP, r.TO_AIRP, r.ETD, r.REMARK, r.SOURCE_REF
+                  FROM T_SLOT_COMPARE_RESULT r
+                  JOIN T_SLOT_COMPARE_RUN h ON h.ID = r.RUN_ID
+                 WHERE h.COMPARE_DATE = V_DATE
+                   AND r.RESULT_TYPE = V_TYPE
+                   AND (V_OPER IS NULL OR r.OPER = V_OPER)
+              )
+             WHERE RN BETWEEN V_FIRST_ROW AND V_LAST_ROW
+             ORDER BY RN;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_RESULTS');
+            RAISE;
+    END GET_RESULTS;
+
+    PROCEDURE GET_SOURCE_KHH
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OUT_CURSOR   OUT T_CURSOR
+    )
+    IS
+        V_DATE DATE;
+    BEGIN
+        V_DATE := PARSE_DATE(P_COMPARE_DATE, 'P_COMPARE_DATE');
+        OPEN P_OUT_CURSOR FOR
+            SELECT ID, "Date" FLIGHT_DATE, "CALLSIGN" CALLSIGN, "From" FROM_AIRP,
+                   "To" TO_AIRP, "ETD" ETD, "OPER" OPER_HINT
+              FROM T_KHH
+             WHERE "Date" >= V_DATE AND "Date" < V_DATE + 1;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_SOURCE_KHH');
+            RAISE;
+    END GET_SOURCE_KHH;
+
+    PROCEDURE GET_SOURCE_SLOT
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OUT_CURSOR   OUT T_CURSOR
+    )
+    IS
+        V_DATE DATE;
+    BEGIN
+        V_DATE := PARSE_DATE(P_COMPARE_DATE, 'P_COMPARE_DATE');
+        OPEN P_OUT_CURSOR FOR
+            SELECT ID, FLIGHT_DATE, CALLSIGN, FROM_AIRP, TO_AIRP,
+                   ETD_ETA ETD, NVL(AERO, CARRIE) OPER_HINT
+              FROM T_SLOT_AERO
+             WHERE FLIGHT_DATE >= V_DATE AND FLIGHT_DATE < V_DATE + 1
+               AND CALLSIGN IS NOT NULL;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_SOURCE_SLOT');
+            RAISE;
+    END GET_SOURCE_SLOT;
+
+    PROCEDURE GET_SOURCE_PERM
+    (
+        P_COMPARE_DATE IN VARCHAR2,
+        P_OUT_CURSOR   OUT T_CURSOR
+    )
+    IS
+        V_DATE DATE;
+    BEGIN
+        V_DATE := PARSE_DATE(P_COMPARE_DATE, 'P_COMPARE_DATE');
+        OPEN P_OUT_CURSOR FOR
+            SELECT FLIGHT_ID ID, FLIGHTDATE FLIGHT_DATE, FLIGHTNBR CALLSIGN,
+                   FROM_AIRP, TO_AIRP, ETD, OPER_ID OPER_HINT
+              FROM T_DAY_FLIGHTS
+             WHERE FLIGHTDATE >= V_DATE AND FLIGHTDATE < V_DATE + 1;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_SOURCE_PERM');
+            RAISE;
+    END GET_SOURCE_PERM;
+
+    PROCEDURE GET_OPERATOR_MAP(P_OUT_CURSOR OUT T_CURSOR)
+    IS
+    BEGIN
+        OPEN P_OUT_CURSOR FOR
+            SELECT UPPER(OPER_ICAO) OPER_ICAO, UPPER(OPER_IATA) OPER_IATA
+              FROM M_OPER
+             WHERE IS_DOMESTIC = '1' AND OPER_ICAO IS NOT NULL;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_OPERATOR_MAP');
+            RAISE;
+    END GET_OPERATOR_MAP;
+
+    PROCEDURE GET_AIRPORT_MAP(P_OUT_CURSOR OUT T_CURSOR)
+    IS
+    BEGIN
+        OPEN P_OUT_CURSOR FOR
+            SELECT UPPER(AE_CODE) AE_CODE, UPPER(AE_IATA) AE_IATA
+              FROM M_AERO
+             WHERE AE_CODE IS NOT NULL;
+    EXCEPTION
+        WHEN OTHERS THEN
+            WRITE_ERROR('SLOT_COMPARE_PKG.GET_AIRPORT_MAP');
+            RAISE;
+    END GET_AIRPORT_MAP;
+END SLOT_COMPARE_PKG;
+/
+
+DECLARE
+    V_COUNT PLS_INTEGER;
+BEGIN
+    SELECT COUNT(*)
+      INTO V_COUNT
+      FROM USER_OBJECTS
+     WHERE OBJECT_NAME = 'SLOT_COMPARE_PKG'
+       AND OBJECT_TYPE IN ('PACKAGE', 'PACKAGE BODY')
+       AND STATUS = 'VALID';
+
+    IF V_COUNT <> 2 THEN
+        RAISE_APPLICATION_ERROR(-21004, 'SLOT_COMPARE_PKG chua VALID day du');
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('SLOT_COMPARE_PKG deployment verify: OK');
+END;
+/
+
+SELECT OBJECT_NAME, OBJECT_TYPE, STATUS
+  FROM USER_OBJECTS
+ WHERE OBJECT_NAME = 'SLOT_COMPARE_PKG'
+ ORDER BY OBJECT_TYPE;

@@ -1,0 +1,436 @@
+﻿body {
+    background-color:white;
+}
+.tgheard {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+            .tgheard td {
+                font-family:"Times New Roman";
+                font-size: 14px;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 0px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: white;
+            }
+
+            .tgheard th {
+                font-family:"Times New Roman";
+                font-size: 14px;
+                font-weight: normal;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 0px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: white;
+            }
+
+            .tgheard .tg-c7ws {
+                font-family:"Times New Roman";               
+                font-weight: bold;
+                font-size: 14px;
+                border-color: #f7fdfa;
+                text-align: center;
+            }
+
+            .tgheard .tg-oqgr {
+                border-color: #f7fdfa;
+                text-align: left;
+            }
+
+            .tgheard .tg-31sd {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: bold;
+                border-color: #f7fdfa;
+                text-align: left;
+            }
+
+            .tgheard .tg-2ph3 {
+                font-family:"Times New Roman"!important;
+                border-color: #f7fdfa;
+                text-align: center;
+            }
+
+            .tgheard .tg-5fpg {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: bold;
+                border-color: #f7fdfa;
+                text-align: center;
+            }
+
+            .tgheard .tg-mqab {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: bold;
+                border-color: #f7fdfa;
+                text-align: right;
+            }
+
+             .tg {
+            border-collapse: collapse;
+            border-spacing: 0;
+            border-color: #ccc;
+        }
+
+            .tg td {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 1px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: #ccc;
+                color: #333;
+                background-color: #fff;
+            }
+
+            .tg th {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: normal;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 1px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: #ccc;
+                color: #333;
+                background-color: #f0f0f0;
+            }
+
+            .tg .tg-88nc {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: bold;
+                border-color: inherit;
+                text-align: center;
+            }
+
+            .tg .tg-oqgr {
+                font-family:"Times New Roman"!important;
+                border-color: #f7fdfa;
+                text-align: left;
+            }
+
+            .tg .tg-k94d {
+                 font-family:'Times New Roman'!important;
+                font-size:14px;
+                font-weight: bold;
+                border-color: #f7fdfa;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .tg .tg-c3ow {
+                font-family:'Times New Roman'!important;
+                font-size:14px;
+                border-color: inherit;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .tg .tg-uys7 {
+                border-color: inherit;
+                text-align: center;
+            }
+
+            .tg .tg-7btt {
+                font-family:'Times New Roman'!important;
+                font-size:14px;
+                font-weight: bold;
+                border-color: inherit;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .tg .tg-0pky {
+                border-color: inherit;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            .tg .tg-0lax {
+                text-align: left;
+                vertical-align: top;
+            }
+
+            .tg .tg-dgz8 {
+                font-family:'Times New Roman'!important;
+                font-size:13px;
+                border-color: #f7fdfa;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            .tg .tg-0dc2 {
+                border-color: #f7fdfa;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .tg .tg-2ph3 {
+                font-family:'Times New Roman'!important;
+                font-size:13px;
+                border-color: #f7fdfa;
+                text-align: center;
+            }
+
+            .tg .tg-sq11 {
+                font-family:'Times New Roman'!important;
+                font-size:14px;
+                font-weight: bold;
+                border-color: #f7fdfa;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            .tg .tg-baqh {
+                font-family:'Times New Roman'!important;
+                font-size:14px;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .tg .tg-hgcj {
+                font-family:'Times New Roman'!important;
+                font-size:14px;
+                font-weight: bold;
+                text-align: center;
+            }
+
+            .tg .tg-amwm {
+                font-family:'Times New Roman'!important;
+                font-size:14px;
+                font-weight: bold;
+                text-align: center;
+                vertical-align: top;
+            }
+          .tgfooter  {border-collapse:collapse;border-spacing:0;}
+.tgfooter td{font-family:"Times New Roman"!important;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:white;}
+.tgfooter th{font-family:"Times New Roman"!important;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:white;}
+.tgfooter .tg-mmgy{font-family:"Times New Roman"!important;font-weight:bold;border-color:#e8edff;text-align:center}
+.tgfooter .tg-npou{font-family:"Times New Roman"!important;font-weight:bold;border-color:#f0f0f0;text-align:center}
+.tgfooter .tg-qjg1{font-family:"Times New Roman"!important;border-color:#f0f0f0;text-align:left}
+
+
+            .tgSLB {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+            .tgSLB td {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 1px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: black;
+            }
+
+            .tgSLB th {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: normal;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 1px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: black;
+            }
+
+            .tgSLB .tg-1wig {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: bold;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            .tgSLB .tg-baqh {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .tgSLB .tg-hgcj {
+                font-weight: bold;
+                text-align: center;
+            }
+
+            .tgSLB .tg-amwm {
+                font-weight: bold;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .tgSLB .tg-0lax {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            .tgSLB .tg-dgz8 {
+                font-family:"Times New Roman"!important;
+                font-size: 13px;
+                border-color: #f7fdfa;
+                text-align: left;
+                vertical-align: top;
+                
+            }
+
+            .tgblue {
+            border-collapse: collapse;
+            border-spacing: 0;
+            border-color: #aabcfe;
+        }
+
+            .tgblue td {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 1px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: #808080;
+                color: black;
+                background-color:white;
+            }
+
+            .tgblue th {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: normal;
+                padding: 10px 5px;
+                border-style: solid;
+                border-width: 1px;
+                overflow: hidden;
+                word-break: normal;
+                border-color: #808080;
+                color: black;
+                background-color: #e8edff;
+            }
+
+            .tgblue .tg-88nc {
+                font-family:"Times New Roman"!important;
+                font-size: 14px;
+                font-weight: bold;
+                border-color: #808080;
+                text-align: center;
+            }
+
+            .tgblue .tg-uys7 {
+                border-color: #808080;
+                text-align: center;
+            }
+
+            .tgblue .tg-xldj {
+                border-color: #808080;
+                text-align: left;
+            }
+
+            .tgrpbyvia {
+                        border-collapse: collapse;
+                        border-spacing: 0;
+                    }
+
+                        .tgrpbyvia td {
+                            font-family:"Times New Roman";
+                            font-size: 14px;
+                            padding: 10px 5px;
+                            border-style: solid;
+                            border-width: 1px;
+                            overflow: hidden;
+                            word-break: normal;
+                            border-color: black;
+                        }
+
+                        .tgrpbyvia th {
+                            font-family:"Times New Roman";
+                            font-size: 14px;
+                            font-weight: normal;
+                            padding: 10px 5px;
+                            border-style: solid;
+                            border-width: 1px;
+                            overflow: hidden;
+                            word-break: normal;
+                            border-color: black;
+                        }
+
+                        .tgrpbyvia .tg-s6z2 {
+                            text-align: center;
+                        }
+
+                        .tgrpbyvia .tg-baqh {
+                            font-family:"Times New Roman"!important;
+                            font-size: 14px;
+                            text-align: center;
+                            vertical-align: top;
+                        }
+
+                        .tgrpbyvia .tg-hgcj {
+                            font-weight: bold;
+                            text-align: center;
+                        }
+
+                        .tgrpbyvia .tg-5ua9 {
+                            font-weight: bold;
+                            text-align: left;
+                        }
+
+                        .tgrpbyvia .tg-amwm {
+                            font-weight: bold;
+                            text-align: center;
+                            vertical-align: top;
+                        }
+
+                        .tgrpbyvia .tg-s268 {
+                            text-align: left;
+                        }
+         .fontRp12 {
+                font-family:"Times New Roman" !important;
+                font-size: 12px;
+                text-align: center;
+            }
+        .fontRp13 {
+                font-family:"Times New Roman" !important;
+                font-size: 13px;
+                font-weight: bold;
+                border-color: #f7fdfa;
+                text-align: center;
+            }
+        .fontRp14 {
+                font-family:"Times New Roman" !important;
+                font-size: 14px;
+                text-align: center;
+            }
+
+.tgbn  {border-collapse:collapse;border-color:#ccc;border-spacing:0;}
+.tgbn td{background-color:#fff;border-color:#ccc;border-style:solid;border-width:1px;color:#333;
+  font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tgbn th{background-color:#f0f0f0;border-color:#ccc;border-style:solid;border-width:1px;color:#333;
+  font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tgbn .tg-9ydz{border-color:#333333;font-weight:bold;text-align:center;vertical-align:top}
+.tgbn .tg-de2y{border-color:#333333;text-align:left;vertical-align:top}
+.tgbn .tg-sn4r{border-color:#333333;font-weight:bold;text-align:left;vertical-align:top}
+
+
+.tgft  {border-collapse:collapse;border-spacing:0;}
+.tgft td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tgft th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tgft .tg-zv4m{border-color:#ffffff;text-align:left;vertical-align:top}
+.tgft .tg-8jgo{border-color:#ffffff;text-align:center;vertical-align:top}

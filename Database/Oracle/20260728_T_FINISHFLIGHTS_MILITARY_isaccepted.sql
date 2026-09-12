@@ -1,0 +1,78 @@
+-- Target: ATFM@PDBORCL (Oracle 12c)
+-- Mục đích:
+--   1. Thêm trạng thái Accepted cho chuyến bay quân sự.
+--   2. Dữ liệu hiện hữu và dữ liệu mới mặc định là chưa Accepted.
+--   3. Hỗ trợ truy vấn theo trạng thái và khoảng FLIGHTDATE.
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_TAB_COLUMNS
+     WHERE TABLE_NAME = 'T_FINISHFLIGHTS_MILITARY'
+       AND COLUMN_NAME = 'ISACCEPTED';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE
+            'ALTER TABLE T_FINISHFLIGHTS_MILITARY '
+            || 'ADD (ISACCEPTED NUMBER(1) DEFAULT 0 NOT NULL)';
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_CONSTRAINTS
+     WHERE TABLE_NAME = 'T_FINISHFLIGHTS_MILITARY'
+       AND CONSTRAINT_NAME = 'CK_TFFM_ISACCEPTED';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE
+            'ALTER TABLE T_FINISHFLIGHTS_MILITARY '
+            || 'ADD CONSTRAINT CK_TFFM_ISACCEPTED '
+            || 'CHECK (ISACCEPTED IN (0, 1))';
+    END IF;
+END;
+/
+
+DECLARE
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM USER_INDEXES
+     WHERE TABLE_NAME = 'T_FINISHFLIGHTS_MILITARY'
+       AND INDEX_NAME = 'IX_TFFM_ACCEPT_DATE';
+
+    IF v_count = 0 THEN
+        EXECUTE IMMEDIATE
+            'CREATE INDEX IX_TFFM_ACCEPT_DATE '
+            || 'ON T_FINISHFLIGHTS_MILITARY (ISACCEPTED, FLIGHTDATE)';
+    END IF;
+END;
+/
+
+BEGIN
+    DBMS_STATS.GATHER_TABLE_STATS(
+        ownname          => USER,
+        tabname          => 'T_FINISHFLIGHTS_MILITARY',
+        cascade          => TRUE,
+        estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE
+    );
+END;
+/
+
+SELECT COLUMN_NAME, DATA_TYPE, DATA_DEFAULT, NULLABLE
+  FROM USER_TAB_COLUMNS
+ WHERE TABLE_NAME = 'T_FINISHFLIGHTS_MILITARY'
+   AND COLUMN_NAME = 'ISACCEPTED';
+
+SELECT INDEX_NAME, COLUMN_NAME, COLUMN_POSITION
+  FROM USER_IND_COLUMNS
+ WHERE TABLE_NAME = 'T_FINISHFLIGHTS_MILITARY'
+   AND INDEX_NAME = 'IX_TFFM_ACCEPT_DATE'
+ ORDER BY COLUMN_POSITION;
