@@ -3,7 +3,10 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
     <link href="../Style/StyleReports.css" rel="stylesheet" />
     <link href="../Scripts/DateTimeJQ/jquery.datetimepicker.css" rel="stylesheet" />
-    <script src="../Scripts/DateTimeJQ/jquery-1.8.3.js"></script>
+    <script>
+        /* Reuse the jQuery instance from ATFM_New.Master so Bootstrap collapse keeps its handlers. */
+        if (!window.jQuery) document.write('<script src="../Scripts/DateTimeJQ/jquery-1.8.3.js"><\/script>');
+    </script>
     <script src="../Scripts/DateTimeJQ/jquery.datetimepicker.js"></script>
     <script language="Javascript" type="text/javascript">
         function f_CallReports(valuePath) {

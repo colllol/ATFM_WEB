@@ -2092,8 +2092,13 @@
       <DependentUpon>FlightPlanDailyComparison.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="ReportNew\KHBHDBNCompare.aspx.cs"><DependentUpon>KHBHDBNCompare.aspx</DependentUpon></Compile>
-    <Compile Include="ReportNew\KHBHDBNCompare.aspx.designer.cs"><DependentUpon>KHBHDBNCompare.aspx</DependentUpon></Compile>
+    <Compile Include="ReportNew\KHBHDBNCompare.aspx.cs">
+      <DependentUpon>KHBHDBNCompare.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ReportNew\KHBHDBNCompare.aspx.designer.cs">
+      <DependentUpon>KHBHDBNCompare.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Common\ChartReportAirport.aspx.cs">
       <DependentUpon>ChartReportAirport.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>

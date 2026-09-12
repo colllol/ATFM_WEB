@@ -1,8 +1,8 @@
 <%@ Page Title="Tổng hợp chỉ số hiệu suất bay từ ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="AdsBPerformanceReport.aspx.cs" Inherits="prjApplication.ReportNew.AdsBPerformanceReport" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.css?v=20260722-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260808-3") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260724-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260911-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260911-1") %>" />
     <section class="adsb-report-page"
             data-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetData"
             data-operators-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetOperators"
@@ -21,6 +21,9 @@
             <div><label for="adsbOper">Hãng khai thác (OPER)</label><select id="adsbOper"><option value="ALL">Tất cả hãng</option></select></div>
             <button type="button" id="adsbApply">⌕ Áp dụng</button>
             <button type="button" id="adsbEndDay" class="adsb-endday-button">Báo cáo cuối ngày</button>
+            <button type="button" id="adsbExportPdf" class="adsb-export-button adsb-export-pdf">Export PDF</button>
+            <button type="button" id="adsbExportExcel" class="adsb-export-button adsb-export-excel">Export Excel</button>
+            <button type="button" id="adsbExportCsv" class="adsb-export-button adsb-export-csv">Export CSV</button>
         </div>
 
         <div class="adsb-kpis">
@@ -34,6 +37,11 @@
         <section class="adsb-card adsb-chart-card">
             <div class="adsb-card-heading"><div><h2>Biến động chuyến bay theo ngày</h2><p>Di chuột vào từng mốc để xem số lượng LD, O/F và chuyến bay khác.</p></div><div class="adsb-chart-legend"><span><i class="ld"></i>LD</span><span><i class="of"></i>O/F</span><span><i class="other"></i>Chuyến bay khác</span></div></div>
             <div id="adsbChart" class="adsb-chart"><div class="adsb-empty">Đang tải biểu đồ...</div></div>
+        </section>
+
+        <section class="adsb-card adsb-chart-card">
+            <div class="adsb-card-heading"><div><h2>Tổng số chuyến theo ngày</h2><p>Cột chồng theo ngày: tổng chiều cao là tổng số chuyến, chia theo LD, O/F và chuyến bay khác.</p></div><div class="adsb-chart-legend"><span><i class="ld"></i>LD</span><span><i class="of"></i>O/F</span><span><i class="other"></i>Chuyến bay khác</span></div></div>
+            <div id="adsbTotalChart" class="adsb-chart"><div class="adsb-empty">Đang tải biểu đồ...</div></div>
         </section>
 
         <section class="adsb-card adsb-table-card">
@@ -67,6 +75,6 @@
             </div>
         </div>
     </div>
-    <script src="<%= ResolveUrl("~/ReportNew/ReportControls.js?v=20260724-1") %>"></script>
-    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260808-3") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/ReportControls.js?v=20260911-1") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260911-1") %>"></script>
 </asp:Content>

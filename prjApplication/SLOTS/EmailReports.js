@@ -63,6 +63,21 @@
         $('emailError').hidden = true;
         load(1);
     }
+    function fileTypeOf(item) {
+        var name = attachmentName(item) || text(item, ['attachmentName']);
+        if (!name) return 'none';
+        var ext = (name.lastIndexOf('.') >= 0 ? name.slice(name.lastIndexOf('.') + 1) : '').toLowerCase();
+        if (ext === 'doc' || ext === 'docx' || ext === 'rtf') return 'word';
+        if (ext === 'xls' || ext === 'xlsx' || ext === 'xlsm' || ext === 'csv') return 'excel';
+        if (ext === 'pdf') return 'pdf';
+        if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'bmp' || ext === 'tif' || ext === 'tiff' || ext === 'webp') return 'image';
+        return 'other';
+    }
+    function applyFileTypeFilter(items) {
+        var type = $('emailFileType').value;
+        if (!type) return items.slice();
+        return items.filter(function (item) { return fileTypeOf(item) === type; });
+    }
     function applyFilters() {
         if ($('emailFrom').value && $('emailTo').value && $('emailFrom').value > $('emailTo').value) {
             $('emailError').textContent = 'Từ ngày không được lớn hơn đến ngày.';
@@ -354,7 +369,7 @@
             });
         }).then(function (payload) {
             if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
-            allItems = payloadItems(payload); filteredItems = allItems.slice();
+            allItems = payloadItems(payload); filteredItems = applyFileTypeFilter(allItems);
             totalItems = Number(payload && payload.totalElements != null ? payload.totalElements : allItems.length);
             totalPages = Number(payload && payload.totalPages != null ? payload.totalPages : 1);
             var sent = 0, failed = 0; allItems.forEach(function (item) { var cls = statusClass(status(item)); if (cls === 'success') sent++; if (cls === 'failed') failed++; });
@@ -371,7 +386,7 @@
             apply.innerHTML = '<i class="fa fa-search"></i> Tìm kiếm';
         });
     }
-    $('emailApply').onclick = applyFilters; $('emailSearch').onkeydown = function (event) { if (event.key === 'Enter') applyFilters(); }; $('emailRefresh').onclick = function () { $('emailError').hidden = true; load(); }; $('emailPageSize').onchange = function () { pageSize = parseInt(this.value, 10); currentPage = 1; load(); };
+    $('emailApply').onclick = applyFilters; $('emailSearch').onkeydown = function (event) { if (event.key === 'Enter') applyFilters(); }; $('emailFileType').onchange = applyFilters; $('emailRefresh').onclick = function () { $('emailError').hidden = true; load(); }; $('emailPageSize').onchange = function () { pageSize = parseInt(this.value, 10); currentPage = 1; load(); };
     $('emailPrev').onclick = function () { if (currentPage > 1) { currentPage--; load(); } }; $('emailNext').onclick = function () { if (currentPage < totalPages) { currentPage++; load(); } };
     $('emailReportDownload').onclick = downloadReport; $('emailReportSend').onclick = sendReport;
     Array.prototype.forEach.call(document.querySelectorAll('[data-report-source]'), function (button) { button.onclick = function () { if (this.getAttribute('data-report-source') !== sourceMode) selectSource(this.getAttribute('data-report-source')); }; });

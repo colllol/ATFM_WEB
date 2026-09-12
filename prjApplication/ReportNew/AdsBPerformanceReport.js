@@ -209,6 +209,108 @@
         });
         host.appendChild(svg);
     }
+    // Biểu đồ cột chồng "Tổng số chuyến theo ngày": trục Y tổng chuyến, trục X ngày,
+    // mỗi cột chia LD / O/F / OTHER. Style inline toàn bộ để nhúng được vào bản in PDF.
+    var stackColors = { ld: '#16aa78', of: '#f59e0b', other: '#e05252' };
+    function renderTotalChart(points) {
+        var host = byId('adsbTotalChart');
+        host.innerHTML = '';
+        if (!points || !points.length) { host.innerHTML = '<div class="adsb-empty">Không có dữ liệu trong khoảng lọc.</div>'; return; }
+        var width = Math.max(760, host.clientWidth || 900), height = 360, left = 54, right = 24, top = 30, bottom = 48;
+        var plotW = width - left - right, plotH = height - top - bottom;
+        var totals = points.map(function (p) { return Number(p.ld || 0) + Number(p.of || 0) + Number(p.other || 0); });
+        var max = Math.max(1, Math.max.apply(null, totals));
+        max = Math.max(5, Math.ceil(max * 1.12 / 5) * 5);
+        var svg = svgNode('svg', { viewBox: '0 0 ' + width + ' ' + height, width: width, height: height, role: 'img', 'aria-label': 'Biểu đồ tổng số chuyến theo ngày', style: 'max-width:100%;height:auto' });
+        for (var i = 0; i <= 5; i++) {
+            var y = top + plotH * i / 5;
+            svg.appendChild(svgNode('line', { x1: left, y1: y, x2: width - right, y2: y, stroke: '#e2ecf4', 'stroke-width': 1 }));
+            var tick = svgNode('text', { x: left - 10, y: y + 4, fill: '#7b8fa1', 'font-size': 11, 'text-anchor': 'end' });
+            tick.textContent = number(Math.round(max * (5 - i) / 5)); svg.appendChild(tick);
+        }
+        var slot = plotW / points.length;
+        var barW = Math.min(46, Math.max(10, slot * 0.6));
+        var labelStep = Math.max(1, Math.ceil(points.length / 12));
+        points.forEach(function (point, index) {
+            var x = left + slot * index + (slot - barW) / 2;
+            var baseline = top + plotH;
+            var total = totals[index];
+            var tip = point.label + ' · Tổng: ' + number(total) + ' (LD: ' + number(point.ld) + ', O/F: ' + number(point.of) + ', Khác: ' + number(point.other) + ')';
+            ['ld', 'of', 'other'].forEach(function (field) {
+                var valueNumber = Number(point[field] || 0);
+                if (!valueNumber) return;
+                var h = valueNumber * plotH / max;
+                baseline -= h;
+                var rect = svgNode('rect', { x: x.toFixed(1), y: baseline.toFixed(1), width: barW.toFixed(1), height: h.toFixed(1), fill: stackColors[field] });
+                var title = svgNode('title'); title.textContent = tip; rect.appendChild(title); svg.appendChild(rect);
+                if (h >= 15 && barW >= 22) {
+                    var segText = svgNode('text', { x: (x + barW / 2).toFixed(1), y: (baseline + h / 2 + 4).toFixed(1), fill: '#ffffff', 'font-size': 10, 'font-weight': 700, 'text-anchor': 'middle' });
+                    segText.textContent = number(valueNumber); svg.appendChild(segText);
+                }
+            });
+            if (total && barW >= 16) {
+                var totalText = svgNode('text', { x: (x + barW / 2).toFixed(1), y: (baseline - 6).toFixed(1), fill: '#31546f', 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle' });
+                totalText.textContent = number(total); svg.appendChild(totalText);
+            }
+            if (index % labelStep === 0 || index === points.length - 1) {
+                var label = svgNode('text', { x: (x + barW / 2).toFixed(1), y: height - 16, fill: '#60778b', 'font-size': 11, 'text-anchor': 'middle' });
+                label.textContent = point.label; svg.appendChild(label);
+            }
+        });
+        host.appendChild(svg);
+    }
+    function exportColumns() {
+        return [
+            { label: 'STT', key: '__no' },
+            { label: 'CALLSIGN', key: 'callsign' },
+            { label: 'OPER', key: 'oper' },
+            { label: 'PERMTYPE', key: 'permType', format: function (value, row) { return isOther(row) ? 'OTHER' : (value || '-'); } },
+            { label: 'FROM_AIRP', key: 'fromAirp' },
+            { label: 'TO_AIRP', key: 'toAirp' },
+            { label: 'ETD', key: 'etd' },
+            { label: 'ETA', key: 'eta' },
+            { label: 'STATUS', key: 'status', format: function (value) { return statusText(value); } },
+            { label: 'DATE', key: 'date' },
+            { label: 'UPDATED_AT_UTC', key: 'updatedAtUtc' }
+        ];
+    }
+    function exportFileName() { return 'AdsBPerformance_' + value('adsbFromDate') + '_' + value('adsbToDate'); }
+    function exportPdf() {
+        if (!rows.length) { alert('Không có dữ liệu để xuất PDF.'); return; }
+        var columns = exportColumns();
+        var chartSvg = document.querySelector('#adsbTotalChart svg');
+        var chartHtml = chartSvg && window.ReportControls
+            ? new XMLSerializer().serializeToString(window.ReportControls.inlineSvgStyles(chartSvg))
+            : '<p>Không có biểu đồ.</p>';
+        var legend = '<p style="margin:6px 0 0;font-size:11px;color:#5d768c">' +
+            '<span style="color:#16aa78;font-weight:700">■ LD</span> &nbsp; ' +
+            '<span style="color:#f59e0b;font-weight:700">■ O/F</span> &nbsp; ' +
+            '<span style="color:#e05252;font-weight:700">■ Chuyến bay khác</span></p>';
+        var tableHtml = '<table><thead><tr>' + columns.map(function (column) { return '<th>' + escapeHtml(column.label) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+            rows.map(function (row, rowIndex) {
+                return '<tr>' + columns.map(function (column) {
+                    var cell = column.key === '__no' ? rowIndex + 1 : row[column.key];
+                    if (column.format) cell = column.format(cell, row);
+                    return '<td>' + escapeHtml(cell == null ? '-' : cell) + '</td>';
+                }).join('') + '</tr>';
+            }).join('') + '</tbody></table>';
+        window.ReportControls.printReport({
+            title: 'Tổng hợp chỉ số hiệu suất bay từ ADS-B',
+            subtitle: 'Nguồn dữ liệu T_TRACKS_LOG • Xuất lúc ' + new Date().toLocaleString('vi-VN'),
+            meta: [
+                { label: 'Từ ngày', value: value('adsbFromDate') },
+                { label: 'Đến ngày', value: value('adsbToDate') },
+                { label: 'PERMTYPE', value: value('adsbPermType') },
+                { label: 'Hãng', value: value('adsbOper') },
+                { label: 'Tổng bản ghi', value: number(rows.length) }
+            ],
+            sections: [
+                { heading: 'Tổng số chuyến theo ngày (LD / O/F / Khác)', html: chartHtml + legend },
+                { heading: 'Chi tiết dữ liệu', html: tableHtml }
+            ]
+        });
+    }
+
     function renderTable() {
         var size = Number(value('adsbPageSize')), pages = Math.max(1, Math.ceil(rows.length / size));
         pageIndex = Math.min(Math.max(1, pageIndex), pages);
@@ -233,7 +335,7 @@
         var button = byId('adsbApply'); button.disabled = true; hideError();
         return post(page.dataset.endpoint, payload(true)).then(function (data) {
             data = normalizeData(data);
-            rows = data.rows || []; currentTrend = data.trend || []; pageIndex = 1; renderKpis(data); renderChart(currentTrend); renderTable();
+            rows = data.rows || []; currentTrend = data.trend || []; pageIndex = 1; renderKpis(data); renderChart(currentTrend); renderTotalChart(currentTrend); renderTable();
         }).catch(showError).then(function () { button.disabled = false; });
     }
     function apply() { loadOperators(true).then(loadData).catch(showError); }
@@ -247,7 +349,16 @@
     byId('adsbPageSize').addEventListener('change', function () { pageIndex = 1; renderTable(); });
     byId('adsbPrev').addEventListener('click', function () { if (pageIndex > 1) { pageIndex--; renderTable(); } });
     byId('adsbNext').addEventListener('click', function () { pageIndex++; renderTable(); });
-    window.addEventListener('resize', function () { clearTimeout(window.__adsbResize); window.__adsbResize = setTimeout(function () { renderChart(currentTrend); }, 180); });
+    byId('adsbExportPdf').addEventListener('click', exportPdf);
+    byId('adsbExportExcel').addEventListener('click', function () {
+        if (!rows.length) { alert('Không có dữ liệu để xuất Excel.'); return; }
+        window.ReportControls.exportExcel({ fileName: exportFileName(), rows: rows, columns: exportColumns() });
+    });
+    byId('adsbExportCsv').addEventListener('click', function () {
+        if (!rows.length) { alert('Không có dữ liệu để xuất CSV.'); return; }
+        window.ReportControls.exportCsv({ fileName: exportFileName(), rows: rows, columns: exportColumns() });
+    });
+    window.addEventListener('resize', function () { clearTimeout(window.__adsbResize); window.__adsbResize = setTimeout(function () { renderChart(currentTrend); renderTotalChart(currentTrend); }, 180); });
 
     setDefaultDates();
     loadOperators(false).then(loadData).catch(showError);

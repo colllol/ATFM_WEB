@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Web.Services;
-using Oracle.ManagedDataAccess.Client;
+using prjBusinessLogic;
 
 namespace prjApplication.ReportNew
 {
@@ -31,12 +31,10 @@ namespace prjApplication.ReportNew
             string selectedAirport = NormalizeFilter(airport);
             string selectedOper = NormalizeFilter(oper);
             bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
-            DateTime toExclusive = to.AddDays(1);
             DateTime compareFrom = from.AddYears(-1);
             DateTime compareTo = to.AddYears(-1);
-            DateTime compareToExclusive = compareTo.AddDays(1);
-            PeriodCounts current = LoadCounts(from, toExclusive, selectedAirport, selectedOper, mode);
-            PeriodCounts previous = LoadCounts(compareFrom, compareToExclusive, selectedAirport, selectedOper, mode);
+            PeriodCounts current = LoadCounts(from, to, selectedAirport, selectedOper, mode);
+            PeriodCounts previous = LoadCounts(compareFrom, compareTo, selectedAirport, selectedOper, mode);
             var labels = new List<string>();
             var currentValues = new List<int>();
             var previousValues = new List<int>();
@@ -83,82 +81,34 @@ namespace prjApplication.ReportNew
             DateTime from;
             DateTime to;
             ParseDateRange(fromDate, toDate, out from, out to);
+            DataTable data = new clsResuftAPI().GetTableApiExtension(
+                "FLIGHT_STATUS_PKG", "GET_OPERATORS",
+                new { P_FROM_DATE = fromDate, P_TO_DATE = toDate });
+            if (data == null)
+                throw new InvalidOperationException("Không lấy được danh sách hãng khai thác từ API.");
             var values = new List<string>();
-            const string sql = @"SELECT OPER_ID FROM (
-                                   SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                     FROM T_FINISHED_FLIGHTS f
-                                    WHERE (
-                                           UPPER(TRIM(f.PERMTYPE))='LD'
-                                           OR (
-                                                UPPER(TRIM(f.PERMTYPE))='O/F'
-                                                AND (UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%')
-                                           )
-                                      )
-                                      AND f.OPER_ID IS NOT NULL
-                                      AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
-                                   UNION
-                                   SELECT UPPER(TRIM(OPER_ID)) OPER_ID
-                                     FROM T_DAY_FLIGHTS_GOINGON f
-                                    WHERE (
-                                           UPPER(TRIM(f.PERMTYPE))='LD'
-                                           OR (
-                                                UPPER(TRIM(f.PERMTYPE))='O/F'
-                                                AND (UPPER(TRIM(f.FROM_AIRP)) LIKE 'VV%' OR UPPER(TRIM(f.TO_AIRP)) LIKE 'VV%')
-                                           )
-                                      )
-                                      AND f.OPER_ID IS NOT NULL
-                                      AND FLIGHTDATE>=:fromDate AND FLIGHTDATE<:toDate
-                                   UNION
-                                   SELECT CASE WHEN UPPER(TRIM(""OPER""))='VNA' THEN 'HVN'
-                                               ELSE UPPER(TRIM(""OPER"")) END OPER_ID
-                                     FROM T_KHH
-                                    WHERE ""OPER"" IS NOT NULL
-                                 ) ORDER BY OPER_ID";
-            using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = new OracleCommand(sql, connection))
-            {
-                command.BindByName = true;
-                command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = to.AddDays(1);
-                connection.Open();
-                using (var reader = command.ExecuteReader())
-                    while (reader.Read()) values.Add(Convert.ToString(reader["OPER_ID"]));
-            }
+            foreach (DataRow row in data.Rows)
+                values.Add(Convert.ToString(row["OPER_ID"]));
             return values;
         }
 
+        // from/to la khoang ngay bao gom ca ngay ket thuc (theo P_TO_DATE cua package).
         private static PeriodCounts LoadCounts(DateTime from, DateTime to, string airport, string oper, string mode)
         {
             var result = new PeriodCounts();
-            bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today.AddDays(1);
-            using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = new OracleCommand(
-                currentDay
-                    ? FlightStatusRate.BuildCurrentStatusSql()
-                    : FlightStatusRate.BuildHistoricalStatusSql(),
-                connection))
+            bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
+            DataTable data = FlightStatusRate.LoadStatus(
+                from.ToString("yyyy-MM-dd"), to.ToString("yyyy-MM-dd"), oper, airport, currentDay);
+            foreach (DataRow row in data.Rows)
             {
-                command.BindByName = true;
-                command.CommandTimeout = 120;
-                command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-                command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
-                command.Parameters.Add("oper", OracleDbType.Varchar2).Value = oper == null ? (object)DBNull.Value : oper;
-                command.Parameters.Add("airport", OracleDbType.Varchar2).Value = airport == null ? (object)DBNull.Value : airport;
-                connection.Open();
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        string state = Convert.ToString(reader["FLIGHT_STATE"]);
-                        if (state != "FINISHED" && !state.StartsWith("DELAY", StringComparison.Ordinal)) continue;
-                        if (state == "FINISHED") result.Finished++;
-                        else result.Delay++;
-                        string key = BucketKey(Convert.ToDateTime(reader["FLIGHTDATE"], CultureInfo.InvariantCulture), mode);
-                        int value;
-                        result.Buckets.TryGetValue(key, out value);
-                        result.Buckets[key] = value + 1;
-                    }
-                }
+                string state = Convert.ToString(row["FLIGHT_STATE"]);
+                if (state != "FINISHED" && !state.StartsWith("DELAY", StringComparison.Ordinal)) continue;
+                if (state == "FINISHED") result.Finished++;
+                else result.Delay++;
+                string key = BucketKey(Convert.ToDateTime(row["FLIGHTDATE"], CultureInfo.InvariantCulture), mode);
+                int value;
+                result.Buckets.TryGetValue(key, out value);
+                result.Buckets[key] = value + 1;
             }
             return result;
         }

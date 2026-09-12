@@ -1,5 +1,9 @@
 .adsb-filter-card{grid-template-columns:repeat(2,minmax(145px,1fr)) minmax(130px,.8fr) minmax(190px,1.2fr) auto auto}
 .adsb-filter-card .adsb-endday-button{background:#153f66;box-shadow:0 6px 14px rgba(21,63,102,.2)}
+.adsb-filter-card .adsb-export-button{padding:0 14px;white-space:nowrap}
+.adsb-filter-card .adsb-export-pdf{background:linear-gradient(135deg,#e0685b,#b8433a);box-shadow:0 6px 14px rgba(214,86,74,.22)}
+.adsb-filter-card .adsb-export-excel{background:linear-gradient(135deg,#23a66f,#168054);box-shadow:0 6px 14px rgba(29,151,96,.22)}
+.adsb-filter-card .adsb-export-csv{background:linear-gradient(135deg,#f0a63a,#c97f14);box-shadow:0 6px 14px rgba(222,148,38,.22)}
 .adsb-kpis{grid-template-columns:repeat(5,1fr)}
 .adsb-kpis .adsb-kpi-other:before{background:#e05252}
 .adsb-perm.other{background:#ffe1e1;color:#b73838}

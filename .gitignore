@@ -47,3 +47,8 @@ prjApplication/Sound/DayFlight/
 **/artifacts/
 tools/build/FlightTrackingApi/
 tools/dist/ATFM-FlightTrackingApi-package/
+
+# zip files
+*.zip
+*.7z
+*.rar

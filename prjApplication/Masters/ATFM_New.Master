@@ -1723,7 +1723,12 @@
                     menu.setAttribute('data-atfm-ready', '1');
 
                     var workspace = document.querySelector('#main-container > .atfm-workspace');
+                    var sidebar = document.getElementById('sidebar');
                     var toggleButton = document.querySelector('#sidebar .atfm-sidebar-toggle');
+
+                    function isDesktop() {
+                        return window.innerWidth >= 992;
+                    }
 
                     function fitSidebarToMenuText() {
                         if (!workspace || window.innerWidth < 992) return;
@@ -1770,12 +1775,19 @@
                         }
                     }
 
+                    var wasDesktop = isDesktop();
+
                     if (toggleButton) {
-                        /* Mỗi lần tải trang luôn bắt đầu ở trạng thái thu gọn. */
-                        setSidebarCollapsed(true, false);
-                        try { window.localStorage.setItem('atfm-sidebar-collapsed', '1'); } catch (e) { }
+                        /* Chỉ áp dụng sidebar tùy biến trên desktop; mobile dùng Bootstrap collapse. */
+                        if (wasDesktop) {
+                            setSidebarCollapsed(true, false);
+                            try { window.localStorage.setItem('atfm-sidebar-collapsed', '1'); } catch (e) { }
+                        } else if (workspace) {
+                            workspace.classList.remove('atfm-sidebar-collapsed', 'atfm-sidebar-transitioning');
+                        }
 
                         toggleButton.addEventListener('click', function (event) {
+                            if (!isDesktop()) return;
                             event.preventDefault();
                             event.stopPropagation();
                             if (event.stopImmediatePropagation) event.stopImmediatePropagation();
@@ -1784,6 +1796,7 @@
                     }
 
                     menu.addEventListener('click', function (event) {
+                        if (!isDesktop()) return;
                         var link = event.target;
                         while (link && link.tagName !== 'A') link = link.parentNode;
                         if (!link) return;
@@ -1842,6 +1855,23 @@
                     document.addEventListener('click', function (event) {
                         if (!document.querySelector('#sidebar .submenu.atfm-submenu-visible')) return;
                         if (!document.getElementById('sidebar').contains(event.target)) closeMenuPanels(menu);
+                    });
+
+                    window.addEventListener('resize', function () {
+                        var desktop = isDesktop();
+                        if (desktop === wasDesktop) return;
+                        if (!desktop) {
+                            closeMenuPanels(menu);
+                            if (workspace) {
+                                workspace.classList.remove('atfm-sidebar-collapsed', 'atfm-sidebar-transitioning');
+                                workspace.style.removeProperty('--atfm-sidebar-width');
+                            }
+                            if (sidebar) sidebar.classList.remove('in');
+                        } else {
+                            if (sidebar) sidebar.classList.remove('in');
+                            setSidebarCollapsed(true, false);
+                        }
+                        wasDesktop = desktop;
                     });
                 }
 

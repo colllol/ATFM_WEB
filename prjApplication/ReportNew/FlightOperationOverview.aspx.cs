@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Web.Services;
-using Oracle.ManagedDataAccess.Client;
 
 namespace prjApplication.ReportNew
 {
@@ -44,41 +43,34 @@ namespace prjApplication.ReportNew
             int finished = 0;
             int delay = 0;
 
-            using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
-            using (var command = CreateCommand(connection, from, to.AddDays(1), selectedAirport, currentDay))
+            DataTable statusData = FlightStatusRate.LoadStatus(fromDate, toDate, null, selectedAirport, currentDay);
+            foreach (DataRow row in statusData.Rows)
             {
-                connection.Open();
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        string state = Convert.ToString(reader["FLIGHT_STATE"]);
-                        if (!IsCompletedOrDelayed(state)) continue;
+                string state = Convert.ToString(row["FLIGHT_STATE"]);
+                if (!IsCompletedOrDelayed(state)) continue;
 
-                        if (state == "FINISHED") finished++;
-                        else delay++;
+                if (state == "FINISHED") finished++;
+                else delay++;
 
-                        string fromAirport = NormalizeAirport(Convert.ToString(reader["FROM_AIRP"]), false);
-                        string toAirport = NormalizeAirport(Convert.ToString(reader["TO_AIRP"]), false);
-                        flights.Add(new FlightRow {
-                            Callsign = Convert.ToString(reader["FLIGHTNBR"]),
-                            Oper = Convert.ToString(reader["OPER_ID"]),
-                            Registration = Convert.ToString(reader["REGISTRATION"]),
-                            PermType = Convert.ToString(reader["PERMTYPE"]),
-                            FromAirp = fromAirport,
-                            ToAirp = toAirport,
-                            AtdDay = Convert.ToString(reader["ATDDAY"]),
-                            AtaDay = Convert.ToString(reader["ATADAY"]),
-                            EobtDay = Convert.ToString(reader["EOBTDAY"]),
-                            Status = state
-                        });
+                string fromAirport = NormalizeAirport(Convert.ToString(row["FROM_AIRP"]), false);
+                string toAirport = NormalizeAirport(Convert.ToString(row["TO_AIRP"]), false);
+                flights.Add(new FlightRow {
+                    Callsign = Convert.ToString(row["FLIGHTNBR"]),
+                    Oper = Convert.ToString(row["OPER_ID"]),
+                    Registration = Convert.ToString(row["REGISTRATION"]),
+                    PermType = Convert.ToString(row["PERMTYPE"]),
+                    FromAirp = fromAirport,
+                    ToAirp = toAirport,
+                    AtdDay = Convert.ToString(row["ATDDAY"]),
+                    AtaDay = Convert.ToString(row["ATADAY"]),
+                    EobtDay = Convert.ToString(row["EOBTDAY"]),
+                    Status = state
+                });
 
-                        if (IsVietnamAirport(fromAirport) && (selectedAirport == null || fromAirport == selectedAirport))
-                            GetMetric(metrics, fromAirport).Departures++;
-                        if (IsVietnamAirport(toAirport) && (selectedAirport == null || toAirport == selectedAirport))
-                            GetMetric(metrics, toAirport).Arrivals++;
-                    }
-                }
+                if (IsVietnamAirport(fromAirport) && (selectedAirport == null || fromAirport == selectedAirport))
+                    GetMetric(metrics, fromAirport).Departures++;
+                if (IsVietnamAirport(toAirport) && (selectedAirport == null || toAirport == selectedAirport))
+                    GetMetric(metrics, toAirport).Arrivals++;
             }
 
             var airportRows = metrics.Values
@@ -114,27 +106,6 @@ namespace prjApplication.ReportNew
                     status = item.Status
                 }).ToList()
             };
-        }
-
-        private static OracleCommand CreateCommand(
-            OracleConnection connection,
-            DateTime from,
-            DateTime to,
-            string airport,
-            bool currentDay)
-        {
-            var command = new OracleCommand(
-                currentDay
-                    ? FlightStatusRate.BuildCurrentStatusSql()
-                    : FlightStatusRate.BuildHistoricalStatusSql(),
-                connection);
-            command.BindByName = true;
-            command.CommandTimeout = 120;
-            command.Parameters.Add("fromDate", OracleDbType.Date).Value = from;
-            command.Parameters.Add("toDate", OracleDbType.Date).Value = to;
-            command.Parameters.Add("oper", OracleDbType.Varchar2).Value = DBNull.Value;
-            command.Parameters.Add("airport", OracleDbType.Varchar2).Value = airport == null ? (object)DBNull.Value : airport;
-            return command;
         }
 
         private static void ParseDateRange(string fromDate, string toDate, out DateTime from, out DateTime to)

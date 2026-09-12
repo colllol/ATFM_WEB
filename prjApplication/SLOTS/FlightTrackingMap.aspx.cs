@@ -9,7 +9,6 @@ using System.Text.RegularExpressions;
 using System.Web.Hosting;
 using System.Web.Script.Serialization;
 using System.Web.Services;
-using Oracle.ManagedDataAccess.Client;
 
 namespace prjApplication.SLOTS
 {
@@ -219,59 +218,38 @@ namespace prjApplication.SLOTS
             if (callsigns.Length == 0) return result;
             var candidates = new Dictionary<string, List<FlightCandidate>>(StringComparer.OrdinalIgnoreCase);
 
-            using (var connection = new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString))
+            for (int offset = 0; offset < callsigns.Length; offset += 800)
             {
-                connection.Open();
-                for (int offset = 0; offset < callsigns.Length; offset += 800)
-                {
-                    string[] block = callsigns.Skip(offset).Take(800).ToArray();
-                    var parameterNames = new List<string>();
-                    using (var command = connection.CreateCommand())
+                string callsignList = String.Join(",", callsigns.Skip(offset).Take(800));
+                System.Data.DataTable data = new global::clsResuftAPI().GetTableApiExtension(
+                    "TRACKING_MAP_PKG", "GET_FLIGHT_META",
+                    new
                     {
-                        command.BindByName = true;
-                        command.CommandTimeout = 60;
-                        command.Parameters.Add("flightDate", OracleDbType.Date).Value = today;
-                        for (int index = 0; index < block.Length; index++)
-                        {
-                            string name = "call" + index;
-                            parameterNames.Add(":" + name);
-                            command.Parameters.Add(name, OracleDbType.Varchar2).Value = block[index];
-                        }
-                        command.CommandText = @"
-                            SELECT UPPER(TRIM(FLIGHTNBR)) FLIGHTNBR,
-                                   UPPER(TRIM(OPER_ID)) OPER_ID,
-                                   UPPER(TRIM(PERMTYPE)) PERMTYPE,
-                                   TRIM(FROM_AIRP) FROM_AIRP,
-                                   TRIM(TO_AIRP) TO_AIRP,
-                                   TRIM(ETD) ETD,
-                                   TRIM(ETA) ETA
-                            FROM T_DAY_FLIGHTS_GOINGON
-                            WHERE TRUNC(FLIGHTDATE) = :flightDate
-                              AND UPPER(TRIM(FLIGHTNBR)) IN (" + String.Join(",", parameterNames) + ")";
-                        using (var reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                string callsign = Convert.ToString(reader["FLIGHTNBR"]);
-                                List<FlightCandidate> matches;
-                                if (!candidates.TryGetValue(callsign, out matches))
-                                {
-                                    matches = new List<FlightCandidate>();
-                                    candidates[callsign] = matches;
-                                }
-                                matches.Add(new FlightCandidate
-                                {
-                                    Callsign = callsign,
-                                    OperId = Convert.ToString(reader["OPER_ID"]).Trim(),
-                                    PermType = Convert.ToString(reader["PERMTYPE"]).Trim(),
-                                    FromAirp = Convert.ToString(reader["FROM_AIRP"]).Trim(),
-                                    ToAirp = Convert.ToString(reader["TO_AIRP"]).Trim(),
-                                    Etd = Convert.ToString(reader["ETD"]).Trim(),
-                                    Eta = Convert.ToString(reader["ETA"]).Trim()
-                                });
-                            }
-                        }
+                        P_FLIGHT_DATE = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        P_CALLSIGNS = callsignList
+                    });
+                if (data == null)
+                    throw new InvalidOperationException("Không lấy được metadata chuyến bay từ API.");
+
+                foreach (System.Data.DataRow row in data.Rows)
+                {
+                    string callsign = Convert.ToString(row["FLIGHTNBR"]);
+                    List<FlightCandidate> matches;
+                    if (!candidates.TryGetValue(callsign, out matches))
+                    {
+                        matches = new List<FlightCandidate>();
+                        candidates[callsign] = matches;
                     }
+                    matches.Add(new FlightCandidate
+                    {
+                        Callsign = callsign,
+                        OperId = Convert.ToString(row["OPER_ID"]).Trim(),
+                        PermType = Convert.ToString(row["PERMTYPE"]).Trim(),
+                        FromAirp = Convert.ToString(row["FROM_AIRP"]).Trim(),
+                        ToAirp = Convert.ToString(row["TO_AIRP"]).Trim(),
+                        Etd = Convert.ToString(row["ETD"]).Trim(),
+                        Eta = Convert.ToString(row["ETA"]).Trim()
+                    });
                 }
             }
             foreach (TrackRow track in tracks)
