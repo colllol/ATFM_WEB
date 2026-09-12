@@ -1175,8 +1175,8 @@ var listPurpose = '';
 var listAero = '';
 var listPermType = ['LD', 'O/F'];
 var listFlightType = ['SC', 'NO'];
-var urlApi = 'http://172.29.79.49:5176/';
-var urlApp = 'http://localhost/atfm_web/'
+var urlApi = 'http://172.29.187.90:8888/ATFM_API/';
+var urlApp = 'http://localhost/atfm_web'
 //var urlApi = 'http://192.168.63.21/';
 //var urlApp = 'http://192.168.62.20:2121/'
 $("<link/>", {

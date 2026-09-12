@@ -66,6 +66,9 @@
         var selectedAirport = '';
         var selectedStatus = '';
         var dashboardData = null;
+        // Kiểu hiển thị người dùng chọn cho từng biểu đồ (chỉ liệt kê kiểu phù hợp dữ liệu).
+        var chartTypes = { status: 'donut', airports: 'bar', trend: 'line' };
+        var airportPalette = ['#2387c8', '#20b486', '#8a6ee8', '#f5a623', '#ef5b5b', '#17a2b8', '#c65fa8', '#7a9e37', '#5a6ee0', '#d98136', '#3aa6a0', '#9b6bd6'];
 
         function showState(title, message, iconClass) {
             var kpis = app.querySelector('.rn-kpis');
@@ -146,6 +149,32 @@
             return flights.filter(function (flight) { return flight.fromAirp === selectedAirport || flight.toAirp === selectedAirport; });
         }
 
+        // Biểu đồ cột trạng thái (kiểu thay thế cho donut), style inline để không phụ thuộc CSS.
+        function statusBarSvg(items, total) {
+            var width = 400, height = 250, padL = 48, padR = 14, padT = 30, padB = 36;
+            var plotW = width - padL - padR, plotH = height - padT - padB;
+            var max = Math.max(1, Math.max.apply(null, items.map(function (item) { return item.value; })));
+            max = Math.max(5, Math.ceil(max * 1.12 / 5) * 5);
+            var parts = [];
+            for (var g = 0; g <= 4; g++) {
+                var y = padT + plotH * g / 4;
+                parts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (width - padR) + '" y2="' + y + '" stroke="#e4edf4" stroke-width="1"></line>');
+                parts.push('<text x="' + (padL - 8) + '" y="' + (y + 4) + '" fill="#7b8fa1" font-size="10" text-anchor="end">' + number(Math.round(max * (4 - g) / 4)) + '</text>');
+            }
+            var slot = plotW / items.length;
+            items.forEach(function (item, index) {
+                var barW = slot * 0.52;
+                var x = padL + slot * index + (slot - barW) / 2;
+                var h = item.value / max * plotH;
+                var y = padT + plotH - h;
+                var dim = selectedStatus && selectedStatus !== item.key;
+                parts.push('<rect class="rn-status-colbar" data-status="' + item.key + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + Math.max(0, h).toFixed(1) + '" rx="6" fill="' + item.color + '" opacity="' + (dim ? '0.25' : '1') + '" style="cursor:pointer"><title>' + esc(item.label) + ': ' + number(item.value) + '</title></rect>');
+                parts.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" fill="#31546f" font-size="11" font-weight="700" text-anchor="middle">' + number(item.value) + '</text>');
+                parts.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (padT + plotH + 16) + '" fill="#60778b" font-size="10" text-anchor="middle">' + esc(item.label) + '</text>');
+            });
+            return '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" role="img" style="max-width:430px">' + parts.join('') + '</svg>';
+        }
+
         function renderDonut() {
             var items = statusItems(donutFlights());
             var total = items.reduce(function (sum, item) { return sum + item.value; }, 0);
@@ -164,8 +193,12 @@
             var centerValue = activeItem ? activeItem.value : total;
             var centerLabel = activeItem ? activeItem.label : selectedAirport || 'Tổng chuyến';
             var holder = app.querySelector('#rnDashboardDonut');
-            holder.innerHTML = '<div class="rn-donut-layout"><div class="rn-donut' + (selectedStatus ? ' has-active' : '') + '"><svg viewBox="0 0 240 240"><circle class="rn-donut-track" cx="120" cy="120" r="82"></circle>' + segments + '</svg><div class="rn-donut-center"><strong>' + number(centerValue) + '</strong><span>' + esc(centerLabel) + '</span></div></div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
-            Array.prototype.forEach.call(holder.querySelectorAll('.rn-status,.rn-donut-segment'), function (node) {
+            if (chartTypes.status === 'bar') {
+                holder.innerHTML = '<div class="rn-donut-layout"><div class="rn-status-column-chart">' + statusBarSvg(items, total) + '</div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
+            } else {
+                holder.innerHTML = '<div class="rn-donut-layout"><div class="rn-donut' + (selectedStatus ? ' has-active' : '') + '"><svg viewBox="0 0 240 240"><circle class="rn-donut-track" cx="120" cy="120" r="82"></circle>' + segments + '</svg><div class="rn-donut-center"><strong>' + number(centerValue) + '</strong><span>' + esc(centerLabel) + '</span></div></div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
+            }
+            Array.prototype.forEach.call(holder.querySelectorAll('.rn-status,.rn-donut-segment,.rn-status-colbar'), function (node) {
                 node.onclick = function () {
                     var key = this.getAttribute('data-status');
                     selectedStatus = selectedStatus === key ? '' : key;
@@ -198,10 +231,88 @@
                     selectedStatus = '';
                     renderBars();
                     renderDonut();
-                    var detail = app.querySelector('#rnDashboardBarDetail');
-                    detail.textContent = selectedAirport
-                        ? selectedAirport + ' - ' + (airportNames[selectedAirport] || selectedAirport) + ': nhấn lại để trở về phạm vi bộ lọc'
-                        : 'Nhấn vào một cụm cột để xem trạng thái của sân bay';
+                    updateBarDetail();
+                };
+            });
+        }
+
+        function updateBarDetail() {
+            var detail = app.querySelector('#rnDashboardBarDetail');
+            if (!detail) return;
+            detail.textContent = selectedAirport
+                ? selectedAirport + ' - ' + (airportNames[selectedAirport] || selectedAirport) + ': nhấn lại để trở về phạm vi bộ lọc'
+                : 'Nhấn vào một cột hoặc lát cắt để xem trạng thái của sân bay';
+        }
+
+        // Kiểu đường: hai đường cất cánh / hạ cánh theo mã sân bay.
+        function airportLineSvg() {
+            var items = dashboardData.overview.airports || [];
+            if (!items.length) return '<div class="rn-airport-empty">Không có chuyến Finished hoặc Delay trong khoảng ngày đã chọn.</div>';
+            var width = Math.max(560, items.length * 64 + 100), height = 300;
+            var padL = 48, padR = 18, padT = 24, padB = 42;
+            var plotW = width - padL - padR, plotH = height - padT - padB;
+            var max = Math.max(1, Math.max.apply(null, items.map(function (item) { return Math.max(item.departures, item.arrivals); })));
+            max = Math.max(5, Math.ceil(max * 1.12 / 5) * 5);
+            var parts = [];
+            for (var g = 0; g <= 4; g++) {
+                var y = padT + plotH * g / 4;
+                parts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (width - padR) + '" y2="' + y + '" stroke="#e4edf4" stroke-width="1"></line>');
+                parts.push('<text x="' + (padL - 8) + '" y="' + (y + 4) + '" fill="#7b8fa1" font-size="10" text-anchor="end">' + number(Math.round(max * (4 - g) / 4)) + '</text>');
+            }
+            function xAt(index) { return items.length === 1 ? padL + plotW / 2 : padL + plotW * index / (items.length - 1); }
+            function yAt(value) { return padT + plotH - value / max * plotH; }
+            ['departures', 'arrivals'].forEach(function (field) {
+                var color = field === 'departures' ? '#2387c8' : '#20b486';
+                parts.push('<path d="' + items.map(function (item, index) { return (index ? 'L' : 'M') + xAt(index).toFixed(1) + ',' + yAt(item[field]).toFixed(1); }).join(' ') + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round"></path>');
+                items.forEach(function (item, index) {
+                    parts.push('<circle cx="' + xAt(index).toFixed(1) + '" cy="' + yAt(item[field]).toFixed(1) + '" r="4" fill="' + color + '"><title>' + esc(item.code) + ' - ' + (field === 'departures' ? 'Cất cánh' : 'Hạ cánh') + ': ' + number(item[field]) + '</title></circle>');
+                });
+            });
+            items.forEach(function (item, index) {
+                parts.push('<text x="' + xAt(index).toFixed(1) + '" y="' + (height - 14) + '" fill="#60778b" font-size="10" text-anchor="middle">' + esc(item.code) + '</text>');
+            });
+            return '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" role="img">' + parts.join('') + '</svg>';
+        }
+
+        // Kiểu tròn: tỷ trọng tổng lượt (cất + hạ cánh) của từng sân bay, nhấn lát cắt để lọc.
+        function airportDonutSvg() {
+            var items = (dashboardData.overview.airports || []).filter(function (item) { return item.departures + item.arrivals > 0; });
+            if (!items.length) return '<div class="rn-airport-empty">Không có chuyến Finished hoặc Delay trong khoảng ngày đã chọn.</div>';
+            var total = items.reduce(function (sum, item) { return sum + item.departures + item.arrivals; }, 0);
+            var circumference = 2 * Math.PI * 82;
+            var offset = 0;
+            var slices = items.map(function (item, index) {
+                var value = item.departures + item.arrivals;
+                var length = value / total * circumference;
+                var dim = selectedAirport && selectedAirport !== item.code;
+                var html = '<circle data-airport="' + esc(item.code) + '" fill="none" stroke="' + airportPalette[index % airportPalette.length] + '" stroke-width="' + (selectedAirport === item.code ? 36 : 28) + '" opacity="' + (dim ? '0.25' : '1') + '" cx="120" cy="120" r="82" stroke-dasharray="' + length + ' ' + (circumference - length) + '" stroke-dashoffset="' + (-offset) + '" style="cursor:pointer"><title>' + esc(item.code + ' - ' + (airportNames[item.code] || item.code)) + ': ' + number(value) + ' lượt (' + (value * 100 / total).toFixed(1) + '%)</title></circle>';
+                offset += length;
+                return html;
+            }).join('');
+            var legend = items.slice(0, 12).map(function (item, index) {
+                return '<span style="display:inline-flex;align-items:center;gap:5px"><i class="rn-dot" style="background:' + airportPalette[index % airportPalette.length] + '"></i>' + esc(item.code) + '</span>';
+            }).join('');
+            return '<div style="width:100%"><svg viewBox="0 0 240 240" width="240" style="display:block;margin:auto;transform:rotate(-90deg);overflow:visible"><circle fill="none" stroke="#edf3f7" stroke-width="28" cx="120" cy="120" r="82"></circle>' + slices + '</svg>' +
+                '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px;color:#60778b;font-size:11px">' + legend + (items.length > 12 ? '<span>…</span>' : '') + '</div></div>';
+        }
+
+        function renderAirportChart() {
+            var wrap = app.querySelector('#rnDashboardBarsWrap');
+            if (!wrap) return;
+            if (chartTypes.airports === 'bar') {
+                wrap.innerHTML = '<div class="rn-airport-chart" id="rnDashboardBars"></div>';
+                renderBars();
+                return;
+            }
+            wrap.innerHTML = '<div class="rn-airport-alt-chart">' + (chartTypes.airports === 'line' ? airportLineSvg() : airportDonutSvg()) + '</div>';
+            Array.prototype.forEach.call(wrap.querySelectorAll('[data-airport]'), function (slice) {
+                slice.onclick = function () {
+                    var code = this.getAttribute('data-airport');
+                    selectedAirport = selectedAirport === code ? '' : code;
+                    selectedStatus = '';
+                    renderAirportChart();
+                    renderDonut();
+                    updateBarDetail();
                 };
             });
         }
@@ -220,14 +331,26 @@
 
         function renderLayout() {
             var trend = dashboardData.trend;
-            var html = '<div class="rn-grid"><article class="rn-card"><h2>Trạng thái chuyến bay</h2><p class="rn-card-subtitle" id="rnDashboardStatusSubtitle"></p><div id="rnDashboardDonut"></div></article>' +
-                '<article class="rn-card"><h2>Cất/hạ cánh sân bay</h2><p class="rn-card-subtitle">Chỉ tính Finished và Delay</p><div class="rn-airport-chart-scroll rn-dashboard-chart-scroll"><div class="rn-airport-chart" id="rnDashboardBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span></div><div class="rn-card-subtitle rn-dashboard-bar-detail" id="rnDashboardBarDetail">Nhấn vào một cụm cột để xem trạng thái của sân bay</div></article>' +
-                '<article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu hướng khai thác theo ' + (trend.period === 'month' ? 'tháng' : 'ngày') + '</h2><p class="rn-card-subtitle">Chỉ gồm chuyến Hoàn thành và Delay • Nguồn: ' + esc(trend.source) + '</p></div><div class="rn-trend-legend"><span><i style="background:#9bb0c1"></i>Cùng kỳ năm trước</span><span><i style="background:#2387c8"></i>Kỳ hiện tại</span></div></div><div class="rn-trend-chart-wrap"><canvas id="rnDashboardTrend" class="rn-trend-canvas"></canvas><div id="rnDashboardTrendTooltip" class="rn-trend-tooltip" role="status"></div></div><p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chuột lên từng mốc để xem số lượng chuyến bay.</p></article>' +
+            var html = '<div class="rn-grid"><article class="rn-card"><div class="rn-chart-head"><h2>Trạng thái chuyến bay</h2><select class="rn-chart-type-select" id="rnStatusChartType" title="Chọn kiểu biểu đồ"><option value="donut">Biểu đồ tròn</option><option value="bar">Biểu đồ cột</option></select></div><p class="rn-card-subtitle" id="rnDashboardStatusSubtitle"></p><div id="rnDashboardDonut"></div></article>' +
+                '<article class="rn-card"><div class="rn-chart-head"><h2>Cất/hạ cánh sân bay</h2><select class="rn-chart-type-select" id="rnAirportChartType" title="Chọn kiểu biểu đồ"><option value="bar">Biểu đồ cột</option><option value="line">Biểu đồ đường</option><option value="donut">Biểu đồ tròn</option></select></div><p class="rn-card-subtitle">Chỉ tính Finished và Delay</p><div class="rn-airport-chart-scroll rn-dashboard-chart-scroll" id="rnDashboardBarsWrap"><div class="rn-airport-chart" id="rnDashboardBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span></div><div class="rn-card-subtitle rn-dashboard-bar-detail" id="rnDashboardBarDetail">Nhấn vào một cụm cột để xem trạng thái của sân bay</div></article>' +
+                '<article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu hướng khai thác theo ' + (trend.period === 'month' ? 'tháng' : 'ngày') + '</h2><p class="rn-card-subtitle">Chỉ gồm chuyến Hoàn thành và Delay • Nguồn: ' + esc(trend.source) + '</p></div><div class="rn-trend-legend"><span><i style="background:#9bb0c1"></i>Cùng kỳ năm trước</span><span><i style="background:#2387c8"></i>Kỳ hiện tại</span><select class="rn-chart-type-select" id="rnTrendChartType" title="Chọn kiểu biểu đồ"><option value="line">Biểu đồ đường</option><option value="bar">Biểu đồ cột</option></select></div></div><div class="rn-trend-chart-wrap"><canvas id="rnDashboardTrend" class="rn-trend-canvas"></canvas><div id="rnDashboardTrendTooltip" class="rn-trend-tooltip" role="status"></div></div><p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chuột lên từng mốc để xem số lượng chuyến bay.</p></article>' +
                 '<article class="rn-card wide"><h2>Truy cập nhanh báo cáo</h2><p class="rn-card-subtitle">Mở báo cáo chi tiết tương ứng với từng khu vực dữ liệu</p><div class="rn-links"><a class="rn-link" href="../ReportNew/FlightOperationOverview.aspx">Tổng quan khai thác <i class="fa fa-arrow-right"></i></a><a class="rn-link" href="../ReportNew/FlightStatusRate.aspx">Tỷ lệ trạng thái <i class="fa fa-arrow-right"></i></a><a class="rn-link" href="../ReportNew/FlightTrendAnalysis.aspx">Phân tích xu hướng <i class="fa fa-arrow-right"></i></a></div></article></div>';
             var old = app.querySelector('.rn-grid');
             if (old) old.outerHTML = html;
+            var statusType = app.querySelector('#rnStatusChartType');
+            var airportType = app.querySelector('#rnAirportChartType');
+            var trendType = app.querySelector('#rnTrendChartType');
+            statusType.value = chartTypes.status;
+            airportType.value = chartTypes.airports;
+            trendType.value = chartTypes.trend;
+            statusType.onchange = function () { chartTypes.status = this.value; renderDonut(); };
+            airportType.onchange = function () { chartTypes.airports = this.value; renderAirportChart(); };
+            trendType.onchange = function () {
+                chartTypes.trend = this.value;
+                renderTrend(app.querySelector('#rnDashboardTrend'), app.querySelector('#rnDashboardTrendTooltip'), trend);
+            };
             renderDonut();
-            renderBars();
+            renderAirportChart();
             renderTrend(app.querySelector('#rnDashboardTrend'), app.querySelector('#rnDashboardTrendTooltip'), trend);
         }
 
@@ -258,8 +381,14 @@
                 var plotHeight = height - pad.top - pad.bottom;
                 var maximum = Math.max.apply(null, current.concat(previous).concat([1]));
                 maximum = Math.max(5, Math.ceil(maximum * 1.15 / 5) * 5);
-                var stepX = labels.length > 1 ? plotWidth / (labels.length - 1) : 0;
-                var xAt = function (index) { return labels.length > 1 ? pad.left + index * stepX : pad.left + plotWidth / 2; };
+                var barMode = chartTypes.trend === 'bar';
+                var stepX = barMode
+                    ? (labels.length ? plotWidth / labels.length : plotWidth)
+                    : (labels.length > 1 ? plotWidth / (labels.length - 1) : 0);
+                var xAt = function (index) {
+                    if (barMode) return pad.left + stepX * (index + 0.5);
+                    return labels.length > 1 ? pad.left + index * stepX : pad.left + plotWidth / 2;
+                };
                 var yAt = function (value) { return pad.top + plotHeight - (value * valueProgress / maximum) * plotHeight; };
 
                 ctx.font = '11px Roboto, Arial, sans-serif';
@@ -271,6 +400,22 @@
                     ctx.fillText(number(Math.round(maximum * (5 - grid) / 5)), pad.left - 10, y);
                 }
 
+                // Chế độ cột: mỗi mốc gồm cặp cột (kỳ trước xám, kỳ hiện tại xanh).
+                function barSeries(values, color, side) {
+                    var barWidth = Math.max(3, Math.min(24, stepX * 0.3));
+                    var points = values.map(function (value, index) {
+                        var x = xAt(index) + (side < 0 ? -barWidth - 1 : 1);
+                        var y = yAt(value);
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        if (ctx.roundRect) ctx.roundRect(x, y, barWidth, pad.top + plotHeight - y, [3, 3, 0, 0]);
+                        else ctx.rect(x, y, barWidth, pad.top + plotHeight - y);
+                        ctx.fill();
+                        if (index === hover) { ctx.strokeStyle = '#173f59'; ctx.lineWidth = 1.5; ctx.stroke(); }
+                        return { x: xAt(index), y: y };
+                    });
+                    return points;
+                }
                 function line(values, color, fillArea) {
                     var points = values.map(function (value, index) { return { x: xAt(index), y: yAt(value) }; });
                     if (!points.length) return points;
@@ -296,15 +441,15 @@
                     });
                     return points;
                 }
-                var previousPoints = line(previous, '#9bb0c1', false);
-                var currentPoints = line(current, '#2387c8', true);
+                var previousPoints = barMode ? barSeries(previous, '#9bb0c1', -1) : line(previous, '#9bb0c1', false);
+                var currentPoints = barMode ? barSeries(current, '#2387c8', 1) : line(current, '#2387c8', true);
                 if (hover >= 0) {
                     ctx.save(); ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(xAt(hover), pad.top); ctx.lineTo(xAt(hover), pad.top + plotHeight); ctx.strokeStyle = 'rgba(35,135,200,.45)'; ctx.stroke(); ctx.restore();
                 }
                 var labelStep = Math.max(1, Math.ceil(labels.length / 12));
                 ctx.fillStyle = '#60778b'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                 labels.forEach(function (label, index) { if (index % labelStep === 0 || index === labels.length - 1) ctx.fillText(label, xAt(index), pad.top + plotHeight + 14); });
-                geometry = { left: pad.left, right: width - pad.right, stepX: stepX, width: width, current: currentPoints, previous: previousPoints };
+                geometry = { left: xAt(0), right: width - pad.right, stepX: stepX, width: width, current: currentPoints, previous: previousPoints };
             }
 
             function animate(timestamp) {

@@ -46,6 +46,16 @@
 .rn-military-actions { display: flex; align-self: end; gap: 8px; }
 .rn-military-actions .rn-filter-button { align-self: auto; white-space: nowrap; }
 .rn-export-button { background: linear-gradient(135deg,#23a66f,#168054); box-shadow: 0 6px 15px rgba(29,151,96,.24); }
+.rn-image-button { background: linear-gradient(135deg,#8a6ee8,#5d43b8); box-shadow: 0 6px 15px rgba(120,94,220,.24); }
+.rn-pdf-button { background: linear-gradient(135deg,#e0685b,#b8433a); box-shadow: 0 6px 15px rgba(214,86,74,.24); }
+.rn-csv-button { background: linear-gradient(135deg,#f0a63a,#c97f14); box-shadow: 0 6px 15px rgba(222,148,38,.24); }
+/* Hàng biểu đồ trạng thái: tròn + cột + thẻ trạng thái trên cùng một hàng, tự xuống dòng khi hẹp. */
+.rn-donut-layout.rn-status-chart-row { grid-template-columns: 270px minmax(0,1.2fr) minmax(230px,.9fr); }
+.rn-status-column-chart { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.rn-status-column-chart svg { width: 100%; height: auto; }
+@media (max-width: 1100px) {
+    .rn-donut-layout.rn-status-chart-row { grid-template-columns: 1fr; }
+}
 @media (max-width: 767px) {
     .rn-flight-list-card { padding: 14px; }
     .rn-flight-pager { justify-content: space-between; }
@@ -71,6 +81,24 @@
 .rn-airport-bar-group > b { margin-top: 8px; color: #31546f; font-size: 11px; }
 .rn-airport-bar-group > small { display: block; max-width: 82px; overflow: hidden; color: #8193a3; font-size: 9px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .rn-airport-empty { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #718397; }
+/* Nổi bật sân bay có tổng lượt cất/hạ cánh cao nhất trong kỳ. */
+.rn-airport-bar-group.is-peak .rn-airport-bar { box-shadow: 0 0 0 3px rgba(245,166,35,.45), 0 8px 16px rgba(31,71,103,.2); }
+.rn-airport-bar-group.is-peak > b { color: #b97b0a; }
+.rn-peak-badge { margin-top: 4px; padding: 2px 9px; border-radius: 999px; background: #fff2d4; color: #b97b0a; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.rn-report-button { background: linear-gradient(135deg,#4a6f96,#315a7d); box-shadow: 0 6px 15px rgba(49,90,125,.24); }
+.rn-app[data-report-view="airport"] .rn-filters { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) auto auto; align-items: end; }
+@media (max-width: 600px) { .rn-app[data-report-view="airport"] .rn-filters { grid-template-columns: 1fr; } }
+.rn-airport-report-card .rn-table-wrap { max-height: 480px; overflow: auto; border-radius: 10px; }
+.rn-app[data-report-view="civil"] .rn-filters { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) auto auto; align-items: end; }
+@media (max-width: 600px) { .rn-app[data-report-view="civil"] .rn-filters { grid-template-columns: 1fr; } }
+.rn-app[data-report-view="civil"] .rn-filter-button { white-space: nowrap; }
+/* Bộ chọn kiểu biểu đồ trên đầu mỗi card của dashboard. */
+.rn-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rn-chart-head h2 { margin: 0; }
+.rn-chart-type-select { height: 30px; padding: 0 8px; border: 1px solid #cfe0ec; border-radius: 8px; background: #fff; color: #294c68; font-size: 12px; }
+.rn-airport-alt-chart { display: flex; min-height: 300px; align-items: center; justify-content: center; padding: 10px 4px; }
+.rn-airport-alt-chart svg { width: 100%; height: auto; }
+.rn-military-chart { padding-top: 6px; }
 .rn-airport-detail-card { min-height: 180px; }
 .rn-airport-detail-placeholder { display: flex; min-height: 135px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #718397; text-align: center; }
 .rn-airport-detail-placeholder i { color: #2787c3; font-size: 30px; }
@@ -111,7 +139,7 @@
 
 /* Keep each report's primary filters and actions together on desktop/tablet. */
 .rn-app[data-report-view="status"] .rn-filters {
-    grid-template-columns: minmax(0,1.25fr) minmax(0,1.05fr) minmax(0,1fr) minmax(0,1fr) auto auto;
+    grid-template-columns: minmax(0,1.25fr) minmax(0,1.05fr) minmax(0,1fr) minmax(0,1fr) auto auto auto;
     align-items: end;
 }
 .rn-app[data-report-view="overview"] .rn-filters {

@@ -69,6 +69,32 @@
         return state.replace('DELAY_', 'Delay ').replace('_PLUS', '+').replace('_', '–') + ' phút';
     }
 
+    // Biểu đồ cột 4 trạng thái, style inline toàn bộ để xuất được ra ảnh PNG.
+    function statusBarSvg(items, total) {
+        var width = 400, height = 250, padL = 48, padR = 14, padT = 30, padB = 36;
+        var plotW = width - padL - padR, plotH = height - padT - padB;
+        var max = Math.max(1, Math.max.apply(null, items.map(function (item) { return item.value; })));
+        max = Math.max(5, Math.ceil(max * 1.12 / 5) * 5);
+        var parts = [];
+        for (var g = 0; g <= 4; g++) {
+            var y = padT + plotH * g / 4;
+            parts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (width - padR) + '" y2="' + y + '" stroke="#e4edf4" stroke-width="1"></line>');
+            parts.push('<text x="' + (padL - 8) + '" y="' + (y + 4) + '" fill="#7b8fa1" font-size="10" text-anchor="end">' + Math.round(max * (4 - g) / 4).toLocaleString('vi-VN') + '</text>');
+        }
+        var slot = plotW / items.length;
+        items.forEach(function (item, index) {
+            var barW = slot * 0.52;
+            var x = padL + slot * index + (slot - barW) / 2;
+            var h = item.value / max * plotH;
+            var y = padT + plotH - h;
+            var percent = total ? (item.value * 100 / total).toFixed(1) : '0';
+            parts.push('<rect class="rn-status-colbar" data-status="' + item.key + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + Math.max(0, h).toFixed(1) + '" rx="6" fill="' + item.color + '" style="cursor:pointer"><title>' + esc(item.name) + ': ' + item.value.toLocaleString('vi-VN') + ' (' + percent + '%)</title></rect>');
+            parts.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" fill="#31546f" font-size="11" font-weight="700" text-anchor="middle">' + item.value.toLocaleString('vi-VN') + '</text>');
+            parts.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (padT + plotH + 16) + '" fill="#60778b" font-size="10" text-anchor="middle">' + esc(item.name) + '</text>');
+        });
+        return '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" role="img" aria-label="Biểu đồ cột trạng thái chuyến bay" style="max-width:440px">' + parts.join('') + '</svg>';
+    }
+
     function render(app, data) {
         var items = [
             { key: 'finished', name: 'Hoàn thành', value: data.finished, color: '#20b486' },
@@ -105,8 +131,10 @@
 
         var grid = '<div class="rn-grid">' +
             '<article class="rn-card wide"><h2>Tỷ lệ trạng thái</h2><p class="rn-card-subtitle">Nguồn: ' + esc(data.source) + ' • Bốn nhóm loại trừ nhau</p>' +
-            '<div class="rn-donut-layout"><div class="rn-donut"><svg viewBox="0 0 240 240"><circle class="rn-donut-track" cx="120" cy="120" r="82"></circle>' + segments + '</svg>' +
-            '<div class="rn-donut-center"><strong>' + total.toLocaleString('vi-VN') + '</strong><span>Tổng chuyến</span></div></div><div class="rn-status-list">' + cards + '</div></div></article>' +
+            '<div class="rn-donut-layout rn-status-chart-row"><div class="rn-donut"><svg viewBox="0 0 240 240"><circle class="rn-donut-track" cx="120" cy="120" r="82"></circle>' + segments + '</svg>' +
+            '<div class="rn-donut-center"><strong>' + total.toLocaleString('vi-VN') + '</strong><span>Tổng chuyến</span></div></div>' +
+            '<div class="rn-status-column-chart" id="rnStatusBars">' + statusBarSvg(items, total) + '</div>' +
+            '<div class="rn-status-list">' + cards + '</div></div></article>' +
             '<article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnFlightListTitle">Danh sách chuyến bay</h2><p class="rn-card-subtitle">Nhấn biểu đồ hoặc thẻ trạng thái để lọc danh sách</p></div>' +
             '<label class="rn-page-size">Số dòng <select id="rnPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
             '<div class="rn-table-wrap rn-flight-detail-wrap"><table class="rn-table rn-flight-detail-table"><thead><tr>' +
@@ -165,6 +193,9 @@
             Array.prototype.forEach.call(app.querySelectorAll('.rn-donut-segment'), function (segment) {
                 segment.classList.toggle('is-active', selectedStatus === segment.getAttribute('data-status'));
             });
+            Array.prototype.forEach.call(app.querySelectorAll('.rn-status-colbar'), function (bar) {
+                bar.setAttribute('opacity', !selectedStatus || selectedStatus === bar.getAttribute('data-status') ? '1' : '0.25');
+            });
             app.querySelector('.rn-donut').classList.toggle('has-active', !!selectedStatus);
             app.querySelector('.rn-status-list').classList.toggle('has-active', !!selectedStatus);
             renderPage();
@@ -182,7 +213,7 @@
             var pages = Math.max(1, Math.ceil(filteredFlights().length / pageSize));
             if (page < pages) { page++; renderPage(); }
         };
-        Array.prototype.forEach.call(app.querySelectorAll('.rn-status,.rn-donut-segment'), function (node) {
+        Array.prototype.forEach.call(app.querySelectorAll('.rn-status,.rn-donut-segment,.rn-status-colbar'), function (node) {
             node.onclick = function () { selectStatus(this.getAttribute('data-status')); };
         });
         renderPage();
@@ -207,7 +238,8 @@
         airport.innerHTML = '<option value="ALL">Tất cả sân bay</option><option>VVNB</option><option>VVTS</option><option>VVDN</option><option>VVCR</option><option>VVPQ</option><option>VVCI</option><option>VVDL</option><option>VVPC</option>';
         airportField.insertAdjacentHTML('afterend', '<div class="rn-field"><label>Hãng bay</label><select id="rnOper"><option value="ALL">Tất cả hãng bay</option></select></div>');
         var oper = app.querySelector('#rnOper');
-        filterBox.insertAdjacentHTML('beforeend', '<button class="rn-filter-button rn-export-button" type="button" id="rnStatusExport"><i class="fa fa-file-excel-o"></i> Export Excel</button>');
+        filterBox.insertAdjacentHTML('beforeend', '<button class="rn-filter-button rn-export-button" type="button" id="rnStatusExport"><i class="fa fa-file-excel-o"></i> Export Excel</button>' +
+            '<button class="rn-filter-button rn-image-button" type="button" id="rnStatusExportImage"><i class="fa fa-picture-o"></i> Export ảnh</button>');
         if (window.ReportControls) window.ReportControls.enhanceAll(filterBox);
 
         function isCurrentDay() { return from.value === iso && to.value === iso; }
@@ -258,6 +290,16 @@
                     { label: 'ATADAY', key: 'ataDay' }, { label: 'EOBTDAY', key: 'eobtDay' },
                     { label: 'TRẠNG THÁI', key: 'status', format: statusLabel }
                 ]
+            });
+        };
+        app.querySelector('#rnStatusExportImage').onclick = function () {
+            var donutSvg = app.querySelector('.rn-donut svg');
+            var barSvg = app.querySelector('#rnStatusBars svg');
+            if (!donutSvg && !barSvg) { alert('Chưa có biểu đồ để xuất ảnh.'); return; }
+            window.ReportControls.exportSvgsAsImage({
+                fileName: 'FlightStatusRate_' + from.value + '_' + to.value,
+                title: 'Thống kê trạng thái chuyến bay ' + from.value + ' đến ' + to.value,
+                svgs: [donutSvg, barSvg]
             });
         };
         from.onchange = loadOperators;

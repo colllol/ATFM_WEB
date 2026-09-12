@@ -10,6 +10,10 @@
     function number(value) { return Number(value || 0).toLocaleString('vi-VN'); }
     function today(offset) { var d = new Date(); d.setDate(d.getDate() + (offset || 0)); return d.toISOString().slice(0, 10); }
 
+    var currentData = null;
+    var flightPage = 1;
+    var flightPageSize = 100;
+
     function post(method, payload) {
         return fetch((window.reportApiBase || '/') + 'api/' + method, {
             method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(payload)
@@ -27,7 +31,8 @@
         var title = military ? 'Báo cáo chuyến bay quân sự' : 'Tổng hợp chuyến bay dân dụng';
         var subtitle = military ? 'Dữ liệu nghiệp vụ VIP, quân sự từ REPORT_DHB' : 'Tổng hợp trực tiếp dữ liệu chuyến bay dân dụng';
         app.innerHTML = '<header class="rn-hero"><div><span class="rn-eyebrow">VATM • FLIGHT ANALYTICS</span><h1>' + title + '</h1><p>' + subtitle + '</p></div><div class="rn-live"><span>Nguồn dữ liệu</span><strong id="summarySource">API</strong><small id="summaryState">Sẵn sàng</small></div></header>' +
-            '<div class="rn-filters"><div class="rn-field"><label>Sân bay</label><select id="summaryAirport"><option value="ALL">Tất cả sân bay</option></select></div><div class="rn-field"><label>Từ ngày</label><input id="summaryFrom" type="date" value="' + today(-30) + '"></div><div class="rn-field"><label>Đến ngày</label><input id="summaryTo" type="date" value="' + today(0) + '"></div><button class="rn-filter-button" id="summaryApply" type="button"><i class="fa fa-filter"></i> Áp dụng</button></div>' +
+            '<div class="rn-filters"><div class="rn-field"><label>Sân bay</label><select id="summaryAirport"><option value="ALL">Tất cả sân bay</option></select></div><div class="rn-field"><label>Từ ngày</label><input id="summaryFrom" type="date" value="' + today(-30) + '"></div><div class="rn-field"><label>Đến ngày</label><input id="summaryTo" type="date" value="' + today(0) + '"></div><button class="rn-filter-button" id="summaryApply" type="button"><i class="fa fa-filter"></i> Áp dụng</button>' +
+            (military ? '' : '<button class="rn-filter-button rn-export-button" id="summaryExportAirport" type="button" disabled><i class="fa fa-file-excel-o"></i> Export theo sân bay</button>') + '</div>' +
             '<div id="summaryError" class="rn-card wide" style="display:none;color:#b42318"></div><div id="summaryContent"><article class="rn-card wide rn-empty"><h2>Đang tải dữ liệu...</h2></article></div>';
     }
 
@@ -40,16 +45,79 @@
             (items || []).slice(0, 12).map(function (x) { return '<tr><td><b>' + escapeHtml(x.Code) + '</b></td><td>' + number(x.Departures) + '</td><td>' + number(x.Arrivals) + '</td><td>' + number(x.Total) + '</td></tr>'; }).join('') + '</tbody></table></div></article>';
     }
 
+    function flightRowHtml(x, military, index) {
+        var stt = '<td class="rn-stt">' + (index + 1) + '</td>';
+        if (military) return '<tr>' + stt + '<td>' + escapeHtml(x.FlightDate) + '</td><td><b>' + escapeHtml(x.Callsign) + '</b></td><td>' + escapeHtml(x.CraftType) + '</td><td>' + escapeHtml(x.Registration) + '</td><td>' + escapeHtml(x.FromAirp) + '</td><td>' + escapeHtml(x.ToAirp) + '</td><td>' + escapeHtml(x.Route) + '</td><td>' + escapeHtml(x.PermitNbr) + '</td></tr>';
+        return '<tr>' + stt + '<td>' + escapeHtml(x.FlightDate) + '</td><td><b>' + escapeHtml(x.Callsign) + '</b></td><td>' + escapeHtml(x.Oper) + '</td><td>' + escapeHtml(x.FromAirp) + '</td><td>' + escapeHtml(x.ToAirp) + '</td><td>' + escapeHtml(x.Status) + '</td></tr>';
+    }
+
+    // Bảng danh sách chuyến bay có phân trang, tối đa 1000 bản ghi mỗi trang.
     function flightTable(rows, military) {
-        var headers = military ? '<th>Ngày bay</th><th>Số hiệu</th><th>Loại tàu bay</th><th>Đăng ký</th><th>From</th><th>To</th><th>Đường bay</th><th>Số phép</th>' : '<th>Ngày bay</th><th>Chuyến bay</th><th>Hãng</th><th>From</th><th>To</th><th>Trạng thái</th>';
-        var body = (rows || []).map(function (x) {
-            if (military) return '<tr><td>' + escapeHtml(x.FlightDate) + '</td><td><b>' + escapeHtml(x.Callsign) + '</b></td><td>' + escapeHtml(x.CraftType) + '</td><td>' + escapeHtml(x.Registration) + '</td><td>' + escapeHtml(x.FromAirp) + '</td><td>' + escapeHtml(x.ToAirp) + '</td><td>' + escapeHtml(x.Route) + '</td><td>' + escapeHtml(x.PermitNbr) + '</td></tr>';
-            return '<tr><td>' + escapeHtml(x.FlightDate) + '</td><td><b>' + escapeHtml(x.Callsign) + '</b></td><td>' + escapeHtml(x.Oper) + '</td><td>' + escapeHtml(x.FromAirp) + '</td><td>' + escapeHtml(x.ToAirp) + '</td><td>' + escapeHtml(x.Status) + '</td></tr>';
-        }).join('');
-        return '<article class="rn-card wide rn-detail-card"><h2>Danh sách chuyến bay</h2><p class="rn-card-subtitle">' + number((rows || []).length) + ' bản ghi trong kỳ đã chọn</p><div class="rn-table-wrap"><table class="rn-table"><thead><tr>' + headers + '</tr></thead><tbody>' + body + '</tbody></table></div></article>';
+        var headers = military ? '<th>STT</th><th>Ngày bay</th><th>Số hiệu</th><th>Loại tàu bay</th><th>Đăng ký</th><th>From</th><th>To</th><th>Đường bay</th><th>Số phép</th>' : '<th>STT</th><th>Ngày bay</th><th>Chuyến bay</th><th>Hãng</th><th>From</th><th>To</th><th>Trạng thái</th>';
+        return '<article class="rn-card wide rn-detail-card rn-flight-list-card"><div class="rn-flight-list-head"><div><h2>Danh sách chuyến bay</h2><p class="rn-card-subtitle">' + number((rows || []).length) + ' bản ghi trong kỳ đã chọn</p></div>' +
+            '<label class="rn-page-size">Số dòng <select id="summaryPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
+            '<div class="rn-table-wrap"><table class="rn-table"><thead><tr>' + headers + '</tr></thead><tbody id="summaryFlightRows"></tbody></table></div>' +
+            '<div class="rn-flight-pager"><button type="button" class="rn-filter-button" id="summaryPrev">‹ Trước</button><span id="summaryPageInfo"></span><button type="button" class="rn-filter-button" id="summaryNext">Sau ›</button></div></article>';
+    }
+
+    function drawFlightPage(military) {
+        var rows = (currentData && currentData.Flights) || [];
+        var pages = Math.max(1, Math.ceil(rows.length / flightPageSize));
+        if (flightPage > pages) flightPage = pages;
+        var start = (flightPage - 1) * flightPageSize;
+        var body = document.getElementById('summaryFlightRows');
+        if (!body) return;
+        var visible = rows.slice(start, start + flightPageSize);
+        body.innerHTML = visible.length ? visible.map(function (x, index) { return flightRowHtml(x, military, start + index); }).join('')
+            : '<tr><td colspan="' + (military ? 9 : 7) + '" class="rn-no-data">Không có chuyến bay trong kỳ đã chọn.</td></tr>';
+        document.getElementById('summaryPageInfo').textContent = 'Trang ' + flightPage + '/' + pages + ' • ' + number(rows.length) + ' dòng';
+        document.getElementById('summaryPrev').disabled = flightPage <= 1;
+        document.getElementById('summaryNext').disabled = flightPage >= pages;
+    }
+
+    function bindFlightPager(military) {
+        var size = document.getElementById('summaryPageSize');
+        if (!size) return;
+        size.value = String(flightPageSize);
+        size.onchange = function () { flightPageSize = Math.min(1000, parseInt(this.value, 10) || 100); flightPage = 1; drawFlightPage(military); };
+        document.getElementById('summaryPrev').onclick = function () { if (flightPage > 1) { flightPage--; drawFlightPage(military); } };
+        document.getElementById('summaryNext').onclick = function () {
+            var rows = (currentData && currentData.Flights) || [];
+            if (flightPage < Math.max(1, Math.ceil(rows.length / flightPageSize))) { flightPage++; drawFlightPage(military); }
+        };
+        drawFlightPage(military);
+    }
+
+    // Excel nhiều sheet: mỗi sheet là một sân bay kèm các bản ghi đi/đến sân bay đó.
+    function exportByAirport() {
+        var airports = (currentData && currentData.Airports) || [];
+        var flights = (currentData && currentData.Flights) || [];
+        if (!airports.length || !window.ReportControls || !window.ReportControls.exportExcelSheets) { alert('Không có dữ liệu để xuất báo cáo.'); return; }
+        var columns = [
+            { label: 'STT', key: '__no' },
+            { label: 'Ngày bay', key: 'FlightDate' },
+            { label: 'Chuyến bay', key: 'Callsign' },
+            { label: 'Hãng', key: 'Oper' },
+            { label: 'From', key: 'FromAirp' },
+            { label: 'To', key: 'ToAirp' },
+            { label: 'Trạng thái', key: 'Status' }
+        ];
+        window.ReportControls.exportExcelSheets({
+            fileName: 'CivilFlightSummary_TheoSanBay_' + document.getElementById('summaryFrom').value + '_' + document.getElementById('summaryTo').value,
+            sheets: airports.map(function (airport) {
+                return {
+                    name: airport.Code,
+                    title: 'Sân bay ' + airport.Code + ' • Đi: ' + number(airport.Departures) + ' • Đến: ' + number(airport.Arrivals) + ' • Tổng: ' + number(airport.Total),
+                    columns: columns,
+                    rows: flights.filter(function (flight) { return flight.FromAirp === airport.Code || flight.ToAirp === airport.Code; })
+                };
+            })
+        });
     }
 
     function renderData(app, data, military) {
+        currentData = data;
+        flightPage = 1;
         var items = military ? [
             { name: 'Tổng chuyến VIP, quân sự', value: data.Total, color: '#315a7d', note: 'Trong kỳ đã chọn' },
             { name: 'Chuyên cơ / VIP', value: data.Vip, color: '#8a6ee8', note: 'Theo số phép' },
@@ -70,6 +138,9 @@
         }).join('');
         airportSelect.value = selectedAirport;
         document.getElementById('summaryContent').innerHTML = kpis(items) + '<div class="rn-grid">' + airportTable(data.Airports) + flightTable(data.Flights, military) + '</div>';
+        bindFlightPager(military);
+        var exportButton = document.getElementById('summaryExportAirport');
+        if (exportButton) exportButton.disabled = !(data.Airports || []).length;
     }
 
     function start() {
@@ -90,6 +161,8 @@
             });
         }
         document.getElementById('summaryApply').onclick = load;
+        var exportButton = document.getElementById('summaryExportAirport');
+        if (exportButton) exportButton.onclick = exportByAirport;
         load();
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

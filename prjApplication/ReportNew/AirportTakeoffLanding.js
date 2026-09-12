@@ -53,6 +53,10 @@
         var toIso = formatDate(today);
         var fromIso = formatDate(today);
         var detailState = null;
+        var summaryData = null;
+
+        apply.insertAdjacentHTML('afterend', '<button type="button" class="rn-filter-button rn-report-button" id="rnAirportReport" disabled><i class="fa fa-table"></i> Báo cáo</button>');
+        var reportButton = app.querySelector('#rnAirportReport');
 
         from.value = fromIso;
         to.value = toIso;
@@ -75,6 +79,8 @@
         }
 
         function renderSummary(data) {
+            summaryData = data;
+            reportButton.disabled = !(data.airports || []).length;
             syncAirportOptions(data.airports || []);
             var kpis = '<div class="rn-kpis">' +
                 '<div class="rn-kpi" style="--accent:#2387c8"><span>Tổng cất cánh</span><strong>' + number(data.totalDepartures) + '</strong><small>Finished + Delay</small></div>' +
@@ -84,19 +90,22 @@
             var max = 0;
             (data.airports || []).forEach(function (item) { max = Math.max(max, item.departures, item.arrivals); });
             var bars = (data.airports || []).map(function (item) {
+                var isPeak = !!data.peakAirport && item.code === data.peakAirport;
                 var departureHeight = item.departures ? Math.max(4, item.departures / Math.max(1, max) * 100) : 0;
                 var arrivalHeight = item.arrivals ? Math.max(4, item.arrivals / Math.max(1, max) * 100) : 0;
-                return '<div class="rn-airport-bar-group"><div class="rn-airport-bar-pair">' +
+                return '<div class="rn-airport-bar-group' + (isPeak ? ' is-peak' : '') + '"><div class="rn-airport-bar-pair">' +
                     '<button type="button" class="rn-airport-bar departure" data-airport="' + item.code + '" data-movement="departure" style="height:' + departureHeight + '%" title="' + esc(item.code + ' - Cất cánh: ' + number(item.departures)) + '"><span>' + number(item.departures) + '</span></button>' +
                     '<button type="button" class="rn-airport-bar arrival" data-airport="' + item.code + '" data-movement="arrival" style="height:' + arrivalHeight + '%" title="' + esc(item.code + ' - Hạ cánh: ' + number(item.arrivals)) + '"><span>' + number(item.arrivals) + '</span></button>' +
-                    '</div><b>' + esc(item.code) + '</b><small>' + esc(airportName(item.code)) + '</small></div>';
+                    '</div><b>' + esc(item.code) + '</b><small>' + esc(airportName(item.code)) + '</small>' +
+                    (isPeak ? '<span class="rn-peak-badge"><i class="fa fa-star"></i> Cao nhất</span>' : '') + '</div>';
             }).join('');
             if (!bars) bars = '<div class="rn-airport-empty">Không có chuyến bay Finished hoặc Delay trong khoảng ngày đã chọn.</div>';
 
             var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>Lưu lượng cất/hạ cánh theo sân bay</h2>' +
                 '<p class="rn-card-subtitle">Nhấn trực tiếp vào từng cột để xem danh sách chuyến bay tương ứng • Nguồn: ' + esc(data.source) + '</p>' +
                 '<div class="rn-airport-chart-scroll"><div class="rn-airport-chart">' + bars + '</div></div>' +
-                '<div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span></div></article>' +
+                '<div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span><span><i class="fa fa-star" style="color:#f5a623"></i> Sân bay lưu lượng cao nhất</span></div></article>' +
+                '<article class="rn-card wide rn-airport-report-card" id="rnAirportReportCard" hidden></article>' +
                 '<article class="rn-card wide rn-airport-detail-card" id="rnAirportDetail"><div class="rn-airport-detail-placeholder"><i class="fa fa-bar-chart"></i><strong>Chọn một cột cất cánh hoặc hạ cánh</strong><span>Danh sách chuyến bay chi tiết sẽ hiển thị tại đây.</span></div></article></div>';
             var oldKpis = app.querySelector('.rn-kpis');
             var oldGrid = app.querySelector('.rn-grid');
@@ -140,6 +149,46 @@
             next.onclick = function () { if (detailState.page < data.totalPages) { detailState.page++; loadDetails(); } };
         }
 
+        // Bảng báo cáo tổng hợp theo sân bay, sân bay lưu lượng cao nhất được tô nổi bật.
+        function reportTableHtml(forPrint) {
+            var items = (summaryData && summaryData.airports) || [];
+            var grandTotal = items.reduce(function (sum, item) { return sum + Number(item.total || 0); }, 0);
+            return '<table class="rn-table"><thead><tr><th>STT</th><th>Sân bay</th><th>Tên sân bay</th><th>Cất cánh</th><th>Hạ cánh</th><th>Tổng lượt</th><th>Tỷ trọng</th></tr></thead><tbody>' +
+                items.map(function (item, index) {
+                    var isPeak = !!summaryData.peakAirport && item.code === summaryData.peakAirport;
+                    var style = isPeak ? ' style="background:#fff6e0;font-weight:700"' : '';
+                    return '<tr' + style + '><td>' + (index + 1) + '</td><td><b>' + esc(item.code) + '</b>' + (isPeak ? (forPrint ? ' ★' : ' <i class="fa fa-star" style="color:#f5a623"></i>') : '') + '</td>' +
+                        '<td>' + esc(airportName(item.code)) + '</td><td>' + number(item.departures) + '</td><td>' + number(item.arrivals) + '</td><td>' + number(item.total) + '</td>' +
+                        '<td>' + (grandTotal ? (item.total * 100 / grandTotal).toFixed(1) : '0') + '%</td></tr>';
+                }).join('') + '</tbody></table>';
+        }
+
+        function toggleReport() {
+            var card = app.querySelector('#rnAirportReportCard');
+            if (!card || !summaryData) return;
+            if (!card.hidden) { card.hidden = true; return; }
+            card.innerHTML = '<div class="rn-airport-detail-head"><div><h2>Báo cáo lưu lượng cất/hạ cánh theo sân bay</h2>' +
+                '<p class="rn-card-subtitle">Từ ' + esc(from.value) + ' đến ' + esc(to.value) + ' • Nguồn: ' + esc(summaryData.source || '') + '</p></div>' +
+                '<div class="rn-military-actions"><button type="button" class="rn-filter-button rn-pdf-button" id="rnAirportReportPrint"><i class="fa fa-print"></i> In / PDF</button>' +
+                '<button type="button" class="rn-filter-button" id="rnAirportReportClose">Đóng</button></div></div>' +
+                '<div class="rn-table-wrap">' + reportTableHtml(false) + '</div>';
+            card.hidden = false;
+            card.querySelector('#rnAirportReportClose').onclick = function () { card.hidden = true; };
+            card.querySelector('#rnAirportReportPrint').onclick = function () {
+                window.ReportControls.printReport({
+                    title: 'Báo cáo lưu lượng cất/hạ cánh theo sân bay',
+                    subtitle: 'Xuất lúc ' + new Date().toLocaleString('vi-VN'),
+                    meta: [
+                        { label: 'Từ ngày', value: from.value },
+                        { label: 'Đến ngày', value: to.value },
+                        { label: 'Sân bay lưu lượng cao nhất', value: (summaryData.peakAirport || '—') + ' (' + number(summaryData.peakTotal) + ' lượt)' }
+                    ],
+                    sections: [{ heading: 'Bảng dữ liệu theo sân bay', html: reportTableHtml(true) }]
+                });
+            };
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
         function loadDetails() {
             if (!detailState) return;
             var detail = app.querySelector('#rnAirportDetail');
@@ -166,6 +215,7 @@
         }
 
         apply.onclick = loadSummary;
+        reportButton.onclick = toggleReport;
         loadSummary();
     }
 
