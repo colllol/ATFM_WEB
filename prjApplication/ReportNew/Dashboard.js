@@ -151,7 +151,7 @@
 
         // Biểu đồ cột trạng thái (kiểu thay thế cho donut), style inline để không phụ thuộc CSS.
         function statusBarSvg(items, total) {
-            var width = 400, height = 250, padL = 48, padR = 14, padT = 30, padB = 36;
+            var width = 720, height = 390, padL = 62, padR = 20, padT = 34, padB = 48;
             var plotW = width - padL - padR, plotH = height - padT - padB;
             var max = Math.max(1, Math.max.apply(null, items.map(function (item) { return item.value; })));
             max = Math.max(5, Math.ceil(max * 1.12 / 5) * 5);
@@ -172,7 +172,7 @@
                 parts.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" fill="#31546f" font-size="11" font-weight="700" text-anchor="middle">' + number(item.value) + '</text>');
                 parts.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (padT + plotH + 16) + '" fill="#60778b" font-size="10" text-anchor="middle">' + esc(item.label) + '</text>');
             });
-            return '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" role="img" style="max-width:430px">' + parts.join('') + '</svg>';
+            return '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" role="img" style="width:100%;max-width:none;height:auto">' + parts.join('') + '</svg>';
         }
 
         function renderDonut() {
@@ -194,9 +194,9 @@
             var centerLabel = activeItem ? activeItem.label : selectedAirport || 'Tổng chuyến';
             var holder = app.querySelector('#rnDashboardDonut');
             if (chartTypes.status === 'bar') {
-                holder.innerHTML = '<div class="rn-donut-layout"><div class="rn-status-column-chart">' + statusBarSvg(items, total) + '</div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
+                holder.innerHTML = '<div class="rn-donut-layout rn-dashboard-status-layout"><div class="rn-dashboard-status-visual"><div class="rn-status-column-chart">' + statusBarSvg(items, total) + '</div></div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
             } else {
-                holder.innerHTML = '<div class="rn-donut-layout"><div class="rn-donut' + (selectedStatus ? ' has-active' : '') + '"><svg viewBox="0 0 240 240"><circle class="rn-donut-track" cx="120" cy="120" r="82"></circle>' + segments + '</svg><div class="rn-donut-center"><strong>' + number(centerValue) + '</strong><span>' + esc(centerLabel) + '</span></div></div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
+                holder.innerHTML = '<div class="rn-donut-layout rn-dashboard-status-layout"><div class="rn-dashboard-status-visual"><div class="rn-donut' + (selectedStatus ? ' has-active' : '') + '"><svg viewBox="0 0 240 240"><circle class="rn-donut-track" cx="120" cy="120" r="82"></circle>' + segments + '</svg><div class="rn-donut-center"><strong>' + number(centerValue) + '</strong><span>' + esc(centerLabel) + '</span></div></div></div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
             }
             Array.prototype.forEach.call(holder.querySelectorAll('.rn-status,.rn-donut-segment,.rn-status-colbar'), function (node) {
                 node.onclick = function () {
@@ -331,8 +331,8 @@
 
         function renderLayout() {
             var trend = dashboardData.trend;
-            var html = '<div class="rn-grid"><article class="rn-card"><div class="rn-chart-head"><h2>Trạng thái chuyến bay</h2><select class="rn-chart-type-select" id="rnStatusChartType" title="Chọn kiểu biểu đồ"><option value="donut">Biểu đồ tròn</option><option value="bar">Biểu đồ cột</option></select></div><p class="rn-card-subtitle" id="rnDashboardStatusSubtitle"></p><div id="rnDashboardDonut"></div></article>' +
-                '<article class="rn-card"><div class="rn-chart-head"><h2>Cất/hạ cánh sân bay</h2><select class="rn-chart-type-select" id="rnAirportChartType" title="Chọn kiểu biểu đồ"><option value="bar">Biểu đồ cột</option><option value="line">Biểu đồ đường</option><option value="donut">Biểu đồ tròn</option></select></div><p class="rn-card-subtitle">Chỉ tính Finished và Delay</p><div class="rn-airport-chart-scroll rn-dashboard-chart-scroll" id="rnDashboardBarsWrap"><div class="rn-airport-chart" id="rnDashboardBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span></div><div class="rn-card-subtitle rn-dashboard-bar-detail" id="rnDashboardBarDetail">Nhấn vào một cụm cột để xem trạng thái của sân bay</div></article>' +
+            var html = '<div class="rn-grid"><article class="rn-card wide rn-dashboard-chart-card"><div class="rn-chart-head"><h2>Trạng thái chuyến bay</h2><select class="rn-chart-type-select" id="rnStatusChartType" title="Chọn kiểu biểu đồ"><option value="donut">Biểu đồ tròn</option><option value="bar">Biểu đồ cột</option></select></div><p class="rn-card-subtitle" id="rnDashboardStatusSubtitle"></p><div id="rnDashboardDonut"></div></article>' +
+                '<article class="rn-card wide rn-dashboard-chart-card"><div class="rn-chart-head"><h2>Cất/hạ cánh sân bay</h2><select class="rn-chart-type-select" id="rnAirportChartType" title="Chọn kiểu biểu đồ"><option value="bar">Biểu đồ cột</option><option value="line">Biểu đồ đường</option><option value="donut">Biểu đồ tròn</option></select></div><p class="rn-card-subtitle">Chỉ tính Finished và Delay</p><div class="rn-airport-chart-scroll rn-dashboard-chart-scroll" id="rnDashboardBarsWrap"><div class="rn-airport-chart" id="rnDashboardBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span></div><div class="rn-card-subtitle rn-dashboard-bar-detail" id="rnDashboardBarDetail">Nhấn vào một cụm cột để xem trạng thái của sân bay</div></article>' +
                 '<article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu hướng khai thác theo ' + (trend.period === 'month' ? 'tháng' : 'ngày') + '</h2><p class="rn-card-subtitle">Chỉ gồm chuyến Hoàn thành và Delay • Nguồn: ' + esc(trend.source) + '</p></div><div class="rn-trend-legend"><span><i style="background:#9bb0c1"></i>Cùng kỳ năm trước</span><span><i style="background:#2387c8"></i>Kỳ hiện tại</span><select class="rn-chart-type-select" id="rnTrendChartType" title="Chọn kiểu biểu đồ"><option value="line">Biểu đồ đường</option><option value="bar">Biểu đồ cột</option></select></div></div><div class="rn-trend-chart-wrap"><canvas id="rnDashboardTrend" class="rn-trend-canvas"></canvas><div id="rnDashboardTrendTooltip" class="rn-trend-tooltip" role="status"></div></div><p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chuột lên từng mốc để xem số lượng chuyến bay.</p></article>' +
                 '<article class="rn-card wide"><h2>Truy cập nhanh báo cáo</h2><p class="rn-card-subtitle">Mở báo cáo chi tiết tương ứng với từng khu vực dữ liệu</p><div class="rn-links"><a class="rn-link" href="../ReportNew/FlightOperationOverview.aspx">Tổng quan khai thác <i class="fa fa-arrow-right"></i></a><a class="rn-link" href="../ReportNew/FlightStatusRate.aspx">Tỷ lệ trạng thái <i class="fa fa-arrow-right"></i></a><a class="rn-link" href="../ReportNew/FlightTrendAnalysis.aspx">Phân tích xu hướng <i class="fa fa-arrow-right"></i></a></div></article></div>';
             var old = app.querySelector('.rn-grid');

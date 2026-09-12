@@ -186,3 +186,83 @@
     box-sizing: border-box;
     min-width: 0;
 }
+
+/* Dashboard charts use the same full-width canvas as the trend chart. */
+.rn-app[data-report-view="dashboard"],
+.rn-app[data-report-view="dashboard"] .rn-grid,
+.rn-app[data-report-view="dashboard"] .rn-card {
+    min-width: 0;
+}
+.rn-app[data-report-view="dashboard"] .rn-dashboard-chart-card {
+    grid-column: 1 / -1;
+}
+.rn-app[data-report-view="dashboard"] .rn-chart-head {
+    flex-wrap: wrap;
+}
+.rn-dashboard-status-layout {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 18px;
+}
+.rn-dashboard-status-visual {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 390px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.rn-dashboard-status-visual .rn-donut {
+    width: min(390px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+}
+.rn-dashboard-status-visual .rn-status-column-chart {
+    width: 100%;
+    min-height: 390px;
+}
+.rn-dashboard-status-layout .rn-status-list {
+    width: 100%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.rn-app[data-report-view="dashboard"] .rn-dashboard-chart-scroll {
+    min-height: 390px;
+}
+.rn-app[data-report-view="dashboard"] .rn-dashboard-chart-scroll .rn-airport-chart,
+.rn-app[data-report-view="dashboard"] .rn-airport-alt-chart {
+    min-height: 390px;
+    height: 390px;
+}
+.rn-app[data-report-view="dashboard"] .rn-airport-alt-chart svg {
+    max-height: 390px;
+}
+@media (max-width: 767px) {
+    .rn-dashboard-status-visual,
+    .rn-dashboard-status-visual .rn-status-column-chart,
+    .rn-app[data-report-view="dashboard"] .rn-dashboard-chart-scroll,
+    .rn-app[data-report-view="dashboard"] .rn-dashboard-chart-scroll .rn-airport-chart,
+    .rn-app[data-report-view="dashboard"] .rn-airport-alt-chart {
+        min-height: 330px;
+        height: 330px;
+    }
+    .rn-dashboard-status-layout .rn-status-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .rn-trend-legend {
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+}
+@media (max-width: 480px) {
+    .rn-dashboard-status-layout .rn-status-list {
+        grid-template-columns: 1fr;
+    }
+    .rn-app[data-report-view="dashboard"] .rn-card {
+        padding: 14px;
+    }
+    .rn-chart-head h2 {
+        flex: 1 1 100%;
+    }
+}
