@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Web.Services;
-using Oracle.ManagedDataAccess.Client;
+using prjBusinessLogic;
 
 namespace prjApplication.ReportNew
 {
@@ -94,61 +94,42 @@ namespace prjApplication.ReportNew
         [WebMethod]
         public static object GetAirports()
         {
-            const string sql = @"SELECT AIRPORT FROM (
-                                   SELECT DISTINCT UPPER(TRIM(FROM_AIRP)) AIRPORT FROM T_DAY_FLIGHTS WHERE FROM_AIRP IS NOT NULL
-                                   UNION SELECT DISTINCT UPPER(TRIM(TO_AIRP)) AIRPORT FROM T_DAY_FLIGHTS WHERE TO_AIRP IS NOT NULL
-                                 ) WHERE AIRPORT IS NOT NULL ORDER BY AIRPORT";
+            DataTable data = new clsResuftAPI().GetTableApiExtension(
+                "DAYPLAN_COMPARE_PKG", "GET_AIRPORTS", new { });
+            if (data == null) throw new InvalidOperationException("Không lấy được danh sách sân bay từ API.");
             List<string> values = new List<string>();
-            using (OracleConnection connection = CreateConnection())
-            using (OracleCommand command = new OracleCommand(sql, connection))
-            {
-                connection.Open();
-                using (OracleDataReader reader = command.ExecuteReader()) while (reader.Read()) values.Add(Convert.ToString(reader["AIRPORT"], CultureInfo.InvariantCulture).Trim());
-            }
+            foreach (DataRow row in data.Rows) values.Add(Text(row["AIRPORT"]));
             return values;
         }
 
         [WebMethod]
         public static object GetOperators()
         {
-            const string sql = @"SELECT DISTINCT UPPER(TRIM(OPER_ID)) OPER_ID FROM T_DAY_FLIGHTS WHERE OPER_ID IS NOT NULL ORDER BY OPER_ID";
+            DataTable data = new clsResuftAPI().GetTableApiExtension(
+                "DAYPLAN_COMPARE_PKG", "GET_OPERATORS", new { });
+            if (data == null) throw new InvalidOperationException("Không lấy được danh sách hãng khai thác từ API.");
             List<string> values = new List<string>();
-            using (OracleConnection connection = CreateConnection())
-            using (OracleCommand command = new OracleCommand(sql, connection))
-            {
-                connection.Open();
-                using (OracleDataReader reader = command.ExecuteReader()) while (reader.Read()) values.Add(Text(reader["OPER_ID"]));
-            }
+            foreach (DataRow row in data.Rows) values.Add(Text(row["OPER_ID"]));
             return values;
         }
 
         private static ComparisonDay LoadDay(DateTime date, string airport, string oper)
         {
-            const string sql = @"SELECT FLIGHTNBR, FROM_AIRP, TO_AIRP, ETD, ETA, FLIGHT_TYPE, OPER_ID, PERMNBR, PERM_ID
-                                   FROM T_DAY_FLIGHTS
-                                  WHERE FLIGHTDATE >= :flightDate AND FLIGHTDATE < :nextDate
-                                    AND PERMNBR IS NOT NULL AND UPPER(TRIM(PERMNBR)) <> 'NOPERM'
-                                    AND (:airport IS NULL OR UPPER(TRIM(FROM_AIRP)) = :airport OR UPPER(TRIM(TO_AIRP)) = :airport)
-                                    AND (:oper IS NULL OR UPPER(TRIM(OPER_ID)) = :oper)";
-            List<FlightRow> flights = new List<FlightRow>();
-            using (OracleConnection connection = CreateConnection())
-            using (OracleCommand command = new OracleCommand(sql, connection))
-            {
-                command.BindByName = true;
-                command.Parameters.Add("flightDate", OracleDbType.Date).Value = date;
-                command.Parameters.Add("nextDate", OracleDbType.Date).Value = date.AddDays(1);
-                command.Parameters.Add("airport", OracleDbType.Varchar2).Value = airport == null ? (object)DBNull.Value : airport;
-                command.Parameters.Add("oper", OracleDbType.Varchar2).Value = oper == null ? (object)DBNull.Value : oper;
-                connection.Open();
-                using (OracleDataReader reader = command.ExecuteReader())
+            DataTable data = new clsResuftAPI().GetTableApiExtension(
+                "DAYPLAN_COMPARE_PKG", "GET_DAY_FLIGHTS",
+                new
                 {
-                    while (reader.Read()) flights.Add(new FlightRow { Callsign = Text(reader["FLIGHTNBR"]), FromAirp = Text(reader["FROM_AIRP"]), ToAirp = Text(reader["TO_AIRP"]), Etd = Text(reader["ETD"]), Eta = Text(reader["ETA"]), FlightType = Text(reader["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(reader["OPER_ID"]).ToUpperInvariant(), PermNbr = Text(reader["PERMNBR"]), PermId = Text(reader["PERM_ID"]) });
-                }
-            }
+                    P_FLIGHT_DATE = date.ToString("yyyy-MM-dd"),
+                    P_AIRPORT = airport,
+                    P_OPER = oper
+                });
+            if (data == null) throw new InvalidOperationException("Không lấy được kế hoạch bay ngày từ API.");
+            List<FlightRow> flights = new List<FlightRow>();
+            foreach (DataRow row in data.Rows)
+                flights.Add(new FlightRow { Callsign = Text(row["FLIGHTNBR"]), FromAirp = Text(row["FROM_AIRP"]), ToAirp = Text(row["TO_AIRP"]), Etd = Text(row["ETD"]), Eta = Text(row["ETA"]), FlightType = Text(row["FLIGHT_TYPE"]).ToUpperInvariant(), OperId = Text(row["OPER_ID"]).ToUpperInvariant(), PermNbr = Text(row["PERMNBR"]), PermId = Text(row["PERM_ID"]) });
             return new ComparisonDay { Date = date, Flights = flights };
         }
 
-        private static OracleConnection CreateConnection() { return new OracleConnection(ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString); }
         private static string Text(object value) { return value == null || value == DBNull.Value ? String.Empty : Convert.ToString(value, CultureInfo.InvariantCulture).Trim(); }
         private static string Key(FlightRow row) { return String.Join("|", new[] { row.Callsign, row.FromAirp, row.ToAirp, row.Etd, row.Eta }.Select(x => (x ?? String.Empty).Trim().ToUpperInvariant())); }
         private static List<AirportCount> BuildAirportChart(IEnumerable<FlightRow> first, IEnumerable<FlightRow> second)
