@@ -73,6 +73,15 @@
                                 </asp:LinkButton>
                             </td>                                              
                         </tr>
+                        <tr>
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">Tìm nhật ký / thời gian:</td>
+                            <td style="width: 35%; text-align: left;" colspan="2">
+                                <asp:TextBox ID="txtActionHistorySearch" runat="server" CssClass="inputtext"
+                                    Width="100%" MaxLength="200"
+                                    placeholder="Nhập nội dung thao tác hoặc dd/MM/yyyy HH:mm:ss"></asp:TextBox>
+                            </td>
+                            <td style="width: 40%;"></td>
+                        </tr>
                     </table>
                 </div>
             </td>
