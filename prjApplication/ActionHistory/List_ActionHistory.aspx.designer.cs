@@ -20,6 +20,14 @@ namespace prjApplication.ActionHistory {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.DropDownList ddlTenTruyCap;
+
+        protected global::System.Web.UI.HtmlControls.HtmlInputText txtActionCode;
+
+        protected global::System.Web.UI.HtmlControls.HtmlInputText txtHostIP;
+
+        protected global::System.Web.UI.HtmlControls.HtmlInputText txtTungay;
+
+        protected global::System.Web.UI.HtmlControls.HtmlInputText txtDenngay;
         
         /// <summary>
         /// linkSearch control.

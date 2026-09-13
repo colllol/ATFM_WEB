@@ -1,6 +1,8 @@
 NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
 ================================
 
+2026-09-14 | prjApplication/ActionHistory/List_ActionHistory.aspx; List_ActionHistory.aspx.cs; List_ActionHistory.aspx.designer.cs | Bổ sung lọc theo mã thao tác, HostIP và khoảng thời gian thực hiện đến giây; thêm kiểm tra định dạng, thứ tự thời gian và bộ chọn ngày giờ.
+
 2026-09-12 | NHAT_KY_THAY_DOI.txt; prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.js | Thay ba tep xung dot bang phien ban remote origin/agent/initial-atfm-import commit 4190266 theo xac nhan.
 
 2026-07-22 | prjApplication/ReportNew/FlightStatusRate.js | Nạp sẵn danh sách hãng bay và hợp nhất kết quả API, bảo đảm select hãng có nội dung kể cả khi endpoint trả rỗng hoặc lỗi.
