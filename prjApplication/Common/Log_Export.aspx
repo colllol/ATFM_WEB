@@ -16,10 +16,23 @@
                     <div class="classSearchHeader">
                         <table border="0" cellspacing="1px" cellspacing="1px" style="text-align: right; width: 100%">
                             <tr>
-                                <td style="width: 40%; text-align: left;">                                    
+                                <td style="width: 10%; text-align: left;" class="Titlelbl">Name:</td>
+                                <td style="width: 20%; text-align: left;">
+                                    <asp:TextBox ID="txtName" runat="server" CssClass="text-input" Width="100%" MaxLength="100" placeholder="Tìm theo Name" />
                                 </td>
-
-                                <td style="width: 60%; text-align: left;">
+                                <td style="width: 10%; text-align: left;" class="Titlelbl">SQLCODE:</td>
+                                <td style="width: 15%; text-align: left;">
+                                    <asp:TextBox ID="txtSqlCode" runat="server" CssClass="text-input" Width="100%" MaxLength="50" placeholder="Tìm theo SQLCODE" />
+                                </td>
+                                <td style="width: 8%; text-align: left;" class="Titlelbl">ERR:</td>
+                                <td style="width: 22%; text-align: left;">
+                                    <asp:TextBox ID="txtErr" runat="server" CssClass="text-input" Width="100%" MaxLength="500" placeholder="Tìm theo ERR" />
+                                </td>
+                                <td style="width: 15%; text-align: left;">
+                                    <asp:LinkButton runat="server" ID="btnSearch" CssClass="btn btn-sm btn-primary btn-bold"
+                                        OnClick="btnSearch_Click" CausesValidation="false">
+                                        <span class="glyphicon glyphicon-search"></span> Tìm kiếm
+                                    </asp:LinkButton>
 
                                     <asp:LinkButton runat="server" ID="btnAddMenu" CssClass="btn btn-sm btn-primary btn-bold"
                                         OnClick="btnAddMenu_Click" CausesValidation="false">
