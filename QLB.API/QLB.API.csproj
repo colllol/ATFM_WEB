@@ -360,6 +360,8 @@
     <Compile Include="Data\System\UserGroupsRepository.cs" />
     <Compile Include="Data\System\UserMenuRepository.cs" />
     <Compile Include="Data\System\UsersRepository.cs" />
+    <Compile Include="Data\System\AiNotificationService.cs" />
+    <Compile Include="Data\System\EmailNotificationService.cs" />
     <Compile Include="Data\System\NotificationsRepository.cs" />
     <Compile Include="Data\Thslb\SumPurQtRepository.cs" />
     <Compile Include="Data\Via\ViaRepository.cs" />
@@ -372,6 +374,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="JwtManager.cs" />
+    <Compile Include="Models\NotificationResponse.cs" />
     <Compile Include="Models\ReponseEntity.cs" />
     <Compile Include="Models\TextMediaTypeFormatter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
