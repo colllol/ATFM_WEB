@@ -1,5 +1,4 @@
-NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
-================================
+﻿NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
 
 2026-07-22 | prjApplication/ReportNew/FlightStatusRate.js | Nạp sẵn danh sách hãng bay và hợp nhất kết quả API, bảo đảm select hãng có nội dung kể cả khi endpoint trả rỗng hoặc lỗi.
 2026-07-22 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Bổ sung nguồn hãng bay T_KHH cho WebMethod GetOperators dự phòng.
@@ -1835,14 +1834,12 @@ Quy ước:
 2026-08-26 | TaiLieu/BienBanNghiemThu_202608/01_BBNT_KyThuat_CaiDat_20260807.docx; tools/generate_acceptance_minutes.py | Sua bien ban nghiem thu ky thuat theo So do ngu canh ATFM_WEB: bo sung pham vi DMZ/Reverse Proxy, IIS Application Zone, AI Service, Integration Workers, Oracle ATFM/Audit, Email/File, Reports/Exports, ADS-B/SLOT, AMHS/AFTN, Bravo 10; them ma tran ket noi, bao mat, backup/rollback va ma anh IMG-INSTALL-01..06.
 2026-08-26 | TaiLieu/NhatKyTrienKhai_GiaiDoan/Mau_1_NhatKyTrienKhai_GiaiDoan.docx; tools/merge_nhatky_giai_doan.py | Ghep Mau_1_Bia_Quyen_NhatKy_CongTac_TrienKhai truoc, sau do cac file Mau_1_1_GD01 den GD07 theo thu tu giai doan; giu nguyen bang noi dung va chen ngat trang giua cac phan.
 2026-08-26 | TaiLieu/NhatKyGiamSat_Ngay/Mau_2_1_NhatKyGiamSat_Ngay.docx; tools/merge_nhatky_giamsat_ngay.py | Ghep Mau_2_Bia_Quyen_NhatKy_GiamSat_CongTac_TrienKhai truoc, sau do 60 file Mau_2_1_Ngay_01 den Ngay_60 theo thu tu; kiem tra du 60 ngay, giu nguyen bang noi dung/xac nhan va chen ngat trang.
-<<<<<<< HEAD
 2026-09-05 | NHAT_KY_THAY_DOI.txt | Giai quyet xung dot khi hop nhat origin/agent/initial-atfm-import, bao toan day du cac muc nhat ky cua ca nhanh local va remote.
 2026-09-05 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx; prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.css; prjApplication/ReportNew/FlightPlanDailyComparison.js; prjApplication/prjApplication.csproj | Tạo trang đánh giá số liệu kế hoạch bay theo hai ngày, lọc sân bay, đối chiếu tổng SC/NO và popup danh sách chuyến bay khác qua WebMethod API từ T_DAY_FLIGHTS; bổ sung giao diện responsive theo skill UI.
 2026-09-05 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.js | Bổ sung số chuyến bay khác riêng cho tổng số, SC và NO; popup lọc đúng nhóm loại kế hoạch và chuẩn hóa tên trường JSON cho client.
 2026-09-05 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx; prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.css; prjApplication/ReportNew/FlightPlanDailyComparison.js | Thêm bộ lọc hãng theo OPER_ID, đổi nhãn nút thành So sánh, căn đồng nhất chiều cao bộ lọc và cố định cụm nút Chi tiết về mép phải bảng.
 2026-09-05 | prjApplication/ReportNew/FlightPlanDailyComparison.css; prjApplication/ReportNew/FlightPlanDailyComparison.aspx | Khôi phục đầy đủ stylesheet bị ghi đè trong lần cân chỉnh trước, bổ sung cache-buster v20260905-2 để trình duyệt tải lại giao diện đúng.
 2026-09-05 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx; prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.css; prjApplication/ReportNew/FlightPlanDailyComparison.js | Thêm biểu đồ cột nhóm theo sân bay với hai cột ngày so sánh, nhãn số liệu, chú giải màu và cuộn ngang responsive; tăng phiên bản cache JavaScript.
-=======
 2026-08-28 | Export_Perm_SC.txt | Tao tai lieu huong dan an toan export phep SC thang 07/2026 qua ATFM_STAGE: loc master/detail, kiem tra LONG, checksum, xung dot khoa, export lai staging, APPEND master truoc detail, xac minh va dieu kien dung khan cap.
 2026-08-28 | Export_Perm_NO.txt | Tao tai lieu huong dan an toan export phep NO thang 07/2026 qua ATFM_STAGE: loc master/detail theo PERM_ID, kiem tra LONG, checksum, xung dot khoa, export lai staging, APPEND master truoc detail va xac minh du lieu.
 2026-08-28 | Export_SCHEDULE_DAYFLIGHTS.txt | Tao tai lieu huong dan an toan export/import lich T_SCHEDULE_DAYFLIGHTS thang 07/2026 qua ATFM_STAGE: loc FLIGHTDATE, kiem tra khoa va index, checksum, xung dot ID, APPEND sau cua so bao tri va xac minh sau import.
@@ -1878,7 +1875,6 @@ Quy ước:
 2026-09-05 | prjApplication/FinishFlights/ListFinishedFlights.aspx.cs | Chuẩn hóa phân loại bốn nhóm chặng Đ/C BRAVO theo hai ký tự đầu của M_AERO.AE_CODE; chỉ nhận sân bay ánh xạ được trong M_AERO và trả mã AE_CODE chuẩn.
 2026-09-05 | prjApplication/FinishFlights/BravoComparison.ashx; prjApplication/FinishFlights/BravoComparison.ashx.cs; prjApplication/FinishFlights/ListFinishedFlightAccepts.aspx; prjApplication/Web.config; prjApplication/prjApplication.csproj | Chuyển API Đ/C BRAVO từ PageMethod bị Forms Authentication trả HTTP 401 sang handler cùng-origin có kiểm tra ATFM_CURRENT_USER trong session, trả lỗi JSON rõ ràng và đăng ký đầy đủ cho publish.
 2026-09-05 | prjApplication/Web.config | Giữ cấu hình môi trường local ngoài Git, chỉ đưa location cho BravoComparison.ashx vào bản theo dõi để tránh commit nhầm thông tin kết nối và thông tin xác thực cục bộ.
->>>>>>> origin/agent/initial-atfm-import
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs | Sua cach tinh tong so phep bay SC/NO theo khoa chuy?n bay duy nhat, tranh dem trung ban ghi.
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.js | Sap xep bang tong hop thanh 5 dong, dat tong so phep bay mua SC o STT 4 va dot xuat NO o STT 5.
 2026-09-07 | prjApplication/ReportNew/FlightPlanDailyComparison.aspx.cs; prjApplication/ReportNew/FlightPlanDailyComparison.js | Sua bang theo mau 5 dong: STT 2-3 la tong so chuyen bay SC/NO, STT 4-5 la tong so phep bay SC/NO; dem phep duy nhat theo PERMNBR.
@@ -1938,3 +1934,4 @@ Quy ước:
 2026-09-14 | prjApplication/Web.config | Gỡ hai cấu hình NL2SQL APIAINotifications/APIAIKey khỏi web vì khóa và endpoint chuyển sang QLB.API/Web.config. Giữ nguyên các cấu hình môi trường có sẵn khác; chỉ stage phần gỡ do lượt này.
 2026-09-14 | tests/test_ai_notification_service.cs; tests/test_ai_notification_service.ps1; tests/test_ai_notification_upsert.ps1 | Chuyển bộ kiểm tra service/Oracle sang thư mục tests của repo API, chạy trên production source QLB.API và ConnectDB của backend; web không còn giữ bản test service cũ.
 2026-09-14 | tests/test_notification_proxy.cs; tests/test_notification_proxy.ps1; prjApplication/Handlers/Notification.ashx.cs | Thêm 83 kiểm tra adapter WebForms→QLB.API: phiên và USER_ID lấy từ session, chống giả mạo query, verb/filter validation, XHR/redirect/JSON/error sanitization và không lộ API key.
+2026-09-14 | prjApplication/ActionHistory/List_ActionHistory.aspx(.cs/.designer.cs); prjApplication/SLOTS/Notifications.aspx; prjApplication/SLOTS/Notifications.js; NHAT_KY_THAY_DOI.txt | Giải quyết xung đột Git dang dở, giữ luồng notification AI và thay đổi remote; loại bỏ marker xung đột, build ATFM.sln thành công.

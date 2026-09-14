@@ -1,10 +1,10 @@
-<%@ Page Title="Thông báo" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
+﻿<%@ Page Title="Thông báo" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
     CodeBehind="Notifications.aspx.cs" Inherits="prjApplication.SLOTS.Notifications" %>
 
 <asp:Content ID="NotificationsContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260914-2") %>" />
 
-    <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>" data-ai-reports-url="<%= ResolveUrl("~/SLOTS/AIReports.aspx") %>">
+    <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>" data-ai-reports-url="<%= ResolveUrl("~/SLOTS/AIReports.aspx") %>" data-dplkl-url="<%= ResolveUrl("~/FinishFlights/ListFinishedFlights.aspx?Menu_ID=71") %>">
         <header class="notifications-page-header">
             <div>
                 <h1><i class="fa fa-bell-o" aria-hidden="true"></i> Thông báo</h1>

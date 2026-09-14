@@ -1,10 +1,11 @@
-(function ($) {
+﻿(function ($) {
     'use strict';
 
     var root = document.getElementById('notificationsPage');
     if (!root || !$) return;
 
     var endpoint = root.getAttribute('data-endpoint');
+    var dplklUrl = root.getAttribute('data-dplkl-url') || '/FinishFlights/ListFinishedFlights.aspx?Menu_ID=71';
     var pageSize = 100;
     var currentPage = 1;
     var currentStatus = -1;
