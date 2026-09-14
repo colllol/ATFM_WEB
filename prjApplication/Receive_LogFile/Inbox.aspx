@@ -23,6 +23,7 @@
         <label for="txtContentSearch">Content:</label>
         <input id="txtContentSearch" type="text" />
         <button id="btnSeacrch" type="button" class="btn btn-primary" onclick="btnSeacrch_OnClick()">Search</button>
+        <button id="btnExportExcel" type="button" class="btn btn-success" onclick="btnExportExcel_OnClick()">Export Excel</button>
     </div>
     <div id="inboxResultSummary" style="display: none; margin-top: 8px; font-weight: 600;">
         <span id="lblTotalRecords">Tổng số bản ghi: 0</span>
@@ -136,6 +137,110 @@
         var inboxPageSize = 100;
         var inboxPageIndex = 1;
         var inboxTotalRecords = 0;
+        var inboxExportRequest = null;
+
+        function escapeExcelHtml(value) {
+            return $('<div>').text(value == null ? '' : String(value)).html();
+        }
+
+        function getSearchRequestData(start, end) {
+            return {
+                P_START: start,
+                P_END: end,
+                P_FROMDATE: formatDateForApi($('#txtFromDateSearch').val()),
+                P_TODATE: formatDateForApi($('#txtToDateSearch').val()),
+                P_NBR: $('#txtNbrSearch').val(),
+                P_ORIGIN: $('#txtOriginSearch').val(),
+                P_CONTENT: $('#txtContentSearch').val()
+            };
+        }
+
+        function btnExportExcel_OnClick() {
+            var fromDate = parseSearchDate($('#txtFromDateSearch').val());
+            var toDate = parseSearchDate($('#txtToDateSearch').val());
+            if (fromDate === null || toDate === null) {
+                alert('Vui lòng nhập ngày theo định dạng dd-mm-yyyy.');
+                return;
+            }
+            if (fromDate > toDate) {
+                alert('Ngày From không được lớn hơn ngày To.');
+                return;
+            }
+            if (inboxExportRequest) return;
+
+            var $button = $('#btnExportExcel');
+            var $search = $('#btnSeacrch');
+            $button.prop('disabled', true).text('Đang xuất...');
+            $search.prop('disabled', true);
+
+            var requestUrl = urlApi + 'api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxBySearch';
+            var detailUrl = urlApi + 'api/ApiExtension/ExcuteTable?packageName=MESSAGE_PKG&storeName=GetInboxDetailBy';
+            var allItems = [];
+
+            function loadExportPage(start) {
+                var end = start + inboxPageSize - 1;
+                return $.ajax({
+                    method: 'PUT',
+                    url: requestUrl,
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(getSearchRequestData(start, end))
+                }).then(function (data) {
+                    var items = data && data.ListValue ? data.ListValue : [];
+                    for (var i = 0; i < items.length; i++) allItems.push(items[i]);
+                    var total = getTotalRecords(data);
+                    return (items.length > 0 && allItems.length < total)
+                        ? loadExportPage(end + 1)
+                        : allItems;
+                });
+            }
+
+            function loadDetails(items, index, result) {
+                if (index >= items.length) return $.Deferred().resolve(result).promise();
+                var item = items[index] || {};
+                return $.ajax({
+                    method: 'PUT',
+                    url: detailUrl,
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ P_TYPE: item.TYPE, P_ID: item.ID })
+                }).then(function (data) {
+                    var detail = data && data.ListValue && data.ListValue[0] ? data.ListValue[0] : {};
+                    result.push({ NBR: item.NBR, CONTENT: detail.CONTENT, ORIGIN: detail.FROM_PL });
+                    return loadDetails(items, index + 1, result);
+                });
+            }
+
+            function downloadExcel(items) {
+                var html = '<html><head><meta charset="UTF-8"></head><body><table border="1">'
+                    + '<tr><th>NBR</th><th>CONTENT</th><th>ORIGIN</th></tr>';
+                for (var i = 0; i < items.length; i++) {
+                    html += '<tr><td>' + escapeExcelHtml(items[i].NBR)
+                        + '</td><td>' + escapeExcelHtml(items[i].CONTENT)
+                        + '</td><td>' + escapeExcelHtml(items[i].ORIGIN) + '</td></tr>';
+                }
+                html += '</table></body></html>';
+                var blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = 'Inbox_' + $('#txtFromDateSearch').val().replace(/-/g, '')
+                    + '_' + $('#txtToDateSearch').val().replace(/-/g, '') + '.xls';
+                document.body.appendChild(link);
+                link.click();
+                window.setTimeout(function () { window.URL.revokeObjectURL(link.href); link.remove(); }, 0);
+            }
+
+            inboxExportRequest = loadExportPage(1)
+                .then(function (items) { return loadDetails(items, 0, []); })
+                .then(function (details) {
+                    downloadExcel(details);
+                    alert('Đã xuất ' + details.length + ' bản ghi ra Excel.');
+                })
+                .fail(function () { alert('Không thể xuất dữ liệu Excel. Vui lòng thử lại.'); })
+                .always(function () {
+                    inboxExportRequest = null;
+                    $button.prop('disabled', false).text('Export Excel');
+                    $search.prop('disabled', false);
+                });
+        }
 
         function updateInboxPager(totalRecords) {
             inboxTotalRecords = totalRecords || 0;
