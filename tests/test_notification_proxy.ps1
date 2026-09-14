@@ -16,37 +16,36 @@ function Resolve-TestDependency([string[]] $Candidates) {
     throw ('Missing test dependency: ' + ($Candidates -join ', '))
 }
 
-$testNewtonsoft = Resolve-TestDependency @('packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll', 'prjApplication\bin\Newtonsoft.Json.dll', 'Lib\Newtonsoft.Json.dll')
-$testOracle = Resolve-TestDependency @('packages\Oracle.ManagedDataAccess.12.2.1100\lib\net40\Oracle.ManagedDataAccess.dll', 'prjApplication\bin\Oracle.ManagedDataAccess.dll')
+$testNewtonsoft = Resolve-TestDependency @('packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll', 'prjApplication\bin\Newtonsoft.Json.dll')
+$testInfo = Resolve-TestDependency @('prjInfo\bin\Debug\prjInfo.dll', 'prjApplication\bin\prjInfo.dll', 'prjInfo\bin\Release\prjInfo.dll')
 $testTempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
-$testBuildDirectory = Join-Path $testTempRoot ('atfm-ai-notification-tests-' + [Guid]::NewGuid().ToString('N'))
+$testBuildDirectory = Join-Path $testTempRoot ('atfm-notification-proxy-tests-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $testBuildDirectory
 $testExitCode = 1
 try {
     Copy-Item -LiteralPath $testNewtonsoft -Destination $testBuildDirectory
-    Copy-Item -LiteralPath $testOracle -Destination $testBuildDirectory
-    $testExecutable = Join-Path $testBuildDirectory 'AiNotificationServiceTests.exe'
+    Copy-Item -LiteralPath $testInfo -Destination $testBuildDirectory
+    $testExecutable = Join-Path $testBuildDirectory 'NotificationProxyTests.exe'
     $testCompilerArgs = @(
         '/nologo', '/target:exe', '/platform:anycpu', '/optimize+',
         ('/out:' + $testExecutable),
         '/reference:System.dll', '/reference:System.Core.dll', '/reference:System.Data.dll',
-        '/reference:System.Configuration.dll', '/reference:System.Web.dll',
-        ('/reference:' + $testNewtonsoft), ('/reference:' + $testOracle),
-        (Join-Path $testRepoRoot 'prjApplication\Handlers\AiNotificationService.cs'),
-        (Join-Path $PSScriptRoot 'test_ai_notification_service.cs')
+        '/reference:System.Configuration.dll', '/reference:System.Web.dll', '/reference:System.Xml.dll',
+        ('/reference:' + $testNewtonsoft), ('/reference:' + $testInfo),
+        (Join-Path $testRepoRoot 'prjApplication\Handlers\Notification.ashx.cs'),
+        (Join-Path $PSScriptRoot 'test_notification_proxy.cs')
     )
     & $testCompiler @testCompilerArgs
-    if ($LASTEXITCODE -ne 0) { throw 'AI notification test compilation failed.' }
+    if ($LASTEXITCODE -ne 0) { throw 'Notification proxy test compilation failed.' }
     & $testExecutable
     $testExitCode = $LASTEXITCODE
 }
 finally {
-    # Only remove this runner's verified temporary build directory, using one shell.
     $testResolvedBuild = [IO.Path]::GetFullPath($testBuildDirectory)
-    $testExpectedPrefix = $testTempRoot.TrimEnd('\') + '\atfm-ai-notification-tests-'
+    $testExpectedPrefix = $testTempRoot.TrimEnd('\') + '\atfm-notification-proxy-tests-'
     if (-not $testResolvedBuild.StartsWith($testExpectedPrefix, [StringComparison]::OrdinalIgnoreCase)) {
         throw 'Refusing to remove a build path outside the test temporary directory.'
     }
     Remove-Item -LiteralPath $testResolvedBuild -Recurse -Force
 }
-exit $testExitCode
+if ($testExitCode -ne 0) { throw 'Notification proxy regression tests failed.' }

@@ -2512,7 +2512,6 @@
       <DependentUpon>ATFM.Master</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Handlers\AiNotificationService.cs" />
     <Compile Include="Handlers\Notification.ashx.cs">
       <DependentUpon>Notification.ashx</DependentUpon>
     </Compile>
