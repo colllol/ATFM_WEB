@@ -1639,6 +1639,7 @@
                 body.innerHTML = rows.map(function (row, index) {
                     var oracleText = $.trim(String(row.oracleCount == null ? '' : row.oracleCount));
                     var bravoText = $.trim(String(row.bravoCount == null ? '' : row.bravoCount));
+                    if (bravoText === '') bravoText = '0';
                     var countsDiffer = oracleText !== '' && bravoText !== ''
                         && isFinite(Number(oracleText)) && isFinite(Number(bravoText))
                         && Number(oracleText) !== Number(bravoText);
