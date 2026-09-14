@@ -42,24 +42,28 @@
                 <div class="classSearchHeader">
                     <table border="0" cellspacing="1px" cellspacing="1px" style="text-align: right; width: 100%">
                         <tr>
-                            <td style="width: 8%; text-align: left;" class="Titlelbl">Tên truy cập:
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">Tên truy cập:
                             </td>
-                            <td style="width: 14%; text-align: left">
+                            <td style="width: 10%; text-align: left">
                                 <asp:DropDownList ID="ddlTenTruyCap" CssClass="wid_40" Width="100%" runat="server"></asp:DropDownList>                                          
                              </td>
-                            <td style="width: 9%; text-align: left;" class="Titlelbl">Mã thao tác:
+                            <%--<td style="width: 15%; text-align: left">
+                                <asp:DropDownList ID="ddlTenTruyCap" TabIndex="3" runat="server" Width="100%" CssClass="inputtext">
+                                </asp:DropDownList>
+                            </td>--%>
+                            <%--<td style="width: 10%; text-align: right" class="Titlelbl">Từ ngày(<span class="req_Field">*</span>):
                             </td>
-                            <td style="width: 18%; text-align: left">
-                                <input id="txtActionCode" runat="server" class="text-input" autocomplete="off"
-                                    style="width: 100%" maxlength="100" placeholder="Nhập mã thao tác" />
+                            <td style="width: 15%; text-align: left">
+                                <input id="txtTungay" runat="server" class="datepicker text-input" autocomplete="off"
+                                    style="width: 100%" onkeypress='return check_num(this,14,event)' />
                             </td>
-                            <td style="width: 7%; text-align: left;" class="Titlelbl">HostIP:
-                            </td>
-                            <td style="width: 17%; text-align: left">
-                                <input id="txtHostIP" runat="server" class="text-input" autocomplete="off"
-                                    style="width: 100%" maxlength="50" placeholder="Nhập HostIP" />
-                            </td>
-                            <td style="width: 27%; text-align: left;">
+                            <td style="width: 10%; text-align: right" class="titlelbl">đến ngày(<span class="req_field">*</span>):
+                            </td>   
+                            <td style="width: 15%; text-align: left">
+                                <input id="txtDenngay" runat="server" class="datepicker text-input" autocomplete="off"
+                                    style="width: 100%" onkeypress='return check_num(this,14,event)' />
+                            </td> --%>    
+                            <td style="width: 40%; text-align: left;">
                                 <asp:Button CausesValidation="false" runat="server" ID="linkSearch" CssClass="iconFind" 
                                     Font-Bold="true" OnClick="linkSearch_Click" Text="" Width="40px" Height="38px"></asp:Button>
                                   <asp:LinkButton runat="server" ID="btnExportExel" CssClass="btn btn-sm btn-primary btn-bold"
@@ -70,19 +74,13 @@
                             </td>                                              
                         </tr>
                         <tr>
-                            <td style="text-align: left;" class="Titlelbl">Từ thời gian:
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">Tìm nhật ký / thời gian:</td>
+                            <td style="width: 35%; text-align: left;" colspan="2">
+                                <asp:TextBox ID="txtActionHistorySearch" runat="server" CssClass="inputtext"
+                                    Width="100%" MaxLength="200"
+                                    placeholder="Nhập nội dung thao tác hoặc dd/MM/yyyy HH:mm:ss"></asp:TextBox>
                             </td>
-                            <td style="text-align: left">
-                                <input id="txtTungay" runat="server" class="datetimepicker text-input" autocomplete="off"
-                                    style="width: 100%" placeholder="dd/MM/yyyy HH:mm" />
-                            </td>
-                            <td style="text-align: left;" class="Titlelbl">Đến thời gian:
-                            </td>
-                            <td style="text-align: left">
-                                <input id="txtDenngay" runat="server" class="datetimepicker text-input" autocomplete="off"
-                                    style="width: 100%" placeholder="dd/MM/yyyy HH:mm" />
-                            </td>
-                            <td colspan="3"></td>
+                            <td style="width: 40%;"></td>
                         </tr>
                     </table>
                 </div>
@@ -153,14 +151,21 @@
  
     <script language="javascript" type="text/javascript">
 
-        $('#<%= txtTungay.ClientID %>, #<%= txtDenngay.ClientID %>').datetimepicker({
-            mask: true,
-            timepicker: true,
-            formatTime: 'H:i',
-            format: 'd/m/Y H:i',
-            formatDate: 'd/m/Y',
-            step: 1
+        <%--$('#<%= txtTungay.ClientID %>').datetimepicker({
+            mask: '39/19/9999',
+            timepicker: false,
+            formatTime: '',
+            format: 'd/m/Y',
+            formatDate: 'd/m/Y'
         });
+
+        $('#<%= txtDenngay.ClientID %>').datetimepicker({
+            mask: '39/19/9999',
+            timepicker: false,
+            formatTime: '',
+            format: 'd/m/Y',
+            formatDate: 'd/m/Y'
+        });--%>
 
     </script>
 </asp:Content>

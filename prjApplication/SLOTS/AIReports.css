@@ -16,3 +16,30 @@
 @media(max-width:1100px){.ai-kpis{grid-template-columns:repeat(3,1fr)}.ai-filters{grid-template-columns:repeat(2,1fr)}.ai-search-field{grid-column:span 2}}
 @media(max-width:700px){.ai-report-hero{align-items:flex-start; flex-direction:column; gap:20px; padding:22px}.ai-report-live{width:100%}.ai-kpis{grid-template-columns:1fr 1fr}.ai-filter-heading,.ai-table-heading{align-items:flex-start; flex-direction:column}.ai-filters{grid-template-columns:1fr}.ai-search-field{grid-column:auto}.ai-primary-button{width:100%}.ai-detail-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:430px){.ai-kpis{grid-template-columns:1fr}.ai-detail-grid{grid-template-columns:1fr}}
+
+.ai-reports-page [hidden] { display:none!important; }
+.ai-job-panel { margin-top:6px; }
+.ai-job-panel h1 { margin:0 0 5px; color:#174c73; font-size:24px; }
+.ai-job-actions { display:flex; align-items:center; gap:18px; }
+.ai-job-actions a { color:#176ea3; text-decoration:underline; white-space:nowrap; }
+.ai-job-body { padding:20px; }
+.ai-job-loading { padding:24px 0; color:#40657f; }
+.ai-job-notice { margin:13px 0 17px; line-height:1.6; color:#40657f; }
+.ai-job-warning { padding:10px 13px; border-left:3px solid #dfa337; background:#fff8e8; color:#785416; }
+.ai-job-body .ai-detail-section h2 { margin:0 0 8px; color:#315d7a; font-size:15px; }
+.ai-job-body .ai-report-error { margin:0 0 16px; }
+.ai-status-badge.pending { color:#986715; background:#fff0ca; }
+.ai-status-badge.cancelled { color:#56677b; background:#e9edf2; }
+.ai-job-result-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:18px; }
+.ai-job-result-actions>span,.ai-job-body #aiJobResultSummary { font-size:12px; color:#617c92; }
+.ai-job-result-wrap { max-height:540px; border:1px solid #d5e4ef; border-radius:9px; }
+.ai-job-result-table { width:100%; border-collapse:collapse; font-size:12px; }
+.ai-job-result-table th { position:sticky; top:0; z-index:1; padding:12px; text-align:left; color:#285777; background:#eaf4fa; border-bottom:1px solid #c9dce9; white-space:nowrap; }
+.ai-job-result-table td { min-width:110px; max-width:440px; padding:10px 12px; vertical-align:top; border-bottom:1px solid #e2ebf1; white-space:pre-wrap; overflow-wrap:anywhere; }
+.ai-job-result-table td:first-child { min-width:54px; color:#71879a; }
+.ai-job-result-table tbody tr:nth-child(even) { background:#f8fbfd; }
+.ai-job-pagination { flex-wrap:wrap; gap:12px; padding-left:0; padding-right:0; }
+.ai-job-pagination label { display:flex; align-items:center; gap:8px; margin:0; font-weight:normal; }
+.ai-job-pagination select { height:34px; border:1px solid #c9dfed; border-radius:6px; color:#236a98; background:#fff; }
+.ai-visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@media(max-width:700px){.ai-job-body{padding:15px}.ai-job-actions{width:100%;justify-content:space-between}.ai-job-actions .ai-primary-button{width:auto}.ai-job-panel h1{font-size:21px}.ai-job-result-table td{max-width:280px}.ai-job-result-actions{align-items:flex-start;flex-direction:column}}
