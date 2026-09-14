@@ -10,6 +10,7 @@
     var currentStatus = -1;
     var totalRecords = 0;
     var unreadCount = 0;
+    var aiUnreadCount = 0;
     var requestInFlight = false;
     var reloadPending = false;
 
@@ -23,6 +24,7 @@
     var refreshButton = document.getElementById('notificationsRefresh');
     var markAllButton = document.getElementById('notificationsMarkAll');
     var filterButtons = root.querySelectorAll('.notifications-segmented button[data-status]');
+    var aiUnreadNode = document.getElementById('notificationsAiUnreadCount');
 
     function sendRequest(options) {
         options = $.extend({}, options, {
@@ -68,6 +70,33 @@
         cell.textContent = value == null ? '' : String(value);
         row.appendChild(cell);
         return cell;
+    }
+
+    function isAiNotification(item) {
+        var source = String(item && item.SOURCE_TYPE || '').toUpperCase();
+        return source.indexOf('AI') === 0 || /(^|[_:\-])AI([_:\-]|$)/.test(source);
+    }
+
+    function appendAiLink(cell) {
+        var link = document.createElement('a');
+        link.className = 'notifications-ai-report-link';
+        link.href = root.getAttribute('data-ai-reports-url');
+        link.title = 'Mở báo cáo hoạt động AI';
+        link.innerHTML = '<i class="fa fa-external-link" aria-hidden="true"></i><span>Mở báo cáo AI</span>';
+        cell.appendChild(link);
+    }
+
+    function appendTitleCell(row, item, isAi) {
+        var cell = document.createElement('td');
+        cell.className = 'notifications-title-cell';
+        if (isAi) {
+            var label = document.createElement('span');
+            label.className = 'notifications-ai-label';
+            label.innerHTML = '<i class="fa fa-microchip" aria-hidden="true"></i><span>AI</span>';
+            cell.appendChild(label);
+        }
+        cell.appendChild(document.createTextNode(item.TITLE || 'Thông báo'));
+        row.appendChild(cell);
     }
 
     function createStatusCell(row, isUnread) {
@@ -121,12 +150,15 @@
         for (var i = 0; i < items.length; i++) {
             var item = items[i] || {};
             var isUnread = parseInt(item.STATUS, 10) === 0;
+            var isAi = isAiNotification(item);
             var row = document.createElement('tr');
             row.className = isUnread ? 'is-unread' : 'is-read';
+            if (isAi) row.classList.add('is-ai');
             row.setAttribute('data-notification-id', item.ID);
             createStatusCell(row, isUnread);
-            appendCell(row, 'notifications-title-cell', item.TITLE || 'Thông báo');
-            appendCell(row, 'notifications-content-cell', item.CONTENT || '');
+            appendTitleCell(row, item, isAi);
+            var contentCell = appendCell(row, 'notifications-content-cell', item.CONTENT || '');
+            if (isAi) appendAiLink(contentCell);
             appendCell(row, 'notifications-type-cell', item.SOURCE_TYPE || '--');
             appendCell(row, 'notifications-time-cell', formatDate(item.DATETIME));
             createActionCell(row, item, isUnread);
@@ -172,6 +204,11 @@
 
     function updateHeader() {
         unreadNode.textContent = String(unreadCount);
+        if (aiUnreadNode) {
+            aiUnreadNode.textContent = aiUnreadCount > 99 ? '99+' : String(aiUnreadCount);
+            aiUnreadNode.classList.toggle('is-empty', aiUnreadCount === 0);
+            aiUnreadNode.setAttribute('aria-label', aiUnreadCount + ' thông báo AI chưa đọc');
+        }
         markAllButton.disabled = unreadCount === 0 || requestInFlight;
         var filterName = currentStatus === 0 ? 'chưa đọc' : (currentStatus === 1 ? 'đã đọc' : 'tất cả');
         summary.textContent = totalRecords + ' thông báo ' + filterName + ', ' + unreadCount + ' thông báo chưa đọc';
@@ -209,6 +246,16 @@
 
             totalRecords = Math.max(0, parseInt(response.SumRecord, 10) || 0);
             unreadCount = Math.max(0, parseInt(response.Value, 10) || 0);
+            var responseAiUnread = response.AIUnreadCount;
+            if (responseAiUnread == null) responseAiUnread = response.AI_UNREAD_COUNT;
+            if (responseAiUnread == null) {
+                responseAiUnread = 0;
+                var responseItems = response.ListValue || [];
+                for (var aiIndex = 0; aiIndex < responseItems.length; aiIndex++) {
+                    if (parseInt(responseItems[aiIndex].STATUS, 10) === 0 && isAiNotification(responseItems[aiIndex])) responseAiUnread++;
+                }
+            }
+            aiUnreadCount = Math.max(0, parseInt(responseAiUnread, 10) || 0);
             var totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
             if (currentPage > totalPages) {
                 currentPage = totalPages;

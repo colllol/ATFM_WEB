@@ -2,15 +2,18 @@
     CodeBehind="Notifications.aspx.cs" Inherits="prjApplication.SLOTS.Notifications" %>
 
 <asp:Content ID="NotificationsContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260824-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260914-1") %>" />
 
-    <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>">
+    <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>" data-ai-reports-url="<%= ResolveUrl("~/SLOTS/AIReports.aspx") %>">
         <header class="notifications-page-header">
             <div>
                 <h1><i class="fa fa-bell-o" aria-hidden="true"></i> Thông báo</h1>
                 <p id="notificationsSummary" aria-live="polite">Đang tải dữ liệu...</p>
             </div>
             <div class="notifications-header-actions">
+                <a class="notifications-ai-link" href="<%= ResolveUrl("~/SLOTS/AIReports.aspx") %>" title="Mở báo cáo hoạt động AI">
+                    <i class="fa fa-microchip" aria-hidden="true"></i><span>Báo cáo AI</span><strong id="notificationsAiUnreadCount" class="is-empty">0</strong>
+                </a>
                 <button id="notificationsRefresh" class="notifications-icon-button" type="button" title="Làm mới danh sách" aria-label="Làm mới danh sách">
                     <i class="fa fa-refresh" aria-hidden="true"></i>
                 </button>
@@ -68,5 +71,5 @@
         </section>
     </section>
 
-    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260824-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260914-1") %>"></script>
 </asp:Content>

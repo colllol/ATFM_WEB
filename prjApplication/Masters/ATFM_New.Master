@@ -317,6 +317,37 @@
             display: none;
         }
 
+        #navbar.atfm-header .atfm-ai-link { position: relative; }
+        #navbar.atfm-header .atfm-ai-badge {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border: 2px solid #1d3f7d;
+            border-radius: 10px;
+            background: #f97316;
+            color: #fff;
+            font: 700 10px/14px Arial, sans-serif;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        #navbar.atfm-header .atfm-ai-badge.is-empty { display: none; }
+        #navbar.atfm-header .atfm-ai-reports-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 0;
+            color: #6d54bd;
+            font-size: 12px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        #navbar.atfm-header .atfm-ai-reports-link:hover,
+        #navbar.atfm-header .atfm-ai-reports-link:focus { color: #4b358f; }
+        #navbar.atfm-header .atfm-ai-reports-link i { color: #7a63d1; }
+
         #navbar.atfm-header .atfm-user-button {
             gap: 8px;
             border-color: transparent;
@@ -469,6 +500,34 @@
             white-space: normal;
             word-break: break-word;
         }
+
+        #navbar.atfm-header .atfm-notification-ai-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 5px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: #eeeafd;
+            color: #6752b3;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .2px;
+            vertical-align: 1px;
+        }
+        #navbar.atfm-header .atfm-notification-ai-label i { font-size: 10px; }
+        #navbar.atfm-header .atfm-notification-ai-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 7px;
+            color: #6752b3;
+            font-size: 11px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        #navbar.atfm-header .atfm-notification-ai-link:hover,
+        #navbar.atfm-header .atfm-notification-ai-link:focus { color: #4b358f; text-decoration: underline; }
 
         #navbar.atfm-header .atfm-notification-message,
         #navbar.atfm-header .atfm-notification-time {
@@ -1436,7 +1495,7 @@
 
                 <div class="navbar-buttons navbar-header pull-right  collapse navbar-collapse" role="navigation">
                     <ul class="nav ace-nav">
-                        <li class="atfm-header-action atfm-ai-action"><a class="atfm-ai-link" href="https://backwash-january-glare.ngrok-free.dev" target="_blank" rel="noopener noreferrer" title="Trợ lý AI"><span class="atfm-ai-orb">AI</span></a></li>
+                        <li class="atfm-header-action atfm-ai-action"><a class="atfm-ai-link" href="https://backwash-january-glare.ngrok-free.dev" target="_blank" rel="noopener noreferrer" title="Trợ lý AI" aria-label="Trợ lý AI"><span class="atfm-ai-orb">AI</span><span class="atfm-ai-badge is-empty" id="atfmAiNotificationBadge" aria-label="0 thông báo AI chưa đọc">0</span></a></li>
                         <li class="atfm-notification atfm-header-action" id="atfmNotification">
                             <button type="button" class="atfm-notification-button atfm-popup-toggle" title="Thông báo" aria-label="Thông báo" aria-expanded="false">
                                 <i class="ace-icon fa fa-bell" aria-hidden="true"></i>
@@ -1446,6 +1505,7 @@
                                 <div class="atfm-popup-header">
                                     <span class="atfm-popup-title"><i class="fa fa-bell-o"></i>THÔNG BÁO</span>
                                     <span class="atfm-popup-actions">
+                                        <a class="atfm-ai-reports-link" href="<%= ResolveUrl("~/SLOTS/AIReports.aspx") %>" title="Mở báo cáo hoạt động AI"><i class="fa fa-microchip"></i>Báo cáo AI</a>
                                         <a class="atfm-view-all" href="<%= ResolveUrl("~/SLOTS/Notifications.aspx") %>"><i class="fa fa-list"></i>Xem tất cả</a>
                                         <button type="button" class="atfm-mark-read" id="atfmMarkAllRead"><i class="fa fa-check"></i>Đọc hết</button>
                                     </span>
@@ -1885,10 +1945,12 @@
         <script type="text/javascript">
             (function () {
                 var NOTIFICATION_API_URL = '<%= ResolveUrl("~/Handlers/Notification.ashx") %>';
+                var AI_REPORTS_URL = '<%= ResolveUrl("~/SLOTS/AIReports.aspx") %>';
                 var notificationRequestInFlight = false;
                 var notificationReloadPending = false;
                 var notificationsLoadedOnce = false;
                 var currentUnreadCount = 0;
+                var currentAiUnreadCount = 0;
 
                 function closeHeaderPopups(except) {
                     var actions = document.querySelectorAll('#navbar .atfm-header-action');
@@ -1924,6 +1986,25 @@
                         badge.setAttribute('aria-label', currentUnreadCount + ' thông báo chưa đọc');
                     }
                     if (markRead) markRead.disabled = currentUnreadCount === 0;
+                }
+
+                function isAiNotification(item) {
+                    var source = String(item && item.SOURCE_TYPE || '').toUpperCase();
+                    return source.indexOf('AI') === 0 || /(^|[_:\-])AI([_:\-]|$)/.test(source);
+                }
+
+                function setAiUnreadCount(value) {
+                    var badge = document.getElementById('atfmAiNotificationBadge');
+                    currentAiUnreadCount = Math.max(0, parseInt(value, 10) || 0);
+                    if (badge) {
+                        badge.textContent = currentAiUnreadCount > 99 ? '99+' : String(currentAiUnreadCount);
+                        badge.classList.toggle('is-empty', currentAiUnreadCount === 0);
+                        badge.setAttribute('aria-label', currentAiUnreadCount + ' thông báo AI chưa đọc');
+                    }
+                    var link = document.querySelector('#navbar.atfm-header .atfm-ai-link');
+                    if (link) link.title = currentAiUnreadCount > 0
+                        ? 'Trợ lý AI · ' + currentAiUnreadCount + ' thông báo AI chưa đọc'
+                        : 'Trợ lý AI';
                 }
 
                 function appendNotificationText(parent, className, value) {
@@ -1971,13 +2052,31 @@
                         var item = items[i] || {};
                         var entry = document.createElement('div');
                         entry.className = 'atfm-notification-item is-unread';
+                        if (isAiNotification(item)) entry.classList.add('is-ai');
                         entry.setAttribute('data-notification-id', item.ID);
                         var copy = document.createElement('div');
                         copy.className = 'atfm-notification-copy';
-                        appendNotificationText(copy, 'atfm-notification-title', item.TITLE || 'Thông báo');
+                        var title = document.createElement('span');
+                        title.className = 'atfm-notification-title';
+                        if (isAiNotification(item)) {
+                            var aiLabel = document.createElement('span');
+                            aiLabel.className = 'atfm-notification-ai-label';
+                            aiLabel.innerHTML = '<i class="fa fa-microchip" aria-hidden="true"></i><span>AI</span>';
+                            title.appendChild(aiLabel);
+                        }
+                        var titleText = document.createTextNode(item.TITLE || 'Thông báo');
+                        title.appendChild(titleText);
+                        copy.appendChild(title);
                         appendNotificationText(copy, 'atfm-notification-message', item.CONTENT || '');
-                        appendNotificationText(copy, 'atfm-notification-message', 'Type: ' + (item.SOURCE_TYPE || 'Không có'));
+                        if (!isAiNotification(item)) appendNotificationText(copy, 'atfm-notification-message', 'Type: ' + (item.SOURCE_TYPE || 'Không có'));
                         appendNotificationText(copy, 'atfm-notification-time', formatNotificationDate(item.DATETIME));
+                        if (isAiNotification(item)) {
+                            var aiLink = document.createElement('a');
+                            aiLink.className = 'atfm-notification-ai-link';
+                            aiLink.href = AI_REPORTS_URL;
+                            aiLink.innerHTML = '<i class="fa fa-external-link" aria-hidden="true"></i><span>Mở báo cáo AI</span>';
+                            copy.appendChild(aiLink);
+                        }
                         entry.appendChild(copy);
                         var readButton = document.createElement('button');
                         readButton.type = 'button';
@@ -2022,7 +2121,17 @@
                     }).done(function (response) {
                         if (!response || response.Code !== '00') return;
                         notificationsLoadedOnce = true;
-                        renderNotifications(response.ListValue || [], response.Value);
+                        var responseItems = response.ListValue || [];
+                        renderNotifications(responseItems, response.Value);
+                        var aiUnread = response.AIUnreadCount;
+                        if (aiUnread == null) aiUnread = response.AI_UNREAD_COUNT;
+                        if (aiUnread == null) {
+                            aiUnread = 0;
+                            for (var i = 0; i < responseItems.length; i++) {
+                                if (isAiNotification(responseItems[i])) aiUnread++;
+                            }
+                        }
+                        setAiUnreadCount(aiUnread);
                     }).fail(function () {
                         if (!notificationsLoadedOnce) {
                             var list = document.getElementById('atfmNotificationList');
