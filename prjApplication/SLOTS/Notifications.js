@@ -5,6 +5,7 @@
     if (!root || !$) return;
 
     var endpoint = root.getAttribute('data-endpoint');
+    var dplklUrl = root.getAttribute('data-dplkl-url') || '/FinishFlights/ListFinishedFlights.aspx?Menu_ID=71';
     var pageSize = 100;
     var currentPage = 1;
     var currentStatus = -1;
@@ -103,6 +104,22 @@
         row.appendChild(cell);
     }
 
+    function createTitleCell(row, item) {
+        var cell = document.createElement('td');
+        cell.className = 'notifications-title-cell';
+        var title = item.TITLE || 'Thông báo';
+        if (String(item.SOURCE_KEY || '').toUpperCase() === 'DPLKL') {
+            var link = document.createElement('a');
+            link.href = dplklUrl;
+            link.textContent = title;
+            link.title = 'Mở danh sách chuyến bay đã hoàn thành';
+            cell.appendChild(link);
+        } else {
+            cell.textContent = title;
+        }
+        row.appendChild(cell);
+    }
+
     function renderRows(items) {
         while (rows.firstChild) rows.removeChild(rows.firstChild);
         items = Object.prototype.toString.call(items) === '[object Array]' ? items : [];
@@ -125,7 +142,7 @@
             row.className = isUnread ? 'is-unread' : 'is-read';
             row.setAttribute('data-notification-id', item.ID);
             createStatusCell(row, isUnread);
-            appendCell(row, 'notifications-title-cell', item.TITLE || 'Thông báo');
+            createTitleCell(row, item);
             appendCell(row, 'notifications-content-cell', item.CONTENT || '');
             appendCell(row, 'notifications-type-cell', item.SOURCE_TYPE || '--');
             appendCell(row, 'notifications-time-cell', formatDate(item.DATETIME));

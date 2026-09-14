@@ -4,7 +4,8 @@
 <asp:Content ID="NotificationsContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/Notifications.css?v=20260824-1") %>" />
 
-    <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>">
+    <section id="notificationsPage" class="notifications-page" data-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>"
+        data-dplkl-url="<%= ResolveUrl("~/FinishFlights/ListFinishedFlights.aspx?Menu_ID=71") %>">
         <header class="notifications-page-header">
             <div>
                 <h1><i class="fa fa-bell-o" aria-hidden="true"></i> Thông báo</h1>
