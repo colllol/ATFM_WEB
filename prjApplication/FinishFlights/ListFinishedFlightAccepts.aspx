@@ -1636,7 +1636,15 @@
             $.ajax({ type: 'POST', url: '<%= ResolveUrl("~/FinishFlights/BravoComparison.ashx") %>', dataType: 'json', headers: { 'X-Requested-With': 'XMLHttpRequest' }, data: { fromDate: fromDate, toDate: toDate, comparisonType: $('#bravoCompareType').val(), region: region } }).done(function (response) {
                 var rows = response || [];
                 if (!rows.length) { body.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu đối chiếu.</td></tr>'; message.textContent = '0 dòng'; return; }
-                body.innerHTML = rows.map(function (row, index) { return '<tr><td>' + (index + 1) + '</td><td>' + escapeBravo(row.airline) + '</td><td>' + escapeBravo(row.fromAirp) + '</td><td>' + escapeBravo(row.toAirp) + '</td><td>' + escapeBravo(row.flightDate) + '</td><td>' + escapeBravo(row.callsign) + '</td><td class="text-right">' + row.oracleCount + '</td><td></td></tr>'; }).join('');
+                body.innerHTML = rows.map(function (row, index) {
+                    var oracleText = $.trim(String(row.oracleCount == null ? '' : row.oracleCount));
+                    var bravoText = $.trim(String(row.bravoCount == null ? '' : row.bravoCount));
+                    var countsDiffer = oracleText !== '' && bravoText !== ''
+                        && isFinite(Number(oracleText)) && isFinite(Number(bravoText))
+                        && Number(oracleText) !== Number(bravoText);
+                    var callsignStyle = countsDiffer ? ' style="color: red !important;"' : '';
+                    return '<tr><td>' + (index + 1) + '</td><td>' + escapeBravo(row.airline) + '</td><td>' + escapeBravo(row.fromAirp) + '</td><td>' + escapeBravo(row.toAirp) + '</td><td>' + escapeBravo(row.flightDate) + '</td><td' + callsignStyle + '>' + escapeBravo(row.callsign) + '</td><td class="text-right">' + escapeBravo(oracleText) + '</td><td class="text-right">' + escapeBravo(bravoText) + '</td></tr>';
+                }).join('');
                 message.textContent = rows.length + ' dòng';
             }).fail(function (xhr) { body.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu đối chiếu.</td></tr>'; message.textContent = xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.Message) ? (xhr.responseJSON.message || xhr.responseJSON.Message) : 'Lỗi API (' + xhr.status + ')'; });
         }
