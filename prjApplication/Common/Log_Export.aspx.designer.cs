@@ -20,6 +20,14 @@ namespace prjApplication.Common {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Panel pnlList;
+
+        protected global::System.Web.UI.WebControls.TextBox txtName;
+
+        protected global::System.Web.UI.WebControls.TextBox txtSqlCode;
+
+        protected global::System.Web.UI.WebControls.TextBox txtErr;
+
+        protected global::System.Web.UI.WebControls.LinkButton btnSearch;
         
         /// <summary>
         /// btnAddMenu control.

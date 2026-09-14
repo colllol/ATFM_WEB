@@ -45,13 +45,53 @@ namespace prjApplication.Common
             _obj.DeleteExportLog(DateTime.Now.ToString("dd/mm/yyyy"));
             LoadData();
         }
+
+        protected void btnSearch_Click(object sender, EventArgs e)
+        {
+            LoadData();
+        }
        
         public void LoadData()
         {
-            UserDAL _obj = new UserDAL();
-            DataTable t = _obj.getLogExp("1");
+            DataTable t = GetFilteredLogData();
             grdListUser.DataSource = t;
             grdListUser.DataBind();
+        }
+
+        private DataTable GetFilteredLogData()
+        {
+            DataTable source = new UserDAL().getLogExp("1");
+            string name = txtName.Text.Trim();
+            string sqlCode = txtSqlCode.Text.Trim();
+            string err = txtErr.Text.Trim();
+
+            if (name.Length == 0 && sqlCode.Length == 0 && err.Length == 0)
+                return source;
+
+            DataTable result = source.Clone();
+            foreach (DataRow row in source.Rows)
+            {
+                if (!ContainsIgnoreCase(GetLogValue(row, "NAME"), name)
+                    || !ContainsIgnoreCase(GetLogValue(row, "SQLCODE"), sqlCode)
+                    || !ContainsIgnoreCase(GetLogValue(row, "ERR"), err))
+                    continue;
+
+                result.ImportRow(row);
+            }
+            return result;
+        }
+
+        private static string GetLogValue(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) || row.IsNull(columnName))
+                return string.Empty;
+            return Convert.ToString(row[columnName]);
+        }
+
+        private static bool ContainsIgnoreCase(string value, string search)
+        {
+            return search.Length == 0
+                || value.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
         }
         protected string IsStatusRolePublish(string str)
         {
@@ -87,7 +127,7 @@ namespace prjApplication.Common
         protected void btnExcel_Click(object sender, EventArgs e)
         {
             DataGrid ax = grdListUser;
-            ax.DataSource = new UserDAL().getLogExp("1");
+            ax.DataSource = GetFilteredLogData();
             ax.DataBind();
             this.CreateExcel(this.RenderToHTML(ax), "LOG_" + DateTime.Now.ToFileTime() + ".xls");
         }
