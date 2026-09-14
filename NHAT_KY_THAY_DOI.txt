@@ -1,5 +1,12 @@
 ﻿NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
 
+2026-09-14 | prjApplication/ActionHistory/List_ActionHistory.aspx; List_ActionHistory.aspx.cs | Bổ sung lọc riêng theo tên người dùng, mã thao tác, HostIP và khoảng thời gian thực hiện; hỗ trợ dd/MM/yyyy HH:mm, tự động kết thúc 23:59:59 khi chỉ nhập ngày kết thúc, kiểm tra thứ tự thời gian và dùng cùng điều kiện khi export Excel.
+2026-09-14 | prjApplication/Day_Flights/DaylyFlight.aspx | Chuẩn hóa mã trả về ListValue của LoadDataGrid_Finished, gửi JSON đúng kiểu và hiển thị chi tiết lỗi theo bước khi Export Finished thất bại.
+2026-09-14 | prjApplication/Receive_LogFile/Inbox.aspx | Thêm nút Export Excel cạnh Search; xuất toàn bộ kết quả lọc với các cột NBR, CONTENT và ORIGIN.
+2026-09-14 | prjApplication/SLOTS/Notifications.aspx; Notifications.js | Khi SOURCE_KEY=DPLKL, tiêu đề thông báo được hiển thị dạng liên kết đến danh sách chuyến bay đã hoàn thành; URL dùng ResolveUrl theo virtual directory.
+2026-09-14 | prjApplication/Common/Log_Export.aspx; Log_Export.aspx.cs; Log_Export.aspx.designer.cs | Bổ sung tìm kiếm theo Name, SQLCODE và ERR; Export dùng cùng tập dữ liệu đã lọc.
+2026-09-14 | ATFM.sln | Rebuild toàn bộ solution cấu hình Release/Any CPU thành công; các cảnh báo còn lại là cảnh báo tham chiếu/thư viện hiện hữu.
+
 2026-07-22 | prjApplication/ReportNew/FlightStatusRate.js | Nạp sẵn danh sách hãng bay và hợp nhất kết quả API, bảo đảm select hãng có nội dung kể cả khi endpoint trả rỗng hoặc lỗi.
 2026-07-22 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Bổ sung nguồn hãng bay T_KHH cho WebMethod GetOperators dự phòng.
 2026-07-22 | prjApplication/ReportNew/FlightStatusRate.aspx | Tăng phiên bản cache JavaScript để trình duyệt nhận ngay danh sách hãng bay mới.
