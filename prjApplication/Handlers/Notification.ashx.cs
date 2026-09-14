@@ -21,6 +21,10 @@ namespace prjApplication.Handlers
         private static readonly object EmailSyncStateLock = new object();
         private static DateTime _lastEmailSyncAttemptUtc = DateTime.MinValue;
         private static bool _emailSyncInProgress;
+        private static readonly object AiSyncStateLock = new object();
+        private static DateTime _lastAiSyncAttemptUtc = DateTime.MinValue;
+        private static bool _aiSyncInProgress;
+        private static long _aiLastNotificationId;
 
         public bool IsReusable { get { return true; } }
 
@@ -94,7 +98,10 @@ namespace prjApplication.Handlers
             try
             {
                 if (isGet)
+                {
                     TrySynchronizeEmailNotifications();
+                    TrySynchronizeAiNotifications();
+                }
 
                 object response;
                 if (string.Equals(action, "state", StringComparison.OrdinalIgnoreCase))
@@ -204,6 +211,192 @@ namespace prjApplication.Handlers
                 }
             }
         }
+
+        private static void TrySynchronizeAiNotifications()
+        {
+            lock (AiSyncStateLock)
+            {
+                if (_aiSyncInProgress
+                    || DateTime.UtcNow.Subtract(_lastAiSyncAttemptUtc) < TimeSpan.FromSeconds(15))
+                    return;
+
+                _aiSyncInProgress = true;
+                _lastAiSyncAttemptUtc = DateTime.UtcNow;
+            }
+
+            try
+            {
+                SynchronizeAiNotifications();
+            }
+            catch (Exception ex)
+            {
+                // AI API khong duoc lam gian doan cac thong bao noi bo dang co.
+                System.Diagnostics.Trace.TraceWarning("[NotificationHandler][AiSync] " + ex);
+            }
+            finally
+            {
+                lock (AiSyncStateLock)
+                    _aiSyncInProgress = false;
+            }
+        }
+
+        private static void SynchronizeAiNotifications()
+        {
+            string endpoint = ConfigurationManager.AppSettings["APIAINotifications"];
+            string apiKey = Environment.GetEnvironmentVariable("QUERY_JOB_API_KEY");
+            if (string.IsNullOrWhiteSpace(apiKey))
+                apiKey = ConfigurationManager.AppSettings["APIAIKey"];
+            if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
+                return;
+
+            const int pageSize = 100;
+            long cursor;
+            lock (AiSyncStateLock)
+                cursor = _aiLastNotificationId;
+
+            while (true)
+            {
+                long requestCursor = cursor;
+                string separator = endpoint.IndexOf('?') >= 0 ? "&" : "?";
+                string requestUrl = endpoint + separator
+                    + "after_id=" + cursor.ToString(CultureInfo.InvariantCulture)
+                    + "&limit=" + pageSize.ToString(CultureInfo.InvariantCulture);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(requestUrl);
+                request.Method = "GET";
+                request.Accept = "application/json";
+                request.Headers["X-API-Key"] = apiKey.Trim();
+                request.Timeout = 5000;
+                request.ReadWriteTimeout = 5000;
+                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+                AiNotificationPage reportPage;
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using (Stream stream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8, true))
+                {
+                    reportPage = JsonConvert.DeserializeObject<AiNotificationPage>(reader.ReadToEnd());
+                }
+
+                if (reportPage == null)
+                    return;
+
+                using (OracleConnection connection = CreateConnection())
+                {
+                    connection.Open();
+                    using (OracleTransaction transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            if (reportPage.Items != null)
+                            {
+                                foreach (AiNotificationItem item in reportPage.Items)
+                                {
+                                    if (item == null || item.Id <= 0)
+                                        continue;
+                                    UpsertAiNotification(connection, transaction, item);
+                                    if (item.Id > cursor)
+                                        cursor = item.Id;
+                                }
+                            }
+                            transaction.Commit();
+                        }
+                        catch
+                        {
+                            transaction.Rollback();
+                            throw;
+                        }
+                    }
+                }
+
+                long responseCursor = reportPage.LastId > cursor ? reportPage.LastId : cursor;
+                lock (AiSyncStateLock)
+                {
+                    if (responseCursor > _aiLastNotificationId)
+                        _aiLastNotificationId = responseCursor;
+                }
+
+                if (reportPage.Items == null || reportPage.Items.Count < pageSize || responseCursor <= requestCursor)
+                    return;
+                cursor = responseCursor;
+            }
+        }
+
+        private static void UpsertAiNotification(
+            OracleConnection connection,
+            OracleTransaction transaction,
+            AiNotificationItem item)
+        {
+            string sourceKey = item.JobId.ToString();
+            string sourceHash = Truncate("AI_QUERY:" + item.Id.ToString(CultureInfo.InvariantCulture), 80);
+            // recipient_id la nguoi yeu cau chatbot, khong phai admin dang xem.
+            // De thong bao AI nam trong hop thong bao chung, luon dung TARGET_TYPE=0.
+            const int targetType = 0;
+
+            const string mergeSql = @"
+MERGE INTO T_NOTIFICATION TARGET
+USING (SELECT :P_SOURCE_HASH AS SOURCE_HASH FROM DUAL) SOURCE
+ON (TARGET.SOURCE_HASH = SOURCE.SOURCE_HASH)
+WHEN MATCHED THEN
+    UPDATE SET TARGET.TITLE = :P_TITLE,
+               TARGET.CONTENT = :P_CONTENT,
+               TARGET.DATETIME = :P_DATETIME,
+               TARGET.TARGET_TYPE = :P_TARGET_TYPE,
+               TARGET.SOURCE_TYPE = :P_SOURCE_TYPE,
+               TARGET.SOURCE_KEY = :P_SOURCE_KEY
+WHEN NOT MATCHED THEN
+    INSERT (TITLE, CONTENT, DATETIME, TARGET_TYPE, SOURCE_TYPE, SOURCE_KEY, SOURCE_HASH)
+    VALUES (:P_TITLE, :P_CONTENT, :P_DATETIME, :P_TARGET_TYPE, :P_SOURCE_TYPE, :P_SOURCE_KEY, :P_SOURCE_HASH)";
+
+            using (OracleCommand command = new OracleCommand(mergeSql, connection))
+            {
+                command.Transaction = transaction;
+                command.BindByName = true;
+                command.CommandType = CommandType.Text;
+                command.CommandTimeout = 10;
+                command.Parameters.Add("P_SOURCE_HASH", OracleDbType.Varchar2, 80).Value = sourceHash;
+                command.Parameters.Add("P_SOURCE_TYPE", OracleDbType.Varchar2, 30).Value = "AI_QUERY";
+                command.Parameters.Add("P_SOURCE_KEY", OracleDbType.Varchar2, 80).Value = Truncate(sourceKey, 80);
+                command.Parameters.Add("P_TITLE", OracleDbType.NVarchar2, 250).Value =
+                    Truncate(string.IsNullOrWhiteSpace(item.Title) ? BuildAiTitle(item.Type) : item.Title.Trim(), 250);
+                command.Parameters.Add("P_CONTENT", OracleDbType.NVarchar2, 2000).Value = BuildAiContent(item);
+                command.Parameters.Add("P_DATETIME", OracleDbType.TimeStamp).Value = ParseAiDate(item.CreatedAt);
+                command.Parameters.Add("P_TARGET_TYPE", OracleDbType.Int32).Value = targetType;
+                command.ExecuteNonQuery();
+            }
+
+        }
+
+        private static string BuildAiTitle(string type)
+        {
+            if (string.Equals(type, "query.completed", StringComparison.OrdinalIgnoreCase))
+                return "Truy vấn AI đã hoàn thành";
+            if (string.Equals(type, "query.failed", StringComparison.OrdinalIgnoreCase))
+                return "Truy vấn AI thất bại";
+            if (string.Equals(type, "query.cancelled", StringComparison.OrdinalIgnoreCase))
+                return "Truy vấn AI đã hủy";
+            return "Thông báo từ AI";
+        }
+
+        private static string BuildAiContent(AiNotificationItem item)
+        {
+            StringBuilder content = new StringBuilder();
+            content.AppendLine(DisplayValue(item.Message));
+            content.AppendLine("Job ID: " + DisplayValue(item.JobId.ToString()));
+            content.Append("Người yêu cầu: " + DisplayValue(item.RecipientId));
+            return Truncate(content.ToString(), 2000);
+        }
+
+        private static DateTime ParseAiDate(string value)
+        {
+            DateTime result;
+            if (!string.IsNullOrWhiteSpace(value)
+                && DateTime.TryParse(value, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
+                    out result))
+                return result.ToLocalTime();
+            return DateTime.Now;
+        }
+
 
         private static void UpsertEmailNotification(
             OracleConnection connection,
@@ -333,6 +526,42 @@ WHEN NOT MATCHED THEN
             return DateTime.Now;
         }
 
+        private sealed class AiNotificationPage
+        {
+            [JsonProperty("items")]
+            public List<AiNotificationItem> Items { get; set; }
+
+            [JsonProperty("last_id")]
+            public long LastId { get; set; }
+
+            [JsonProperty("unread_count")]
+            public int UnreadCount { get; set; }
+        }
+
+        private sealed class AiNotificationItem
+        {
+            [JsonProperty("id")]
+            public long Id { get; set; }
+
+            [JsonProperty("job_id")]
+            public Guid JobId { get; set; }
+
+            [JsonProperty("recipient_id")]
+            public string RecipientId { get; set; }
+
+            [JsonProperty("type")]
+            public string Type { get; set; }
+
+            [JsonProperty("title")]
+            public string Title { get; set; }
+
+            [JsonProperty("message")]
+            public string Message { get; set; }
+
+            [JsonProperty("created_at")]
+            public string CreatedAt { get; set; }
+        }
+
         private sealed class EmailReportPage
         {
             public List<EmailReportItem> Content { get; set; }
@@ -374,7 +603,8 @@ WHEN NOT MATCHED THEN
             if (rows.Columns.Contains("UNREAD_COUNT"))
                 rows.Columns.Remove("UNREAD_COUNT");
 
-            return Success(rows, unreadCount, rows.Rows.Count);
+            int aiUnreadCount = GetAiUnreadCount(userId);
+            return SuccessWithAiUnread(rows, unreadCount, rows.Rows.Count, aiUnreadCount);
         }
 
         private static object GetPage(long userId, int status, int page)
@@ -402,7 +632,8 @@ WHEN NOT MATCHED THEN
             int unreadCount = totals.Rows.Count > 0
                 ? Convert.ToInt32(totals.Rows[0]["UNREAD_COUNT"], CultureInfo.InvariantCulture)
                 : 0;
-            return Success(rows, unreadCount, totalCount);
+            int aiUnreadCount = GetAiUnreadCount(userId);
+            return SuccessWithAiUnread(rows, unreadCount, totalCount, aiUnreadCount);
         }
 
         private static object MarkRead(long userId, long notificationId)
@@ -458,6 +689,39 @@ WHEN NOT MATCHED THEN
             }
         }
 
+        private static int GetAiUnreadCount(long userId)
+        {
+            try
+            {
+                const string sql = @"
+SELECT COUNT(*)
+FROM T_NOTIFICATION N
+WHERE N.SOURCE_TYPE = 'AI_QUERY'
+  AND (N.TARGET_TYPE = 0
+       OR EXISTS (SELECT 1 FROM T_NOTIFICATION_TARGET T
+                  WHERE T.NOTIFICATION_ID = N.ID AND T.USER_ID = :P_USER_ID))
+  AND NOT EXISTS (SELECT 1 FROM T_NOTIFICATION_READ R
+                  WHERE R.NOTIFICATION_ID = N.ID AND R.USER_ID = :P_USER_ID)";
+                using (OracleConnection connection = CreateConnection())
+                using (OracleCommand command = new OracleCommand(sql, connection))
+                {
+                    command.BindByName = true;
+                    command.CommandType = CommandType.Text;
+                    command.CommandTimeout = 15;
+                    command.Parameters.Add("P_USER_ID", OracleDbType.Int64).Value = userId;
+                    connection.Open();
+                    return Convert.ToInt32(command.ExecuteScalar(), CultureInfo.InvariantCulture);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Badge AI khong duoc lam gian doan hop thong bao chung neu schema
+                // chua duoc cap nhat hoac truy van dem tam thoi that bai.
+                System.Diagnostics.Trace.TraceWarning("[NotificationHandler][AiCount] " + ex);
+                return 0;
+            }
+        }
+
         private static OracleConnection CreateConnection()
         {
             ConnectionStringSettings settings = ConfigurationManager.ConnectionStrings["SlotsOracle"];
@@ -475,6 +739,20 @@ WHEN NOT MATCHED THEN
                 Value = value,
                 ListValue = rows,
                 SumRecord = totalCount.ToString(CultureInfo.InvariantCulture)
+            };
+        }
+
+        private static object SuccessWithAiUnread(DataTable rows, long value, int totalCount, int aiUnreadCount)
+        {
+            return new
+            {
+                Code = "00",
+                Message = "Get Data Success!",
+                Value = value,
+                ListValue = rows,
+                SumRecord = totalCount.ToString(CultureInfo.InvariantCulture),
+                AIUnreadCount = aiUnreadCount,
+                AI_UNREAD_COUNT = aiUnreadCount
             };
         }
 
