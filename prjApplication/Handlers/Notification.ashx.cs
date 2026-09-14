@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -21,10 +21,6 @@ namespace prjApplication.Handlers
         private static readonly object EmailSyncStateLock = new object();
         private static DateTime _lastEmailSyncAttemptUtc = DateTime.MinValue;
         private static bool _emailSyncInProgress;
-        private static readonly object AiSyncStateLock = new object();
-        private static DateTime _lastAiSyncAttemptUtc = DateTime.MinValue;
-        private static bool _aiSyncInProgress;
-        private static long _aiLastNotificationId;
 
         public bool IsReusable { get { return true; } }
 
@@ -61,6 +57,12 @@ namespace prjApplication.Handlers
                 return;
             }
 
+            string source = (context.Request["source"] ?? "ALL").ToUpperInvariant();
+            if (source != "ALL" && source != "AI_QUERY")
+            {
+                WriteError(context, 400, "Nguồn thông báo không hợp lệ.");
+                return;
+            }
             int status = -1;
             int page = 1;
             long notificationId = 0;
@@ -75,6 +77,15 @@ namespace prjApplication.Handlers
                     || page < 1 || page > 1000000)
                 {
                     WriteError(context, 400, "Bộ lọc hoặc trang không hợp lệ.");
+                    return;
+                }
+            }
+            else if (isGet && (string.Equals(action, "aiJob", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(action, "aiResult", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (!long.TryParse(context.Request["id"], out notificationId) || notificationId <= 0)
+                {
+                    WriteError(context, 400, "Mã thông báo không hợp lệ.");
                     return;
                 }
             }
@@ -97,23 +108,31 @@ namespace prjApplication.Handlers
 
             try
             {
-                if (isGet)
+                if (isGet && (action.Equals("state", StringComparison.OrdinalIgnoreCase) || action.Equals("list", StringComparison.OrdinalIgnoreCase)))
                 {
+                    AiNotificationService.QueueSynchronization();
                     TrySynchronizeEmailNotifications();
-                    TrySynchronizeAiNotifications();
                 }
 
                 object response;
                 if (string.Equals(action, "state", StringComparison.OrdinalIgnoreCase))
                     response = GetState(sessionUser.UserID);
                 else if (string.Equals(action, "list", StringComparison.OrdinalIgnoreCase))
-                    response = GetPage(sessionUser.UserID, status, page);
+                    response = GetPage(sessionUser.UserID, status, page, source);
                 else if (string.Equals(action, "markRead", StringComparison.OrdinalIgnoreCase))
                     response = MarkRead(sessionUser.UserID, notificationId);
+                else if (string.Equals(action, "aiJob", StringComparison.OrdinalIgnoreCase))
+                    response = new { Code = "00", Job = AiNotificationService.GetJob(sessionUser.UserID, notificationId, false) };
+                else if (string.Equals(action, "aiResult", StringComparison.OrdinalIgnoreCase))
+                    response = new { Code = "00", Result = AiNotificationService.GetJob(sessionUser.UserID, notificationId, true) };
                 else
-                    response = MarkAllRead(sessionUser.UserID);
+                    response = MarkAllRead(sessionUser.UserID, source);
 
                 context.Response.Write(JsonConvert.SerializeObject(response));
+            }
+            catch (AiIntegrationException ex)
+            {
+                WriteError(context, ex.StatusCode, ex.Message);
             }
             catch (Exception ex)
             {
@@ -211,192 +230,6 @@ namespace prjApplication.Handlers
                 }
             }
         }
-
-        private static void TrySynchronizeAiNotifications()
-        {
-            lock (AiSyncStateLock)
-            {
-                if (_aiSyncInProgress
-                    || DateTime.UtcNow.Subtract(_lastAiSyncAttemptUtc) < TimeSpan.FromSeconds(15))
-                    return;
-
-                _aiSyncInProgress = true;
-                _lastAiSyncAttemptUtc = DateTime.UtcNow;
-            }
-
-            try
-            {
-                SynchronizeAiNotifications();
-            }
-            catch (Exception ex)
-            {
-                // AI API khong duoc lam gian doan cac thong bao noi bo dang co.
-                System.Diagnostics.Trace.TraceWarning("[NotificationHandler][AiSync] " + ex);
-            }
-            finally
-            {
-                lock (AiSyncStateLock)
-                    _aiSyncInProgress = false;
-            }
-        }
-
-        private static void SynchronizeAiNotifications()
-        {
-            string endpoint = ConfigurationManager.AppSettings["APIAINotifications"];
-            string apiKey = Environment.GetEnvironmentVariable("QUERY_JOB_API_KEY");
-            if (string.IsNullOrWhiteSpace(apiKey))
-                apiKey = ConfigurationManager.AppSettings["APIAIKey"];
-            if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
-                return;
-
-            const int pageSize = 100;
-            long cursor;
-            lock (AiSyncStateLock)
-                cursor = _aiLastNotificationId;
-
-            while (true)
-            {
-                long requestCursor = cursor;
-                string separator = endpoint.IndexOf('?') >= 0 ? "&" : "?";
-                string requestUrl = endpoint + separator
-                    + "after_id=" + cursor.ToString(CultureInfo.InvariantCulture)
-                    + "&limit=" + pageSize.ToString(CultureInfo.InvariantCulture);
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(requestUrl);
-                request.Method = "GET";
-                request.Accept = "application/json";
-                request.Headers["X-API-Key"] = apiKey.Trim();
-                request.Timeout = 5000;
-                request.ReadWriteTimeout = 5000;
-                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-                AiNotificationPage reportPage;
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                using (Stream stream = response.GetResponseStream())
-                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8, true))
-                {
-                    reportPage = JsonConvert.DeserializeObject<AiNotificationPage>(reader.ReadToEnd());
-                }
-
-                if (reportPage == null)
-                    return;
-
-                using (OracleConnection connection = CreateConnection())
-                {
-                    connection.Open();
-                    using (OracleTransaction transaction = connection.BeginTransaction())
-                    {
-                        try
-                        {
-                            if (reportPage.Items != null)
-                            {
-                                foreach (AiNotificationItem item in reportPage.Items)
-                                {
-                                    if (item == null || item.Id <= 0)
-                                        continue;
-                                    UpsertAiNotification(connection, transaction, item);
-                                    if (item.Id > cursor)
-                                        cursor = item.Id;
-                                }
-                            }
-                            transaction.Commit();
-                        }
-                        catch
-                        {
-                            transaction.Rollback();
-                            throw;
-                        }
-                    }
-                }
-
-                long responseCursor = reportPage.LastId > cursor ? reportPage.LastId : cursor;
-                lock (AiSyncStateLock)
-                {
-                    if (responseCursor > _aiLastNotificationId)
-                        _aiLastNotificationId = responseCursor;
-                }
-
-                if (reportPage.Items == null || reportPage.Items.Count < pageSize || responseCursor <= requestCursor)
-                    return;
-                cursor = responseCursor;
-            }
-        }
-
-        private static void UpsertAiNotification(
-            OracleConnection connection,
-            OracleTransaction transaction,
-            AiNotificationItem item)
-        {
-            string sourceKey = item.JobId.ToString();
-            string sourceHash = Truncate("AI_QUERY:" + item.Id.ToString(CultureInfo.InvariantCulture), 80);
-            // recipient_id la nguoi yeu cau chatbot, khong phai admin dang xem.
-            // De thong bao AI nam trong hop thong bao chung, luon dung TARGET_TYPE=0.
-            const int targetType = 0;
-
-            const string mergeSql = @"
-MERGE INTO T_NOTIFICATION TARGET
-USING (SELECT :P_SOURCE_HASH AS SOURCE_HASH FROM DUAL) SOURCE
-ON (TARGET.SOURCE_HASH = SOURCE.SOURCE_HASH)
-WHEN MATCHED THEN
-    UPDATE SET TARGET.TITLE = :P_TITLE,
-               TARGET.CONTENT = :P_CONTENT,
-               TARGET.DATETIME = :P_DATETIME,
-               TARGET.TARGET_TYPE = :P_TARGET_TYPE,
-               TARGET.SOURCE_TYPE = :P_SOURCE_TYPE,
-               TARGET.SOURCE_KEY = :P_SOURCE_KEY
-WHEN NOT MATCHED THEN
-    INSERT (TITLE, CONTENT, DATETIME, TARGET_TYPE, SOURCE_TYPE, SOURCE_KEY, SOURCE_HASH)
-    VALUES (:P_TITLE, :P_CONTENT, :P_DATETIME, :P_TARGET_TYPE, :P_SOURCE_TYPE, :P_SOURCE_KEY, :P_SOURCE_HASH)";
-
-            using (OracleCommand command = new OracleCommand(mergeSql, connection))
-            {
-                command.Transaction = transaction;
-                command.BindByName = true;
-                command.CommandType = CommandType.Text;
-                command.CommandTimeout = 10;
-                command.Parameters.Add("P_SOURCE_HASH", OracleDbType.Varchar2, 80).Value = sourceHash;
-                command.Parameters.Add("P_SOURCE_TYPE", OracleDbType.Varchar2, 30).Value = "AI_QUERY";
-                command.Parameters.Add("P_SOURCE_KEY", OracleDbType.Varchar2, 80).Value = Truncate(sourceKey, 80);
-                command.Parameters.Add("P_TITLE", OracleDbType.NVarchar2, 250).Value =
-                    Truncate(string.IsNullOrWhiteSpace(item.Title) ? BuildAiTitle(item.Type) : item.Title.Trim(), 250);
-                command.Parameters.Add("P_CONTENT", OracleDbType.NVarchar2, 2000).Value = BuildAiContent(item);
-                command.Parameters.Add("P_DATETIME", OracleDbType.TimeStamp).Value = ParseAiDate(item.CreatedAt);
-                command.Parameters.Add("P_TARGET_TYPE", OracleDbType.Int32).Value = targetType;
-                command.ExecuteNonQuery();
-            }
-
-        }
-
-        private static string BuildAiTitle(string type)
-        {
-            if (string.Equals(type, "query.completed", StringComparison.OrdinalIgnoreCase))
-                return "Truy vấn AI đã hoàn thành";
-            if (string.Equals(type, "query.failed", StringComparison.OrdinalIgnoreCase))
-                return "Truy vấn AI thất bại";
-            if (string.Equals(type, "query.cancelled", StringComparison.OrdinalIgnoreCase))
-                return "Truy vấn AI đã hủy";
-            return "Thông báo từ AI";
-        }
-
-        private static string BuildAiContent(AiNotificationItem item)
-        {
-            StringBuilder content = new StringBuilder();
-            content.AppendLine(DisplayValue(item.Message));
-            content.AppendLine("Job ID: " + DisplayValue(item.JobId.ToString()));
-            content.Append("Người yêu cầu: " + DisplayValue(item.RecipientId));
-            return Truncate(content.ToString(), 2000);
-        }
-
-        private static DateTime ParseAiDate(string value)
-        {
-            DateTime result;
-            if (!string.IsNullOrWhiteSpace(value)
-                && DateTime.TryParse(value, CultureInfo.InvariantCulture,
-                    DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
-                    out result))
-                return result.ToLocalTime();
-            return DateTime.Now;
-        }
-
 
         private static void UpsertEmailNotification(
             OracleConnection connection,
@@ -526,42 +359,6 @@ WHEN NOT MATCHED THEN
             return DateTime.Now;
         }
 
-        private sealed class AiNotificationPage
-        {
-            [JsonProperty("items")]
-            public List<AiNotificationItem> Items { get; set; }
-
-            [JsonProperty("last_id")]
-            public long LastId { get; set; }
-
-            [JsonProperty("unread_count")]
-            public int UnreadCount { get; set; }
-        }
-
-        private sealed class AiNotificationItem
-        {
-            [JsonProperty("id")]
-            public long Id { get; set; }
-
-            [JsonProperty("job_id")]
-            public Guid JobId { get; set; }
-
-            [JsonProperty("recipient_id")]
-            public string RecipientId { get; set; }
-
-            [JsonProperty("type")]
-            public string Type { get; set; }
-
-            [JsonProperty("title")]
-            public string Title { get; set; }
-
-            [JsonProperty("message")]
-            public string Message { get; set; }
-
-            [JsonProperty("created_at")]
-            public string CreatedAt { get; set; }
-        }
-
         private sealed class EmailReportPage
         {
             public List<EmailReportItem> Content { get; set; }
@@ -590,7 +387,7 @@ WHEN NOT MATCHED THEN
         private static object GetState(long userId)
         {
             DataSet data = ExecuteDataSet(
-                "NOTIFICATION_PKG.GET_STATE",
+                "AI_NOTIFICATION_PKG.GET_STATE",
                 new OracleParameter("P_USER_ID", OracleDbType.Int64) { Value = userId },
                 new OracleParameter("P_OUT_CURSOR", OracleDbType.RefCursor)
                 {
@@ -603,18 +400,19 @@ WHEN NOT MATCHED THEN
             if (rows.Columns.Contains("UNREAD_COUNT"))
                 rows.Columns.Remove("UNREAD_COUNT");
 
-            int aiUnreadCount = GetAiUnreadCount(userId);
+            int aiUnreadCount = rows.Rows.Count > 0 ? Convert.ToInt32(rows.Rows[0]["AI_UNREAD_COUNT"], CultureInfo.InvariantCulture) : 0;
             return SuccessWithAiUnread(rows, unreadCount, rows.Rows.Count, aiUnreadCount);
         }
 
-        private static object GetPage(long userId, int status, int page)
+        private static object GetPage(long userId, int status, int page, string source)
         {
             DataSet data = ExecuteDataSet(
-                "NOTIFICATION_PKG.GET_PAGE",
+                "AI_NOTIFICATION_PKG.GET_PAGE",
                 new OracleParameter("P_USER_ID", OracleDbType.Int64) { Value = userId },
                 new OracleParameter("P_STATUS", OracleDbType.Int32) { Value = status },
                 new OracleParameter("P_PAGE_INDEX", OracleDbType.Int32) { Value = page },
                 new OracleParameter("P_PAGE_SIZE", OracleDbType.Int32) { Value = 100 },
+                new OracleParameter("P_SOURCE_TYPE", OracleDbType.Varchar2) { Value = source },
                 new OracleParameter("P_DATA_CURSOR", OracleDbType.RefCursor)
                 {
                     Direction = ParameterDirection.Output
@@ -632,24 +430,25 @@ WHEN NOT MATCHED THEN
             int unreadCount = totals.Rows.Count > 0
                 ? Convert.ToInt32(totals.Rows[0]["UNREAD_COUNT"], CultureInfo.InvariantCulture)
                 : 0;
-            int aiUnreadCount = GetAiUnreadCount(userId);
+            int aiUnreadCount = totals.Rows.Count > 0 ? Convert.ToInt32(totals.Rows[0]["AI_UNREAD_COUNT"], CultureInfo.InvariantCulture) : 0;
             return SuccessWithAiUnread(rows, unreadCount, totalCount, aiUnreadCount);
         }
 
         private static object MarkRead(long userId, long notificationId)
         {
             long updated = ExecuteUpdate(
-                "NOTIFICATION_PKG.MARK_READ",
+                "AI_NOTIFICATION_PKG.MARK_READ",
                 new OracleParameter("P_USER_ID", OracleDbType.Int64) { Value = userId },
                 new OracleParameter("P_ID", OracleDbType.Int64) { Value = notificationId });
             return Success(null, updated, 0);
         }
 
-        private static object MarkAllRead(long userId)
+        private static object MarkAllRead(long userId, string source)
         {
             long updated = ExecuteUpdate(
-                "NOTIFICATION_PKG.MARK_ALL_READ",
-                new OracleParameter("P_USER_ID", OracleDbType.Int64) { Value = userId });
+                "AI_NOTIFICATION_PKG.MARK_ALL_READ",
+                new OracleParameter("P_USER_ID", OracleDbType.Int64) { Value = userId },
+                new OracleParameter("P_SOURCE_TYPE", OracleDbType.Varchar2) { Value = source });
             return Success(null, updated, 0);
         }
 
@@ -684,41 +483,14 @@ WHEN NOT MATCHED THEN
                     ParameterDirection.Output);
                 command.Parameters.Add(output);
                 connection.Open();
-                command.ExecuteNonQuery();
-                return Convert.ToInt64(output.Value.ToString(), CultureInfo.InvariantCulture);
-            }
-        }
-
-        private static int GetAiUnreadCount(long userId)
-        {
-            try
-            {
-                const string sql = @"
-SELECT COUNT(*)
-FROM T_NOTIFICATION N
-WHERE N.SOURCE_TYPE = 'AI_QUERY'
-  AND (N.TARGET_TYPE = 0
-       OR EXISTS (SELECT 1 FROM T_NOTIFICATION_TARGET T
-                  WHERE T.NOTIFICATION_ID = N.ID AND T.USER_ID = :P_USER_ID))
-  AND NOT EXISTS (SELECT 1 FROM T_NOTIFICATION_READ R
-                  WHERE R.NOTIFICATION_ID = N.ID AND R.USER_ID = :P_USER_ID)";
-                using (OracleConnection connection = CreateConnection())
-                using (OracleCommand command = new OracleCommand(sql, connection))
+                using (OracleTransaction transaction = connection.BeginTransaction())
                 {
-                    command.BindByName = true;
-                    command.CommandType = CommandType.Text;
-                    command.CommandTimeout = 15;
-                    command.Parameters.Add("P_USER_ID", OracleDbType.Int64).Value = userId;
-                    connection.Open();
-                    return Convert.ToInt32(command.ExecuteScalar(), CultureInfo.InvariantCulture);
+                    command.Transaction = transaction;
+                    command.ExecuteNonQuery();
+                    long updated = Convert.ToInt64(output.Value.ToString(), CultureInfo.InvariantCulture);
+                    transaction.Commit();
+                    return updated;
                 }
-            }
-            catch (Exception ex)
-            {
-                // Badge AI khong duoc lam gian doan hop thong bao chung neu schema
-                // chua duoc cap nhat hoac truy van dem tam thoi that bai.
-                System.Diagnostics.Trace.TraceWarning("[NotificationHandler][AiCount] " + ex);
-                return 0;
             }
         }
 
@@ -760,6 +532,7 @@ WHERE N.SOURCE_TYPE = 'AI_QUERY'
         {
             context.Response.StatusCode = statusCode;
             context.Response.TrySkipIisCustomErrors = true;
+            context.Response.SuppressFormsAuthenticationRedirect = true;
             context.Response.Write(JsonConvert.SerializeObject(new { Code = "-99", Message = message }));
         }
     }

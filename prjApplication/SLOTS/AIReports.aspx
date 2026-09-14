@@ -1,7 +1,35 @@
 <%@ Page Title="Báo cáo hoạt động AI" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="AIReports.aspx.cs" Inherits="prjApplication.SLOTS.AIReports" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/AIReports.css?v=20260722-1") %>" />
-    <section id="aiReportsPage" class="ai-reports-page" data-endpoint="<%= ResolveUrl("~/SLOTS/AIReports.aspx/GetReports") %>">
+    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/AIReports.css?v=20260914-1") %>" />
+    <section id="aiReportsPage" class="ai-reports-page" data-endpoint="<%= ResolveUrl("~/SLOTS/AIReports.aspx/GetReports") %>" data-notification-endpoint="<%= ResolveUrl("~/Handlers/Notification.ashx") %>">
+        <section id="aiJobPanel" class="ai-report-card ai-job-panel" aria-labelledby="aiJobTitle" hidden>
+            <header class="ai-table-heading">
+                <div><h1 id="aiJobTitle">Chi tiết yêu cầu AI</h1><p>Theo dõi trạng thái xử lý và xem kết quả của yêu cầu.</p></div>
+                <div class="ai-job-actions"><a href="<%= ResolveUrl("~/SLOTS/Notifications.aspx?source=AI_QUERY") %>">Thông báo AI</a><button id="aiJobRefresh" class="ai-primary-button" type="button"><i class="fa fa-refresh"></i> Làm mới</button></div>
+            </header>
+            <div class="ai-job-body">
+                <div id="aiJobLoading" class="ai-job-loading" role="status"><span class="ai-inline-spinner"></span> Đang tải chi tiết yêu cầu...</div>
+                <div id="aiJobError" class="ai-report-error" role="alert" hidden></div>
+                <div id="aiJobDetails" hidden>
+                    <span id="aiJobStatus" class="ai-status-badge"></span>
+                    <p id="aiJobNotice" class="ai-job-notice" role="status"></p>
+                    <div id="aiJobMetadata" class="ai-detail-grid"></div>
+                    <section class="ai-detail-section"><h2>Câu hỏi</h2><div id="aiJobQuestion" class="ai-detail-content"></div></section>
+                    <section id="aiJobFailure" class="ai-detail-section" hidden><h2>Thông tin lỗi</h2><div id="aiJobFailureText" class="ai-detail-content ai-error-content"></div></section>
+                    <p id="aiJobLimit" class="ai-job-notice ai-job-warning" hidden>Kết quả đã đạt giới hạn số dòng; dữ liệu có thể chưa đầy đủ.</p>
+                    <p id="aiJobReadWarning" class="ai-job-notice ai-job-warning" role="status" hidden></p>
+                    <div class="ai-job-result-actions"><button id="aiJobShowResult" class="ai-primary-button" type="button" hidden><i class="fa fa-table"></i> Xem kết quả</button><span id="aiJobResultHint">Kết quả chỉ được tải khi bạn chọn xem.</span></div>
+                </div>
+                <div id="aiJobResultError" class="ai-report-error" role="alert" hidden></div>
+                <section id="aiJobResultPanel" class="ai-detail-section" aria-labelledby="aiJobResultTitle" hidden>
+                    <h2 id="aiJobResultTitle">Kết quả truy vấn</h2>
+                    <p id="aiJobResultSummary" role="status"></p>
+                    <div class="ai-table-wrap ai-job-result-wrap" tabindex="0" role="region" aria-label="Bảng kết quả truy vấn, cuộn ngang để xem các cột"><table class="ai-job-result-table"><caption class="ai-visually-hidden">Dữ liệu kết quả yêu cầu AI</caption><thead id="aiJobResultColumns"></thead><tbody id="aiJobResultRows"></tbody></table></div>
+                    <div class="ai-pagination ai-job-pagination"><label>Số dòng mỗi trang <select id="aiJobResultPageSize"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option></select></label><span id="aiJobResultPageInfo" role="status"></span><div><button id="aiJobResultPrevious" type="button">Trước</button><button id="aiJobResultNext" type="button">Sau</button></div></div>
+                </section>
+            </div>
+        </section>
+        <div id="aiLegacyReports">
         <header class="ai-report-hero">
             <div>
                 <span class="ai-report-eyebrow"><i class="fa fa-microchip"></i> VATM · AI OBSERVABILITY</span>
@@ -54,6 +82,7 @@
                 <div><button id="aiPreviousPage" type="button"><i class="fa fa-angle-left"></i> Trước</button><button id="aiNextPage" type="button">Sau <i class="fa fa-angle-right"></i></button></div>
             </div>
         </section>
+        </div>
     </section>
 
     <div id="aiDetailModal" class="ai-detail-modal" hidden>
@@ -63,5 +92,5 @@
             <div id="aiDetailBody" class="ai-detail-body"></div>
         </article>
     </div>
-    <script src="<%= ResolveUrl("~/SLOTS/AIReports.js?v=20260722-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/AIReports.js?v=20260914-1") %>"></script>
 </asp:Content>

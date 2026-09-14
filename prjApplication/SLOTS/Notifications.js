@@ -8,6 +8,7 @@
     var pageSize = 100;
     var currentPage = 1;
     var currentStatus = -1;
+    var currentSource = /(?:\?|&)source=AI_QUERY(?:&|$)/i.test(window.location.search) ? 'AI_QUERY' : 'ALL';
     var totalRecords = 0;
     var unreadCount = 0;
     var aiUnreadCount = 0;
@@ -23,7 +24,9 @@
     var errorBox = document.getElementById('notificationsError');
     var refreshButton = document.getElementById('notificationsRefresh');
     var markAllButton = document.getElementById('notificationsMarkAll');
+    var markAllLabel = document.getElementById('notificationsMarkAllLabel');
     var filterButtons = root.querySelectorAll('.notifications-segmented button[data-status]');
+    var sourceButtons = root.querySelectorAll('.notifications-segmented button[data-source]');
     var aiUnreadNode = document.getElementById('notificationsAiUnreadCount');
 
     function sendRequest(options) {
@@ -74,15 +77,19 @@
 
     function isAiNotification(item) {
         var source = String(item && item.SOURCE_TYPE || '').toUpperCase();
-        return source.indexOf('AI') === 0 || /(^|[_:\-])AI([_:\-]|$)/.test(source);
+        return source === 'AI_QUERY';
     }
 
-    function appendAiLink(cell) {
+    function aiNotificationUrl(item) {
+        return root.getAttribute('data-ai-reports-url') + '?notificationId=' + encodeURIComponent(String(item.ID));
+    }
+
+    function appendAiLink(cell, item) {
         var link = document.createElement('a');
         link.className = 'notifications-ai-report-link';
-        link.href = root.getAttribute('data-ai-reports-url');
-        link.title = 'Mở báo cáo hoạt động AI';
-        link.innerHTML = '<i class="fa fa-external-link" aria-hidden="true"></i><span>Mở báo cáo AI</span>';
+        link.href = aiNotificationUrl(item);
+        link.title = 'Mở chi tiết yêu cầu và kết quả AI';
+        link.innerHTML = '<i class="fa fa-external-link" aria-hidden="true"></i><span>Xem kết quả AI</span>';
         cell.appendChild(link);
     }
 
@@ -95,7 +102,13 @@
             label.innerHTML = '<i class="fa fa-microchip" aria-hidden="true"></i><span>AI</span>';
             cell.appendChild(label);
         }
-        cell.appendChild(document.createTextNode(item.TITLE || 'Thông báo'));
+        if (isAi) {
+            var link = document.createElement('a');
+            link.className = 'notifications-title-link';
+            link.href = aiNotificationUrl(item);
+            link.textContent = item.TITLE || 'Thông báo AI';
+            cell.appendChild(link);
+        } else cell.appendChild(document.createTextNode(item.TITLE || 'Thông báo'));
         row.appendChild(cell);
     }
 
@@ -158,8 +171,8 @@
             createStatusCell(row, isUnread);
             appendTitleCell(row, item, isAi);
             var contentCell = appendCell(row, 'notifications-content-cell', item.CONTENT || '');
-            if (isAi) appendAiLink(contentCell);
-            appendCell(row, 'notifications-type-cell', item.SOURCE_TYPE || '--');
+            if (isAi) appendAiLink(contentCell, item);
+            appendCell(row, 'notifications-type-cell', isAi ? 'AI' : (item.SOURCE_TYPE || '--'));
             appendCell(row, 'notifications-time-cell', formatDate(item.DATETIME));
             createActionCell(row, item, isUnread);
             rows.appendChild(row);
@@ -202,16 +215,24 @@
         createPagerButton('<i class="fa fa-angle-double-right" aria-hidden="true"></i>', totalPages, 'Trang cuối', currentPage >= totalPages, false);
     }
 
+    function filteredUnreadCount() {
+        return currentSource === 'AI_QUERY' ? aiUnreadCount : unreadCount;
+    }
+
     function updateHeader() {
-        unreadNode.textContent = String(unreadCount);
+        var currentUnread = filteredUnreadCount();
+        unreadNode.textContent = String(currentUnread);
         if (aiUnreadNode) {
             aiUnreadNode.textContent = aiUnreadCount > 99 ? '99+' : String(aiUnreadCount);
             aiUnreadNode.classList.toggle('is-empty', aiUnreadCount === 0);
             aiUnreadNode.setAttribute('aria-label', aiUnreadCount + ' thông báo AI chưa đọc');
         }
-        markAllButton.disabled = unreadCount === 0 || requestInFlight;
+        markAllButton.disabled = currentUnread === 0 || requestInFlight;
+        markAllLabel.textContent = currentSource === 'AI_QUERY' ? 'Đọc tất cả AI' : 'Đọc tất cả';
+        markAllButton.title = currentSource === 'AI_QUERY' ? 'Đánh dấu đã đọc tất cả thông báo AI của bạn' : 'Đánh dấu đã đọc tất cả thông báo của bạn';
         var filterName = currentStatus === 0 ? 'chưa đọc' : (currentStatus === 1 ? 'đã đọc' : 'tất cả');
-        summary.textContent = totalRecords + ' thông báo ' + filterName + ', ' + unreadCount + ' thông báo chưa đọc';
+        var sourceName = currentSource === 'AI_QUERY' ? 'thông báo AI' : 'thông báo';
+        summary.textContent = totalRecords + ' ' + sourceName + ' ' + filterName + ', ' + currentUnread + ' chưa đọc';
     }
 
     function dispatchNotificationsChanged() {
@@ -237,7 +258,7 @@
             url: endpoint,
             dataType: 'json',
             cache: false,
-            data: { action: 'list', status: currentStatus, page: currentPage }
+            data: { action: 'list', status: currentStatus, page: currentPage, source: currentSource }
         }).done(function (response) {
             if (!response || response.Code !== '00') {
                 showError('Không thể tải danh sách thông báo.');
@@ -248,13 +269,6 @@
             unreadCount = Math.max(0, parseInt(response.Value, 10) || 0);
             var responseAiUnread = response.AIUnreadCount;
             if (responseAiUnread == null) responseAiUnread = response.AI_UNREAD_COUNT;
-            if (responseAiUnread == null) {
-                responseAiUnread = 0;
-                var responseItems = response.ListValue || [];
-                for (var aiIndex = 0; aiIndex < responseItems.length; aiIndex++) {
-                    if (parseInt(responseItems[aiIndex].STATUS, 10) === 0 && isAiNotification(responseItems[aiIndex])) responseAiUnread++;
-                }
-            }
             aiUnreadCount = Math.max(0, parseInt(responseAiUnread, 10) || 0);
             var totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
             if (currentPage > totalPages) {
@@ -284,7 +298,7 @@
         button.disabled = true;
         sendRequest({
             type: 'POST',
-            url: endpoint + '?action=markRead&id=' + encodeURIComponent(id),
+            url: endpoint + '?action=markRead&id=' + encodeURIComponent(id) + '&source=' + encodeURIComponent(currentSource),
             dataType: 'json',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         }).done(function (response) {
@@ -320,6 +334,23 @@
         });
     }
 
+    for (var sourceIndex = 0; sourceIndex < sourceButtons.length; sourceIndex++) {
+        var isCurrentSource = sourceButtons[sourceIndex].getAttribute('data-source') === currentSource;
+        sourceButtons[sourceIndex].classList.toggle('is-active', isCurrentSource);
+        sourceButtons[sourceIndex].setAttribute('aria-pressed', isCurrentSource ? 'true' : 'false');
+        sourceButtons[sourceIndex].addEventListener('click', function () {
+            if (requestInFlight) return;
+            currentSource = this.getAttribute('data-source') === 'AI_QUERY' ? 'AI_QUERY' : 'ALL';
+            currentPage = 1;
+            for (var j = 0; j < sourceButtons.length; j++) {
+                var active = sourceButtons[j] === this;
+                sourceButtons[j].classList.toggle('is-active', active);
+                sourceButtons[j].setAttribute('aria-pressed', active ? 'true' : 'false');
+            }
+            loadPage();
+        });
+    }
+
     rows.addEventListener('click', function (event) {
         var button = event.target;
         while (button && button !== rows && !button.classList.contains('notifications-row-read')) button = button.parentNode;
@@ -336,11 +367,11 @@
 
     refreshButton.addEventListener('click', loadPage);
     markAllButton.addEventListener('click', function () {
-        if (markAllButton.disabled || unreadCount === 0) return;
+        if (markAllButton.disabled || filteredUnreadCount() === 0) return;
         markAllButton.disabled = true;
         sendRequest({
             type: 'POST',
-            url: endpoint + '?action=markAllRead',
+            url: endpoint + '?action=markAllRead&source=' + encodeURIComponent(currentSource),
             dataType: 'json',
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         }).done(function (response) {
@@ -354,7 +385,7 @@
         }).fail(function () {
             showError('Không thể đánh dấu đọc tất cả thông báo.');
         }).always(function () {
-            markAllButton.disabled = unreadCount === 0 || requestInFlight;
+            markAllButton.disabled = filteredUnreadCount() === 0 || requestInFlight;
         });
     });
 
