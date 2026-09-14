@@ -77,5 +77,5 @@
         </section>
     </section>
 
-    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260914-2") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260914-3") %>"></script>
 </asp:Content>

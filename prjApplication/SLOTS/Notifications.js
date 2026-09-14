@@ -97,17 +97,18 @@
     function appendTitleCell(row, item, isAi) {
         var cell = document.createElement('td');
         cell.className = 'notifications-title-cell';
+        var isDplkl = $.trim(String(item.SOURCE_KEY || '')).toUpperCase() === 'DPLKL';
         if (isAi) {
             var label = document.createElement('span');
             label.className = 'notifications-ai-label';
             label.innerHTML = '<i class="fa fa-microchip" aria-hidden="true"></i><span>AI</span>';
             cell.appendChild(label);
         }
-        if (isAi) {
+        if (isDplkl || isAi) {
             var link = document.createElement('a');
             link.className = 'notifications-title-link';
-            link.href = aiNotificationUrl(item);
-            link.textContent = item.TITLE || 'Thông báo AI';
+            link.href = isDplkl ? dplklUrl : aiNotificationUrl(item);
+            link.textContent = item.TITLE || (isAi ? 'Thông báo AI' : 'Thông báo');
             cell.appendChild(link);
         } else cell.appendChild(document.createTextNode(item.TITLE || 'Thông báo'));
         row.appendChild(cell);
