@@ -32,6 +32,7 @@ internal static class NotificationProxyTests
             Configure(backend.Url, BackendKey);
             TestAuthentication(backend);
             TestRoutes(backend);
+            TestAiCompatibility(backend);
             TestValidation(backend);
             TestBackendFailures(backend);
             TestConfiguration(backend);
@@ -147,12 +148,59 @@ internal static class NotificationProxyTests
             int before = backend.Requests;
             Result result = Invoke(query, method, body: body);
             Assert(result.Status == 200 && (string)JObject.Parse(result.Body)["Code"] == "00", "Successful backend envelope changed.");
-            Assert(backend.Requests == before + 1, "Wrong backend request count.");
+            int expectedRequests = path == "MarkAllRead" && expectedQuery == "&source=AI_QUERY" ? 2 : 1;
+            Assert(backend.Requests == before + expectedRequests, "Wrong backend request count.");
             Assert(backend.LastPath == "/api/Notifications/" + path, "Wrong API operation: " + backend.LastPath);
             Assert(backend.LastQuery == "?userId=42" + expectedQuery, "Forwarded query differs: " + backend.LastQuery);
             Assert(backend.LastMethod == method, "Wrong backend method.");
             Assert(backend.LastKey == BackendKey && backend.LastAccept == "application/json", "Server headers omitted backend key or JSON accept.");
             Assert(backend.LastBody == "", "Browser body was forwarded to the backend.");
+        });
+    }
+
+    private static void TestAiCompatibility(Backend backend)
+    {
+        const string legacy = "{\"Code\":\"00\",\"Value\":356,\"SumRecord\":\"3789\",\"ListValue\":[{\"ID\":1,\"SOURCE_TYPE\":\"email\"}]}";
+        Check("legacy general notifications remain available", delegate {
+            backend.Reply(200, legacy);
+            Assert(Invoke("action=list&status=-1&page=1&source=ALL").Status == 200, "General inbox was blocked.");
+        });
+        Check("legacy API cannot show general rows in the AI inbox", delegate {
+            backend.Reply(200, legacy);
+            Result result = Invoke("action=list&status=-1&page=1&source=AI_QUERY");
+            Assert(result.Status == 503, "Legacy unfiltered response was accepted.");
+            JObject body = JObject.Parse(result.Body);
+            Assert((string)body["Code"] == "-99" && body["ListValue"] == null, "General rows leaked into AI inbox.");
+        });
+        Check("empty legacy response does not claim AI support", delegate {
+            backend.Reply(200, "{\"Code\":\"00\",\"Value\":0,\"ListValue\":[]}");
+            Assert(Invoke("action=list&status=-1&page=1&source=AI_QUERY").Status == 503, "Missing AI contract accepted.");
+        });
+        Check("AI counter alone cannot hide mixed-source rows", delegate {
+            backend.Reply(200, legacy.Replace("\"Value\":356", "\"Value\":356,\"AIUnreadCount\":2"));
+            Assert(Invoke("action=list&status=-1&page=1&source=AI_QUERY").Status == 503, "Mixed-source AI page accepted.");
+        });
+        Check("supported empty AI inbox remains successful", delegate {
+            backend.Reply(200, Success);
+            Assert(Invoke("action=list&status=-1&page=1&source=AI_QUERY").Status == 200, "Valid empty AI page rejected.");
+        });
+        Check("AI counter alias and actual AI row are accepted", delegate {
+            backend.Reply(200, "{\"Code\":\"00\",\"AI_UNREAD_COUNT\":1,\"ListValue\":[{\"ID\":2,\"SOURCE_TYPE\":\"AI_QUERY\"}]}");
+            Result result = Invoke("action=list&status=-1&page=1&source=AI_QUERY");
+            Assert(result.Status == 200 && ((JArray)JObject.Parse(result.Body)["ListValue"]).Count == 1, "Valid AI row rejected.");
+        });
+        Check("AI mark-all never posts to an API that ignores source", delegate {
+            backend.Reply(200, legacy);
+            int before = backend.Requests;
+            Assert(Invoke("action=markAllRead&source=AI_QUERY", "POST").Status == 503, "Legacy AI mark-all accepted.");
+            Assert(backend.Requests == before + 1 && backend.LastMethod == "GET"
+                && backend.LastPath == "/api/Notifications/GetPage", "Unsafe POST reached legacy API.");
+        });
+        Check("failed AI capability check prevents mark-all mutation", delegate {
+            backend.Reply(503, "{}");
+            int before = backend.Requests;
+            Assert(Invoke("action=markAllRead&source=AI_QUERY", "POST").Status == 503, "Failed preflight accepted.");
+            Assert(backend.Requests == before + 1 && backend.LastMethod == "GET", "POST followed failed preflight.");
         });
     }
 

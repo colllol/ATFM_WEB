@@ -11,7 +11,7 @@
                 <p id="notificationsSummary" aria-live="polite">Đang tải dữ liệu...</p>
             </div>
             <div class="notifications-header-actions">
-                <a class="notifications-ai-link" href="https://backwash-january-glare.ngrok-free.dev" target="_blank" rel="noopener noreferrer" title="Mở trợ lý AI">
+                <a class="notifications-ai-link" href="https://quench-limpness-attach.ngrok-free.dev/" target="_blank" rel="noopener noreferrer" title="Mở trợ lý AI">
                     <i class="fa fa-comments" aria-hidden="true"></i><span>Trợ lý AI</span>
                 </a>
                 <button id="notificationsRefresh" class="notifications-icon-button" type="button" title="Làm mới danh sách" aria-label="Làm mới danh sách">
@@ -77,5 +77,5 @@
         </section>
     </section>
 
-    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260914-2") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/Notifications.js?v=20260915-1") %>"></script>
 </asp:Content>

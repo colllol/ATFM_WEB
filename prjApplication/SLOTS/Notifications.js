@@ -9,12 +9,13 @@
     var pageSize = 100;
     var currentPage = 1;
     var currentStatus = -1;
-    var currentSource = /(?:\?|&)source=AI_QUERY(?:&|$)/i.test(window.location.search) ? 'AI_QUERY' : 'ALL';
+    var currentSource = readSourceFilter();
     var totalRecords = 0;
     var unreadCount = 0;
     var aiUnreadCount = 0;
     var requestInFlight = false;
     var reloadPending = false;
+    var hasPageResults = false;
 
     var rows = document.getElementById('notificationsRows');
     var summary = document.getElementById('notificationsSummary');
@@ -29,6 +30,26 @@
     var filterButtons = root.querySelectorAll('.notifications-segmented button[data-status]');
     var sourceButtons = root.querySelectorAll('.notifications-segmented button[data-source]');
     var aiUnreadNode = document.getElementById('notificationsAiUnreadCount');
+
+    function readSourceFilter() {
+        var match = /(?:\?|&)source=([^&]*)/i.exec(window.location.search);
+        if (!match) return 'ALL';
+        try {
+            return decodeURIComponent(match[1]).toUpperCase() === 'AI_QUERY' ? 'AI_QUERY' : 'ALL';
+        } catch (error) { return 'ALL'; }
+    }
+
+    function rememberSourceFilter() {
+        if (!window.history || !window.history.replaceState) return;
+        var parts = window.location.search.replace(/^\?/, '').split('&');
+        var query = [];
+        for (var i = 0; i < parts.length; i++) {
+            if (parts[i] && !/^source=/i.test(parts[i])) query.push(parts[i]);
+        }
+        query.push('source=' + encodeURIComponent(currentSource));
+        window.history.replaceState(window.history.state, document.title,
+            window.location.pathname + '?' + query.join('&') + window.location.hash);
+    }
 
     function sendRequest(options) {
         options = $.extend({}, options, {
@@ -146,7 +167,7 @@
         row.appendChild(cell);
     }
 
-    function renderRows(items) {
+    function renderRows(items, emptyMessage) {
         while (rows.firstChild) rows.removeChild(rows.firstChild);
         items = Object.prototype.toString.call(items) === '[object Array]' ? items : [];
 
@@ -155,7 +176,7 @@
             var emptyCell = document.createElement('td');
             emptyCell.colSpan = 6;
             emptyCell.className = 'notifications-empty-cell';
-            emptyCell.textContent = 'Không có thông báo phù hợp.';
+            emptyCell.textContent = emptyMessage || 'Không có thông báo phù hợp.';
             emptyRow.appendChild(emptyCell);
             rows.appendChild(emptyRow);
             return;
@@ -233,7 +254,20 @@
         markAllButton.title = currentSource === 'AI_QUERY' ? 'Đánh dấu đã đọc tất cả thông báo AI của bạn' : 'Đánh dấu đã đọc tất cả thông báo của bạn';
         var filterName = currentStatus === 0 ? 'chưa đọc' : (currentStatus === 1 ? 'đã đọc' : 'tất cả');
         var sourceName = currentSource === 'AI_QUERY' ? 'thông báo AI' : 'thông báo';
-        summary.textContent = totalRecords + ' ' + sourceName + ' ' + filterName + ', ' + currentUnread + ' chưa đọc';
+        summary.textContent = hasPageResults
+            ? totalRecords + ' ' + sourceName + ' ' + filterName + ', ' + currentUnread + ' chưa đọc'
+            : (requestInFlight || reloadPending ? 'Đang tải ' + sourceName + '...' : 'Chưa tải được danh sách ' + sourceName + '.');
+    }
+
+    function clearPageResults(message) {
+        hasPageResults = false;
+        totalRecords = 0;
+        renderRows([], message);
+        renderPager();
+    }
+
+    function responseMessage(response, fallback) {
+        return response && typeof response.Message === 'string' && response.Message ? response.Message : fallback;
     }
 
     function dispatchNotificationsChanged() {
@@ -249,20 +283,30 @@
     function loadPage() {
         if (requestInFlight) {
             reloadPending = true;
+            updateHeader();
             return;
         }
         var reloadAdjustedPage = false;
+        var requestedSource = currentSource;
+        var requestedStatus = currentStatus;
+        var requestedPage = currentPage;
+        function isCurrentRequest() {
+            return requestedSource === currentSource && requestedStatus === currentStatus && requestedPage === currentPage;
+        }
         setLoading(true);
         showError('');
+        updateHeader();
         sendRequest({
             type: 'GET',
             url: endpoint,
             dataType: 'json',
             cache: false,
-            data: { action: 'list', status: currentStatus, page: currentPage, source: currentSource }
+            data: { action: 'list', status: requestedStatus, page: requestedPage, source: requestedSource }
         }).done(function (response) {
+            if (!isCurrentRequest()) return;
             if (!response || response.Code !== '00') {
-                showError('Không thể tải danh sách thông báo.');
+                clearPageResults('Không thể tải danh sách thông báo.');
+                showError(responseMessage(response, 'Không thể tải danh sách thông báo.'));
                 return;
             }
 
@@ -278,11 +322,14 @@
                 return;
             }
 
+            hasPageResults = true;
             renderRows(response.ListValue || []);
             renderPager();
             updateHeader();
-        }).fail(function () {
-            showError('Không thể kết nối dịch vụ thông báo.');
+        }).fail(function (xhr) {
+            if (!isCurrentRequest()) return;
+            clearPageResults('Không thể tải danh sách thông báo.');
+            showError(responseMessage(xhr && xhr.responseJSON, 'Không thể kết nối dịch vụ thông báo.'));
         }).always(function () {
             setLoading(false);
             updateHeader();
@@ -305,7 +352,7 @@
         }).done(function (response) {
             if (!response || response.Code !== '00') {
                 button.disabled = false;
-                showError('Không thể cập nhật trạng thái thông báo.');
+                showError(responseMessage(response, 'Không thể cập nhật trạng thái thông báo.'));
                 return;
             }
 
@@ -315,17 +362,17 @@
                 dispatchNotificationsChanged();
                 loadPage();
             }, currentStatus === 0 ? 220 : 0);
-        }).fail(function () {
+        }).fail(function (xhr) {
             button.disabled = false;
-            showError('Không thể cập nhật trạng thái thông báo.');
+            showError(responseMessage(xhr && xhr.responseJSON, 'Không thể cập nhật trạng thái thông báo.'));
         });
     }
 
     for (var i = 0; i < filterButtons.length; i++) {
         filterButtons[i].addEventListener('click', function () {
-            if (requestInFlight) return;
             currentStatus = parseInt(this.getAttribute('data-status'), 10);
             currentPage = 1;
+            clearPageResults('Đang tải dữ liệu...');
             for (var j = 0; j < filterButtons.length; j++) {
                 var active = filterButtons[j] === this;
                 filterButtons[j].classList.toggle('is-active', active);
@@ -340,9 +387,10 @@
         sourceButtons[sourceIndex].classList.toggle('is-active', isCurrentSource);
         sourceButtons[sourceIndex].setAttribute('aria-pressed', isCurrentSource ? 'true' : 'false');
         sourceButtons[sourceIndex].addEventListener('click', function () {
-            if (requestInFlight) return;
             currentSource = this.getAttribute('data-source') === 'AI_QUERY' ? 'AI_QUERY' : 'ALL';
             currentPage = 1;
+            rememberSourceFilter();
+            clearPageResults('Đang tải dữ liệu...');
             for (var j = 0; j < sourceButtons.length; j++) {
                 var active = sourceButtons[j] === this;
                 sourceButtons[j].classList.toggle('is-active', active);
@@ -377,14 +425,14 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         }).done(function (response) {
             if (!response || response.Code !== '00') {
-                showError('Không thể đánh dấu đọc tất cả thông báo.');
+                showError(responseMessage(response, 'Không thể đánh dấu đọc tất cả thông báo.'));
                 return;
             }
             currentPage = 1;
             dispatchNotificationsChanged();
             loadPage();
-        }).fail(function () {
-            showError('Không thể đánh dấu đọc tất cả thông báo.');
+        }).fail(function (xhr) {
+            showError(responseMessage(xhr && xhr.responseJSON, 'Không thể đánh dấu đọc tất cả thông báo.'));
         }).always(function () {
             markAllButton.disabled = filteredUnreadCount() === 0 || requestInFlight;
         });

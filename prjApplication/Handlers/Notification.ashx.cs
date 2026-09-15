@@ -94,7 +94,18 @@ namespace prjApplication.Handlers
                 return;
             }
 
-            try { Forward(context, operation, query, isPost); }
+            try
+            {
+                // Older API deployments ignore source, including on MarkAllRead.
+                // Verify the AI contract before a scoped mutation reaches them.
+                if (operation == "MarkAllRead" && source == "AI_QUERY"
+                    && ReadBackend(context, "GetPage", "userId=" + user.UserID.ToString(CultureInfo.InvariantCulture)
+                        + "&status=-1&page=1&source=AI_QUERY", false, source) == null)
+                    return;
+
+                JObject response = ReadBackend(context, operation, query, isPost, source);
+                if (response != null) context.Response.Write(response.ToString(Formatting.None));
+            }
             catch (Exception ex)
             {
                 System.Diagnostics.Trace.TraceWarning("[Notification API proxy] " + ex.GetType().Name);
@@ -102,7 +113,7 @@ namespace prjApplication.Handlers
             }
         }
 
-        private static void Forward(HttpContext context, string operation, string query, bool isPost)
+        private static JObject ReadBackend(HttpContext context, string operation, string query, bool isPost, string source)
         {
             string address = ConfigurationManager.AppSettings["ApplicationPath.API"];
             string apiKey = ConfigurationManager.AppSettings["APIKey"];
@@ -113,7 +124,7 @@ namespace prjApplication.Handlers
                 || !string.IsNullOrEmpty(backend.UserInfo) || !string.IsNullOrEmpty(backend.Query) || !string.IsNullOrEmpty(backend.Fragment))
             {
                 WriteError(context, 503, "Chưa cấu hình kết nối backend thông báo.");
-                return;
+                return null;
             }
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri(backend, "api/Notifications/" + operation + "?" + query));
             request.Method = isPost ? "POST" : "GET";
@@ -143,7 +154,7 @@ namespace prjApplication.Handlers
                     else if (status == 410) WriteError(context, 410, "Kết quả AI đã hết hạn hoặc không còn khả dụng.");
                     else if (status == 403) WriteError(context, 403, "Bạn không có quyền xem yêu cầu AI này.");
                     else WriteError(context, status == 401 || status == 503 ? 503 : 502, "Backend thông báo chưa sẵn sàng. Vui lòng thử lại sau.");
-                    return;
+                    return null;
                 }
                 using (Stream stream = response.GetResponseStream())
                 using (MemoryStream buffer = new MemoryStream())
@@ -165,12 +176,32 @@ namespace prjApplication.Handlers
                         if ((string)value["Code"] != "00")
                         {
                             WriteError(context, 502, "Backend không thể xử lý dữ liệu thông báo.");
-                            return;
+                            return null;
                         }
-                        context.Response.Write(value.ToString(Formatting.None));
+                        if (operation == "GetPage" && source == "AI_QUERY" && !SupportsAiFilter(value))
+                        {
+                            WriteError(context, 503, "Dịch vụ thông báo AI chưa sẵn sàng. Vui lòng liên hệ quản trị viên để cập nhật dịch vụ.");
+                            return null;
+                        }
+                        return value;
                     }
                 }
             }
+        }
+
+        private static bool SupportsAiFilter(JObject response)
+        {
+            JToken count = response["AIUnreadCount"] ?? response["AI_UNREAD_COUNT"];
+            JArray rows = response["ListValue"] as JArray;
+            if (count == null || count.Type != JTokenType.Integer || (long)count < 0 || rows == null)
+                return false;
+            foreach (JToken row in rows)
+            {
+                JObject item = row as JObject;
+                if (item == null || !string.Equals((string)item["SOURCE_TYPE"], "AI_QUERY", StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+            return true;
         }
 
         private static void WriteError(HttpContext context, int status, string message)
