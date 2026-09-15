@@ -1945,4 +1945,5 @@ Quy ước:
 2026-09-15 | (kiểm chứng) | Build ATFM.sln Debug thành công; 91 proxy, 57 service AI, 22 UI danh sách và 10 header mock đạt. Chưa kiểm tra UI đăng nhập/thông báo AI thật; cần endpoint tích hợp kết nối được và triển khai QLB.API mới trên server remote. Web.config sửa có sẵn của người dùng giữ ngoài commit; không push.
 2026-09-15 | Database/Oracle/20260914_AI_notification_integration.md | Người dùng xác nhận giữ endpoint 192.168.100.136:8000; ghi rõ timeout từ máy dev và cần kiểm tra mạng từ server API. Build QLB.API Debug cũng thành công.
 2026-09-15 | prjApplication/Web.config | Trỏ ApplicationPath.API sang http://192.168.131.30:8000/ và thêm APIKey=123456 để handler Notification.ashx gửi X-API-Key đúng endpoint NL2SQL mới; comment lại địa chỉ backend cũ (172.29.187.90:8888).
+2026-09-15 | prjApplication/Web.config | Khôi phục dòng applicationpath.api=http://172.29.187.90:8888/ATFM_API/ hoạt động trở lại (giữ nguyên như trước); giữ thêm ApplicationPath.API=192.168.131.30:8000 và APIKey=123456 cho Notification handler.
 
