@@ -89,7 +89,7 @@
         load();
     }
     function draw() {
-        var pages = Math.max(1, totalPages), start = (currentPage - 1) * pageSize, rows = filteredItems;
+        var pages = Math.max(1, totalPages), start = (currentPage - 1) * pageSize, rows = filteredItems.slice(start, start + pageSize);
         $('emailRows').innerHTML = rows.length ? rows.map(function (item, index) {
             var state = status(item), subject = text(item,['subject','title']) || '(Không có tiêu đề)';
             var sender = text(item,['sender','from','senderEmail']);
@@ -354,24 +354,36 @@
         apply.disabled = true;
         apply.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm...';
         setConnection(false, 'Đang kết nối...');
-        var request = {
-            query: $('emailSearch').value.trim(),
-            processingStatus: $('emailStatus').value,
+        var baseRequest = { query: $('emailSearch').value.trim(), processingStatus: $('emailStatus').value,
             fromDate: $('emailFrom').value ? $('emailFrom').value + 'T00:00:00' : '',
-            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '',
-            page: currentPage - 1,
-            size: pageSize
-        };
-        fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
+            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', size: 100 };
+        function requestPage(pageNumber) {
+            var request = { query: baseRequest.query, processingStatus: baseRequest.processingStatus,
+                fromDate: baseRequest.fromDate, toDate: baseRequest.toDate, page: pageNumber, size: baseRequest.size };
+            return fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
             return response.json().catch(function () { return null; }).then(function (payload) {
                 if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
                 return payload;
             });
-        }).then(function (payload) {
-            if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
-            allItems = payloadItems(payload); filteredItems = applyFileTypeFilter(allItems);
-            totalItems = Number(payload && payload.totalElements != null ? payload.totalElements : allItems.length);
-            totalPages = Number(payload && payload.totalPages != null ? payload.totalPages : 1);
+            });
+        }
+        requestPage(0).then(function (firstPayload) {
+            if (firstPayload && typeof firstPayload.d === 'string') firstPayload = JSON.parse(firstPayload.d);
+            var apiPages = Number(firstPayload && firstPayload.totalPages), apiTotal = Number(firstPayload && firstPayload.totalElements);
+            if (!apiPages && apiTotal) apiPages = Math.ceil(apiTotal / baseRequest.size);
+            apiPages = Math.max(1, apiPages || 1);
+            var requests = [], payloads = [firstPayload], pageNumber;
+            for (pageNumber = 1; pageNumber < apiPages; pageNumber++) requests.push(requestPage(pageNumber));
+            return Promise.all(requests).then(function (remaining) { return payloads.concat(remaining); });
+        }).then(function (payloads) {
+            allItems = [];
+            payloads.forEach(function (payload) {
+                if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
+                allItems = allItems.concat(payloadItems(payload));
+            });
+            filteredItems = applyFileTypeFilter(allItems);
+            totalItems = filteredItems.length;
+            totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
             var sent = 0, failed = 0; allItems.forEach(function (item) { var cls = statusClass(status(item)); if (cls === 'success') sent++; if (cls === 'failed') failed++; });
             $('emailSent').textContent = sent.toLocaleString('vi-VN'); $('emailFailed').textContent = failed.toLocaleString('vi-VN'); $('emailLastUpdated').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN'); setConnection(true, 'Đã kết nối'); draw(); inspectCurrentPage();
         }).catch(function (error) {

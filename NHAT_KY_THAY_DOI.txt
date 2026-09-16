@@ -1946,4 +1946,5 @@ Quy ước:
 2026-09-15 | Database/Oracle/20260914_AI_notification_integration.md | Người dùng xác nhận giữ endpoint 192.168.100.136:8000; ghi rõ timeout từ máy dev và cần kiểm tra mạng từ server API. Build QLB.API Debug cũng thành công.
 2026-09-15 | prjApplication/Web.config | Trỏ ApplicationPath.API sang http://192.168.131.30:8000/ và thêm APIKey=123456 để handler Notification.ashx gửi X-API-Key đúng endpoint NL2SQL mới; comment lại địa chỉ backend cũ (172.29.187.90:8888).
 2026-09-15 | prjApplication/Web.config | Khôi phục dòng applicationpath.api=http://172.29.187.90:8888/ATFM_API/ hoạt động trở lại (giữ nguyên như trước); giữ thêm ApplicationPath.API=192.168.131.30:8000 và APIKey=123456 cho Notification handler.
+2026-09-16 | prjApplication/SLOTS/EmailReports.js | Sửa phân trang danh sách email: tải toàn bộ các trang dữ liệu thô theo bộ lọc, áp dụng lọc loại file trước khi tính tổng/phân trang, và chỉ hiển thị đúng số dòng đã chọn (25/50/100); tránh trường hợp chọn 50 nhưng chỉ thấy vài bản ghi khớp trong 50 dòng đầu.
 
