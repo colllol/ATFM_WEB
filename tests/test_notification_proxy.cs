@@ -185,7 +185,7 @@ internal static class NotificationProxyTests
             Assert(Invoke("action=list&status=-1&page=1&source=AI_QUERY").Status == 200, "Valid empty AI page rejected.");
         });
         Check("AI counter alias and actual AI row are accepted", delegate {
-            backend.Reply(200, "{\"Code\":\"00\",\"AI_UNREAD_COUNT\":1,\"ListValue\":[{\"ID\":2,\"SOURCE_TYPE\":\"AI_QUERY\"}]}");
+            backend.Reply(200, "{\"Code\":\"00\",\"AI_UNREAD_COUNT\":1,\"ListValue\":[{\"ID\":2,\"SOURCE_TYPE\":\"AI\"}]}");
             Result result = Invoke("action=list&status=-1&page=1&source=AI_QUERY");
             Assert(result.Status == 200 && ((JArray)JObject.Parse(result.Body)["ListValue"]).Count == 1, "Valid AI row rejected.");
         });

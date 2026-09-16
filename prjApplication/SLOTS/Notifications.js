@@ -99,7 +99,7 @@
 
     function isAiNotification(item) {
         var source = String(item && item.SOURCE_TYPE || '').toUpperCase();
-        return source === 'AI_QUERY';
+        return source === 'AI';
     }
 
     function aiNotificationUrl(item) {

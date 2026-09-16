@@ -1948,3 +1948,4 @@ Quy ước:
 2026-09-15 | prjApplication/Web.config | Khôi phục dòng applicationpath.api=http://172.29.187.90:8888/ATFM_API/ hoạt động trở lại (giữ nguyên như trước); giữ thêm ApplicationPath.API=192.168.131.30:8000 và APIKey=123456 cho Notification handler.
 2026-09-16 | prjApplication/SLOTS/EmailReports.js | Sửa phân trang danh sách email: tải toàn bộ các trang dữ liệu thô theo bộ lọc, áp dụng lọc loại file trước khi tính tổng/phân trang, và chỉ hiển thị đúng số dòng đã chọn (25/50/100); tránh trường hợp chọn 50 nhưng chỉ thấy vài bản ghi khớp trong 50 dòng đầu.
 
+2026-09-16 | prjApplication/Handlers/Notification.ashx.cs; prjApplication/SLOTS/Notifications.js; tests/test_notification_proxy.cs | �?i h?p d?ng nh?n di?n th�ng b�o AI sang SOURCE_TYPE='AI' cho b? l?c Th�ng b�o AI; gi? source=AI_QUERY l�m tham s? truy v?n backend.

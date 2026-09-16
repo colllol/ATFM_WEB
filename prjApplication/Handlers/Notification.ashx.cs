@@ -198,7 +198,7 @@ namespace prjApplication.Handlers
             foreach (JToken row in rows)
             {
                 JObject item = row as JObject;
-                if (item == null || !string.Equals((string)item["SOURCE_TYPE"], "AI_QUERY", StringComparison.OrdinalIgnoreCase))
+                if (item == null || !string.Equals((string)item["SOURCE_TYPE"], "AI", StringComparison.OrdinalIgnoreCase))
                     return false;
             }
             return true;
