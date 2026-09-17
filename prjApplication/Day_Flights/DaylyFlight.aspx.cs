@@ -306,6 +306,7 @@ namespace prjApplication.Day_Flights
                         FROM T_PLAN_MESSAGE PM
                         WHERE PM.FLIGHTDATE >= :flightDate
                           AND PM.FLIGHTDATE < :nextDate
+                          AND PM.STATUS = 0
                           AND INSTR(UPPER(PM.CONTENT), 'THONG BAO') > 0
                           AND PM.LISTFLIGHTID IS NOT NULL";
                     command.Parameters.Add("flightDate", OracleDbType.Date);
@@ -349,7 +350,7 @@ namespace prjApplication.Day_Flights
             string key = NoticeFlightKey(Convert.ToDateTime(row["FLIGHTDATE"]),
                 Convert.ToInt64(row["FLIGHT_ID"]));
             return noticeFlights.Contains(key)
-                ? "<span style='display:block;color:red!important;font-weight:bold;font-size:11px' title='Chuyến bay có trong điện văn THONG BAO cùng ngày'>NEW</span>"
+                ? "<span style='display:block;color:red!important;font-weight:bold;font-size:11px' title='Chuyến bay có trong điện văn THONG BAO cùng ngày, STATUS=0'>NEW</span>"
                 : String.Empty;
         }
 
