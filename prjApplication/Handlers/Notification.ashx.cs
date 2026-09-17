@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Web;
 using System.Web.SessionState;
+using Oracle.ManagedDataAccess.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using prjInfo;
@@ -59,7 +60,7 @@ namespace prjApplication.Handlers
             string operation;
             string query = "userId=" + user.UserID.ToString(CultureInfo.InvariantCulture);
             long id;
-            int status, page;
+            int status = -1, page = 1;
             if (isGet && action.Equals("state", StringComparison.OrdinalIgnoreCase)) operation = "GetState";
             else if (isGet && action.Equals("list", StringComparison.OrdinalIgnoreCase))
             {
@@ -103,7 +104,9 @@ namespace prjApplication.Handlers
                         + "&status=-1&page=1&source=AI_QUERY", false, source) == null)
                     return;
 
-                JObject response = ReadBackend(context, operation, query, isPost, source);
+                JObject response = operation == "GetPage" && source == "AI_QUERY"
+                    ? ReadDirectAiPage(user.UserID, status, page)
+                    : ReadBackend(context, operation, query, isPost, source);
                 if (response != null) context.Response.Write(response.ToString(Formatting.None));
             }
             catch (Exception ex)
@@ -111,6 +114,67 @@ namespace prjApplication.Handlers
                 System.Diagnostics.Trace.TraceWarning("[Notification API proxy] " + ex.GetType().Name);
                 WriteError(context, 502, "Không thể kết nối backend thông báo. Vui lòng thử lại sau.");
             }
+        }
+
+        private static JObject ReadDirectAiPage(int userId, int status, int page)
+        {
+            int pageSize = 100;
+            int start = ((page - 1) * pageSize) + 1;
+            int end = page * pageSize;
+            string cs = ConfigurationManager.ConnectionStrings["SlotsOracle"].ConnectionString;
+            const string sql = @"
+SELECT ID, TITLE, CONTENT, DATETIME, SOURCE_TYPE, STATUS, TOTAL_COUNT, UNREAD_COUNT
+FROM (
+    SELECT N.ID, N.TITLE, N.CONTENT, N.DATETIME, N.SOURCE_TYPE,
+           NVL(R.STATUS, 0) STATUS,
+           COUNT(*) OVER () TOTAL_COUNT,
+           SUM(CASE WHEN NVL(R.STATUS, 0) = 0 THEN 1 ELSE 0 END) OVER () UNREAD_COUNT,
+           ROW_NUMBER() OVER (ORDER BY N.DATETIME DESC, N.ID DESC) RN
+    FROM T_NOTIFICATION N
+    LEFT JOIN T_NOTIFICATION_READ R
+      ON R.NOTIFICATION_ID = N.ID AND R.USER_ID = :userId
+    WHERE N.SOURCE_TYPE = 'AI'
+      AND (:status = -1 OR NVL(R.STATUS, 0) = :status)
+)
+WHERE RN BETWEEN :startRow AND :endRow
+ORDER BY RN";
+            JArray rows = new JArray();
+            int total = 0, unread = 0;
+            using (var connection = new OracleConnection(cs))
+            using (var command = new OracleCommand(sql, connection))
+            {
+                command.BindByName = true;
+                command.Parameters.Add("userId", OracleDbType.Int32).Value = userId;
+                command.Parameters.Add("status", OracleDbType.Int32).Value = status;
+                command.Parameters.Add("startRow", OracleDbType.Int32).Value = start;
+                command.Parameters.Add("endRow", OracleDbType.Int32).Value = end;
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        total = Convert.ToInt32(reader["TOTAL_COUNT"]);
+                        unread = Convert.ToInt32(reader["UNREAD_COUNT"]);
+                        rows.Add(new JObject
+                        {
+                            ["ID"] = Convert.ToInt32(reader["ID"]),
+                            ["TITLE"] = reader.GetString(reader.GetOrdinal("TITLE")),
+                            ["CONTENT"] = reader.GetString(reader.GetOrdinal("CONTENT")),
+                            ["DATETIME"] = reader.GetDateTime(reader.GetOrdinal("DATETIME")).ToString("yyyy-MM-ddTHH:mm:ss"),
+                            ["SOURCE_TYPE"] = reader.GetString(reader.GetOrdinal("SOURCE_TYPE")),
+                            ["STATUS"] = Convert.ToInt32(reader["STATUS"])
+                        });
+                    }
+                }
+            }
+            return new JObject
+            {
+                ["Code"] = "00",
+                ["Value"] = unread,
+                ["SumRecord"] = total,
+                ["AIUnreadCount"] = unread,
+                ["ListValue"] = rows
+            };
         }
 
         private static JObject ReadBackend(HttpContext context, string operation, string query, bool isPost, string source)

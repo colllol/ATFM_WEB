@@ -16,7 +16,6 @@
     var requestInFlight = false;
     var reloadPending = false;
     var hasPageResults = false;
-    var aiFeedCache = {};
 
     var rows = document.getElementById('notificationsRows');
     var summary = document.getElementById('notificationsSummary');
@@ -277,36 +276,12 @@
         setLoading(true);
         showError('');
         updateHeader();
-        function requestAllSourcePages() {
-            var collected = [], rawPage = 1, rawTotal = 0;
-            function next() {
-                return sendRequest({
-                    type: 'GET', url: endpoint, dataType: 'json', cache: false,
-                    data: { action: 'list', status: requestedStatus, page: rawPage, source: 'ALL' }
-                }).then(function (response) {
-                    if (!response || response.Code !== '00') return response;
-                    var batch = response.ListValue || [];
-                    collected = collected.concat(batch);
-                    rawTotal = Math.max(0, parseInt(response.SumRecord, 10) || collected.length);
-                    if (collected.length < rawTotal && batch.length) { rawPage++; return next(); }
-                    response.ListValue = collected;
-                    response.SumRecord = String(collected.length);
-                    return response;
-                });
-            }
-            return next();
-        }
-        var cacheKey = requestedStatus;
-        var requestPromise = requestedSource === 'AI_QUERY' && aiFeedCache[cacheKey]
-            ? $.Deferred().resolve(aiFeedCache[cacheKey]).promise()
-            : requestedSource === 'AI_QUERY' ? requestAllSourcePages() : sendRequest({
+        var requestPromise = sendRequest({
             type: 'GET',
             url: endpoint,
             dataType: 'json',
             cache: false,
-            // AI is a client-side view over the complete ALL notification feed.
-            // The legacy AI_QUERY backend filter does not represent SOURCE_TYPE='AI'.
-            data: { action: 'list', status: requestedStatus, page: requestedPage, source: 'ALL' }
+            data: { action: 'list', status: requestedStatus, page: requestedPage, source: requestedSource }
         });
         requestPromise.done(function (response) {
             if (!isCurrentRequest()) return;
@@ -321,11 +296,6 @@
             totalRecords = currentSource === 'AI_QUERY'
                 ? pageItems.length
                 : Math.max(0, parseInt(response.SumRecord, 10) || 0);
-            if (currentSource === 'AI_QUERY') {
-                aiFeedCache[cacheKey] = response;
-                var aiStart = (currentPage - 1) * pageSize;
-                pageItems = pageItems.slice(aiStart, aiStart + pageSize);
-            }
             unreadCount = Math.max(0, parseInt(response.Value, 10) || 0);
             var responseAiUnread = response.AIUnreadCount;
             if (responseAiUnread == null) responseAiUnread = response.AI_UNREAD_COUNT;
@@ -386,7 +356,6 @@
     for (var i = 0; i < filterButtons.length; i++) {
         filterButtons[i].addEventListener('click', function () {
             currentStatus = parseInt(this.getAttribute('data-status'), 10);
-            aiFeedCache = {};
             currentPage = 1;
             clearPageResults('Đang tải dữ liệu...');
             for (var j = 0; j < filterButtons.length; j++) {
@@ -404,7 +373,6 @@
         sourceButtons[sourceIndex].setAttribute('aria-pressed', isCurrentSource ? 'true' : 'false');
         sourceButtons[sourceIndex].addEventListener('click', function () {
             currentSource = this.getAttribute('data-source') === 'AI_QUERY' ? 'AI_QUERY' : 'ALL';
-            aiFeedCache = {};
             currentPage = 1;
             rememberSourceFilter();
             clearPageResults('Đang tải dữ liệu...');
@@ -431,7 +399,7 @@
         loadPage();
     });
 
-    refreshButton.addEventListener('click', function () { aiFeedCache = {}; loadPage(); });
+    refreshButton.addEventListener('click', loadPage);
     markAllButton.addEventListener('click', function () {
         if (markAllButton.disabled || filteredUnreadCount() === 0) return;
         markAllButton.disabled = true;

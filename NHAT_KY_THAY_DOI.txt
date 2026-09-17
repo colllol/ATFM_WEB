@@ -1956,3 +1956,4 @@ Quy Æ°á»›c:
 2026-09-17 | prjApplication/SLOTS/Notifications.js | B? l?c AI dùng ngu?n ALL làm d? li?u n?n r?i l?c SOURCE_TYPE='AI' phía client, không g?i b? l?c AI c?a package/API.
 2026-09-17 | prjApplication/SLOTS/Notifications.js | B? ph? thu?c b? l?c AI c?a package/API: khi ch?n Thông báo AI, t?i toàn b? trang ngu?n ALL r?i l?c SOURCE_TYPE='AI' ? client và phân trang k?t qu?; gi? source=AI_QUERY ch? d? tuong thích URL.
 2026-09-17 | prjApplication/SLOTS/Notifications.js | Thêm cache d? li?u ALL dã gom cho màn hình AI, tránh g?i l?p toàn b? các trang khi polling/chuy?n trang; cache xóa khi d?i b? l?c ho?c refresh.
+2026-09-17 | prjApplication/Handlers/Notification.ashx.cs; prjApplication/SLOTS/Notifications.js | Chuy?n danh sách Thông báo AI sang truy v?n tr?c ti?p Oracle T_NOTIFICATION v?i SOURCE_TYPE='AI', phân trang t?i DB; b? quét toàn b? ngu?n ALL và cache nhi?u trang.
