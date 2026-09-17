@@ -35,7 +35,8 @@
         var match = /(?:\?|&)source=([^&]*)/i.exec(window.location.search);
         if (!match) return 'ALL';
         try {
-            return decodeURIComponent(match[1]).toUpperCase() === 'AI_QUERY' ? 'AI_QUERY' : 'ALL';
+            var value = decodeURIComponent(match[1]).toUpperCase();
+            return value === 'AI' || value === 'AI_QUERY' ? 'AI' : 'ALL';
         } catch (error) { return 'ALL'; }
     }
 
@@ -238,7 +239,7 @@
     }
 
     function filteredUnreadCount() {
-        return currentSource === 'AI_QUERY' ? aiUnreadCount : unreadCount;
+        return currentSource === 'AI' ? aiUnreadCount : unreadCount;
     }
 
     function updateHeader() {
@@ -250,10 +251,10 @@
             aiUnreadNode.setAttribute('aria-label', aiUnreadCount + ' thông báo AI chưa đọc');
         }
         markAllButton.disabled = currentUnread === 0 || requestInFlight;
-        markAllLabel.textContent = currentSource === 'AI_QUERY' ? 'Đọc tất cả AI' : 'Đọc tất cả';
-        markAllButton.title = currentSource === 'AI_QUERY' ? 'Đánh dấu đã đọc tất cả thông báo AI của bạn' : 'Đánh dấu đã đọc tất cả thông báo của bạn';
+        markAllLabel.textContent = currentSource === 'AI' ? 'Đọc tất cả AI' : 'Đọc tất cả';
+        markAllButton.title = currentSource === 'AI' ? 'Đánh dấu đã đọc tất cả thông báo AI của bạn' : 'Đánh dấu đã đọc tất cả thông báo của bạn';
         var filterName = currentStatus === 0 ? 'chưa đọc' : (currentStatus === 1 ? 'đã đọc' : 'tất cả');
-        var sourceName = currentSource === 'AI_QUERY' ? 'thông báo AI' : 'thông báo';
+        var sourceName = currentSource === 'AI' ? 'thông báo AI' : 'thông báo';
         summary.textContent = hasPageResults
             ? totalRecords + ' ' + sourceName + ' ' + filterName + ', ' + currentUnread + ' chưa đọc'
             : (requestInFlight || reloadPending ? 'Đang tải ' + sourceName + '...' : 'Chưa tải được danh sách ' + sourceName + '.');
@@ -387,7 +388,7 @@
         sourceButtons[sourceIndex].classList.toggle('is-active', isCurrentSource);
         sourceButtons[sourceIndex].setAttribute('aria-pressed', isCurrentSource ? 'true' : 'false');
         sourceButtons[sourceIndex].addEventListener('click', function () {
-            currentSource = this.getAttribute('data-source') === 'AI_QUERY' ? 'AI_QUERY' : 'ALL';
+            currentSource = this.getAttribute('data-source') === 'AI' ? 'AI' : 'ALL';
             currentPage = 1;
             rememberSourceFilter();
             clearPageResults('Đang tải dữ liệu...');

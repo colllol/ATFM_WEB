@@ -50,7 +50,7 @@ namespace prjApplication.Handlers
 
             string action = context.Request["action"] ?? "state";
             string source = (context.Request["source"] ?? "ALL").ToUpperInvariant();
-            if (source != "ALL" && source != "AI_QUERY")
+            if (source != "ALL" && source != "AI")
             {
                 WriteError(context, 400, "Nguồn thông báo không hợp lệ.");
                 return;
@@ -98,9 +98,9 @@ namespace prjApplication.Handlers
             {
                 // Older API deployments ignore source, including on MarkAllRead.
                 // Verify the AI contract before a scoped mutation reaches them.
-                if (operation == "MarkAllRead" && source == "AI_QUERY"
+                if (operation == "MarkAllRead" && source == "AI"
                     && ReadBackend(context, "GetPage", "userId=" + user.UserID.ToString(CultureInfo.InvariantCulture)
-                        + "&status=-1&page=1&source=AI_QUERY", false, source) == null)
+                        + "&status=-1&page=1&source=AI", false, source) == null)
                     return;
 
                 JObject response = ReadBackend(context, operation, query, isPost, source);
@@ -178,7 +178,7 @@ namespace prjApplication.Handlers
                             WriteError(context, 502, "Backend không thể xử lý dữ liệu thông báo.");
                             return null;
                         }
-                        if (operation == "GetPage" && source == "AI_QUERY" && !SupportsAiFilter(value))
+                        if (operation == "GetPage" && source == "AI" && !SupportsAiFilter(value))
                         {
                             WriteError(context, 503, "Dịch vụ thông báo AI chưa sẵn sàng. Vui lòng liên hệ quản trị viên để cập nhật dịch vụ.");
                             return null;

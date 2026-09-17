@@ -27,7 +27,7 @@
             <div class="notifications-filters">
                 <div class="notifications-segmented" role="group" aria-label="Lọc loại thông báo">
                     <button type="button" data-source="ALL" class="is-active" aria-pressed="true">Mọi loại</button>
-                    <button type="button" data-source="AI_QUERY" class="notifications-ai-filter" aria-pressed="false"><i class="fa fa-microchip" aria-hidden="true"></i> Thông báo AI <strong id="notificationsAiUnreadCount" class="is-empty">0</strong></button>
+                    <button type="button" data-source="AI" class="notifications-ai-filter" aria-pressed="false"><i class="fa fa-microchip" aria-hidden="true"></i> Thông báo AI <strong id="notificationsAiUnreadCount" class="is-empty">0</strong></button>
                 </div>
                 <div class="notifications-segmented" role="group" aria-label="Lọc trạng thái thông báo">
                     <button type="button" data-status="-1" class="is-active" aria-pressed="true">Tất cả</button>

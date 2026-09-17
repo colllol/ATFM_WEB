@@ -1949,3 +1949,4 @@ Quy ước:
 2026-09-16 | prjApplication/SLOTS/EmailReports.js | Sửa phân trang danh sách email: tải toàn bộ các trang dữ liệu thô theo bộ lọc, áp dụng lọc loại file trước khi tính tổng/phân trang, và chỉ hiển thị đúng số dòng đã chọn (25/50/100); tránh trường hợp chọn 50 nhưng chỉ thấy vài bản ghi khớp trong 50 dòng đầu.
 
 2026-09-16 | prjApplication/Handlers/Notification.ashx.cs; prjApplication/SLOTS/Notifications.js; tests/test_notification_proxy.cs | �?i h?p d?ng nh?n di?n th�ng b�o AI sang SOURCE_TYPE='AI' cho b? l?c Th�ng b�o AI; gi? source=AI_QUERY l�m tham s? truy v?n backend.
+2026-09-17 | prjApplication/Handlers/Notification.ashx.cs; prjApplication/SLOTS/Notifications.aspx; prjApplication/SLOTS/Notifications.js; tests/test_notification_proxy.cs | S?a b? l?c Th�ng b�o AI d�ng SOURCE_TYPE='AI' v� truy?n source=AI t?i proxy/backend; ch?p nh?n URL cu AI_QUERY d? tuong th�ch.
