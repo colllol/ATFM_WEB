@@ -427,6 +427,11 @@
                 return;
             }
 
+            if (toDate - fromDate > 60 * 24 * 60 * 60 * 1000) {
+                alert('Khoảng thời gian tìm kiếm vượt quá 60 ngày. Vui lòng thu hẹp khoảng From–To còn tối đa 60 ngày.');
+                return;
+            }
+
             if (resetPage !== false) {
                 inboxPageIndex = 1;
             }

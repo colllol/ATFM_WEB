@@ -19,7 +19,7 @@
 
 .spa-filter-card {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: flex-end;
     gap: 7px;
     padding: 11px 12px;
@@ -81,6 +81,8 @@
 .spa-button-muted:hover { background: #667e90; }
 .spa-button-excel { min-width: 125px; background: #63a866; }
 .spa-button-excel:hover { background: #4d9251; }
+.spa-button-pdf { min-width: 125px; background: #c44848; }
+.spa-button-pdf:hover { background: #a83636; }
 .spa-button:disabled { opacity: .6; cursor: not-allowed; }
 
 .spa-result-head {

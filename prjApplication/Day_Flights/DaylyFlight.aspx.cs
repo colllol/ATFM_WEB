@@ -9,6 +9,9 @@ using prjBusinessLogic;
 using System.Data;
 using Newtonsoft.Json.Converters;
 using System.Web.Script.Serialization;
+using System.Configuration;
+using System.Globalization;
+using Oracle.ManagedDataAccess.Client;
 
 namespace prjApplication.Day_Flights
 {
@@ -267,6 +270,90 @@ namespace prjApplication.Day_Flights
         /// </summary>
         /// <param name="dt"></param>
         /// <returns></returns>
+        private static string NoticeFlightKey(DateTime date, long flightId)
+        {
+            return date.ToString("yyyyMMdd", CultureInfo.InvariantCulture) + ":" +
+                flightId.ToString(CultureInfo.InvariantCulture);
+        }
+
+        // Read complete LISTFLIGHTID values (including CLOBs longer than 4000 characters).
+        // One query per distinct day in the batch, never one query per flight.
+        private static HashSet<string> GetNoticeFlights(DataTable flights)
+        {
+            var matched = new HashSet<string>(StringComparer.Ordinal);
+            if (flights.Rows.Count == 0) return matched;
+            try
+            {
+                var wanted = new HashSet<string>(StringComparer.Ordinal);
+                var days = new HashSet<DateTime>();
+                foreach (DataRow row in flights.Rows)
+                {
+                    DateTime date = Convert.ToDateTime(row["FLIGHTDATE"]).Date;
+                    long id = Convert.ToInt64(row["FLIGHT_ID"]);
+                    days.Add(date);
+                    wanted.Add(NoticeFlightKey(date, id));
+                }
+                var setting = ConfigurationManager.ConnectionStrings["SlotsOracle"];
+                if (setting == null || String.IsNullOrWhiteSpace(setting.ConnectionString))
+                    throw new ConfigurationErrorsException("Missing SlotsOracle connection string.");
+
+                using (var connection = new OracleConnection(setting.ConnectionString))
+                using (var command = connection.CreateCommand())
+                {
+                    command.BindByName = true;
+                    command.CommandTimeout = 30;
+                    command.CommandText = @"SELECT PM.LISTFLIGHTID
+                        FROM T_PLAN_MESSAGE PM
+                        WHERE PM.FLIGHTDATE >= :flightDate
+                          AND PM.FLIGHTDATE < :nextDate
+                          AND PM.STATUS = 0
+                          AND INSTR(UPPER(PM.CONTENT), 'THONG BAO') > 0
+                          AND PM.LISTFLIGHTID IS NOT NULL";
+                    command.Parameters.Add("flightDate", OracleDbType.Date);
+                    command.Parameters.Add("nextDate", OracleDbType.Date);
+                    connection.Open();
+                    foreach (DateTime date in days)
+                    {
+                        command.Parameters["flightDate"].Value = date;
+                        command.Parameters["nextDate"].Value = date.AddDays(1);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                if (reader.IsDBNull(0)) continue;
+                                foreach (string token in reader.GetString(0).Split(','))
+                                {
+                                    long id;
+                                    if (!Int64.TryParse(token.Trim(), NumberStyles.None,
+                                        CultureInfo.InvariantCulture, out id)) continue;
+                                    string key = NoticeFlightKey(date, id);
+                                    if (wanted.Contains(key)) matched.Add(key);
+                                }
+                            }
+                        }
+                    }
+                }
+                return matched;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError("DaylyFlight notice lookup failed: {0}", ex);
+                // Unknown is distinct from no matching message; do not hide the flight list.
+                return null;
+            }
+        }
+
+        private static string NoticeBadge(DataRow row, HashSet<string> noticeFlights)
+        {
+            if (noticeFlights == null)
+                return "<span style='color:#a66b00' title='Không kiểm tra được điện văn THONG BAO. Vui lòng tải lại hoặc liên hệ quản trị.'>?</span>";
+            string key = NoticeFlightKey(Convert.ToDateTime(row["FLIGHTDATE"]),
+                Convert.ToInt64(row["FLIGHT_ID"]));
+            return noticeFlights.Contains(key)
+                ? "<span style='display:block;color:red!important;font-weight:bold;font-size:11px' title='Chuyến bay có trong điện văn THONG BAO cùng ngày, STATUS=0'>NEW</span>"
+                : String.Empty;
+        }
+
         protected string RenderGrdSource(DataTable dt)
         {
             /* hungtn edit 201801041025
@@ -741,6 +828,7 @@ namespace prjApplication.Day_Flights
             if (dt == null) return "";
             string _record = "0";
             string _color = "";
+            var noticeFlights = GetNoticeFlights(dt);
             foreach (DataRow r in dt.Rows)
             {
                 _color = trColorClass(r["LETTER_TYPE"], r["ETD"], r["ATD"], r["FLIGHTNBR"], r["PERMNBR"], r["HASPERM"]) + " sInputDb";
@@ -762,6 +850,7 @@ namespace prjApplication.Day_Flights
                 //   + "</div></td>";
 
                 c0 = $"<td style=\"width:48px;\" class=\"tdIconStatus\">"
+                      + NoticeBadge(r, noticeFlights)
                       + "<div id='divStatusIcon' class='action-buttons wid_50px'>"
                        + $"<a data-toggle=\"tooltip\" title=\"Edit info!\" onclick=\"viewPopupInfoExtensionInsert(this);\" data-id=\"{r["FLIGHT_ID"]}\"><i class=\"glyphicon glyphicon-check\"></i></a>"
                        + $"<a data-toggle=\"tooltip\" title=\"Delete !\" onclick=\"btnDeleteBy_Onclick('{r["ID"]}');\"><i class=\"ace-icon fa fa-trash-o bigger-130\"></i></a>"
@@ -1044,6 +1133,7 @@ namespace prjApplication.Day_Flights
             if (dt == null) return "";
             string _record = "0";
             string _color = "";
+            var noticeFlights = GetNoticeFlights(dt);
             foreach (DataRow r in dt.Rows)
             {
                 _color = trColorClass(r["LETTER_TYPE"], r["ETD"], r["ATD"], r["FLIGHTNBR"], r["PERMNBR"], r["HASPERM"]) + " sInputDb";
@@ -1065,6 +1155,7 @@ namespace prjApplication.Day_Flights
 
                 c0 = $"<td style=\"width:48px;\" class=\"tdIconStatus\">"
                       + "<div id='divStatusIcon' class='action-buttons wid_50px'>"
+                      + NoticeBadge(r, noticeFlights)
                        + $"<a data-toggle=\"tooltip\" title=\"Edit info!\" onclick=\"viewPopupInfoExtensionInsert(this);\" data-id=\"{r["FLIGHT_ID"]}\"><i class=\"glyphicon glyphicon-check\"></i></a>"
                        + $"<a data-toggle=\"tooltip\" title=\"Delete !\" onclick=\"btnDeleteBy_Onclick('{r["FLIGHT_ID"]}');\"><i class=\"ace-icon fa fa-trash-o bigger-130\"></i></a>"
                        + $"<a data-toggle=\"tooltip\" title=\"Move date!\" onclick=\"moveDate('{r["FLIGHT_ID"]}');\"><i class=\"glyphicon glyphicon-arrow-right\"></i></a>"

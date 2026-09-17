@@ -893,12 +893,43 @@
         function returnEmpty(val) {
             return val == null ? "" : val;
         }
-        function LoadDataGrid() {
+        var finishedSearchSequence = 0;
+
+        function CompareGoingOnCount(criteria, finishedCount, sequence) {
+            $.ajax({
+                method: 'PUT',
+                url: urlApi + 'api/ApiExtension/ExcuteTable?packageName=FINISHED_COMPARE_PKG&storeName=COUNT_GOINGON',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(criteria)
+            }).done(function (data) {
+                if (sequence !== finishedSearchSequence) return;
+                var value = data && data.ListValue && data.ListValue.length
+                    ? data.ListValue[0].GOINGON_COUNT : null;
+                if (value == null || String(value).trim() === '' || !isFinite(Number(value))) {
+                    alert('Đã tải kết quả tìm kiếm nhưng không lấy được số lượng đối chiếu GOINGON. Vui lòng kiểm tra FINISHED_COMPARE_PKG.');
+                    return;
+                }
+                var goingOnCount = Number(value);
+                var difference = finishedCount - goingOnCount;
+                alert('ĐỐI CHIẾU SỐ LƯỢNG (' + criteria.STARTDATE + ' - ' + criteria.FINISHDATE + ')\n' +
+                    'Kết quả tìm kiếm đã chấp nhận: ' + finishedCount + ' chuyến\n' +
+                    'T_DAY_FLIGHTS_GOINGON (MOVEFINISH=1): ' + goingOnCount + ' chuyến\n' +
+                    'Chênh lệch (kết quả - GOINGON): ' + difference + ' chuyến\n' +
+                    (difference === 0 ? 'Số lượng khớp.' : 'Số lượng không khớp. Vui lòng kiểm tra dữ liệu.'));
+            }).fail(function () {
+                if (sequence !== finishedSearchSequence) return;
+                alert('Đã tải kết quả tìm kiếm nhưng đối chiếu GOINGON không thành công. Vui lòng kiểm tra API và triển khai FINISHED_COMPARE_PKG.');
+            });
+        }
+
+        function LoadDataGrid(compareCounts) {
+            var sequence = ++finishedSearchSequence;
+            var criteria = GetFinishedAcceptedSearchRequest(false);
             var $request = $.ajax({
                 method: "PUT",
                 url: urlApi + "api/ApiExtension/ExcuteTable?packageName=FINISHED_STATUS_PKG&storeName=GET_FINISHED_FLIGHTS",
                 contentType: "application/json; charset=utf-8",
-                data: JSON.stringify(GetFinishedAcceptedSearchRequest(false)),
+                data: JSON.stringify(criteria),
                 beforeSend: function () {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);
@@ -921,7 +952,16 @@
                         $('#tblSource tbody tr').eq(parseInt($(this).parent().index())).addClass('select');
                     });
                 },
-            }).always(function (data) {
+            }).done(function (data) {
+                if (sequence !== finishedSearchSequence) return;
+                if (!data || !Array.isArray(data.ListValue)) {
+                    alert('Không lấy được kết quả tìm kiếm. Chưa thực hiện đối chiếu số lượng.');
+                    return;
+                }
+                var finishedCount = data.ListValue.length ? Number(data.ListValue[0].SUMRECORD) : 0;
+                if (compareCounts === true && isFinite(finishedCount)) {
+                    CompareGoingOnCount(criteria, finishedCount, sequence);
+                }
                 if (!data || !data.ListValue || data.ListValue.length === 0) {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);
@@ -934,6 +974,9 @@
                 var strAppend = Render2Table(data);
                 $('#tblSource tbody').append(strAppend);
                 $("#totalsfinished").html("Tổng số : <b>" + data.ListValue[0]['SUMRECORD'] + "</b>");
+            }).fail(function () {
+                if (sequence === finishedSearchSequence)
+                    alert('Tìm kiếm không thành công. Chưa thực hiện đối chiếu số lượng.');
             });
             $request.onreadystatechange = null;
             $request.abort = null;
@@ -1636,7 +1679,16 @@
             $.ajax({ type: 'POST', url: '<%= ResolveUrl("~/FinishFlights/BravoComparison.ashx") %>', dataType: 'json', headers: { 'X-Requested-With': 'XMLHttpRequest' }, data: { fromDate: fromDate, toDate: toDate, comparisonType: $('#bravoCompareType').val(), region: region } }).done(function (response) {
                 var rows = response || [];
                 if (!rows.length) { body.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu đối chiếu.</td></tr>'; message.textContent = '0 dòng'; return; }
-                body.innerHTML = rows.map(function (row, index) { return '<tr><td>' + (index + 1) + '</td><td>' + escapeBravo(row.airline) + '</td><td>' + escapeBravo(row.fromAirp) + '</td><td>' + escapeBravo(row.toAirp) + '</td><td>' + escapeBravo(row.flightDate) + '</td><td>' + escapeBravo(row.callsign) + '</td><td class="text-right">' + row.oracleCount + '</td><td></td></tr>'; }).join('');
+                body.innerHTML = rows.map(function (row, index) {
+                    var oracleText = $.trim(String(row.oracleCount == null ? '' : row.oracleCount));
+                    var bravoText = $.trim(String(row.bravoCount == null ? '' : row.bravoCount));
+                    if (bravoText === '') bravoText = '0';
+                    var countsDiffer = oracleText !== '' && bravoText !== ''
+                        && isFinite(Number(oracleText)) && isFinite(Number(bravoText))
+                        && Number(oracleText) !== Number(bravoText);
+                    var callsignStyle = countsDiffer ? ' style="color: red !important;"' : '';
+                    return '<tr><td>' + (index + 1) + '</td><td>' + escapeBravo(row.airline) + '</td><td>' + escapeBravo(row.fromAirp) + '</td><td>' + escapeBravo(row.toAirp) + '</td><td>' + escapeBravo(row.flightDate) + '</td><td' + callsignStyle + '>' + escapeBravo(row.callsign) + '</td><td class="text-right">' + escapeBravo(oracleText) + '</td><td class="text-right">' + escapeBravo(bravoText) + '</td></tr>';
+                }).join('');
                 message.textContent = rows.length + ' dòng';
             }).fail(function (xhr) { body.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu đối chiếu.</td></tr>'; message.textContent = xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.Message) ? (xhr.responseJSON.message || xhr.responseJSON.Message) : 'Lỗi API (' + xhr.status + ')'; });
         }
@@ -1697,6 +1749,7 @@
         }
 
         function btnSearch_Full() {
+            ++finishedSearchSequence;
             var khb = $('#chkKhb').prop('checked');
             var khb_delete = $('#chkKhbDelete').prop('checked');
             var khb_qndi = $('#chkQndi').prop('checked');
@@ -1713,7 +1766,7 @@
             pageSize = parseInt(ddlPageSize.value);
             $("#totalsfinished").html("Tổng số : <b>0</b>");
             isSearch = true;
-            LoadDataGrid();
+            LoadDataGrid(true);
 
         }
 

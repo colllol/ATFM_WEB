@@ -77,6 +77,7 @@
 
     function setExportEnabled(enabled) {
         document.getElementById('spaExportExcel').disabled = !enabled;
+        document.getElementById('spaExportPdf').disabled = !enabled || !filteredPermissions.length;
     }
 
     function renderPermissions() {
@@ -162,6 +163,7 @@
 
         currentPage = 1;
         renderPermissions();
+        setExportEnabled(permissions.length > 0);
     }
 
     function clearColumnFilters() {
@@ -248,6 +250,56 @@
                 alert(error.message);
             })
             .then(function () { setSearchLoading(false); });
+    }
+
+    function exportPdf() {
+        if (!activeFromPermissionDate || !activeToPermissionDate || !filteredPermissions.length) {
+            alert('Không có kết quả để xuất PDF. Vui lòng tìm kiếm hoặc điều chỉnh bộ lọc.');
+            return;
+        }
+
+        // Export the complete filtered result, independent of pagination and expanded details.
+        var fields = ['PermNbr', 'Author', 'PType', 'FType', 'Number', 'Version', 'PermissionDate', 'Oper'];
+        var headers = ['STT', 'PERMNBR', 'AUTHOR', 'PTYPE', 'FTYPE', 'NUMBER', 'VERSION', 'DATE', 'OPER'];
+        var filters = Array.prototype.map.call(document.querySelectorAll('[data-filter-field]'), function (input) {
+            return input.value.trim() ? input.getAttribute('data-filter-field') + ': ' + input.value.trim() : '';
+        }).filter(function (value) { return value !== ''; });
+        var rows = filteredPermissions.map(function (item, index) {
+            return '<tr><td>' + (index + 1) + '</td>' + fields.map(function (field) {
+                return '<td>' + esc(item[field]) + '</td>';
+            }).join('') + '</tr>';
+        }).join('');
+        var printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Trình duyệt đã chặn cửa sổ xuất PDF. Vui lòng cho phép popup và thử lại.');
+            return;
+        }
+        printWindow.document.open();
+        printWindow.document.write('<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8">' +
+            '<title>SearchPermissionAdv_' + esc(activeFromPermissionDate) + '_' + esc(activeToPermissionDate) + '</title>' +
+            '<style>@page{size:A4 landscape;margin:12mm}body{font:10pt Arial,sans-serif;color:#172f42}' +
+            'h1{font-size:18pt}p{line-height:1.5}table{border-collapse:collapse;width:100%;table-layout:fixed}' +
+            'th,td{border:1px solid #8097a8;padding:6px;overflow-wrap:anywhere;word-wrap:break-word}' +
+            'th{background:#e8f2f8}thead{display:table-header-group}tr{break-inside:avoid}' +
+            'th:first-child{width:5%}th:nth-child(2){width:22%}th:nth-child(8){width:12%}' +
+            '.toolbar{padding:12px;background:#f3f9fd}button{padding:8px 16px;cursor:pointer}' +
+            '@media print{.toolbar{display:none}}</style></head><body>' +
+            '<div class="toolbar">Chọn <strong>Save as PDF / Lưu dưới dạng PDF</strong> trong hộp thoại in. ' +
+            '<button id="printPdf" type="button">In / Lưu PDF</button></div>' +
+            '<h1>SEARCH PERMISSION ADV</h1><p>' + esc(document.getElementById('spaSearchCaption').textContent) + '</p>' +
+            (filters.length ? '<p>Bộ lọc cột: ' + esc(filters.join(' | ')) + '</p>' : '') +
+            '<p>' + esc(document.getElementById('spaTotal').textContent) + '</p>' +
+            '<table><thead><tr>' + headers.map(function (header) { return '<th>' + header + '</th>'; }).join('') +
+            '</tr></thead><tbody>' + rows + '</tbody></table></body></html>');
+        printWindow.document.close();
+        printWindow.document.getElementById('printPdf').addEventListener('click', function () {
+            printWindow.focus();
+            printWindow.print();
+        });
+        printWindow.onload = function () {
+            printWindow.focus();
+            printWindow.print();
+        };
     }
 
     function exportExcel() {
@@ -526,6 +578,7 @@
         toTimeInput.value = '';
         document.getElementById('spaSearch').addEventListener('click', search);
         document.getElementById('spaExportExcel').addEventListener('click', exportExcel);
+        document.getElementById('spaExportPdf').addEventListener('click', exportPdf);
         document.getElementById('spaClear').addEventListener('click', function () {
             fromDateInput.value = isoToday();
             toDateInput.value = isoToday();

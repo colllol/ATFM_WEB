@@ -3358,6 +3358,22 @@
             return deferred.promise();
         }
 
+        function getFinishedExportResultCode(response) {
+            if (!response) return -1;
+            var value = response.ListValue;
+            if ($.isArray(value)) value = value.length ? value[0] : null;
+            var code = parseInt(value, 10);
+            return isNaN(code) ? -1 : code;
+        }
+
+        function getFinishedExportError(error) {
+            var response = error && error.response ? error.response : error;
+            if (response && response.Message) return response.Message;
+            if (response && response.ErrorMessage) return response.ErrorMessage;
+            if (response && response.ListValue != null) return 'Procedure trả về ' + response.ListValue;
+            return '';
+        }
+
         function getSelectedFinishedFlightDate() {
             var selectedText = $.trim($('#ddlDateFlight option:selected').text() || '');
             var dateParts = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(selectedText);
@@ -3385,12 +3401,14 @@
                 $.ajax({
                     method: "PUT",
                     url: url,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
                     data: JSON.stringify({
                         P_STRING: '<%= _user.UserName%>',
                         P_DATE: selectedFlightDate
                     })
                 }).then(function (data) {
-                    if (!data || data.ListValue == null || data.ListValue == -1) {
+                    if (getFinishedExportResultCode(data) !== 1) {
                         return rejectFinishedExport('MAKE_FINISHED', data);
                     }
 
@@ -3402,7 +3420,8 @@
                     }, 950);
                 }).fail(function (error) {
                     console.error('[MOVEFINISH] Export Finished error:', error);
-                    alert('Export Finished error!');
+                    var detail = getFinishedExportError(error);
+                    alert('Export Finished error!' + (detail ? '\n' + detail : ''));
                 }).always(function () {
                     // Giữ overlay trong lúc ba link tải LD_OF, LD và OF lần lượt được kích hoạt.
                     window.setTimeout(hideFinishedExportLoading, 900);

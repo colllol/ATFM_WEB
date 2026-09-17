@@ -74,13 +74,14 @@
                             </td>                                              
                         </tr>
                         <tr>
-                            <td style="width: 5%; text-align: left;" class="Titlelbl">Tìm nhật ký / thời gian:</td>
-                            <td style="width: 35%; text-align: left;" colspan="2">
-                                <asp:TextBox ID="txtActionHistorySearch" runat="server" CssClass="inputtext"
-                                    Width="100%" MaxLength="200"
-                                    placeholder="Nhập nội dung thao tác hoặc dd/MM/yyyy HH:mm:ss"></asp:TextBox>
-                            </td>
-                            <td style="width: 40%;"></td>
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">Mã thao tác:</td>
+                            <td style="width: 18%; text-align: left;"><input id="txtActionCode" runat="server" class="inputtext" style="width: 100%;" maxlength="100" /></td>
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">HostIP:</td>
+                            <td style="width: 18%; text-align: left;"><input id="txtHostIP" runat="server" class="inputtext" style="width: 100%;" maxlength="100" /></td>
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">Từ thời gian:</td>
+                            <td style="width: 18%; text-align: left;"><input id="txtTungay" runat="server" class="text-input action-history-datetime" autocomplete="off" style="width: 100%;" placeholder="dd/MM/yyyy HH:mm" maxlength="16" /></td>
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">Đến thời gian:</td>
+                            <td style="width: 18%; text-align: left;"><input id="txtDenngay" runat="server" class="text-input action-history-datetime" autocomplete="off" style="width: 100%;" placeholder="dd/MM/yyyy HH:mm" maxlength="16" /></td>
                         </tr>
                     </table>
                 </div>
@@ -151,21 +152,14 @@
  
     <script language="javascript" type="text/javascript">
 
-        <%--$('#<%= txtTungay.ClientID %>').datetimepicker({
-            mask: '39/19/9999',
-            timepicker: false,
-            formatTime: '',
-            format: 'd/m/Y',
-            formatDate: 'd/m/Y'
+        $('#<%= txtTungay.ClientID %>, #<%= txtDenngay.ClientID %>').datetimepicker({
+            format: 'd/m/Y H:i',
+            formatDate: 'd/m/Y',
+            formatTime: 'H:i',
+            timepicker: true,
+            step: 1,
+            allowBlank: true
         });
-
-        $('#<%= txtDenngay.ClientID %>').datetimepicker({
-            mask: '39/19/9999',
-            timepicker: false,
-            formatTime: '',
-            format: 'd/m/Y',
-            formatDate: 'd/m/Y'
-        });--%>
 
     </script>
 </asp:Content>

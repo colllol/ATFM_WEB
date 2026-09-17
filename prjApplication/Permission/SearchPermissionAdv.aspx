@@ -3,7 +3,7 @@
     Inherits="prjApplication.Permission.SearchPermissionAdv" %>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260809-8") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/Permission/SearchPermissionAdv.css?v=20260917-1") %>" />
 
     <section class="spa-page">
         <header class="spa-heading">
@@ -52,6 +52,10 @@
             </button>
             <button id="spaExportExcel" class="spa-button spa-button-excel" type="button" disabled>
                 <i class="fa fa-file-excel-o"></i> Export Excel
+            </button>
+            <button id="spaExportPdf" class="spa-button spa-button-pdf" type="button" disabled
+                title="Xuất toàn bộ danh sách phép đã lọc: chọn Save as PDF trong hộp thoại in">
+                <i class="fa fa-file-pdf-o"></i> Export PDF
             </button>
         </div>
 
@@ -145,5 +149,5 @@
         </div>
     </div>
 
-    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260809-11") %>"></script>
+    <script src="<%= ResolveUrl("~/Permission/SearchPermissionAdv.js?v=20260917-1") %>"></script>
 </asp:Content>
