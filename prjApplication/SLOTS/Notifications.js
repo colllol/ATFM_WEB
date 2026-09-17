@@ -102,19 +102,6 @@
         return source === 'AI';
     }
 
-    function aiNotificationUrl(item) {
-        return root.getAttribute('data-ai-reports-url') + '?notificationId=' + encodeURIComponent(String(item.ID));
-    }
-
-    function appendAiLink(cell, item) {
-        var link = document.createElement('a');
-        link.className = 'notifications-ai-report-link';
-        link.href = aiNotificationUrl(item);
-        link.title = 'Mở chi tiết yêu cầu và kết quả AI';
-        link.innerHTML = '<i class="fa fa-external-link" aria-hidden="true"></i><span>Xem kết quả AI</span>';
-        cell.appendChild(link);
-    }
-
     function appendTitleCell(row, item, isAi) {
         var cell = document.createElement('td');
         cell.className = 'notifications-title-cell';
@@ -124,13 +111,7 @@
             label.innerHTML = '<i class="fa fa-microchip" aria-hidden="true"></i><span>AI</span>';
             cell.appendChild(label);
         }
-        if (isAi) {
-            var link = document.createElement('a');
-            link.className = 'notifications-title-link';
-            link.href = aiNotificationUrl(item);
-            link.textContent = item.TITLE || 'Thông báo AI';
-            cell.appendChild(link);
-        } else cell.appendChild(document.createTextNode(item.TITLE || 'Thông báo'));
+        cell.appendChild(document.createTextNode(item.TITLE || (isAi ? 'Thông báo AI' : 'Thông báo')));
         row.appendChild(cell);
     }
 
@@ -192,8 +173,7 @@
             row.setAttribute('data-notification-id', item.ID);
             createStatusCell(row, isUnread);
             appendTitleCell(row, item, isAi);
-            var contentCell = appendCell(row, 'notifications-content-cell', item.CONTENT || '');
-            if (isAi) appendAiLink(contentCell, item);
+            appendCell(row, 'notifications-content-cell', item.CONTENT || '');
             appendCell(row, 'notifications-type-cell', isAi ? 'AI' : (item.SOURCE_TYPE || '--'));
             appendCell(row, 'notifications-time-cell', formatDate(item.DATETIME));
             createActionCell(row, item, isUnread);
@@ -310,7 +290,11 @@
                 return;
             }
 
-            totalRecords = Math.max(0, parseInt(response.SumRecord, 10) || 0);
+            var pageItems = response.ListValue || [];
+            if (currentSource === 'AI_QUERY') pageItems = pageItems.filter(isAiNotification);
+            totalRecords = currentSource === 'AI_QUERY'
+                ? pageItems.length
+                : Math.max(0, parseInt(response.SumRecord, 10) || 0);
             unreadCount = Math.max(0, parseInt(response.Value, 10) || 0);
             var responseAiUnread = response.AIUnreadCount;
             if (responseAiUnread == null) responseAiUnread = response.AI_UNREAD_COUNT;
@@ -323,7 +307,7 @@
             }
 
             hasPageResults = true;
-            renderRows(response.ListValue || []);
+            renderRows(pageItems);
             renderPager();
             updateHeader();
         }).fail(function (xhr) {
