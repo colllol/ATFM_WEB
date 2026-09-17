@@ -276,7 +276,26 @@
         setLoading(true);
         showError('');
         updateHeader();
-        sendRequest({
+        function requestAllSourcePages() {
+            var collected = [], rawPage = 1, rawTotal = 0;
+            function next() {
+                return sendRequest({
+                    type: 'GET', url: endpoint, dataType: 'json', cache: false,
+                    data: { action: 'list', status: requestedStatus, page: rawPage, source: 'ALL' }
+                }).then(function (response) {
+                    if (!response || response.Code !== '00') return response;
+                    var batch = response.ListValue || [];
+                    collected = collected.concat(batch);
+                    rawTotal = Math.max(0, parseInt(response.SumRecord, 10) || collected.length);
+                    if (collected.length < rawTotal && batch.length) { rawPage++; return next(); }
+                    response.ListValue = collected;
+                    response.SumRecord = String(collected.length);
+                    return response;
+                });
+            }
+            return next();
+        }
+        var requestPromise = currentSource === 'AI_QUERY' ? requestAllSourcePages() : sendRequest({
             type: 'GET',
             url: endpoint,
             dataType: 'json',
@@ -284,7 +303,8 @@
             // AI is a client-side view over the complete ALL notification feed.
             // The legacy AI_QUERY backend filter does not represent SOURCE_TYPE='AI'.
             data: { action: 'list', status: requestedStatus, page: requestedPage, source: 'ALL' }
-        }).done(function (response) {
+        });
+        requestPromise.done(function (response) {
             if (!isCurrentRequest()) return;
             if (!response || response.Code !== '00') {
                 clearPageResults('Không thể tải danh sách thông báo.');
@@ -297,6 +317,10 @@
             totalRecords = currentSource === 'AI_QUERY'
                 ? pageItems.length
                 : Math.max(0, parseInt(response.SumRecord, 10) || 0);
+            if (currentSource === 'AI_QUERY') {
+                var aiStart = (currentPage - 1) * pageSize;
+                pageItems = pageItems.slice(aiStart, aiStart + pageSize);
+            }
             unreadCount = Math.max(0, parseInt(response.Value, 10) || 0);
             var responseAiUnread = response.AIUnreadCount;
             if (responseAiUnread == null) responseAiUnread = response.AI_UNREAD_COUNT;
