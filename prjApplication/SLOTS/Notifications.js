@@ -16,6 +16,7 @@
     var requestInFlight = false;
     var reloadPending = false;
     var hasPageResults = false;
+    var aiFeedCache = {};
 
     var rows = document.getElementById('notificationsRows');
     var summary = document.getElementById('notificationsSummary');
@@ -295,7 +296,10 @@
             }
             return next();
         }
-        var requestPromise = currentSource === 'AI_QUERY' ? requestAllSourcePages() : sendRequest({
+        var cacheKey = requestedStatus;
+        var requestPromise = requestedSource === 'AI_QUERY' && aiFeedCache[cacheKey]
+            ? $.Deferred().resolve(aiFeedCache[cacheKey]).promise()
+            : requestedSource === 'AI_QUERY' ? requestAllSourcePages() : sendRequest({
             type: 'GET',
             url: endpoint,
             dataType: 'json',
@@ -318,6 +322,7 @@
                 ? pageItems.length
                 : Math.max(0, parseInt(response.SumRecord, 10) || 0);
             if (currentSource === 'AI_QUERY') {
+                aiFeedCache[cacheKey] = response;
                 var aiStart = (currentPage - 1) * pageSize;
                 pageItems = pageItems.slice(aiStart, aiStart + pageSize);
             }
@@ -381,6 +386,7 @@
     for (var i = 0; i < filterButtons.length; i++) {
         filterButtons[i].addEventListener('click', function () {
             currentStatus = parseInt(this.getAttribute('data-status'), 10);
+            aiFeedCache = {};
             currentPage = 1;
             clearPageResults('Đang tải dữ liệu...');
             for (var j = 0; j < filterButtons.length; j++) {
@@ -398,6 +404,7 @@
         sourceButtons[sourceIndex].setAttribute('aria-pressed', isCurrentSource ? 'true' : 'false');
         sourceButtons[sourceIndex].addEventListener('click', function () {
             currentSource = this.getAttribute('data-source') === 'AI_QUERY' ? 'AI_QUERY' : 'ALL';
+            aiFeedCache = {};
             currentPage = 1;
             rememberSourceFilter();
             clearPageResults('Đang tải dữ liệu...');
@@ -424,7 +431,7 @@
         loadPage();
     });
 
-    refreshButton.addEventListener('click', loadPage);
+    refreshButton.addEventListener('click', function () { aiFeedCache = {}; loadPage(); });
     markAllButton.addEventListener('click', function () {
         if (markAllButton.disabled || filteredUnreadCount() === 0) return;
         markAllButton.disabled = true;

@@ -1955,3 +1955,4 @@ Quy Æ°á»›c:
 2026-09-17 | Database/Oracle/20260914_AI_notification_integration.sql | Ð?ng b? package AI_NOTIFICATION_PKG: chu?n hóa source=AI_QUERY thành AI khi truy v?n, d?m/l?c/reconcile TARGET_TYPE theo SOURCE_TYPE='AI' d? b?n ghi AI trong T_NOTIFICATION du?c tr? lên giao di?n.
 2026-09-17 | prjApplication/SLOTS/Notifications.js | B? l?c AI dùng ngu?n ALL làm d? li?u n?n r?i l?c SOURCE_TYPE='AI' phía client, không g?i b? l?c AI c?a package/API.
 2026-09-17 | prjApplication/SLOTS/Notifications.js | B? ph? thu?c b? l?c AI c?a package/API: khi ch?n Thông báo AI, t?i toàn b? trang ngu?n ALL r?i l?c SOURCE_TYPE='AI' ? client và phân trang k?t qu?; gi? source=AI_QUERY ch? d? tuong thích URL.
+2026-09-17 | prjApplication/SLOTS/Notifications.js | Thêm cache d? li?u ALL dã gom cho màn hình AI, tránh g?i l?p toàn b? các trang khi polling/chuy?n trang; cache xóa khi d?i b? l?c ho?c refresh.
