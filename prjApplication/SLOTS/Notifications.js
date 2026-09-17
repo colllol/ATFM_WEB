@@ -281,7 +281,9 @@
             url: endpoint,
             dataType: 'json',
             cache: false,
-            data: { action: 'list', status: requestedStatus, page: requestedPage, source: requestedSource }
+            // AI is a client-side view over the complete ALL notification feed.
+            // The legacy AI_QUERY backend filter does not represent SOURCE_TYPE='AI'.
+            data: { action: 'list', status: requestedStatus, page: requestedPage, source: 'ALL' }
         }).done(function (response) {
             if (!isCurrentRequest()) return;
             if (!response || response.Code !== '00') {
