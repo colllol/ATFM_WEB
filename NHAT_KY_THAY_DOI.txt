@@ -1950,3 +1950,4 @@ Quy Æ°á»›c:
 
 2026-09-16 | prjApplication/Handlers/Notification.ashx.cs; prjApplication/SLOTS/Notifications.js; tests/test_notification_proxy.cs | Ð?i h?p d?ng nh?n di?n thông báo AI sang SOURCE_TYPE='AI' cho b? l?c Thông báo AI; gi? source=AI_QUERY làm tham s? truy v?n backend.
 2026-09-17 | prjApplication/Handlers/Notification.ashx.cs; prjApplication/SLOTS/Notifications.aspx; prjApplication/SLOTS/Notifications.js; tests/test_notification_proxy.cs | S?a b? l?c Thông báo AI dùng SOURCE_TYPE='AI' và truy?n source=AI t?i proxy/backend; ch?p nh?n URL cu AI_QUERY d? tuong thích.
+2026-09-17 | prjApplication/Handlers/Notification.ashx.cs; prjApplication/SLOTS/Notifications.aspx; prjApplication/SLOTS/Notifications.js | Hoàn tác vi?c d?i tham s? backend sang AI; nút Thông báo AI gi? source=AI_QUERY và ch? nh?n di?n b?n ghi SOURCE_TYPE='AI'.
