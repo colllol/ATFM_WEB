@@ -102,16 +102,27 @@
         return source === 'AI';
     }
 
+    function isDplklNotification(item) {
+        return $.trim(String(item && item.SOURCE_KEY || '')).toUpperCase() === 'DPLKL';
+    }
+
     function appendTitleCell(row, item, isAi) {
         var cell = document.createElement('td');
         cell.className = 'notifications-title-cell';
+        var isDplkl = isDplklNotification(item);
         if (isAi) {
             var label = document.createElement('span');
             label.className = 'notifications-ai-label';
             label.innerHTML = '<i class="fa fa-microchip" aria-hidden="true"></i><span>AI</span>';
             cell.appendChild(label);
         }
-        cell.appendChild(document.createTextNode(item.TITLE || (isAi ? 'Thông báo AI' : 'Thông báo')));
+        if (isDplkl) {
+            var link = document.createElement('a');
+            link.className = 'notifications-title-link';
+            link.href = dplklUrl;
+            link.textContent = item.TITLE || 'Thông báo';
+            cell.appendChild(link);
+        } else cell.appendChild(document.createTextNode(item.TITLE || (isAi ? 'Thông báo AI' : 'Thông báo')));
         row.appendChild(cell);
     }
 
