@@ -1,7 +1,7 @@
 <%@ Page Title="Tổng hợp chỉ số hiệu suất bay từ ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="AdsBPerformanceReport.aspx.cs" Inherits="prjApplication.ReportNew.AdsBPerformanceReport" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.css?v=20260722-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260911-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260918-1") %>" />
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260911-1") %>" />
     <section class="adsb-report-page"
             data-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetData"
@@ -76,5 +76,5 @@
         </div>
     </div>
     <script src="<%= ResolveUrl("~/ReportNew/ReportControls.js?v=20260911-1") %>"></script>
-    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260911-1") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260918-1") %>"></script>
 </asp:Content>

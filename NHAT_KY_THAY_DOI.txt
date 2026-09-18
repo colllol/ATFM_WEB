@@ -1,4 +1,4 @@
-﻿NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
+NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
 
 2026-09-14 | prjApplication/ActionHistory/List_ActionHistory.aspx; List_ActionHistory.aspx.cs | Bổ sung lọc riêng theo tên người dùng, mã thao tác, HostIP và khoảng thời gian thực hiện; hỗ trợ dd/MM/yyyy HH:mm, tự động kết thúc 23:59:59 khi chỉ nhập ngày kết thúc, kiểm tra thứ tự thời gian và dùng cùng điều kiện khi export Excel.
 2026-09-14 | prjApplication/Day_Flights/DaylyFlight.aspx | Chuẩn hóa mã trả về ListValue của LoadDataGrid_Finished, gửi JSON đúng kiểu và hiển thị chi tiết lỗi theo bước khi Export Finished thất bại.
@@ -1951,3 +1951,7 @@ Quy ước:
 2026-09-17 | prjApplication/Day_Flights/DaylyFlight.aspx.cs | Thêm nhãn NEW đỏ đầu dòng khi FLIGHT_ID khớp nguyên token LISTFLIGHTID của điện văn THONG BAO cùng FLIGHTDATE. Đọc đầy đủ CLOB theo lô/ngày qua SlotsOracle, áp dụng tải đầu/tìm kiếm/cuộn; lỗi tra cứu hiển thị ? và ghi Trace, không chặn danh sách. Build Release prjApplication thành công (còn cảnh báo sẵn có); chưa kiểm thử dữ liệu Oracle thực tế.
 2026-09-17 | prjApplication/Day_Flights/DaylyFlight.aspx.cs | Bổ sung PM.STATUS=0 khi tra điện văn để đánh dấu NEW, tránh lấy các điện văn THONG BAO ở trạng thái khác; giữ đối chiếu nguyên FLIGHT_ID theo LISTFLIGHTID và cùng ngày, cập nhật tooltip.
 2026-09-17 | prjApplication/SLOTS/Notifications.js | Khôi phục link tiêu đề thông báo có SOURCE_KEY='DPLKL' tới danh sách chuyến bay hoàn thành; thông báo AI vẫn hiển thị dạng chữ.
+2026-09-18 | prjApplication/ReportNew/AdsBPerformanceReport.js | Thêm class is-other vào dòng tr khi permType=OTHER trong bảng chi tiết dữ liệu.
+2026-09-18 | prjApplication/ReportNew/AdsBPerformanceReportExtras.css | Thêm highlight nền đỏ nhạt (#fff5f5), viền trái đỏ 3px cho dòng is-other trong bảng chi tiết; kể cả dòng chẵn và hover.
+2026-09-18 | prjApplication/ReportNew/AdsBPerformanceReport.aspx | Tăng phiên bản cache CSS/JS lên 20260918-1 để trình duyệt nhận style highlight mới.
+
