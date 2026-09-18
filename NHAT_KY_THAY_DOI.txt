@@ -1959,3 +1959,6 @@ Quy ước:
 2026-09-18 | prjApplication/ReportNew/FlightStatusRate.aspx | Thêm link CSS FlightStatusRateKpis.css, tăng phiên bản cache JS lên 20260918-1.
 2026-09-18 | C:\Users\Admin\Documents\APP_V2\HDSD_FlightTrackingMap_NguoiDung_VietLai.docx | Viết lại hướng dẫn người dùng theo phần view và thao tác thực tế của SLOTS/FlightTrackingMap.aspx: thẻ tổng hợp LD/O/F/Khác, tự cập nhật 5 giây, xem chi tiết chuyến bay, zoom/kéo/khôi phục bản đồ và xử lý tình huống.
 
+
+2026-09-18 | TaiLieu/Huong_dan_su_dung_HTSLB_ATFM_WEB_20260918.docx | T?o t�i li?u Word hu?ng d?n s? d?ng theo M?c III Ph? l?c HTSLB, d?i chi?u menu v� lu?ng thao t�c th?c t? c?a ATFM Web; b? sung checklist v� b?ng �nh x? 32 y�u c?u.
+2026-09-18 | create_user_guide.py | Th�m script t?o t�i li?u hu?ng d?n Word d? t�i t?o/di?u ch?nh t�i li?u.
