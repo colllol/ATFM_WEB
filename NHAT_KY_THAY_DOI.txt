@@ -1957,4 +1957,5 @@ Quy ước:
 2026-09-18 | prjApplication/ReportNew/FlightStatusRateKpis.css | [MỚI] CSS cho modal KPIs Dashboard: overlay, toolbar chọn KPI/dimension, bảng ranking với benchmark bar, heatmap grid interpolate màu, trend chart SVG, drill-down table phân trang, responsive 992/980/600px.
 2026-09-18 | prjApplication/ReportNew/FlightStatusRate.js | Thêm nút KPIs vào thanh lọc và toàn bộ engine KPIs: aggregate theo dimension (hãng/sân bay/ngày/permType), tính benchmark mean, renderRanking với progress bar so benchmark, renderHeatmap interpolate xanh→đỏ, renderTrendChart (line nếu ngày, bar ngang nếu dimension khác), drill-down chi tiết chuyến bay khi click ranking row hoặc heatmap cell, phân trang 100 dòng.
 2026-09-18 | prjApplication/ReportNew/FlightStatusRate.aspx | Thêm link CSS FlightStatusRateKpis.css, tăng phiên bản cache JS lên 20260918-1.
+2026-09-18 | C:\Users\Admin\Documents\APP_V2\HDSD_FlightTrackingMap_NguoiDung_VietLai.docx | Viết lại hướng dẫn người dùng theo phần view và thao tác thực tế của SLOTS/FlightTrackingMap.aspx: thẻ tổng hợp LD/O/F/Khác, tự cập nhật 5 giây, xem chi tiết chuyến bay, zoom/kéo/khôi phục bản đồ và xử lý tình huống.
 
