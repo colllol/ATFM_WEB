@@ -1964,3 +1964,5 @@ Quy ước:
 2026-09-18 | create_user_guide.py | Th�m script t?o t�i li?u hu?ng d?n Word d? t�i t?o/di?u ch?nh t�i li?u.
 
 2026-09-18 | C:\Users\Admin\Documents\APP_V2\HDSD_FlightTrackingMap_NguoiDung_VietLai.docx | Bổ sung hướng dẫn ReportNew/AdsBPerformanceReport.aspx: lọc ngày/PERMTYPE/hãng, KPI, biểu đồ, bảng phân trang, báo cáo cuối ngày và xuất PDF/Excel/CSV.
+
+2026-09-19 | tools/generate_adsb_tools_user_guide.py; TaiLieu/Huong_dan_su_dung_Tool_ADS-B_20260919.docx | Tao tai lieu Word huong dan van hanh TracksSync va Flight Tracking API theo mau HDSD_AMHS: trang bia, muc luc, cau hinh, thao tac, kiem tra API, xu ly su co, van hanh an toan va hai anh giao dien ADS-B tu SRS; khong ghi thong tin ket noi that.
