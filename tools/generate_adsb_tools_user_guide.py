@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create the ADS-B tools operating guide using the supplied AMHS guide as a layout template."""
+"""Build a Word guide for tools/TracksSyncPython only."""
 
 from __future__ import annotations
 
@@ -14,265 +14,164 @@ from docx.oxml import OxmlElement
 from docx.shared import Cm, Pt
 
 
-TODAY = "19/09/2026"
-
-
-def clear_document_body(document: Document) -> None:
-    """Keep the template styles and section setup, but replace its body content."""
-    body = document._element.body
-    for child in list(body):
+def clear_body(doc):
+    for child in list(doc._element.body):
         if not child.tag.endswith("}sectPr"):
-            body.remove(child)
+            doc._element.body.remove(child)
 
 
-def set_cell_shading(cell, fill: str) -> None:
-    properties = cell._tc.get_or_add_tcPr()
-    shading = OxmlElement("w:shd")
-    shading.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fill", fill)
-    properties.append(shading)
-
-
-def set_cell_text(cell, value: str, bold: bool = False) -> None:
-    paragraph = cell.paragraphs[0]
-    paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run = paragraph.add_run(value)
-    run.bold = bold
-
-
-def add_table(document: Document, headers: list[str], rows: list[list[str]]) -> None:
-    table = document.add_table(rows=1, cols=len(headers))
-    table.style = "Table Grid"
-    table.autofit = True
-    for index, header in enumerate(headers):
-        cell = table.rows[0].cells[index]
-        set_cell_text(cell, header, bold=True)
-        set_cell_shading(cell, "D9EAF7")
-    for values in rows:
-        cells = table.add_row().cells
-        for index, value in enumerate(values):
-            set_cell_text(cells[index], value)
-
-
-def add_bullets(document: Document, values: list[str]) -> None:
-    for value in values:
-        document.add_paragraph(value, style="List Bullet")
-
-
-def add_caption(document: Document, value: str) -> None:
-    paragraph = document.add_paragraph(value)
-    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    for run in paragraph.runs:
-        run.italic = True
-
-
-def add_picture(document: Document, path: Path, caption: str) -> None:
-    paragraph = document.add_paragraph()
-    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    paragraph.add_run().add_picture(str(path), width=Cm(15.8))
-    add_caption(document, caption)
-
-
-def add_toc_field(paragraph) -> None:
-    def add_field_run(element) -> None:
+def toc(paragraph):
+    namespace = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    items = [("fldChar", "begin"), ("instrText", ' TOC \\o "1-2" \\h \\z \\u '),
+             ("fldChar", "separate"), ("t", "Nhấn Ctrl+A rồi F9 trong Word để cập nhật mục lục."),
+             ("fldChar", "end")]
+    for tag, value in items:
+        element = OxmlElement("w:" + tag)
+        if tag == "fldChar":
+            element.set(namespace + "fldCharType", value)
+        elif tag == "instrText":
+            element.set(namespace + "space", "preserve")
+            element.text = value
+        else:
+            element.text = value
         run = OxmlElement("w:r")
         run.append(element)
         paragraph._p.append(run)
 
-    begin = OxmlElement("w:fldChar")
-    begin.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fldCharType", "begin")
-    instruction = OxmlElement("w:instrText")
-    instruction.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}space", "preserve")
-    instruction.text = ' TOC \\o "1-2" \\h \\z \\u '
-    separate = OxmlElement("w:fldChar")
-    separate.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fldCharType", "separate")
-    text = OxmlElement("w:t")
-    text.text = "Nhấn Ctrl+A rồi F9 trong Word để cập nhật mục lục."
-    end = OxmlElement("w:fldChar")
-    end.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fldCharType", "end")
-    # Word requires every field element to be contained in a run.
-    add_field_run(begin)
-    add_field_run(instruction)
-    add_field_run(separate)
-    add_field_run(text)
-    add_field_run(end)
+
+def table(doc, headers, rows):
+    result = doc.add_table(rows=1, cols=len(headers))
+    result.style = "Table Grid"
+    for i, text in enumerate(headers):
+        cell = result.rows[0].cells[i]
+        cell.paragraphs[0].add_run(text).bold = True
+        shade = OxmlElement("w:shd")
+        shade.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fill", "D9EAF7")
+        cell._tc.get_or_add_tcPr().append(shade)
+    for values in rows:
+        cells = result.add_row().cells
+        for i, text in enumerate(values):
+            cells[i].paragraphs[0].add_run(text)
 
 
-def extract_source_images(source_document: Path, destination: Path) -> tuple[Path, Path]:
-    """Reuse the two real ADS-B screenshots already embedded in the project SRS."""
-    with ZipFile(source_document) as archive:
-        media = sorted(name for name in archive.namelist() if name.startswith("word/media/"))
-        if len(media) < 2:
-            raise ValueError("SRS ADS-B không có đủ hai ảnh giao diện.")
-        paths = []
-        for index, name in enumerate(media[:2], start=1):
-            suffix = Path(name).suffix or ".png"
-            image_path = destination / f"adsb-screen-{index}{suffix}"
-            image_path.write_bytes(archive.read(name))
-            paths.append(image_path)
-    return paths[0], paths[1]
+def bullets(doc, values):
+    for value in values:
+        doc.add_paragraph(value, style="List Bullet")
 
 
-def add_cover(document: Document) -> None:
-    title = document.add_paragraph(style="Title")
+def report_image(srs, destination):
+    with ZipFile(srs) as archive:
+        name = sorted(n for n in archive.namelist() if n.startswith("word/media/"))[0]
+        path = destination / ("adsb-report" + Path(name).suffix)
+        path.write_bytes(archive.read(name))
+        return path
+
+
+def build(template, srs, output):
+    doc = Document(template)
+    clear_body(doc)
+    doc.core_properties.title = "Hướng dẫn sử dụng TracksSyncPython"
+    doc.core_properties.subject = "Đồng bộ dữ liệu ADS-B"
+    doc.core_properties.author = "VATM ATFM"
+
+    title = doc.add_paragraph(style="Title")
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title.paragraph_format.space_before = Pt(130)
-    run = title.add_run("TÀI LIỆU HƯỚNG DẪN SỬ DỤNG")
-    run.bold = True
-    run.font.name = "Arial"
-    run.font.size = Pt(23)
-
-    subtitle = document.add_paragraph(style="Title")
-    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = subtitle.add_run("CÔNG CỤ ĐỒNG BỘ VÀ THEO DÕI ADS-B")
-    run.bold = True
-    run.font.name = "Arial"
-    run.font.size = Pt(20)
-
-    details = document.add_paragraph()
+    run = title.add_run("TÀI LIỆU HƯỚNG DẪN SỬ DỤNG\nCÔNG CỤ TRACKSSYNCPYTHON")
+    run.bold, run.font.name, run.font.size = True, "Arial", Pt(22)
+    details = doc.add_paragraph("Hệ thống Quản lý luồng không lưu Việt Nam - ATFM Web\nVị trí mã nguồn: tools\\TracksSyncPython\\\nPhiên bản: 1.1 | Ngày cập nhật: 19/09/2026")
     details.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    details.paragraph_format.space_before = Pt(46)
-    details.add_run(
-        "Hệ thống Quản lý luồng không lưu Việt Nam - ATFM Web\n"
-        "Thành phần: TracksSync và Flight Tracking API\n"
-        f"Phiên bản tài liệu: 1.0\nNgày cập nhật: {TODAY}"
-    )
-    document.add_page_break()
+    doc.add_page_break()
+    doc.add_heading("MỤC LỤC", 1)
+    toc(doc.add_paragraph())
+    doc.add_page_break()
 
-
-def build(template: Path, source_srs: Path, output: Path) -> None:
-    document = Document(template)
-    clear_document_body(document)
-    document.core_properties.title = "Hướng dẫn sử dụng công cụ ADS-B"
-    document.core_properties.subject = "TracksSync và Flight Tracking API"
-    document.core_properties.author = "VATM ATFM"
-
-    add_cover(document)
-    document.add_heading("MỤC LỤC", level=1)
-    toc = document.add_paragraph()
-    add_toc_field(toc)
-    document.add_page_break()
-
-    document.add_heading("Giới thiệu", level=1)
-    document.add_paragraph(
-        "Bộ công cụ ADS-B phục vụ hai nhu cầu bổ trợ trong ATFM: lưu dữ liệu giám sát để báo cáo, "
-        "và cung cấp vị trí tàu bay gần thời gian thực cho bản đồ theo dõi. Tài liệu này hướng dẫn "
-        "cán bộ vận hành sử dụng TracksSync và kiểm tra Flight Tracking API; không thay thế tài liệu "
-        "quản trị cơ sở dữ liệu hoặc hướng dẫn triển khai hạ tầng."
-    )
-    add_table(
-        document,
-        ["Thành phần", "Mục đích", "Dữ liệu xử lý"],
-        [
-            ["TracksSync", "Đồng bộ, đối chiếu và xác minh dữ liệu ADS-B theo chu kỳ.", "PostgreSQL public.tracks -> Oracle T_TRACKS_LOG."],
-            ["Flight Tracking API", "Cung cấp vị trí mới nhất cho FlightTrackingMap của ATFM Web.", "Đọc PostgreSQL public.tracks qua HTTP nội bộ."],
-            ["ATFM Web", "Hiển thị bản đồ và báo cáo ADS-B cho người dùng nghiệp vụ.", "T_TRACKS_LOG, Flight Tracking API và metadata Oracle."],
-        ],
-    )
-    document.add_paragraph("Luồng dữ liệu tổng quát: public.tracks -> TracksSync -> T_TRACKS_LOG -> báo cáo ADS-B; đồng thời public.tracks -> Flight Tracking API -> FlightTrackingMap.")
-
-    document.add_heading("1. Chuẩn bị và cài đặt", level=1)
-    add_bullets(document, [
-        "Máy chạy công cụ là Windows 10/11 64-bit và kết nối được tới PostgreSQL, Oracle, cũng như file GeoJSON vùng FIR VVHN/VVHM.",
-        "Dùng bản EXE đã đóng gói khi vận hành thông thường: ATFM-TracksSync.exe cho giao diện, ATFM-TracksSync-CLI.exe cho Task Scheduler và ATFM-FlightTrackingApi.exe cho dịch vụ API.",
-        "Đặt TracksSync.local.json cạnh EXE khi triển khai riêng; file cấu hình và watermark chứa thông tin vận hành nên không đưa lên Git hoặc gửi qua kênh không được phép.",
-        "Không chạy hai phiên TracksSync cùng dùng một bảng T_TRACKS_LOG hoặc một file watermark.",
+    doc.add_heading("Giới thiệu", 1)
+    doc.add_paragraph("Tài liệu này chỉ hướng dẫn tools\\TracksSyncPython. Công cụ đọc dữ liệu vị trí tàu bay từ PostgreSQL public.tracks, lọc theo FIR VVHN/VVHM, đối chiếu Oracle và ghi vào ATFM.T_TRACKS_LOG.")
+    table(doc, ["Thành phần", "Chức năng"], [
+        ["main.py", "Mã nguồn chính; hỗ trợ giao diện Windows và dòng lệnh."],
+        ["TracksSync.sample.json", "Cấu hình mẫu PostgreSQL, Oracle, FIR và watermark."],
+        ["ATFM-TracksSync.exe", "Bản giao diện Windows sau khi build."],
+        ["ATFM-TracksSync-CLI.exe", "Bản CLI dùng cho Task Scheduler."],
     ])
 
-    document.add_heading("2. Cấu hình kết nối", level=1)
-    document.add_paragraph(
-        "TracksSync ưu tiên cấu hình theo thứ tự: biến môi trường TRACKS_CONFIG, file TracksSync.local.json "
-        "cạnh chương trình, sau đó tới prjApplication\\App_Data\\TracksSync.local.json. Flight Tracking API dùng "
-        "FlightTrackingApi.local.json cạnh EXE hoặc các biến môi trường FLIGHT_API_PG_* và FLIGHT_API_HOST/PORT."
-    )
-    add_table(document, ["Nhóm cấu hình", "Nội dung cần kiểm tra"], [
-        ["PostgreSQL", "Host, port, database, tài khoản chỉ đọc và thời gian chờ kết nối."],
-        ["Oracle", "Host, port, service, quyền đọc T_DAY_FLIGHTS_GOINGON và ghi T_TRACKS_LOG cho TracksSync."],
-        ["FIR", "Đường dẫn tuyệt đối tới file GeoJSON chứa vùng VVHN và VVHM, tài khoản chạy tool có quyền đọc."],
-        ["Watermark", "Đường dẫn file mốc đồng bộ; để trống để tool tự đặt cạnh chương trình."],
-        ["API", "Host/port dịch vụ; port mặc định 5088. Chỉ cho phép mạng nội bộ truy cập qua firewall."],
+    doc.add_heading("1. Chuẩn bị và cấu hình", 1)
+    bullets(doc, [
+        "Máy chạy phải kết nối được PostgreSQL, Oracle và file GeoJSON ranh giới FIR VVHN/VVHM.",
+        "PostgreSQL cần quyền đọc public.tracks; Oracle cần đọc T_DAY_FLIGHTS_GOINGON và ghi T_TRACKS_LOG.",
+        "Không đưa TracksSync.local.json hoặc file watermark lên Git.",
+        "Không chạy chồng nhiều phiên TracksSync trên cùng T_TRACKS_LOG hoặc watermark.",
     ])
-    document.add_paragraph("Không ghi mật khẩu thật trong file hướng dẫn, ảnh chụp màn hình, log gửi hỗ trợ hoặc package ZIP. Sau khi thay đổi cấu hình, luôn chạy kiểm tra trước khi bật đồng bộ tự động.")
-
-    document.add_heading("3. Màn hình TracksSync", level=1)
-    document.add_paragraph("Mở ATFM-TracksSync.exe. Giao diện có vùng log và năm thao tác: Kiểm tra đối chiếu, Ghi T_TRACKS_LOG, Xác minh kết quả, Auto và Stop. Chu kỳ là khoảng nghỉ sau khi một lượt hoàn tất, phải là số nguyên dương.")
-    document.add_heading("3.1 Kiểm tra đối chiếu và ghi dữ liệu", level=2)
-    add_bullets(document, [
-        "Bấm Kiểm tra đối chiếu trước. Tool đọc public.tracks, loại điểm ngoài FIR, chuẩn hóa callsign và đối chiếu chuyến bay Oracle nhưng chưa ghi dữ liệu nghiệp vụ.",
-        "Đọc log để xác nhận đúng file cấu hình, kết nối PostgreSQL/Oracle, số callsign/ngày đối chiếu và các trường hợp bị bỏ qua.",
-        "Bấm Ghi T_TRACKS_LOG khi kết quả kiểm tra hợp lệ. Tool MERGE theo khóa CALLSIGN + DATE, cập nhật vị trí mới nhất và chỉ ghi watermark sau khi đồng bộ thành công.",
-        "Bấm Xác minh kết quả để nhận thống kê đúng, sai, thiếu, thừa và trùng khóa. Một lượt bình thường không có traceback; sai, thiếu và trùng khóa phải bằng 0.",
-    ])
-    document.add_heading("3.2 Quy tắc dữ liệu chính", level=2)
-    add_table(document, ["Quy tắc", "Cách xử lý của tool"], [
-        ["Callsign", "Lấy phần trước dấu gạch nối của flight_id_current, bỏ khoảng trắng và chuyển sang chữ hoa."],
-        ["FIR", "VVHN hoặc biên chung có STATUS=1; VVHM có STATUS=2; ngoài hai FIR bị loại."],
-        ["Đối chiếu chuyến bay", "Tìm CALLSIGN + ngày trong T_DAY_FLIGHTS_GOINGON; trường hợp nhiều dòng dùng khoảng ETD-ETA, kể cả qua nửa đêm."],
-        ["Không match", "Vẫn ghi bản ghi đủ điều kiện với PERMTYPE=OTHER, thông tin hành trình để trống."],
-        ["Thời điểm FIR", "Giữ TIME_IN sớm nhất; TIME_OUT là lần đầu đổi FIR sau đó, nếu có."],
-        ["Bản ghi cũ", "Cập nhật tọa độ/thời gian mới nhất; có thể bổ sung metadata khi bản ghi OTHER được match ở lượt sau."],
+    doc.add_paragraph("Thứ tự tìm cấu hình: TRACKS_CONFIG, TracksSync.local.json cạnh mã nguồn/EXE, rồi prjApplication\\App_Data\\TracksSync.local.json.")
+    table(doc, ["Nhóm", "Nội dung"], [
+        ["postgres", "host, port, database, username, password; nguồn public.tracks."],
+        ["oracle", "host, port, service_name, tài khoản và T_DAY_FLIGHTS_GOINGON."],
+        ["fir", "geojson_path tuyệt đối đến file vùng VVHN/VVHM."],
+        ["watermark_path", "Mốc dữ liệu đã đồng bộ; để trống để tool tự đặt cạnh chương trình."],
     ])
 
-    document.add_heading("4. Chạy tự động và dòng lệnh", level=1)
-    document.add_paragraph("Auto thực hiện check -> sync -> verify trên cùng tập dữ liệu, sau đó mới đếm ngược tới lượt tiếp theo. Nút Stop yêu cầu dừng vòng Auto; lượt đang thao tác cơ sở dữ liệu sẽ hoàn tất an toàn trước khi dừng.")
-    add_table(document, ["Lệnh/chế độ", "Công dụng"], [
-        ["--mode check", "Đọc và đối chiếu, không ghi log nghiệp vụ hoặc watermark."],
-        ["--mode sync", "Ghi/cập nhật T_TRACKS_LOG và cập nhật watermark."],
-        ["--mode verify", "Đối chiếu dữ liệu dự kiến với Oracle, không cập nhật watermark."],
+    doc.add_heading("2. Luồng xử lý dữ liệu", 1)
+    doc.add_paragraph("Luồng chuẩn: public.tracks -> lọc FIR VVHN/VVHM -> chuẩn hóa callsign -> T_DAY_FLIGHTS_GOINGON -> T_TRACKS_LOG -> watermark.")
+    table(doc, ["Quy tắc", "Cách xử lý"], [
+        ["Callsign", "Lấy phần trước dấu gạch nối của flight_id_current, bỏ khoảng trắng và chuyển chữ hoa."],
+        ["FIR", "VVHN hoặc biên chung có STATUS=1; VVHM có STATUS=2; ngoài FIR bị loại."],
+        ["Đối chiếu", "Ghép CALLSIGN + ngày; nếu trùng, chọn duy nhất khoảng ETD-ETA chứa thời điểm track."],
+        ["Không ghép được", "Vẫn ghi bản ghi đủ điều kiện với PERMTYPE=OTHER."],
+        ["Bản ghi cũ", "Cập nhật tọa độ/thời gian mới nhất và giữ TIME_IN/TIME_OUT đã ghi."],
+        ["Watermark", "Chỉ cập nhật sau sync thành công để lượt sau chỉ đọc dữ liệu mới hơn."],
+    ])
+
+    doc.add_heading("3. Vận hành bằng giao diện Windows", 1)
+    doc.add_paragraph("Mở tools\\dist\\ATFM-TracksSync.exe hoặc chạy python .\\tools\\TracksSyncPython\\main.py.")
+    table(doc, ["Nút", "Thao tác"], [
+        ["Kiểm tra đối chiếu", "Đọc và đối chiếu dữ liệu; không ghi dữ liệu nghiệp vụ hoặc watermark."],
+        ["Ghi T_TRACKS_LOG", "Ghi mới/cập nhật T_TRACKS_LOG và cập nhật watermark."],
+        ["Xác minh kết quả", "Thống kê đúng, sai, thiếu, thừa và khóa trùng sau khi ghi."],
+        ["Auto", "Lặp check -> sync -> verify theo chu kỳ đã nhập."],
+        ["Stop", "Dừng Auto sau khi lượt thao tác cơ sở dữ liệu hiện tại hoàn tất an toàn."],
+    ])
+    doc.add_paragraph("Quy trình khuyến nghị: Kiểm tra đối chiếu -> đọc log -> Ghi T_TRACKS_LOG -> Xác minh kết quả. Chỉ bật Auto sau khi một lượt thủ công hoàn tất bình thường.")
+
+    doc.add_heading("4. Vận hành bằng dòng lệnh", 1)
+    table(doc, ["Lệnh", "Công dụng"], [
+        ["--mode check", "Đọc, phân vùng và đối chiếu; không ghi log nghiệp vụ."],
+        ["--mode sync", "Ghi/cập nhật T_TRACKS_LOG và watermark."],
+        ["--mode verify", "Kiểm tra dữ liệu dự kiến với Oracle; không cập nhật watermark."],
         ["--mode all", "Chạy tuần tự check, sync và verify."],
-        ["--full", "Bỏ qua watermark để quét lại toàn bộ; chỉ dùng khi chạy lần đầu, backfill hoặc xử lý watermark sai."],
+        ["--full", "Bỏ watermark để quét lại toàn bộ; dùng khi backfill hoặc sửa watermark."],
     ])
-    document.add_paragraph("Ví dụ chạy qua Task Scheduler: Program/script là ATFM-TracksSync-CLI.exe, Arguments là --mode all, Start in là thư mục chứa EXE và TracksSync.local.json.")
+    doc.add_paragraph("Ví dụ: ATFM-TracksSync-CLI.exe --mode all. Trước sync --full hoặc all --full trên môi trường thật, dừng Auto, sao lưu/đánh giá dữ liệu và chạy check --full trước.")
 
-    document.add_heading("5. Flight Tracking API", level=1)
-    document.add_paragraph("Flight Tracking API chạy độc lập trên máy có quyền đọc PostgreSQL, giúp IIS chỉ cần gọi HTTP nội bộ. Sau khi khởi động bản EXE nền, dùng các địa chỉ kiểm tra bên dưới; thay 127.0.0.1 bằng IP máy API khi kiểm tra từ máy được phép khác.")
-    add_table(document, ["Địa chỉ", "Kết quả mong đợi"], [
-        ["/health/live", "HTTP 200 và trạng thái ok: tiến trình API đang hoạt động."],
-        ["/health/ready", "HTTP 200 khi kết nối PostgreSQL sẵn sàng; HTTP 503 khi chưa sẵn sàng."],
-        ["/swagger/", "Mở giao diện Swagger để xem và thử các endpoint."],
-        ["/openapi.json", "Trả đặc tả OpenAPI dạng JSON."],
-        ["/api/v1/tracks?date=yyyy-MM-dd", "Trả vị trí mới nhất của mỗi callsign trong ngày hợp lệ."],
+    with tempfile.TemporaryDirectory(prefix="tracks-sync-guide-") as temp:
+        image = report_image(srs, Path(temp))
+        doc.add_heading("5. Kết quả khai thác", 1)
+        doc.add_paragraph("T_TRACKS_LOG là đầu ra nghiệp vụ của TracksSyncPython, phục vụ báo cáo hiệu suất ADS-B trong ATFM Web.")
+        picture = doc.add_paragraph()
+        picture.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        picture.add_run().add_picture(str(image), width=Cm(15.8))
+        caption = doc.add_paragraph("Hình 1. Báo cáo hiệu suất ADS-B sử dụng dữ liệu T_TRACKS_LOG.")
+        caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    doc.add_heading("6. Kiểm tra và xử lý sự cố", 1)
+    table(doc, ["Hiện tượng", "Cách xử lý"], [
+        ["Không kết nối PostgreSQL/Oracle", "Kiểm tra host, port, service, tài khoản, firewall và quyền cơ sở dữ liệu."],
+        ["Không có dữ liệu mới", "Kiểm tra watermark, updated_at_utc, tọa độ nguồn và FIR; chạy check --full để chẩn đoán."],
+        ["Nhiều bản ghi bị bỏ qua", "Rà soát chuyến bay trùng CALLSIGN + ngày và khoảng ETD-ETA."],
+        ["Watermark sai", "Dừng Auto, sao lưu watermark, chạy check --full trước khi đồng bộ lại."],
+        ["Có sai/thiếu/trùng", "Không bật Auto; đọc log, sửa nguyên nhân rồi chạy lại check -> sync -> verify."],
     ])
-    document.add_paragraph("API không dùng X-API-Key. Vì vậy chỉ mở cổng 5088 cho IP máy IIS hoặc mạng vận hành đã được phép; không công bố endpoint trực tiếp ra Internet. Khi thay đổi địa chỉ API, cập nhật FlightTrackingApiBaseUrl và FlightTrackingApiTimeoutSeconds trong cấu hình ATFM Web theo quy trình quản trị hệ thống.")
-
-    with tempfile.TemporaryDirectory(prefix="adsb-guide-") as temporary_directory:
-        report_image, map_image = extract_source_images(source_srs, Path(temporary_directory))
-        document.add_heading("6. Kết quả khai thác ADS-B", level=1)
-        document.add_paragraph("Dữ liệu do hai tool xử lý được khai thác trên ATFM Web. Ảnh dưới đây là giao diện thực tế đã lưu trong tài liệu kỹ thuật ADS-B của dự án, dùng để nhận biết đầu ra nghiệp vụ của quy trình.")
-        add_picture(document, report_image, "Hình 1. Báo cáo hiệu suất ADS-B sử dụng dữ liệu T_TRACKS_LOG.")
-        add_picture(document, map_image, "Hình 2. Bản đồ theo dõi chuyến bay sử dụng Flight Tracking API.")
-
-    document.add_heading("7. Xử lý sự cố nhanh", level=1)
-    add_table(document, ["Hiện tượng", "Cách xử lý"], [
-        ["Không kết nối PostgreSQL/Oracle", "Kiểm tra host, port, service, tài khoản, firewall và quyền database; chạy lại Kiểm tra đối chiếu."],
-        ["Không có dòng mới", "Kiểm tra watermark, updated_at_utc của nguồn và vị trí có nằm trong FIR; thử check --full trước khi ghi lại."],
-        ["Nhiều dòng bị bỏ qua", "Rà soát chuyến bay trùng CALLSIGN + ngày và bảo đảm ETD/ETA hợp lệ để chọn được một khoảng duy nhất."],
-        ["API ready trả 503", "Kiểm tra cấu hình PostgreSQL và đường mạng từ máy API; live=200 chỉ xác nhận tiến trình còn chạy."],
-        ["Bản đồ không có dữ liệu", "Kiểm tra health/live, health/ready, firewall cổng 5088 và cấu hình FlightTrackingApiBaseUrl của ATFM Web."],
-        ["Cần chạy lại toàn bộ", "Dừng Auto, sao lưu/đánh giá dữ liệu, chạy check --full trước; chỉ sync --full sau khi xác nhận kết quả."],
-    ])
-
-    document.add_heading("8. Vận hành an toàn", level=1)
-    add_bullets(document, [
-        "Luôn kiểm tra log sau mỗi thay đổi cấu hình; không bỏ qua traceback, lỗi sai/thiếu hoặc trùng khóa.",
-        "Không sửa hoặc xóa watermark trong khi Auto đang chạy. Sao lưu dữ liệu trước khi dùng --full trên môi trường thật.",
-        "Giữ quyền tối thiểu: Flight Tracking API chỉ cần đọc PostgreSQL; TracksSync chỉ dùng quyền Oracle cần thiết cho nhiệm vụ đồng bộ.",
-        "Theo dõi tuổi watermark, kết quả verify, dung lượng T_TRACKS_LOG, trạng thái health/ready và tần suất lỗi Auto.",
-        "Dừng các tiến trình liên quan trước khi nâng cấp; giữ lại file cấu hình local và log cần thiết để có thể khôi phục vận hành.",
-    ])
-
+    doc.add_heading("7. Checklist vận hành", 1)
+    bullets(doc, ["Đúng file cấu hình, kết nối PostgreSQL/Oracle và file FIR GeoJSON.", "Log không có traceback; sai, thiếu và khóa trùng bằng 0.", "Watermark chỉ tăng sau sync/all thành công.", "Không chạy song song nhiều Auto hoặc Task Scheduler trên cùng watermark.", "Sao lưu/đánh giá dữ liệu trước khi dùng --full trên môi trường thật."])
     output.parent.mkdir(parents=True, exist_ok=True)
-    document.save(output)
+    doc.save(output)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Tạo hướng dẫn sử dụng công cụ ADS-B.")
+def main():
+    parser = argparse.ArgumentParser(description="Tạo hướng dẫn sử dụng TracksSyncPython.")
     parser.add_argument("--template", type=Path, required=True)
     parser.add_argument("--source-srs", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    for path in (args.template, args.source_srs):
-        if not path.is_file():
-            raise FileNotFoundError(path)
     build(args.template, args.source_srs, args.output)
 
 

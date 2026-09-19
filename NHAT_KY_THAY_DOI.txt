@@ -1968,3 +1968,5 @@ Quy ước:
 2026-09-19 | tools/generate_adsb_tools_user_guide.py; TaiLieu/Huong_dan_su_dung_Tool_ADS-B_20260919.docx | Tao tai lieu Word huong dan van hanh TracksSync va Flight Tracking API theo mau HDSD_AMHS: trang bia, muc luc, cau hinh, thao tac, kiem tra API, xu ly su co, van hanh an toan va hai anh giao dien ADS-B tu SRS; khong ghi thong tin ket noi that.
 
 2026-09-19 | tools/generate_adsb_tools_user_guide.py; TaiLieu/Huong_dan_su_dung_Tool_ADS-B_20260919.docx | Sua cau truc truong muc luc trong DOCX de tuong thich Microsoft Word; da mo va kiem tra thanh cong bang Word.
+
+2026-09-19 | tools/generate_adsb_tools_user_guide.py; TaiLieu/Huong_dan_su_dung_Tool_ADS-B_20260919.docx | Viet lai tai lieu chi cho tools/TracksSyncPython: cau hinh, dong bo public.tracks sang T_TRACKS_LOG, GUI, CLI, watermark va xu ly su co; loai bo toan bo noi dung Flight Tracking API.
