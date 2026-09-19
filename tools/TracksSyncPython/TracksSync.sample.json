@@ -1,0 +1,21 @@
+{
+  "postgres": {
+    "host": "POSTGRES_HOST",
+    "port": 5432,
+    "database": "postgres",
+    "username": "postgres",
+    "password": "POSTGRES_PASSWORD"
+  },
+  "oracle": {
+    "host": "ORACLE_HOST",
+    "port": 1521,
+    "service_name": "PDBORCL",
+    "username": "atfm",
+    "password": "ORACLE_PASSWORD",
+    "flight_table": "T_DAY_FLIGHTS_GOINGON"
+  },
+  "fir": {
+    "geojson_path": "C:\\Users\\Admin\\Downloads\\vietnam-fir-VVHM-VVHN.geojson"
+  },
+  "watermark_path": ""
+}

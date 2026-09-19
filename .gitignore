@@ -1,0 +1,54 @@
+# Visual Studio / build output
+.vs/
+.vscode/
+**/bin/
+**/obj/
+**/TestResults/
+*.user
+*.suo
+*.pdb
+*.cache
+*.log
+
+# Python runtime bytecode
+**/__pycache__/
+*.py[cod]
+
+# NuGet packages are restored by setup.ps1
+packages/
+
+# Generated publish output and local backups
+**/PackageTmp/
+**/Back*/
+# Gangline board (not a generated backup directory)
+!backlog/
+!backlog/**
+Crystal Reports Backup Files/
+prjApplicationOnline/
+
+# Source control metadata from legacy systems
+*.scc
+*.vssscc
+*.vspscc
+
+# Machine-local configuration and uploaded/runtime data
+*.local.config
+*.secrets.config
+*.local.json
+*.watermark.log
+prjApplication/Upload/
+prjApplication/Uploads/
+prjApplication/App_Data/*.mdf
+prjApplication/App_Data/*.ldf
+prjApplication/FileUploadPermission/
+prjApplication/BinNews/
+prjApplication/Sound/DayFlight/
+**/PublishProfiles/
+**/artifacts/
+tools/build/FlightTrackingApi/
+tools/dist/ATFM-FlightTrackingApi-package/
+
+# zip files
+*.zip
+*.7z
+*.rar

@@ -1,0 +1,12 @@
+- từ bảng public.tracks và file C:\Users\Admin\Downloads\vietnam-fir-VVHM-VVHN.geojson tạo cho tôi 1 trang ở folder prjApplication\SLOTS với các yêu cầu sau:
+    + view bản đồ nên trên bản đồ view các icon máy bay
+    + các icon máy bay khi click vào hiển thị ra flight_id_current trong bảng public.track và OPER_ID trong bảng T_DAY_FLIGHTS_GOINGON
+    + các icon máy bay hiển thị màu theo PERMTYPE trong bảng T_DAY_FLIGHTS_GOINGON với PERMTYPE=LD thì view lên là màu xanh lá, PERMTYPE=O/F thì view lên là màu cam.
+    + flight_id_current lấy ra từ bảng public.tracks để so sánh với FLIGHTNBR trong bảng T_DAY_FLIGHTS_GOINGON để lấy ra các trường liên quan thì sẽ lấy ký từ đầu tiên tính từ trái qua phải đến dấu "-" còn nếu không có dấu "-" thì lấy hết. VÍ DỤ: flight_id_current="RFI227" thì lấy nguyên là "RFI227" còn flight_id_current="CES6380-2026-07-07" thì lấy ra là "CES6380"
+    + cứ mỗi 5s là load dữ liệu từ bảng public.track 1 lần để cập nhật vị trí icon máy bay ( không chạy loading và không chạy load lại cả page lên vì nó chỉ load các vị trí icon thôi)
+    + điều kiện để view icon máy bay là các chuyến bay đó là của ngày hiện tại ( DAYNOW) trên máy
+- từ bảng T_TRACKS_LOG tạo cho tôi 1 trang ở thư mục prjApplication\ReportNew theo yêu cầu dưới đây:
+    + view nội dung của bảng T_TRACKS_LOG lên, tiêu đề trang là Tổng hợp chỉ số hiệu suất bay từ ADS-B.
+    + có bộ lọc theo PERMTYPE, lọc theo này, lọc theo OPER
+    + có biểu đồ sóng với 2 đường là LD và O/F của cột PERMTYPE với trục y là số lượng, trục x là ngày/tháng.
+    + chi chuột vào từng mốc thì có thể xem được số lượng.

@@ -1,0 +1,1681 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="CreateDaily.aspx.cs" Inherits="prjApplication.FinishedFlights.CreateDaily" %>
+<%@ Register Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
+    <link href="../Style/Style_List.css" rel="stylesheet" />
+    <link href="../Style/assets/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <link href="../Style/assets/css/bootstrap-datepicker3.min.css" rel="stylesheet" />
+    <style>
+        .cssHide {
+            display: none;
+        }
+
+        .cssShow {
+            display: block;
+        }
+
+        .cssVisble {
+            visibility: visible;
+            display: block;
+        }
+
+        .cssVisbleHide {
+            visibility: hidden;
+            display: none;
+        }
+
+        .modal {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .table td i:hover {
+            cursor: pointer;
+        }
+
+        .inputControl {
+            width: 300px !important;
+        }
+
+        .pagination {
+            padding-right: 5px;
+            margin-top: -5px;
+        }
+    </style>
+
+    <style>
+        .mControl {
+            width: 200px !important;
+            height: 23px !important;
+        }
+
+        select.form-control {
+            padding: 1px 2px;
+            font-size: 12px;
+        }
+
+        .mLable {
+            width: 120px !important;
+        }
+
+        .modal-dialog {
+            width: 100% !important;
+        }
+
+        #MultiAdd.table label, input, select > option {
+            font-size: 12px;
+        }
+    </style>
+
+    <span class="TitlePanel">+ Flight LIST</span>
+    <div class="well well-sm" style="text-align: left;">
+       <div class="row">
+            <div class="col-lg-5">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-lg-4 control-label" for="txtSTART">START DATE</label>
+
+                        <input id="txtStartDate" runat="server" data-date-format="dd/mm/yyyy"
+                            class="inputControl date-picker col-sm-5"
+                            type="text" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-lg-4 control-label" for="txtEND">END DATE</label>
+                        <input id="txtFinishDate" runat="server" data-date-format="dd/mm/yyyy"
+                            class="inputControl date-picker col-sm-5"
+                            type="text" />
+                        <asp:Button ID="btnSearch" runat="server" Width="40px" Height="38px"  CssClass="iconFind" OnClick="btnSearch_Click" />
+                    </div>
+                </div>
+            </div>
+           
+        </div>
+           
+
+          
+    </div>
+
+            
+
+    <div class="table-responsive table table-condensed">
+
+
+        <asp:GridView runat="server" ID="grdSource" AutoGenerateColumns="false" DataKeyNames="FLIGHT_ID"
+            Width="100%" OnRowDataBound="grdSource_RowDataBound"
+            CssClass="table table-bordered">
+            <Columns>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="4%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="4%"></ItemStyle>
+                    <HeaderTemplate>
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <div class="action-buttons" style="width: 65px" id="divattribute" runat="server">
+                            <a runat="server" data-toggle="tooltip" visible='<%#_Role.R_Edit %>' title="Edit">
+                                <i class="ace-icon fa fa-pencil bigger-130" data-toggle="modal" data-target="#popupEditFlightDetail"
+                                    onclick="ShowpopupEditFlightDetail(<%# Eval("FLIGHT_ID") %>);"></i>
+                            </a>
+                            <a runat="server" data-toggle="tooltip" visible='<%#_Role.R_Del %>' title="Delete">
+                                <i class="ace-icon fa fa-trash-o bigger-130" onclick="btnDeleteOnclick(<%# Eval("FLIGHT_ID") %>);">
+                                </i>
+                            </a>
+                            <a href="#" data-toggle="tooltip" class="bigger-140 show-details-btn" title="Show history">
+                                <i class="ace-icon fa fa-angle-double-down"></i>
+                            </a>
+                        </div>
+                        <asp:Button CausesValidation="false" runat="server" ID="linkSearch" CssClass="iconFind"
+                            Font-Bold="true" OnClick="linkSearch_Click" Visible="false" Text="" Width="40px"
+                            Height="38px"></asp:Button>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="8%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="8%"></ItemStyle>
+                    <HeaderTemplate>
+                        PERMNBR
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum01" runat="server" Width="100%" Visible="false" Text='<%# Eval("PERMNBR") %>'></asp:TextBox>
+                        <div id="col01" runat="server">
+                        <%# Eval("PERMNBR") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        PERMTYPE
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum02" runat="server" Width="100%" Visible="false" Text='<%# Eval("PERMTYPE") %>'></asp:TextBox>
+                        <div id="col02" runat="server">
+                        <%# Eval("PERMTYPE") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        FLIGHT_TYPE
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum03" runat="server" Width="100%" Visible="false" Text='<%# Eval("FLIGHT_TYPE") %>'></asp:TextBox>
+                        <div id="col03" runat="server">
+                        <%# Eval("FLIGHT_TYPE") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        PURPOSE
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum04" runat="server" Width="100%" Visible="false" Text='<%# Eval("PURPOSE") %>'></asp:TextBox>
+                        <div id="col04" runat="server">
+                        <%# Eval("PURPOSE") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        CRAFT_ID
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum05" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("CRAFT_ID") %>'></asp:TextBox>
+                        <div id="col05" runat="server">
+                        <%# Eval("CRAFT_ID") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        MTOW
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum06" runat="server" Width="100%" Visible="false" Text='<%# Eval("MTOW") %>'></asp:TextBox>
+                        <div id="col06" runat="server">
+                        <%# Eval("MTOW") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        VALIDHOURS
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum07" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("VALIDHOURS") %>'></asp:TextBox>
+                        <div id="col07" runat="server">
+                        <%# Eval("VALIDHOURS") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        DATE_OLD
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum08" runat="server" Width="100%" data-date-format="dd/mm/yyyy"
+                            class="date-picker" Visible="false" data-number="true" Text='<%# Eval("DATE_OLD") %>'></asp:TextBox>
+                        <div id="col08" runat="server">
+                        <%# Eval("DATE_OLD", "{0:dd/MM/yyyy}") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        FLIGHTDATE
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum09" runat="server" Width="100%" data-date-format="dd/mm/yyyy"
+                           class="date-picker" Visible="false" data-number="true" Text='<%# Eval("FLIGHTDATE") %>'></asp:TextBox>
+                        <div id="col09" runat="server">
+                        <%# Eval("FLIGHTDATE","{0:dd/MM/yyyy}") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        FLIGHTNBR
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum10" runat="server" Width="100%" Visible="false" Text='<%# Eval("FLIGHTNBR") %>'></asp:TextBox>
+                        <div id="col10" runat="server">
+                        <%# Eval("FLIGHTNBR") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        REGISTRATION
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum11" runat="server" Width="100%" Visible="false" Text='<%# Eval("REGISTRATION") %>'></asp:TextBox>
+                        <div id="col11" runat="server">
+                        <%# Eval("REGISTRATION") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        FROM_AIRP
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum12" runat="server" Width="100%" Visible="false" Text='<%# Eval("FROM_AIRP") %>'></asp:TextBox>
+                        <div id="col12" runat="server">
+                        <%# Eval("FROM_AIRP") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        TO_AIRP
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum13" runat="server" Width="100%" Visible="false" Text='<%# Eval("TO_AIRP") %>'></asp:TextBox>
+                        <div id="col13" runat="server">
+                        <%# Eval("TO_AIRP") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        ETD
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum14" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("ETD") %>'></asp:TextBox>
+                        <div id="col14" runat="server">
+                        <%# Eval("ETD") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        ETA
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum15" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("ETA") %>'></asp:TextBox>
+                        <div id="col15" runat="server">
+                        <%# Eval("ETA") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        ATD
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum16" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("ATD") %>'></asp:TextBox>
+                        <div id="col16" runat="server">
+                        <%# Eval("ATD") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        ATA
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum17" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("ATA") %>'></asp:TextBox>
+                        <div id="col17" runat="server">
+                        <%# Eval("ATA") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        VIA
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum18" runat="server" Width="100%" Visible="false" Text='<%# Eval("VIA") %>'></asp:TextBox>
+                        <div id="col18" runat="server">
+                        <%# Eval("VIA") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        STATUS
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum19" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("STATUS") %>'></asp:TextBox>
+                        <div id="col19" runat="server">
+                        <%# Eval("STATUS") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        LETTERNBR_PK
+                    </HeaderTemplate>
+                    <ItemTemplate>
+
+                        <asp:TextBox ID="txtColum20" runat="server" Width="100%" data-date-format="dd/mm/yyyy"
+                            class="date-picker" Visible="false" data-number="true" Text='<%# Eval("LETTERNBR_PK") %>'></asp:TextBox>
+                        <div id="col20" runat="server">
+                        <%# Eval("LETTERNBR_PK","{0:dd/MM/yyyy}") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        NBR
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum21" runat="server" Width="100%" Visible="false" Text='<%# Eval("NBR") %>'></asp:TextBox>
+                        <div id="col21" runat="server">
+                        <%# Eval("NBR") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        OPER_ID
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum22" runat="server" Width="100%" Visible="false" Text='<%# Eval("OPER_ID") %>'></asp:TextBox>
+                        <div id="col22" runat="server">
+                        <%# Eval("OPER_ID") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        PLAN_STATUS
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum23" runat="server" Width="100%" Visible="false" data-number="true" Text='<%# Eval("PLAN_STATUS") %>'></asp:TextBox>
+                        <div id="col23" runat="server">
+                        <%# Eval("PLAN_STATUS") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        REMARK
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum24" runat="server" Width="100%" Visible="false" Text='<%# Eval("REMARK") %>'></asp:TextBox>
+                        <div id="col24" runat="server">
+                        <%# Eval("REMARK") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        CODE
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum25" runat="server" Width="100%" Visible="false" Text='<%# Eval("CODE") %>'></asp:TextBox>
+                        <div id="col25" runat="server">
+                        <%# Eval("CODE") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+                <asp:TemplateField>
+                    <HeaderStyle HorizontalAlign="Left" Width="5%"></HeaderStyle>
+                    <ItemStyle HorizontalAlign="left" Width="5%"></ItemStyle>
+                    <HeaderTemplate>
+                        DOF
+                    </HeaderTemplate>
+                    <ItemTemplate>
+                        <asp:TextBox ID="txtColum26" runat="server" Width="100%" data-minlenght="1" data-date-format="dd/mm/yyyy"
+                            class="date-picker" Visible="false" data-number="true" Text='<%# Eval("DOF") %>'></asp:TextBox>                       
+                        <div id="col26" runat="server">
+                        <%# Eval("DOF") %></div>
+                    </ItemTemplate>
+                </asp:TemplateField>
+            </Columns>
+        </asp:GridView>
+
+
+
+
+    </div>
+    <div style="text-align: right">
+        <cc1:CustomPaging ID="CustomPaging1" runat="server" NumberViewPage="7" PageSize="10" />
+    </div>
+
+    <div id="popupEditFlightDetail" class="modal fade" role="dialog" tabindex="-1" data-backdrop="false"
+        aria-hidden="true">
+        <div class="modal-dialog wid_90">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" onclick="ClosePopup('popupEditFlightDetail');" class="close"
+                        data-dismiss="modal">
+                        ×</button>
+                    <h4 class="blue bigger">Edit Day Flight</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtPERMNBR" class="mLable control-label">PERMNBR</label>
+                                        <input id="txtPERMNBR" data-control="_Update" maxlength="30" class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtPERMTYPE" class="mLable control-label">PERMTYPE</label>
+                                        <select id="txtPERMTYPE" class="form-control mControl">
+                                            <option value="LD">Landing</option>
+                                            <option value="O/F">Over Flight</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtFLIGHT_TYPE" class="mLable control-label">FLIGHT_TYPE</label>
+                                        <select id="txtFLIGHT_TYPE" class="form-control mControl">
+                                            <option value="SC">SC</option>
+                                            <option value="NO">NO</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= ddlPURPOSE.ClientID %>' class="mLable control-label">
+                                            PURPOSE                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="ddlPURPOSE">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= ddlCRAFT_ID.ClientID %>' class="mLable control-label">
+                                            CRAFT                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="ddlCRAFT_ID">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtMTOW" class="control-label mLable">MTOW</label>
+                                        <input id="txtMTOW" type="text" data-number="true" maxlength="20"
+                                            name="mMTOW"
+                                            class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtVALIDHOURS" class="control-label mLable">VALIDHOURS</label>
+                                        <input id="txtVALIDHOURS" type="text" data-number="true" maxlength="2"
+                                            name="mVALIDHOURS"
+                                            class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtDATE_OLD" class="mLable control-label">DATE_OLD</label>
+                                        <input id="txtDATE_OLD" data-minlenght="1" data-control="_Update" name="mDATE_OLD"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtFLIGHTDATE" class="mLable control-label">FLIGHTDATE</label>
+                                        <input id="txtFLIGHTDATE" data-control="_Update" name="mFLIGHTDATE"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtFLIGHTNBR" class="control-label mLable">FLIGHTNBR</label>
+                                        <input id="txtFLIGHTNBR" data-number="true" data-control="_Update" maxlength="20"
+                                            data-minlenght="1"
+                                            name="mFLIGHTNBR"
+                                            type="text" class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtREGISTRATION" class="mLable control-label">REGISTRATION</label>
+                                        <input id="txtREGISTRATION" maxlength="20" data-control="_Update" data-minlenght="1"
+                                            name="mREGISTRATION"
+                                            class="form-control mControl" type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= ddlFROM_AIRP.ClientID %>' class="mLable control-label">
+                                            FROM_AIRP                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="ddlFROM_AIRP">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= ddlTO_AIRP.ClientID %>' class="mLable control-label">
+                                            TO_AIRP                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="ddlTO_AIRP">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtETD" class="mLable control-label">ETD</label>
+                                        <input id="txtETD" name="mETD" maxlength="1" data-control="_Update"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtETA" class="mLable control-label">
+                                            ETA
+                                        </label>
+                                        <input id="txtETA" name="mETA" maxlength="1" data-control="_Update"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtATD" class="mLable control-label">LASTMODIFY</label>
+                                        <input id="txtATD" name="mATD"
+                                            class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtATA" class="mLable control-label">ATA</label>
+                                        <input id="txtATA" maxlength="100" data-control="_Update" data-minlenght="1" name="mATA"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtVIA" class="mLable control-label">VIA</label>
+                                        <input id="txtVIA" readonly name="mVIA"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtSTATUS" class="mLable control-label">
+                                            STATUS
+                                        </label>
+                                        <input id="txtSTATUS" name="mSTATUS" readonly maxlength="1" data-control="_Update"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtLETTERNBR_PK" class="mLable control-label">LETTERNBR_PK</label>
+                                        <input id="txtLETTERNBR_PK" data-minlenght="1" data-control="_Update" name="mLETTERNBR_PK"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtNBR" class="mLable control-label">NBR</label>
+                                        <input id="txtNBR" maxlength="14" data-control="_Update" name="mNBR"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= ddlOPER_ID.ClientID %>' class="mLable control-label">
+                                            OPER_ID                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="ddlOPER_ID">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtPLAN_STATUS" class="mLable control-label">
+                                            PLAN_STATUS
+                                        </label>
+                                        <input id="txtPLAN_STATUS" name="mPLAN_STATUS" readonly maxlength="1" data-control="_Update"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtREMARK" class="mLable control-label">REMARK</label>
+                                        <input id="txtREMARK" name="mREMARK" readonly
+                                            class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtCODE" class="mLable control-label">CODE</label>
+                                        <input id="txtCODE" maxlength="100" data-control="_Update" data-minlenght="1" name="mCODE"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="txtDOF" class="mLable control-label">DOF</label>
+                                        <input id="txtDOF" data-minlenght="1" data-control="_Update" name="mDOF"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="row" style="text-align: center">
+                        <button id="btnUpdate" type="button" onclick="btnUpdateOnclick();"
+                            class="btn btn-sm btn-primary">
+                            <i class="ace-icon fa fa-check"></i>
+                            Update
+                        </button>
+                        <%--<button id="btnCreate" type="button" style="display: none" onclick="btnCreateOnclick();"
+                            class="btn btn-sm btn-primary">
+                            <i class="ace-icon fa fa-check"></i>
+                            Create
+                        </button>--%>
+                        <button id="btnCancel" type="button" onclick="ClosePopup('popupEditFlightDetail');"
+                            runat="server"
+                            data-dismiss="modal" class="btn btn-sm btn-primary">
+                            <i class="ace-icon fa fa-times"></i>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="MultiAdd" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="headerLabel"
+        aria-hidden="true" data-backdrop="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span><span
+                            class="sr-only">Close</span></button>
+                    <h4 class="modal-title" id="headerLabel">Multi add detail flight</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mPERMNBR" class="mLable control-label">PERMNBR</label>
+                                        <input id="mPERMNBR" data-control="mUpdate" maxlength="30" class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mPERMTYPE" class="mLable control-label">PERMTYPE</label>
+                                        <select id="mPERMTYPE" class="form-control mControl">
+                                            <option value="LD">Landing</option>
+                                            <option value="O/F">Over Flight</option>
+                                        </select>
+                                        <%--<input id="mPERMTYPE" maxlength="3" data-control="mUpdate" data-minlenght="1" class="form-control mControl"
+                                            type="text" />--%>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mFLIGHT_TYPE" class="mLable control-label">FLIGHT_TYPE</label>
+                                        <select id="mFLIGHT_TYPE" class="form-control mControl">
+                                            <option value="SC">SC</option>
+                                            <option value="NO">NO</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= mPURPOSE.ClientID %>' class="mLable control-label">
+                                            PURPOSE                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="mPURPOSE">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= mCRAFT_ID.ClientID %>' class="mLable control-label">
+                                            CRAFT                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="mCRAFT_ID">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mMTOW" class="control-label mLable">MTOW</label>
+                                        <input id="mMTOW" type="text" data-number="true" maxlength="20"
+                                            name="mMTOW"
+                                            class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mVALIDHOURS" class="control-label mLable">VALIDHOURS</label>
+                                        <input id="mVALIDHOURS" type="text" data-number="true" maxlength="2"
+                                            name="mVALIDHOURS"
+                                            class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mDATE_OLD" class="mLable control-label">DATE_OLD</label>
+                                        <input id="mDATE_OLD" data-minlenght="1" data-control="mUpdate" name="mDATE_OLD"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mFLIGHTDATE" class="mLable control-label">FLIGHTDATE</label>
+                                        <input id="mFLIGHTDATE" data-control="mUpdate" name="mFLIGHTDATE"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mFLIGHTNBR" class="control-label mLable">FLIGHTNBR</label>
+                                        <input id="mFLIGHTNBR" data-number="true" data-control="mUpdate" maxlength="20" data-minlenght="1"
+                                            name="mFLIGHTNBR"
+                                            type="text" class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mREGISTRATION" class="mLable control-label">REGISTRATION</label>
+                                        <input id="mREGISTRATION" maxlength="20" data-control="mUpdate" data-minlenght="1"
+                                            name="mREGISTRATION"
+                                            class="form-control mControl" type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= mFROM_AIRP.ClientID %>' class="mLable control-label">
+                                            FROM_AIRP                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="mFROM_AIRP">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= mTO_AIRP.ClientID %>' class="mLable control-label">
+                                            TO_AIRP                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="mTO_AIRP">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mETD" class="mLable control-label">ETD</label>
+                                        <input id="mETD" name="mETD" maxlength="1" data-control="mUpdate"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mETA" class="mLable control-label">
+                                            ETA
+                                        </label>
+                                        <input id="mETA" name="mETA" maxlength="1" data-control="mUpdate"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mATD" class="mLable control-label">LASTMODIFY</label>
+                                        <input id="mATD" name="mATD" readonly
+                                            class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mATA" class="mLable control-label">ATA</label>
+                                        <input id="mATA" maxlength="100" data-control="mUpdate" data-minlenght="1" name="mATA"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mVIA" class="mLable control-label">VIA</label>
+                                        <input id="mVIA" name="mVIA"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mSTATUS" class="mLable control-label">
+                                            STATUS
+                                        </label>
+                                        <input id="mSTATUS" name="mSTATUS" readonly maxlength="1" data-control="mUpdate"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mLETTERNBR_PK" class="mLable control-label">LETTERNBR_PK</label>
+                                        <input id="mLETTERNBR_PK" data-minlenght="1" data-control="mUpdate" name="mLETTERNBR_PK"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mNBR" class="mLable control-label">NBR</label>
+                                        <input id="mNBR" maxlength="14" data-control="mUpdate" name="mNBR"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for='<%= mOPER_ID.ClientID %>' class="mLable control-label">
+                                            OPER_ID                                
+                                        </label>
+                                        <asp:DropDownList runat="server" CssClass="form-control mControl" ID="mOPER_ID">
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mPLAN_STATUS" class="mLable control-label">
+                                            PLAN_STATUS
+                                        </label>
+                                        <input id="mPLAN_STATUS" name="mPLAN_STATUS" maxlength="1" data-control="mUpdate"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mREMARK" class="mLable control-label">REMARK</label>
+                                        <input id="mREMARK" name="mREMARK" type="" class="form-control mControl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-inline" role="form">
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mCODE" class="mLable control-label">CODE</label>
+                                        <input id="mCODE" maxlength="100" data-control="mUpdate" data-minlenght="1" name="mCODE"
+                                            class="form-control mControl"
+                                            type="text" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-horizontal" role="form">
+                                    <div class="form-group">
+                                        <label for="mDOF" class="mLable control-label">DOF</label>
+                                        <input id="mDOF" data-minlenght="1" data-control="mUpdate" name="mDOF"
+                                            data-date-format="dd/mm/yyyy"
+                                            class="inputControl date-picker mControl" />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+
+                    <div class="row">
+                        <div class="form-inline">
+                            <button id="mbtnAddNewFlightDetail" onclick="mbtnAddNewFlightDetailOnclick();"
+                                type="button"
+                                class="btn btn-sm btn-primary">
+                                Add new</button>
+                            <button id="mbtnUpdateFlightDetail" disabled="disabled" onclick="mbtnUpdateFlightDetailOnclick();"
+                                type="button"
+                                class="btn  btn-sm btn-primary">
+                                Update</button>
+                            <button id="mbtnCancelFlightDetail" disabled="disabled" onclick="mbtnCancelFlightDetailOnclick();"
+                                type="button"
+                                class="btn  btn-sm btn-primary">
+                                Cancel</button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="heading">
+                            <h4>List add new</h4>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="tblMultiAdd" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Number
+                                        </th>
+                                        <th></th>
+                                        <th>PERMNBR
+                                        </th>
+                                        <th>PERMTYPE
+                                        </th>
+                                        <th>FLIGHT_TYPE
+                                        </th>
+                                        <th>PURPOSE
+                                        </th>
+                                        <th>CRAFT
+                                        </th>
+                                        <th>MTOW
+                                        </th>
+                                        <th>VALIDHOURS
+                                        </th>
+                                        <th>DATE_OLD
+                                        </th>
+                                        <th>FLIGHTDATE
+                                        </th>
+                                        <th>FLIGHTNBR
+                                        </th>
+                                        <th>REGISTRATION
+                                        </th>
+                                        <th>FROM_AIRP
+                                        </th>
+                                        <th>TO_AIRP
+                                        </th>
+                                        <th>ETD
+                                        </th>
+                                        <th>ETA
+                                        </th>
+                                        <th>ATD
+                                        </th>
+                                        <th>ATA
+                                        </th>
+                                        <th>VIA
+                                        </th>
+                                        <th>STATUS
+                                        </th>
+                                        <th>LETTERNBR_PK
+                                        </th>
+                                        <th>NBR
+                                        </th>
+                                        <th>OPER
+                                        </th>
+                                        <th>PLAN_STATUS
+                                        </th>
+                                        <th>REMARK
+                                        </th>
+                                        <th>CODE
+                                        </th>
+                                        <th>DOF
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../Style/assets/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="../Style/assets/js/bootstrap-datepicker.min.js"></script>
+    <script src="../Scripts/CustomDynamic.js"></script>
+    <script src="../Scripts/validate.js"></script>
+
+
+
+    <script>
+        var IdSelect = '0';
+        var _objRender = JSON.parse('<%= _ObjRender%>');
+        var txtPERMNBR = document.getElementById('txtPERMNBR');
+        var txtPERMTYPE = document.getElementById('txtPERMTYPE');
+        var txtFLIGHT_TYPE = document.getElementById('txtFLIGHT_TYPE');
+        var ddlPURPOSE = document.getElementById('<%= ddlPURPOSE.ClientID%>');
+        var ddlCRAFT_ID = document.getElementById('<%= ddlCRAFT_ID.ClientID%>');
+        var txtMTOW = document.getElementById('txtMTOW');
+        var txtVALIDHOURS = document.getElementById('txtVALIDHOURS');
+        var txtDATE_OLD = document.getElementById('txtDATE_OLD');
+        var txtFLIGHTDATE = document.getElementById('txtFLIGHTDATE');
+        var txtFLIGHTNBR = document.getElementById('txtFLIGHTNBR');
+        var txtREGISTRATION = document.getElementById('txtREGISTRATION');
+        var ddlFROM_AIRP = document.getElementById('<%= ddlFROM_AIRP.ClientID%>');
+        var ddlTO_AIRP = document.getElementById('<%= ddlTO_AIRP.ClientID%>');
+        var txtETD = document.getElementById('txtETD');
+        var txtETA = document.getElementById('txtETA');
+        var txtATD = document.getElementById('txtATD');
+        var txtATA = document.getElementById('txtATA');
+        var txtVIA = document.getElementById('txtVIA');
+        var txtSTATUS = document.getElementById('txtSTATUS');
+        var txtLETTERNBR_PK = document.getElementById('txtLETTERNBR_PK');
+        var txtNBR = document.getElementById('txtNBR');
+        var ddlOPER_ID = document.getElementById('<%= ddlOPER_ID.ClientID%>');
+        var txtPLAN_STATUS = document.getElementById('txtPLAN_STATUS');
+        var txtREMARK = document.getElementById('txtREMARK');
+        var txtCODE = document.getElementById('txtCODE');
+        var txtDOF = document.getElementById('txtDOF');
+
+        function ReadInfoFlightDetail(data) {
+            var obj = JSON.parse(data);
+            txtPERMNBR.value = obj['PERMNBR'];
+            setSelectedValue(txtPERMTYPE.id, obj['PERMTYPE']);
+            setSelectedValue(txtFLIGHT_TYPE.id, obj['FLIGHT_TYPE']);
+            setSelectedValue(ddlPURPOSE.id, obj['PURPOSE']);
+            setSelectedValue(ddlCRAFT_ID.id, obj['CRAFT_ID']);
+            txtMTOW.value = obj['MTOW'];
+            txtVALIDHOURS.value = obj['VALIDHOURS'];
+            txtDATE_OLD.value = obj['DATE_OLD'] == null ? null : obj['DATE_OLD']['DateTime'];
+            txtFLIGHTDATE.value = obj['FLIGHTDATE'] == null ? null : obj['FLIGHTDATE']['DateTime'];
+            txtFLIGHTNBR.value = obj['FLIGHTNBR'];
+            txtREGISTRATION.value = obj['REGISTRATION'];
+            setSelectedValue(ddlFROM_AIRP.id, obj['FROM_AIRP']);
+            setSelectedValue(ddlTO_AIRP.id, obj['TO_AIRP']);
+            txtETD.value = obj['ETD'];
+            txtETA.value = obj['ETA'];
+            txtATD.value = obj['ATD'];
+            txtATA.value = obj['ATA'];
+            txtVIA.value = obj['VIA'];
+            txtSTATUS.value = obj['STATUS'];
+            txtLETTERNBR_PK.value = obj['LETTERNBR_PK'] == null ? null : obj['LETTERNBR_PK']['DateTime'];
+            txtNBR.value = obj['NBR'];
+            setSelectedValue(ddlOPER_ID.id, obj['OPER_ID']);
+            txtPLAN_STATUS.value = obj['PLAN_STATUS'];
+            txtREMARK.value = obj['REMARK'];
+            txtCODE.value = obj['CODE'];
+            txtDOF.value = obj['DOF'] == null ? null : obj['DOF']['DateTime'];
+            checkCustomValidate();
+        }
+        function GetObjectInfo() {
+            var _obj = _objRender;
+            _obj["FLIGHT_ID"] = IdSelect;
+            _obj['PERMNBR'] = txtPERMNBR.value;
+            _obj['PERMTYPE'] = txtPERMTYPE.value;
+            _obj['FLIGHT_TYPE'] = txtFLIGHT_TYPE.value;
+            _obj['PURPOSE'] = ddlPURPOSE.value;
+            _obj['CRAFT_ID'] = ddlCRAFT_ID.value;
+            _obj['MTOW'] = txtMTOW.value;
+            _obj['VALIDHOURS'] = txtVALIDHOURS.value;
+            _obj['DATE_OLD'] = txtDATE_OLD.value;
+            _obj['FLIGHTDATE'] = txtFLIGHTDATE.value;
+            _obj['FLIGHTNBR'] = txtFLIGHTNBR.value;
+            _obj['REGISTRATION'] = txtREGISTRATION.value;
+            _obj['FROM_AIRP'] = ddlFROM_AIRP.value;
+            _obj['TO_AIRP'] = ddlTO_AIRP.value;
+            _obj['ETD'] = txtETD.value;
+            _obj['ETA'] = txtETA.value;
+            _obj['ATD'] = txtATD.value;
+            _obj['ATA'] = txtATA.value;
+            _obj['VIA'] = txtVIA.value;
+            _obj['STATUS'] = txtSTATUS.value;
+            _obj['LETTERNBR_PK'] = txtLETTERNBR_PK.value;
+            _obj['NBR'] = txtNBR.value;
+            _obj['OPER_ID'] = ddlOPER_ID.value;
+            _obj['PLAN_STATUS'] = txtPLAN_STATUS.value;
+            _obj['REMARK'] = txtREMARK.value;
+            _obj['CODE'] = txtCODE.value;
+            _obj['DOF'] = txtDOF.value;
+            _obj["LASTUSER"] = '<%= _user.UserID.ToString()%>';
+            return _obj;
+        }
+        function ShowpopupEditFlightDetail(id) {
+            IdSelect = id;
+            GetArgWithPostBack(id + '_____GetOneObject', 'GetOneObject');
+        }
+        function ShowDetailNoEdit(id) {
+            GetArgWithPostBack(id + '_____GetOneObjectNoUpdate', 'GetOneObjectNoUpdate');
+        }
+        function ClearValue() {
+            txtMTOW.value = '';
+            txtREMARK.value = '';
+            txtREGISTRATION.value = '';
+            txtFLIGHTNBR.value = '';
+            txtETD.value = '';
+            txtVIA.value = '';
+            txtREMARK.value = '';
+            txtSTATUS.value = '';
+        }
+        function ClosePopup(elem) {
+            ClearValue();
+        }
+        function ShowPopup(elem) {
+            //document.getElementById(elem).className = "modal cssShow";
+        }
+
+        //    function btnCreateOnclick() {
+        //        GetArgWithPostBack(JSON.stringify(GetObjectInfo()) + '_____btnCreateOnclick',
+        //'btnCreateOnclick');
+        //    }
+        function btnDeleteOnclick(id) {
+            var result = confirm("Do you want delete?");
+            if (result)
+                GetArgWithPostBack(id + '_____btnDeleteOnclick', 'btnDeleteOnclick');
+        }
+        function btnUpdateOnclick() {
+            if (IdSelect != '') {
+                if (checkValidCustomMinlenght('_Update'))
+                    GetArgWithPostBack(JSON.stringify(GetObjectInfo()) + '_____btnUpdateOnclick',
+        'btnUpdateOnclick');
+            }
+            else {
+                alert('Please select Flight');
+                return;
+            }
+        }
+        function LoadDataGrid() {
+            GetArgWithPostBack('LoadDataGrid_____LoadDataGrid', 'LoadDataGrid');
+        }
+        function DisplayResult(resulf, context) {
+            if (context == 'GetOneObject') {
+                if (resulf != '') {
+                    ReadInfoFlightDetail(resulf);
+                }
+            }
+            if (context == 'GetOneObjectNoUpdate') {
+                if (resulf != '') {
+                    ReadInfoFlightDetail(resulf);
+                    //document.getElementById('popupEditFlightDetail').className = "modal cssShow";
+                    btnUpdate.setAttribute('style', 'display: none');
+                }
+            }
+            if (context == 'btnUpdateOnclick') {
+                alert(resulf);
+                LoadDataGrid();
+            }
+            if (context == 'btnDeleteOnclick') {
+                alert(resulf);
+                LoadDataGrid();
+            }
+            //if (context == 'btnCreateOnclick') {
+            //    alert(resulf);
+            //    LoadDataGrid();
+            //}
+            if (context == 'mbtnAddNewFlightDetailOnclick') {
+                if (resulf != '-1' && resulf != '-99') {
+                    alert('Insert sussess!');
+                    mAddrowDynamic(resulf);
+                } else alert('Insert error!');
+            }
+            if (context == 'mEditFlightDetailByID') {
+                if (resulf != '') {
+                    mReadInfoFlightDetail(resulf);
+                    mbtnAddNewFlightDetail.setAttribute('disabled', 'disabled');
+                    mbtnCancelFlightDetail.removeAttribute('disabled');
+                    mbtnUpdateFlightDetail.removeAttribute('disabled');
+                }
+            }
+            if (context == 'mDeleteRowOnclick') {
+                if (resulf != 'OK') {
+                    alert("Delete error!");
+                }
+                else {
+                    var mtblMultiAdd = document.getElementById('tblMultiAdd');
+                    document.getElementById('tr' + numberRowDelete).remove();
+                    if (mtblMultiAdd.tBodies[0].rows.length == 0) {
+                        mtblMultiAdd.tBodies[0].appendChild(mdefaulfRow);
+                        iRowAdd = 1;
+                    }
+                }
+            }
+            if (context == 'mShowDetail') {
+                mReadInfoFlightDetail(resulf);
+                checkCustomValidate();
+                mbtnAddNewFlightDetail.setAttribute('disabled', 'disabled');
+                mbtnUpdateFlightDetail.removeAttribute('disabled');
+                mbtnCancelFlightDetail.removeAttribute('disabled');
+            }
+            if (context == 'RestoreHistory') {
+                if (resulf != 'NOK') {
+                    alert('Restore sussess!');
+                    LoadDataGrid();
+                } else alert('Restore error!');
+            }
+            if (context == 'mbtnUpdateFlightDetailOnclick') {
+                if (resulf != "OK") {
+                    alert("Update error!");
+                }
+                else {
+                    alert("Update sussess!");
+                    mUpdateValueUpdate();
+                }
+            }
+            if (context == 'LoadDataGrid') {
+                document.getElementById('<%=grdSource.ClientID%>').innerHTML = resulf;
+        }
+    }
+    function RestoreHistory(id, ver, UserID) {
+        GetArgWithPostBack(id + phanCach + ver + phanCach + UserID + '_____RestoreHistory', 'RestoreHistory');
+    }
+    $('.show-details-btn').on('click', function (e) {
+        e.preventDefault();
+        $(this).closest('tr').next().toggleClass('open');
+        $(this).find(ace.vars['.icon']).toggleClass('fa-angle-double-down').toggleClass('fa-angle-double-up');
+    });
+    </script>
+
+    <%--Script for multi add--%>
+    <script>
+        var idIndetiny = 1;
+        var numberRowDelete = 0;
+        var iRowAdd = 1; // 0 - no add; 1 add row defaulf
+        var iRowSelect = '';
+        var mdefaulfRow = document.getElementById('tblMultiAdd').tBodies[0].rows[0];
+        var mbtnCancelFlightDetail = document.getElementById('mbtnCancelFlightDetail');
+        var mbtnUpdateFlightDetail = document.getElementById('mbtnUpdateFlightDetail');
+        var mbtnAddNewFlightDetail = document.getElementById('mbtnAddNewFlightDetail');
+        var mTable = document.getElementById('tblMultiAdd');
+
+        var mPERMNBR = document.getElementById('mPERMNBR');
+        var mPERMTYPE = document.getElementById('mPERMTYPE');
+        var mFLIGHT_TYPE = document.getElementById('mFLIGHT_TYPE');
+        var mPURPOSE = document.getElementById('<%=mPURPOSE.ClientID%>');
+        var mCRAFT_ID = document.getElementById('<%=mCRAFT_ID.ClientID%>');
+        var mMTOW = document.getElementById('mMTOW');
+        var mVALIDHOURS = document.getElementById('mVALIDHOURS');
+        var mDATE_OLD = document.getElementById('mDATE_OLD');
+        var mFLIGHTDATE = document.getElementById('mFLIGHTDATE');
+        var mFLIGHTNBR = document.getElementById('mFLIGHTNBR');
+        var mREGISTRATION = document.getElementById('mREGISTRATION');
+        var mFROM_AIRP = document.getElementById('<%= mFROM_AIRP.ClientID%>');
+        var mTO_AIRP = document.getElementById('<%= mTO_AIRP.ClientID%>');
+        var mETD = document.getElementById('mETD');
+        var mETA = document.getElementById('mETA');
+        var mATD = document.getElementById('mATD');
+        var mATA = document.getElementById('mATA');
+        var mVIA = document.getElementById('mVIA');
+        var mSTATUS = document.getElementById('mSTATUS');
+        var mLETTERNBR_PK = document.getElementById('mLETTERNBR_PK');
+        var mNBR = document.getElementById('mNBR');
+        var mOPER_ID = document.getElementById('<%= mOPER_ID.ClientID%>');
+        var mPLAN_STATUS = document.getElementById('mPLAN_STATUS');
+        var mREMARK = document.getElementById('mREMARK');
+        var mCODE = document.getElementById('mCODE');
+        var mDOF = document.getElementById('mDOF');
+
+
+        function mGetObjectInfo() {
+            var _obj = _objRender;
+            _obj['FLIGHT_ID'] = IdSelect;
+            //_obj['PERM_ID'] = '<%= IDCHA %>';
+            _obj['PERMNBR'] = mPERMNBR.value;
+            _obj['PERMTYPE'] = mPERMTYPE.value;
+            _obj['FLIGHT_TYPE'] = mFLIGHT_TYPE.value;
+            _obj['PURPOSE'] = mPURPOSE.value;
+            _obj['CRAFT_ID'] = mCRAFT_ID.value;
+            _obj['MTOW'] = mMTOW.value;
+            _obj['VALIDHOURS'] = mVALIDHOURS.value;
+            _obj['DATE_OLD'] = mDATE_OLD.value;
+            _obj['FLIGHTDATE'] = mFLIGHTDATE.value;
+            _obj['FLIGHTNBR'] = mFLIGHTNBR.value;
+            _obj['REGISTRATION'] = mREGISTRATION.value;
+            _obj['FROM_AIRP'] = mFROM_AIRP.value;
+            _obj['TO_AIRP'] = mTO_AIRP.value;
+            _obj['ETD'] = mETD.value;
+            _obj['ETA'] = mETA.value;
+            _obj['ATD'] = mATD.value;
+            _obj['ATA'] = mATA.value;
+            _obj['VIA'] = mVIA.value;
+            _obj['STATUS'] = mSTATUS.value;
+            _obj['LETTERNBR_PK'] = mLETTERNBR_PK.value;
+            _obj['NBR'] = mNBR.value;
+            _obj['OPER_ID'] = mOPER_ID.value;
+            _obj['PLAN_STATUS'] = mPLAN_STATUS.value;
+            _obj['REMARK'] = mREMARK.value;
+            _obj['CODE'] = mCODE.value;
+            _obj['DOF'] = mDOF.value;
+            return _obj;
+        }
+
+        function mbtnAddNewFlightDetailOnclick() {
+            if (checkValidCustomMinlenght('mUpdate'))
+                GetArgWithPostBack(JSON.stringify(mGetObjectInfo()) + '_____mbtnAddNewFlightDetailOnclick', 'mbtnAddNewFlightDetailOnclick');
+        }
+
+        function mEditFlightDetailByID(id) {
+            iRowSelect = 'tr' + id;
+            GetArgWithPostBack(id + '_____mEditFlightDetailByID', 'mEditFlightDetailByID');
+        }
+        function mbtnCancelFlightDetailOnclick() {
+            mbtnAddNewFlightDetail.removeAttribute('disabled');
+            mbtnCancelFlightDetail.setAttribute('disabled', 'disabled');
+            mbtnUpdateFlightDetail.setAttribute('disabled', 'disabled');
+            mClearValueControl();
+            iRowSelect = '';
+        }
+        function mbtnUpdateFlightDetailOnclick() {
+            if (checkValidCustomMinlenght('mUpdate'))
+                GetArgWithPostBack(JSON.stringify(mGetObjectInfo()) + '_____mbtnUpdateFlightDetailOnclick', 'mbtnUpdateFlightDetailOnclick');
+        }
+        function mAddrowDynamic(id) {
+            var new_row = mdefaulfRow.cloneNode(true);
+            new_row.cells[0].innerHTML = idIndetiny;
+            new_row.cells[1].innerHTML = '<div class="action-buttons"><a title="Edit"><i class="ace-icon fa fa-pencil bigger-130" onclick="mShowDetail(' + id + ');"></i></a><a title="Delete"><i class="ace-icon fa fa-trash-o bigger-130" onclick="mDeleteRowOnclick(' + id + ')"></i></a></div>';
+
+            new_row.cells[2].innerHTML = mPERMNBR.value;
+            new_row.cells[3].innerHTML = mPERMTYPE.options[mPERMTYPE.selectedIndex].text;;
+            new_row.cells[4].innerHTML = mFLIGHT_TYPE.options[mFLIGHT_TYPE.selectedIndex].text;
+            new_row.cells[5].innerHTML = mPURPOSE.options[mPURPOSE.selectedIndex].text;
+            new_row.cells[6].innerHTML = mCRAFT_ID.options[mCRAFT_ID.selectedIndex].text;
+            new_row.cells[7].innerHTML = mMTOW.value;
+            new_row.cells[8].innerHTML = mVALIDHOURS.value;
+            new_row.cells[9].innerHTML = mDATE_OLD.value;
+            new_row.cells[10].innerHTML = mFLIGHTDATE.value;
+            new_row.cells[11].innerHTML = mFLIGHTNBR.value;
+            new_row.cells[12].innerHTML = mREGISTRATION.value;
+            new_row.cells[13].innerHTML = mFROM_AIRP.options[mFROM_AIRP.selectedIndex].text;
+            new_row.cells[14].innerHTML = mTO_AIRP.options[mTO_AIRP.selectedIndex].text;
+            new_row.cells[15].innerHTML = mETD.value;
+            new_row.cells[16].innerHTML = mETA.value;
+            new_row.cells[17].innerHTML = mATD.value;
+            new_row.cells[18].innerHTML = mATA.value;
+            new_row.cells[19].innerHTML = mVIA.value;
+            new_row.cells[20].innerHTML = mSTATUS.value;
+            new_row.cells[21].innerHTML = mLETTERNBR_PK.value;
+            new_row.cells[22].innerHTML = mNBR.value;
+            new_row.cells[23].innerHTML = mOPER_ID.options[mOPER_ID.selectedIndex].text;
+            new_row.cells[24].innerHTML = mPLAN_STATUS.value;
+            new_row.cells[25].innerHTML = mREMARK.value;
+            new_row.cells[26].innerHTML = mCODE.value;
+            new_row.cells[27].innerHTML = mDOF.value;
+            new_row.id = 'tr' + id;
+            tblMultiAdd.tBodies[0].appendChild(new_row);
+            if (iRowAdd == 1)
+                tblMultiAdd.tBodies[0].rows[0].remove();
+            idIndetiny++;
+            iRowAdd = 0;
+        }
+        function mClearValueControl() {
+            mETA.value = ''; mETD.value = ''; mFLIGHTNBR.value = '';
+            mMTOW.value = '';
+            mREGISTRATION.value = '';
+            mVIA.value = ''; mREMARK.value = '';
+            iRowSelect = '';
+        }
+        function mDeleteRowOnclick(id) {
+            var rs = confirm('Do you want delete row?');
+            if (rs) {
+                numberRowDelete = id;
+                GetArgWithPostBack(id + '_____mDeleteRowOnclick', 'mDeleteRowOnclick');
+            }
+        }
+        function mReadInfoFlightDetail(data) {
+            var obj = JSON.parse(data);
+            mPERMNBR.value = obj['PERMNBR'];
+            setSelectedValue(mPERMTYPE.id, obj['PERMTYPE']);
+            setSelectedValue(mFLIGHT_TYPE.id, obj["FLIGHT_TYPE"]);
+            setSelectedValue(mPURPOSE.id, obj['PURPOSE']);
+            setSelectedValue(mCRAFT_ID.id, obj['CRAFT_ID']);
+            mMTOW.value = obj['MTOW'];
+            mVALIDHOURS.value = obj['VALIDHOURS'];
+            mDATE_OLD.value = obj['DATE_OLD'] == null ? null : obj['DATE_OLD']['DateTime'];
+            mFLIGHTDATE.value = obj['FLIGHTDATE'] == null ? null : obj['FLIGHTDATE']['DateTime'];
+            mFLIGHTNBR.value = obj['FLIGHTNBR'];
+            mREGISTRATION.value = obj['REGISTRATION'];
+            setSelectedValue(mFROM_AIRP.id, obj['FROM_AIRP']);
+            setSelectedValue(mTO_AIRP.id, obj['TO_AIRP']);
+            mETD.value = obj['ETD'];
+            mETA.value = obj['ETA'];
+            mATD.value = obj['ATD'];
+            mATA.value = obj['ATA'];
+            mVIA.value = obj['VIA'];
+            mSTATUS.value = obj['STATUS'];
+            mLETTERNBR_PK.value = obj['LETTERNBR_PK'] == null ? null : obj['LETTERNBR_PK']['DateTime'];
+            mNBR.value = obj['NBR'];
+            setSelectedValue(mOPER_ID.id, obj['OPER_ID']);
+            mPLAN_STATUS.value = obj['PLAN_STATUS'];
+            mREMARK.value = obj['REMARK'];
+            mCODE.value = obj['CODE'];
+            mDOF.value = obj['DOF'] == null ? null : obj['DOF']['DateTime'];
+            checkCustomValidate();
+        }
+        function mShowDetail(id) {
+            iRowSelect = 'tr' + id;
+            IdSelect = id;
+            GetArgWithPostBack(id + '_____mShowDetail', 'mShowDetail');
+        }
+        function mUpdateValueUpdate() {
+            var uRow = document.getElementById(iRowSelect);
+            new_row.cells[2].innerHTML = mPERMNBR.value;
+            new_row.cells[3].innerHTML = mPERMTYPE.options[mPERMTYPE.selectedIndex].text;;
+            new_row.cells[4].innerHTML = mFLIGHT_TYPE.options[mFLIGHT_TYPE.selectedIndex].text;
+            new_row.cells[5].innerHTML = mPURPOSE.options[mPURPOSE.selectedIndex].text;
+            new_row.cells[6].innerHTML = mCRAFT_ID.options[mCRAFT_ID.selectedIndex].text;
+            new_row.cells[7].innerHTML = mMTOW.value;
+            new_row.cells[8].innerHTML = mVALIDHOURS.value;
+            new_row.cells[9].innerHTML = mDATE_OLD.value;
+            new_row.cells[10].innerHTML = mFLIGHTDATE.value;
+            new_row.cells[11].innerHTML = mFLIGHTNBR.value;
+            new_row.cells[12].innerHTML = mREGISTRATION.value;
+            new_row.cells[13].innerHTML = mFROM_AIRP.options[mFROM_AIRP.selectedIndex].text;
+            new_row.cells[14].innerHTML = mTO_AIRP.options[mTO_AIRP.selectedIndex].text;
+            new_row.cells[15].innerHTML = mETD.value;
+            new_row.cells[16].innerHTML = mETA.value;
+            new_row.cells[17].innerHTML = mATD.value;
+            new_row.cells[18].innerHTML = mATA.value;
+            new_row.cells[19].innerHTML = mVIA.value;
+            new_row.cells[20].innerHTML = mSTATUS.value;
+            new_row.cells[21].innerHTML = mLETTERNBR_PK.value;
+            new_row.cells[22].innerHTML = mNBR.value;
+            new_row.cells[23].innerHTML = mOPER_ID.options[mOPER_ID.selectedIndex].text;
+            new_row.cells[24].innerHTML = mPLAN_STATUS.value;
+            new_row.cells[25].innerHTML = mREMARK.value;
+            new_row.cells[26].innerHTML = mCODE.value;
+            new_row.cells[27].innerHTML = mDOF.value;
+        }
+    </script>
+    <%--/-Script for multi add--%>
+</asp:Content>

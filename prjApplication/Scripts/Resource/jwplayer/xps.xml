@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skin version="2.0" name="godtv" author="">
+	<components>
+		<component name="controlbar">
+			<settings>
+				<setting name="margin" value="0"/>
+				<setting name="font" value="_sans"/>
+				<setting name="fontsize" value="12"/>
+				<setting name="fontcolor" value="ffffff"/>
+				<setting name="fontstyle" value="normal"/>
+				<setting name="fontweight" value="normal"/>
+				<setting name="backgroundcolor" value="0xFFFFFF"/>
+			</settings>
+
+			<layout>
+				<group position="left">
+					<button name="play"/>
+					<text name="elapsed"/>
+				</group>
+				<group position="center">
+					<slider name="time"/>
+				</group>
+				<group position="right">
+					<text name="duration"/>
+					<button name="blank"/>
+					<button name="mute"/>
+					<button name="volume"/>
+					<button name="fullscreen"/>
+				</group>
+			</layout>
+
+			<elements>
+				<element name="background" src="bg.png"/>
+
+				<element name="playButton" src="play.png"/>
+				<element name="playButtonOver" src="playOver.png"/>
+
+				<element name="pauseButton" src="pause.png"/>
+				<element name="pauseButtonOver" src="pauseOver.png"/>
+
+				 <element name="prevButton" src="prev.png"/>
+				 <element name="prevButtonOver" src="prevOver.png"/>
+				 <element name="nextButton" src="next.png"/>
+				 <element name="nextButtonOver" src="nextOver.png"/>
+
+
+				<element name="timeSliderRail" src="timeRail.png"/>
+				<element name="timeSliderBuffer" src="timeBuffer.png"/>
+				<element name="timeSliderProgress" src="timeProgress.png"/>
+				<element name="timeSliderThumb" src="timeThumb.png"/>
+
+				<element name="fullscreenButton" src="fullScreen.png"/>
+				<element name="fullscreenButtonOver" src="fullScreenOver.png"/>
+				<element name="normalscreenButton" src="normalScreen.png"/>
+				<element name="normalscreenButtonOver" src="normalScreenOver.png"/>
+
+				<element name="muteButton" src="mute.png"/>
+				<element name="muteButtonOver" src="muteOver.png"/>
+
+				<element name="unmuteButton" src="unMute.png"/>
+				<element name="unmuteButtonOver" src="unMuteOver.png"/>
+
+				<element name="volumeSliderRail" src="volumeRails.png"/>
+				<element name="volumeSliderBuffer" src="volumeBuffer.png"/>
+				<element name="volumeSliderProgress" src="volumeProgress.png"/>
+				<element name="volumeSliderThumb" src="volumeSliderThumb.png"/>
+
+				<element name="blankButton" src="blankButton.png"/>
+				<element name="blankButtonOver" src="blankButton.png"/>
+
+			</elements>
+
+		</component>
+
+		<component name="dock">
+			<elements>
+				<element name="button" src="button.png"/>
+				<element name="buttonOver" src="buttonOver.png"/>
+			</elements>
+		</component>
+		
+		<component name="vplugin">
+			<elements>
+				<element name="vlight" src="vlight.png"/>
+				<element name="vsub" src="vsub.png"/>
+				<element name="vmenu" src="vmenu.png"/>
+				<element name="vresize" src="vresize.png"/>
+			</elements>
+		</component>
+		
+		<component name="display">
+		   <settings>
+			  <settings>
+				 <setting name="backgroundcolor" value="0x000000"/>
+
+				 <setting name="bufferrotation" value="10"/>
+				 <setting name="bufferinterval" value="10"/>
+
+			  </settings>
+		   </settings>
+		   <elements>
+		   	 <element name="playIcon" src="play.png"/>
+		   	 <element name="muteIcon" src="mute.png"/>
+		   	 <element name="bufferIcon" src="buffer.png"/>
+			 <element name="playIconOver" src="playIconOver.png"/>
+
+		   </elements>
+		</component>
+
+
+
+	</components>
+</skin>

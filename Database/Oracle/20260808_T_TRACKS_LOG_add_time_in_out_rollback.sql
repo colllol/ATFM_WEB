@@ -1,0 +1,20 @@
+-- Rollback hai cot moc thoi gian cham FIR.
+-- Chi chay khi chac chan cac cot TIME_IN/TIME_OUT khong con duoc su dung.
+DECLARE
+    v_count PLS_INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO v_count
+      FROM ALL_TAB_COLUMNS
+     WHERE OWNER = 'ATFM' AND TABLE_NAME = 'T_TRACKS_LOG' AND COLUMN_NAME = 'TIME_OUT';
+    IF v_count > 0 THEN
+        EXECUTE IMMEDIATE 'ALTER TABLE ATFM.T_TRACKS_LOG DROP COLUMN TIME_OUT';
+    END IF;
+
+    SELECT COUNT(*) INTO v_count
+      FROM ALL_TAB_COLUMNS
+     WHERE OWNER = 'ATFM' AND TABLE_NAME = 'T_TRACKS_LOG' AND COLUMN_NAME = 'TIME_IN';
+    IF v_count > 0 THEN
+        EXECUTE IMMEDIATE 'ALTER TABLE ATFM.T_TRACKS_LOG DROP COLUMN TIME_IN';
+    END IF;
+END;
+/

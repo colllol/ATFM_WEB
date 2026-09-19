@@ -1,0 +1,235 @@
+﻿body
+{
+	margin: 0px;
+	padding: 0px 0px 0px 0px;
+	text-align:center;
+	font-size:12px;
+	font-family:arial;
+}
+
+#page
+{
+	width: 824px;
+	margin: 0 auto;	
+	text-align:left;
+	line-height:28px;
+}
+#footer
+{
+	background:transparent url('../Images/footer_bg.png') repeat-x scroll left top;
+	display:inline; 
+	text-align:center;
+	height:150px;
+	width:100%;
+	float:left;
+	color:#393a3a;	
+	padding-top:5px
+}
+.top_bg_link
+{
+	color:#004478;
+	font:bold 11px Arial, Helvetica, sans-serif; 
+	text-decoration:underline;
+	line-height:28px;
+	float:right;
+	margin-left:5px;
+}
+.top_bg_link:hover
+{
+	color:#004478;
+	font:bold 11px Arial, Helvetica, sans-serif; 
+	text-decoration:underline;
+	line-height:28px;
+	float:right;
+	margin-left:5px;
+}
+.ImgHelp
+{
+	margin-top:2px;
+	float:right;
+	margin-left:5px;
+}
+#logoVCSS
+{
+	float:left;
+	width:824px;
+	height:94px;
+	background-color:white;
+}
+.ImgVCSSLogo
+{
+	float:left;
+}
+#logohpctext
+{
+	float:left;
+	height:53px;
+	color:#182535;
+	font-size:18px;
+	font-family:Arial;
+	padding-top:41px;
+}
+#left_content
+{
+	float:left;
+	width:562px;
+	height:auto;
+}
+#right_content
+{
+	float:left;
+	width:240px;
+	height:373px;
+	margin-left:20px;
+	display:inline-block;    
+    border:1px solid #cccccc;
+    background:transparent url('../Images/login_bg.png') repeat-x scroll left top;
+	border-radius: 6px;
+}
+#right_content_bg
+{
+	float:left;
+	width:240px;
+	height:373px;
+	background:transparent url('../Images/login_bg.png') repeat-x scroll left top;
+	border:solid 1px #b5dae3;	
+}
+#ImgVCSSLink
+{
+	float:left;
+}
+.ImgIco
+{
+	float:left;
+	margin-left:5px;
+	margin-top:10px;
+}
+.TextIco
+{
+	float:left;
+	margin-left:5px;
+	margin-top:15px;
+}
+.Login_text
+{
+	float:left;
+	font-size:16px;
+	font-weight:bold;
+	color:#393a3a;
+	margin-top:18px;
+	margin-left:27px;
+}
+.PnlLogin
+{
+	float:left;
+}
+#Content
+{
+	float:left;
+	width:824px;
+}
+.line
+{
+	float:right;
+	margin-left:5px;
+}
+.lblAdmin
+{
+	color:#004478;
+	font:bold 11px Arial, Helvetica, sans-serif; 
+	text-decoration:underline;
+	line-height:27px;
+	float:right;
+	margin-left:5px;
+}
+.logout
+{
+	color:#004478;
+	font:bold 11px Arial, Helvetica, sans-serif; 
+	text-decoration:underline;
+	line-height:27px;
+	float:right;
+	margin-left:5px;
+}
+.floatleft
+{
+	float:left;
+	margin-top:2px;
+}
+.floatleft2
+{
+	float:left;
+	margin-left:5px;
+}
+.ImgAlbumThumb
+{
+	width:120px;
+	height:120px;
+}
+.btnLogonCSS
+{
+	border-width: 0px;
+}
+.hpcError
+{
+	color:Red;
+	font-size:12px;
+}
+
+.content {
+	height: 100%;
+	position: relative;
+	overflow: auto;
+	z-index: 0; 
+}
+
+.background {
+	position: absolute;
+	z-index: -1;
+	top: 0;
+	bottom: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.top_block {
+	width: 100%;
+	display: block; 
+}
+
+.bottom_block {
+	position: absolute;
+	width: 100%;
+	display: block;
+	bottom: 0; 
+}
+
+.left_block {
+	display: block;
+	float: left; 
+}
+
+.right_block {
+	display: block;
+	float: right; 
+}
+
+.center_block {
+	display: block;
+	width: auto; 
+}
+
+.top_bg {
+	width: 100%;
+	height: 28px;
+	background-color: #9999ff;
+	background:transparent url('../Images/top_bg.png') repeat-x scroll left top;
+}
+
+.block_2 {
+	width: 100%;
+	height: 100%;
+	padding-top:40px;
+	padding-bottom:120px;
+	background-color: #ffffff;
+}

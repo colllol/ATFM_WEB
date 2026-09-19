@@ -1,0 +1,374 @@
+FUNCTION GenFromTable_day_flightsNotAll
+(
+    on_day         VARCHAR2,
+    over           VARCHAR2 DEFAULT NULL,
+    p_ListFlightId OUT CLOB
+)
+RETURN CLOB
+IS
+    TYPE day_flights_c IS REF CURSOR;
+    c day_flights_c;
+
+    TYPE rc1 IS RECORD
+    (
+        flight_id       NUMBER,
+        ma              VARCHAR2(240),
+        registration    VARCHAR2(30),
+        flightnbr       VARCHAR2(20),
+        from_airp       VARCHAR2(4),
+        to_airp         VARCHAR2(4),
+        etd             VARCHAR2(6),
+        eta             VARCHAR2(6),
+        via             VARCHAR2(700),
+        remark          VARCHAR2(1000),
+        route           VARCHAR2(2000),
+        purpose         VARCHAR2(2000),
+        max_ma          NUMBER,
+        max_registration NUMBER
+    );
+
+    rc rc1;
+
+    v_flight_date DATE;
+    v_over        VARCHAR2(20);
+    v_result      CLOB;
+    v_row         VARCHAR2(32767);
+    v_route       VARCHAR2(2000);
+    v_remark      VARCHAR2(4000);
+    v_error_code  NUMBER;
+    v_error_msg   VARCHAR2(2000);
+    v_row_number  NUMBER := 0;
+    v_ma_length   NUMBER := 1;
+    v_reg_length  NUMBER := 1;
+BEGIN
+    p_ListFlightId := NULL;
+
+    /*
+      on_day trước đây được so sánh bằng TO_CHAR(FLIGHTDATE), khiến Oracle
+      không sử dụng hiệu quả index bắt đầu bằng FLIGHTDATE. Chuyển tham số
+      sang DATE đúng một lần và lọc theo khoảng nửa mở [ngày, ngày + 1).
+    */
+    v_flight_date := TO_DATE(TRIM(on_day), 'FXDD/MM/YYYY');
+    v_over := UPPER(TRIM(over));
+
+    /*
+      Một truy vấn chung thay cho ba truy vấn gần giống nhau ở mỗi nhánh:
+      - Cursor lấy dữ liệu.
+      - MAX độ dài loại tàu bay.
+      - MAX độ dài đăng ký.
+
+      Hai giá trị MAX được tính bằng analytic function trên đúng tập kết quả.
+
+      T_SP_ROUTE/priority và T_FLYPLAN_DETAIL/sttrp được loại bỏ hoàn toàn.
+      Trên dữ liệu hiện tại hai bảng đều rỗng nên priority và sttrp chỉ trả
+      các giá trị mặc định, không làm thay đổi thứ tự thực tế khi loại bỏ.
+    */
+    OPEN c FOR
+        SELECT
+            a.FLIGHT_ID,
+            COALESCE(a.CRAFT_TYPE, ct.MA) AS MA,
+            a.REGISTRATION,
+            REGEXP_REPLACE(
+                a.FLIGHTNBR,
+                '[^0-9A-Za-z]',
+                ''
+            ) AS FLIGHTNBR,
+            a.FROM_AIRP,
+            a.TO_AIRP,
+            a.ETD,
+            a.ETA,
+            TRIM(a.VIA) AS VIA,
+            a.REMARK,
+            a.ROUTE,
+            a.PURPOSE,
+            MAX(
+                LENGTH(COALESCE(a.CRAFT_TYPE, ct.MA))
+            ) OVER () AS MAX_MA,
+            MAX(
+                LENGTH(a.REGISTRATION)
+            ) OVER () AS MAX_REGISTRATION
+        FROM T_DAY_FLIGHTS a
+        LEFT JOIN M_CRAFT_TYPE ct
+          ON ct.CRAFT_ID = a.CRAFT_ID
+        WHERE a.FLIGHTDATE >= v_flight_date
+          AND a.FLIGHTDATE <  v_flight_date + 1
+          AND a.STATUS NOT IN ('4', '5')
+          AND a.PERMNBR NOT IN ('NoPerm', 'NOPERM')
+          AND a.ISACCESS = 1
+          AND a.ISMESSAGE = 0
+          AND
+          (
+              /*
+                Chuyến bay quá cảnh: cả sân bay đi và đến đều không thuộc VV.
+                Nhánh OVER cũ không loại chuyến trong T_FLIGHTCANCEL.
+              */
+              (
+                  v_over = 'OVER'
+                  AND a.FROM_AIRP NOT LIKE 'VV%'
+                  AND a.TO_AIRP NOT LIKE 'VV%'
+              )
+
+              /*
+                Chuyến bay HVN: giữ nguyên điều kiện theo ba ký tự đầu.
+              */
+              OR
+              (
+                  v_over = 'HKVN'
+                  AND SUBSTR(a.FLIGHTNBR, 1, 3) = 'HVN'
+              )
+
+              /*
+                Khu vực 1.
+              */
+              OR
+              (
+                  v_over = 'KV1'
+                  AND
+                  (
+                      a.FROM_AIRP IN
+                      (
+                          'VVNB', 'VVCI', 'VVDH',
+                          'VVDB', 'VVVH', 'VVTX'
+                      )
+                      OR
+                      a.TO_AIRP IN
+                      (
+                          'VVNB', 'VVCI', 'VVDH',
+                          'VVDB', 'VVVH', 'VVTX'
+                      )
+                  )
+              )
+
+              /*
+                Khu vực 2.
+              */
+              OR
+              (
+                  v_over = 'KV2'
+                  AND
+                  (
+                      a.FROM_AIRP IN
+                      (
+                          'VVDN', 'VVPB', 'VVPK',
+                          'VVPC', 'VVVH', 'VVCA'
+                      )
+                      OR
+                      a.TO_AIRP IN
+                      (
+                          'VVDN', 'VVPB', 'VVPK',
+                          'VVPC', 'VVVH', 'VVCA'
+                      )
+                  )
+              )
+
+              /*
+                Khu vực 3.
+              */
+              OR
+              (
+                  v_over = 'KV3'
+                  AND
+                  (
+                      a.FROM_AIRP IN
+                      (
+                          'VVTS', 'VVCM', 'VVRG',
+                          'VVPQ', 'VVBM', 'VVCS',
+                          'VVTH', 'VVCT', 'VVDL'
+                      )
+                      OR
+                      a.TO_AIRP IN
+                      (
+                          'VVTS', 'VVCM', 'VVRG',
+                          'VVPQ', 'VVBM', 'VVCS',
+                          'VVTH', 'VVCT', 'VVDL'
+                      )
+                  )
+              )
+
+              /*
+                Một mã sân bay cụ thể thuộc 22 sân bay.
+              */
+              OR
+              (
+                  v_over IS NOT NULL
+                  AND v_over NOT IN
+                  (
+                      'OVER', 'HKVN', 'KV1', 'KV2', 'KV3'
+                  )
+                  AND
+                  (
+                      a.FROM_AIRP = v_over
+                      OR a.TO_AIRP = v_over
+                  )
+              )
+
+              /*
+                over NULL: chuyến bay đi/đến Việt Nam nhưng không phải HVN.
+              */
+              OR
+              (
+                  v_over IS NULL
+                  AND SUBSTR(a.FLIGHTNBR, 1, 3) <> 'HVN'
+                  AND
+                  (
+                      a.FROM_AIRP LIKE 'VV%'
+                      OR a.TO_AIRP LIKE 'VV%'
+                  )
+              )
+          )
+          AND
+          (
+              v_over = 'OVER'
+              OR NOT EXISTS
+              (
+                  SELECT 1
+                  FROM T_FLIGHTCANCEL fc
+                  WHERE fc.FLIGHTDATE =
+                        TO_CHAR(
+                            a.FLIGHTDATE,
+                            'DD-Mon-YY',
+                            'NLS_DATE_LANGUAGE=ENGLISH'
+                        )
+                    AND fc.CALLSIGN = a.FLIGHTNBR
+                    AND fc.FROM_AIRP = a.FROM_AIRP
+                    AND fc.TO_AIRP = a.TO_AIRP
+              )
+          )
+        ORDER BY
+            SUBSTR(a.FLIGHTNBR, 1, 3),
+            CASE
+                WHEN v_over <> 'HKVN' OR v_over IS NULL
+                THEN a.CRAFT_ID
+            END,
+            CASE
+                WHEN v_over = 'HKVN'
+                THEN a.WAITDEL
+            END,
+            a.ETD;
+
+    LOOP
+        FETCH c INTO rc;
+        EXIT WHEN c%NOTFOUND;
+
+        BEGIN
+            IF v_row_number = 0 THEN
+                v_ma_length := NVL(rc.max_ma, 1);
+                v_reg_length := NVL(rc.max_registration, 1);
+            END IF;
+
+            v_row_number := v_row_number + 1;
+
+            /*
+              Giữ nguyên định dạng danh sách ID cũ: ID đầu tiên cũng có dấu
+              phẩy ở phía trước.
+            */
+            p_ListFlightId :=
+                p_ListFlightId || ',' || TO_CHAR(rc.flight_id);
+
+            v_row :=
+                   LPAD(TO_CHAR(v_row_number), 4)
+                || ' '
+                || RPAD(rc.ma, v_ma_length)
+                || ' ';
+
+            IF rc.registration IS NOT NULL THEN
+                v_row :=
+                    v_row
+                    || RPAD(rc.registration, v_reg_length)
+                    || ' ';
+            END IF;
+
+            v_row :=
+                   v_row
+                || RPAD(rc.flightnbr, 8)
+                || ' '
+                || RPAD(rc.from_airp, 4)
+                || ' '
+                || RPAD(rc.to_airp, 4)
+                || ' '
+                || etd_eta(on_day, TRIM(rc.etd))
+                || ' '
+                || LPAD(etd_eta(on_day, rc.eta), 6);
+
+            v_route := NVL(rc.route, '');
+            v_remark :=
+                NVL(rc.via, '')
+                || ' '
+                || NVL(rc.remark, '');
+
+            v_row :=
+                v_row
+                || ' '
+                || v_route
+                || ' '
+                || v_remark;
+
+            v_row := ALL_TRIM(v_row);
+            v_row := RTRIM(v_row) || CHR(10);
+
+            v_result :=
+                v_result
+                || chuanDong69KyTu(v_row);
+
+        EXCEPTION
+            WHEN OTHERS THEN
+                IF c%ISOPEN THEN
+                    CLOSE c;
+                END IF;
+
+                RETURN
+                       'ERROR IN FLIGHT: '
+                    || TO_CHAR(rc.flight_id)
+                    || ', LENGTH OF MESSAGE: '
+                    || TO_CHAR(DBMS_LOB.GETLENGTH(v_result))
+                    || ', ERROR: '
+                    || SQLERRM;
+        END;
+    END LOOP;
+
+    CLOSE c;
+    RETURN v_result;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        v_error_code := SQLCODE;
+        v_error_msg := SUBSTR(
+            DBMS_UTILITY.FORMAT_ERROR_STACK
+            || CHR(10)
+            || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE,
+            1,
+            2000
+        );
+
+        IF c%ISOPEN THEN
+            CLOSE c;
+        END IF;
+
+        /*
+          Không COMMIT tại đây để function không tự ý kết thúc transaction
+          của procedure gọi bên ngoài.
+        */
+        BEGIN
+            INSERT INTO T_LOG
+            (
+                NAME,
+                SQLCODE,
+                ERR
+            )
+            VALUES
+            (
+                'GenFromTable_day_flightsNotAll',
+                TO_CHAR(v_error_code),
+                v_error_msg
+            );
+        EXCEPTION
+            WHEN OTHERS THEN
+                NULL;
+        END;
+
+        RETURN
+               'ERROR GenFromTable_day_flightsNotAll ['
+            || TO_CHAR(v_error_code)
+            || ']: '
+            || v_error_msg;
+END GenFromTable_day_flightsNotAll;

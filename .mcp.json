@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "obsidian": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "mcp-obsidian",
+        "C:\\Users\\Admin\\Documents\\Codex Knowledge"
+      ]
+    }
+  }
+}
