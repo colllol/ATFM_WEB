@@ -73,6 +73,11 @@ def add_picture(document: Document, path: Path, caption: str) -> None:
 
 
 def add_toc_field(paragraph) -> None:
+    def add_field_run(element) -> None:
+        run = OxmlElement("w:r")
+        run.append(element)
+        paragraph._p.append(run)
+
     begin = OxmlElement("w:fldChar")
     begin.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fldCharType", "begin")
     instruction = OxmlElement("w:instrText")
@@ -84,11 +89,12 @@ def add_toc_field(paragraph) -> None:
     text.text = "Nhấn Ctrl+A rồi F9 trong Word để cập nhật mục lục."
     end = OxmlElement("w:fldChar")
     end.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fldCharType", "end")
-    paragraph._p.append(begin)
-    paragraph._p.append(instruction)
-    paragraph._p.append(separate)
-    paragraph._p.append(text)
-    paragraph._p.append(end)
+    # Word requires every field element to be contained in a run.
+    add_field_run(begin)
+    add_field_run(instruction)
+    add_field_run(separate)
+    add_field_run(text)
+    add_field_run(end)
 
 
 def extract_source_images(source_document: Path, destination: Path) -> tuple[Path, Path]:
