@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 import argparse
-import tempfile
 from pathlib import Path
-from zipfile import ZipFile
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -59,15 +57,7 @@ def bullets(doc, values):
         doc.add_paragraph(value, style="List Bullet")
 
 
-def report_image(srs, destination):
-    with ZipFile(srs) as archive:
-        name = sorted(n for n in archive.namelist() if n.startswith("word/media/"))[0]
-        path = destination / ("adsb-report" + Path(name).suffix)
-        path.write_bytes(archive.read(name))
-        return path
-
-
-def build(template, srs, output):
+def build(template, screenshot, output):
     doc = Document(template)
     clear_body(doc)
     doc.core_properties.title = "Hướng dẫn sử dụng TracksSyncPython"
@@ -142,15 +132,13 @@ def build(template, srs, output):
     ])
     doc.add_paragraph("Ví dụ: ATFM-TracksSync-CLI.exe --mode all. Trước sync --full hoặc all --full trên môi trường thật, dừng Auto, sao lưu/đánh giá dữ liệu và chạy check --full trước.")
 
-    with tempfile.TemporaryDirectory(prefix="tracks-sync-guide-") as temp:
-        image = report_image(srs, Path(temp))
-        doc.add_heading("5. Kết quả khai thác", 1)
-        doc.add_paragraph("T_TRACKS_LOG là đầu ra nghiệp vụ của TracksSyncPython, phục vụ báo cáo hiệu suất ADS-B trong ATFM Web.")
-        picture = doc.add_paragraph()
-        picture.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        picture.add_run().add_picture(str(image), width=Cm(15.8))
-        caption = doc.add_paragraph("Hình 1. Báo cáo hiệu suất ADS-B sử dụng dữ liệu T_TRACKS_LOG.")
-        caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_heading("5. Giao diện công cụ", 1)
+    doc.add_paragraph("Giao diện TracksSyncPython hiển thị các nút Kiểm tra đối chiếu, Ghi T_TRACKS_LOG, Xác minh kết quả, Auto, Stop, trường Chu kỳ và vùng log vận hành.")
+    picture = doc.add_paragraph()
+    picture.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    picture.add_run().add_picture(str(screenshot), width=Cm(15.8))
+    caption = doc.add_paragraph("Hình 1. Giao diện thực tế của công cụ ATFM FIR Tracks Logger (TracksSyncPython).")
+    caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     doc.add_heading("6. Kiểm tra và xử lý sự cố", 1)
     table(doc, ["Hiện tượng", "Cách xử lý"], [
@@ -169,10 +157,10 @@ def build(template, srs, output):
 def main():
     parser = argparse.ArgumentParser(description="Tạo hướng dẫn sử dụng TracksSyncPython.")
     parser.add_argument("--template", type=Path, required=True)
-    parser.add_argument("--source-srs", type=Path, required=True)
+    parser.add_argument("--screenshot", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    build(args.template, args.source_srs, args.output)
+    build(args.template, args.screenshot, args.output)
 
 
 if __name__ == "__main__":
