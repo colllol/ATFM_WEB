@@ -1,8 +1,9 @@
 -- ============================================================================
 -- Dong bo quy tac tim CALLSIGN cua danh sach Finished Flights.
 --
--- Truoc: LIKE '%' || gia_tri || '%' (co the khop CALLSIGN co HVN o giua chuoi).
--- Sau : LIKE gia_tri || '%'     (HVN chi khop cac chuyen bay bat dau bang HVN).
+-- Truoc: LIKE '%' || gia_tri || '%' (co the khop CALLSIGN co gia tri o giua chuoi).
+-- Sau : so sanh bang, bo qua khoang trang va phan biet hoa/thuong.
+--       AAR736 chi khop AAR736, khong khop AAR7361/AAR1736.
 --
 -- Cap nhat ca FINISHED_STATUS_PKG (danh sach) va FINISHED_COMPARE_PKG
 -- (doi chieu GOINGON) de hai so lieu dung cung dieu kien.
@@ -17,6 +18,9 @@ DECLARE
         'UPPER(t.FLIGHTNBR) LIKE' || CHR(10)
         || '                            ''%'' || UPPER(TRIM(FLIGHTNBR)) || ''%''';
     c_new_filter CONSTANT VARCHAR2(1000) :=
+        'UPPER(TRIM(t.FLIGHTNBR)) =' || CHR(10)
+        || '                            UPPER(TRIM(FLIGHTNBR))';
+    c_prefix_filter CONSTANT VARCHAR2(1000) :=
         'UPPER(t.FLIGHTNBR) LIKE' || CHR(10)
         || '                            UPPER(TRIM(FLIGHTNBR)) || ''%''';
 
@@ -42,21 +46,24 @@ DECLARE
         v_ddl := DBMS_METADATA.GET_DDL('PACKAGE_BODY', p_package_name, USER);
 
         IF DBMS_LOB.INSTR(v_ddl, c_new_filter) > 0 THEN
-            DBMS_OUTPUT.PUT_LINE(p_package_name || ': da dung dieu kien CALLSIGN tien to.');
+            DBMS_OUTPUT.PUT_LINE(p_package_name || ': da dung dieu kien CALLSIGN chinh xac.');
             RETURN;
         END IF;
 
-        IF DBMS_LOB.INSTR(v_ddl, c_old_filter) = 0 THEN
+        IF DBMS_LOB.INSTR(v_ddl, c_old_filter) > 0 THEN
+            v_ddl := REPLACE(v_ddl, c_old_filter, c_new_filter);
+        ELSIF DBMS_LOB.INSTR(v_ddl, c_prefix_filter) > 0 THEN
+            v_ddl := REPLACE(v_ddl, c_prefix_filter, c_new_filter);
+        ELSE
             RAISE_APPLICATION_ERROR(
                 -20921,
                 p_package_name || ': khong tim thay dieu kien CALLSIGN cu de cap nhat'
             );
         END IF;
 
-        v_ddl := REPLACE(v_ddl, c_old_filter, c_new_filter);
         parse_ddl(v_ddl);
 
-        DBMS_OUTPUT.PUT_LINE(p_package_name || ': da cap nhat CALLSIGN = tien to.');
+        DBMS_OUTPUT.PUT_LINE(p_package_name || ': da cap nhat CALLSIGN chinh xac.');
     END update_package_body;
 
     v_invalid_count PLS_INTEGER;
@@ -91,7 +98,7 @@ BEGIN
         );
     END IF;
 
-    DBMS_OUTPUT.PUT_LINE('VERIFY OK: 2 package VALID; CALLSIGN dung prefix search.');
+    DBMS_OUTPUT.PUT_LINE('VERIFY OK: 2 package VALID; CALLSIGN dung exact search.');
 END;
 /
 
@@ -100,8 +107,8 @@ SELECT OBJECT_NAME, OBJECT_TYPE, STATUS
  WHERE OBJECT_NAME IN ('FINISHED_STATUS_PKG', 'FINISHED_COMPARE_PKG')
  ORDER BY OBJECT_NAME, OBJECT_TYPE;
 
--- Ket qua mong doi khi nhap HVN: chi CALLSIGN bat dau bang HVN.
+-- Ket qua mong doi khi nhap AAR736: chi CALLSIGN bang AAR736.
 -- SELECT FLIGHTNBR
 --   FROM T_FINISHED_FLIGHTS
 --  WHERE ISACCEPTED = 1
---    AND UPPER(FLIGHTNBR) LIKE 'HVN%';
+--    AND UPPER(TRIM(FLIGHTNBR)) = 'AAR736';

@@ -222,8 +222,8 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_COMPARE_PKG AS
                      AND
                      (
                          TRIM(FLIGHTNBR) IS NULL
-                         OR UPPER(t.FLIGHTNBR) LIKE
-                            UPPER(TRIM(FLIGHTNBR)) || '%'
+                         OR UPPER(TRIM(t.FLIGHTNBR)) =
+                            UPPER(TRIM(FLIGHTNBR))
                      )
                      AND
                      (
