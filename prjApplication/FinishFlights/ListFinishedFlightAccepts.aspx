@@ -158,6 +158,10 @@
         .export-field-grid label, .export-select-all { cursor: pointer; text-transform: none; }
         .export-field-grid input, .export-select-all input { margin: 0 7px 0 0; vertical-align: middle; }
         .export-popup-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e4e9ef; border-bottom: 0; }
+        .advanced-update-popup { width: min(520px, 100%); }
+        .advanced-update-field { display: block; margin-bottom: 15px; color: #315a77; font-size: 12px; font-weight: 700; text-transform: none; }
+        .advanced-update-field select, .advanced-update-field input { display: block; width: 100%; height: 38px; margin-top: 6px; padding: 7px 10px; border: 1px solid #b9d0de; border-radius: 4px; color: #1c3d54; background: #fff; font-weight: 400; text-transform: none; }
+        .advanced-update-note { margin: 0; color: #6a7d89; font-size: 12px; line-height: 1.45; text-transform: none; }
 
         .bravo-compare-backdrop { position: fixed; inset: 0; z-index: 2100; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(12,30,50,.58); }
         .bravo-compare-backdrop[hidden] { display: none; }
@@ -509,6 +513,7 @@
         </div>
         <div id="abcxyzd" class="finished-filter-actions">
         <button type="button" id="btnUpdateList" class="btn btn-sm btn-primary" onclick="btnUpdateList_Onclick()"><i class="fa fa-refresh"></i>UPDATE</button>
+        <button type="button" id="btnUpdateAdv" class="btn btn-sm btn-primary" onclick="openAdvancedUpdatePopup()"><i class="fa fa-pencil-square-o"></i>UPDATE ADV</button>
         <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-danger" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash"></i>DELETE</button>
         <button type="button" id="btnClearSearch" class="btn btn-sm btn-default" onclick="btnClearValue_OnClick()"><i class="fa fa-eraser"></i>CLEAR SREACH</button>
         <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
@@ -536,6 +541,45 @@
             <div class="export-popup-footer">
                 <button type="button" class="btn btn-default" onclick="closeExportPopup()">HUỶ</button>
                 <button type="button" class="btn btn-primary" onclick="executeSelectedExport()"><i class="fa fa-download"></i> EXPORT EXCEL</button>
+            </div>
+        </div>
+    </div>
+    <div id="advancedUpdateBackdrop" class="export-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="advancedUpdateTitle">
+        <div class="export-popup advanced-update-popup">
+            <div class="export-popup-header">
+                <h4 id="advancedUpdateTitle"><i class="fa fa-pencil-square-o"></i> CẬP NHẬT NÂNG CAO</h4>
+                <button type="button" class="export-popup-close" onclick="closeAdvancedUpdatePopup()" aria-label="Đóng">&times;</button>
+            </div>
+            <div class="export-popup-body">
+                <label class="advanced-update-field" for="ddlAdvancedUpdateField">THÔNG TIN CẦN CẬP NHẬT
+                    <select id="ddlAdvancedUpdateField">
+                        <option value="OPER_ID">OPER</option>
+                        <option value="FLIGHTNBR">CALLSIGN</option>
+                        <option value="REGISTRATION">REGIS</option>
+                        <option value="REAL_CRAFT_TYPE">R_CRAFT</option>
+                        <option value="CRAFT_ID">F_CRAFT (CRAFT ID)</option>
+                        <option value="PURPOSE">PURPOSE</option>
+                        <option value="PERMTYPE">P_TYPE</option>
+                        <option value="FROM_AIRP">FROM</option>
+                        <option value="TO_AIRP">TO</option>
+                        <option value="FLIGHTDATE">FLIGHTDATE</option>
+                        <option value="ATD">ATD</option>
+                        <option value="ATA">ATA</option>
+                        <option value="VIA">VIA</option>
+                        <option value="FPL_VIA">FPL_VIA</option>
+                        <option value="REMARK">REMARK</option>
+                        <option value="ETD">ETD</option>
+                        <option value="ETA">ETA</option>
+                    </select>
+                </label>
+                <label class="advanced-update-field" for="txtAdvancedUpdateValue">GIÁ TRỊ MỚI
+                    <input id="txtAdvancedUpdateValue" type="text" maxlength="1000" autocomplete="off" />
+                </label>
+                <p class="advanced-update-note">Áp dụng cùng một giá trị cho các chuyến bay đã chọn. F_CRAFT nhập CRAFT ID dạng số.</p>
+            </div>
+            <div class="export-popup-footer">
+                <button type="button" class="btn btn-default" onclick="closeAdvancedUpdatePopup()">HUỶ</button>
+                <button type="button" id="btnAdvancedUpdateSave" class="btn btn-primary" onclick="saveAdvancedUpdate()"><i class="fa fa-save"></i> SAVE</button>
             </div>
         </div>
     </div>
@@ -1530,6 +1574,125 @@
             });
             alert('Insert sussess: ' + c + '/' + $lis.length);
             btnSearch_OnClick();
+        }
+
+        function getAdvancedUpdateSelectedRows() {
+            return $('#tblSource input[type="checkbox"][id^="chk_"]:checked').closest('tr');
+        }
+
+        function openAdvancedUpdatePopup() {
+            var selectedRows = getAdvancedUpdateSelectedRows();
+            if (selectedRows.length === 0) {
+                alert('Vui lòng chọn ít nhất một chuyến bay bằng ô checkbox trước khi UPDATE ADV.');
+                return;
+            }
+            $('#txtAdvancedUpdateValue').val('');
+            $('#advancedUpdateBackdrop').addClass('is-open');
+            window.setTimeout(function () { $('#txtAdvancedUpdateValue').focus(); }, 0);
+        }
+
+        function closeAdvancedUpdatePopup() {
+            $('#advancedUpdateBackdrop').removeClass('is-open');
+        }
+
+        function getFinishedFlightUpdateObject(row) {
+            var getValue = function (prefix) {
+                var input = $(row).find('[id^="' + prefix + '"]').first();
+                return input.length ? input.val() : '';
+            };
+            var flightDate = getValue('txtFLIGHTDATE');
+            return {
+                FLIGHT_ID: $(row).prop('id'),
+                FLIGHTDATE: flightDate.replace(/^(\d{2})\-(\d{2})\-(\d{4})$/, '$3/$2/$1'),
+                FLIGHTNBR: getValue('txtFLIGHTNBR'),
+                PERMTYPE: getValue('txtPERMTYPE'),
+                PURPOSE: getValue('txtPURPOSE'),
+                TO_AIRP: getValue('txtTO_AIRP'),
+                LASTUSER: '<%= _user.UserName.ToString()%>',
+                REGISTRATION: getValue('txtREGISTRATION'),
+                REMARK: getValue('txtREMARK'),
+                VALIDHOURS: '',
+                FLIGHT_TYPE: '',
+                CRAFT_ID: $(row).find('[id^="txtPERMCRAFT"]').first().attr('data-craftid') || '0',
+                REAL_CRAFT_TYPE: getValue('txtREALCRAFT'),
+                ATA: getValue('txtATA'),
+                VIA: getValue('txtVIA'),
+                FPL_VIA: getValue('txtFPLVIA'),
+                OPER_ID: getValue('txtOPER_ID'),
+                ATD: getValue('txtATD'),
+                ETA: getValue('txtETA'),
+                ETD: getValue('txtETD'),
+                PERMNBR: '',
+                FROM_AIRP: getValue('txtFROM_AIRP')
+            };
+        }
+
+        function applyAdvancedUpdateValue(row, field, value) {
+            var selectors = {
+                OPER_ID: 'txtOPER_ID', FLIGHTNBR: 'txtFLIGHTNBR', REGISTRATION: 'txtREGISTRATION',
+                REAL_CRAFT_TYPE: 'txtREALCRAFT', PURPOSE: 'txtPURPOSE', PERMTYPE: 'txtPERMTYPE',
+                FROM_AIRP: 'txtFROM_AIRP', TO_AIRP: 'txtTO_AIRP', FLIGHTDATE: 'txtFLIGHTDATE',
+                ATD: 'txtATD', ATA: 'txtATA', VIA: 'txtVIA', FPL_VIA: 'txtFPLVIA',
+                REMARK: 'txtREMARK', ETD: 'txtETD', ETA: 'txtETA'
+            };
+            if (field === 'CRAFT_ID') {
+                $(row).find('[id^="txtPERMCRAFT"]').first()
+                    .val(value)
+                    .attr('data-craftid', value);
+                return;
+            }
+            $(row).find('[id^="' + selectors[field] + '"]').first().val(value);
+        }
+
+        function saveAdvancedUpdate() {
+            var selectedRows = getAdvancedUpdateSelectedRows();
+            var field = $('#ddlAdvancedUpdateField').val();
+            var value = $.trim($('#txtAdvancedUpdateValue').val());
+            if (selectedRows.length === 0) {
+                closeAdvancedUpdatePopup();
+                alert('Vui lòng chọn ít nhất một chuyến bay bằng ô checkbox trước khi SAVE.');
+                return;
+            }
+            if (!value) {
+                alert('Vui lòng nhập giá trị mới.');
+                $('#txtAdvancedUpdateValue').focus();
+                return;
+            }
+            if (field === 'CRAFT_ID' && !/^\d+$/.test(value)) {
+                alert('F_CRAFT yêu cầu CRAFT ID là số.');
+                $('#txtAdvancedUpdateValue').focus();
+                return;
+            }
+            if (field === 'FLIGHTDATE' && !/^\d{2}\-\d{2}\-\d{4}$/.test(value)) {
+                alert('FLIGHTDATE phải theo định dạng dd-mm-yyyy.');
+                $('#txtAdvancedUpdateValue').focus();
+                return;
+            }
+            var fieldName = $('#ddlAdvancedUpdateField option:selected').text();
+            if (!confirm('Cập nhật ' + fieldName + ' = "' + value + '" cho ' + selectedRows.length + ' chuyến bay đã chọn?')) return;
+
+            var saveButton = $('#btnAdvancedUpdateSave').prop('disabled', true);
+            var succeeded = 0;
+            var failed = 0;
+            selectedRows.each(function () {
+                var row = this;
+                applyAdvancedUpdateValue(row, field, value);
+                var request = getFinishedFlightUpdateObject(row);
+                $.ajax({
+                    async: false,
+                    method: 'PUT',
+                    url: urlApi + 'api/FinishedFlights/Update',
+                    data: request
+                }).always(function (data) {
+                    if (data && data.Code != -1) succeeded++;
+                    else failed++;
+                });
+            });
+            saveButton.prop('disabled', false);
+            closeAdvancedUpdatePopup();
+            alert('UPDATE ADV hoàn tất: ' + succeeded + '/' + selectedRows.length + ' chuyến bay cập nhật thành công.' +
+                (failed ? ' Có ' + failed + ' chuyến bay không cập nhật được.' : ''));
+            if (succeeded > 0) btnSearch_OnClick();
         }
 
         function btnUpdateList_Onclick() {
