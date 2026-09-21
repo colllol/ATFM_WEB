@@ -163,6 +163,7 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
         v_start_date  DATE;
         v_finish_date DATE;
         v_filter_date DATE;
+        v_flight_nbr   VARCHAR2(4000);
         v_first_row   PLS_INTEGER;
         v_last_row    PLS_INTEGER;
         v_page_size   PLS_INTEGER;
@@ -181,6 +182,10 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
         IF TRIM(WHECONDITION) IS NOT NULL THEN
             v_filter_date := PARSE_DATE(WHECONDITION);
         END IF;
+
+        -- FLIGHTNBR trung ten cot trong bang. Dung bien noi bo de SQL
+        -- khong tu so sanh t.FLIGHTNBR voi chinh no.
+        v_flight_nbr := NULLIF(UPPER(TRIM(FLIGHTNBR)), '');
 
         v_page_size := GREATEST(NVL(PAGESIZE, 100), 1);
         v_page_index := GREATEST(NVL(PAGEINDEX, 0), 0);
@@ -304,9 +309,9 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                      )
                      AND
                      (
-                         TRIM(FLIGHTNBR) IS NULL
-                         OR UPPER(t.FLIGHTNBR) LIKE
-                            '%' || UPPER(TRIM(FLIGHTNBR)) || '%'
+                         v_flight_nbr IS NULL
+                         OR UPPER(TRIM(t.FLIGHTNBR)) LIKE
+                            '%' || v_flight_nbr || '%'
                      )
                      AND
                      (
