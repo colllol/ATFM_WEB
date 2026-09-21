@@ -223,7 +223,7 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_COMPARE_PKG AS
                      (
                          TRIM(FLIGHTNBR) IS NULL
                          OR UPPER(t.FLIGHTNBR) LIKE
-                            '%' || UPPER(TRIM(FLIGHTNBR)) || '%'
+                            UPPER(TRIM(FLIGHTNBR)) || '%'
                      )
                      AND
                      (
@@ -404,4 +404,3 @@ END;
 /
 SELECT TYPE, LINE, POSITION, TEXT FROM USER_ERRORS
 WHERE NAME = 'FINISHED_COMPARE_PKG' ORDER BY SEQUENCE;
-

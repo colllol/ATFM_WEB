@@ -306,7 +306,7 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                      (
                          TRIM(FLIGHTNBR) IS NULL
                          OR UPPER(t.FLIGHTNBR) LIKE
-                            '%' || UPPER(TRIM(FLIGHTNBR)) || '%'
+                            UPPER(TRIM(FLIGHTNBR)) || '%'
                      )
                      AND
                      (
