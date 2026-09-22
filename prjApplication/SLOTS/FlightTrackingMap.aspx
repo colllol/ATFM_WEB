@@ -1,6 +1,6 @@
 <%@ Page Title="Theo dõi chuyến bay ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="FlightTrackingMap.aspx.cs" Inherits="prjApplication.SLOTS.FlightTrackingMap" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
-    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/FlightTrackingMap.css?v=20260808-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/SLOTS/FlightTrackingMap.css?v=20260922-1") %>" />
     <section class="track-map-page"
         data-flights-endpoint="<%= ResolveUrl("~/SLOTS/FlightTrackingMap.aspx/GetFlights") %>"
         data-fir-endpoint="<%= ResolveUrl("~/SLOTS/FlightTrackingMap.aspx/GetFirGeoJson") %>">
@@ -50,5 +50,5 @@
             </div>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/FlightTrackingMap.js?v=20260808-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/FlightTrackingMap.js?v=20260922-1") %>"></script>
 </asp:Content>

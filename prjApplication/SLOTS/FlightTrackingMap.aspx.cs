@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Web.Hosting;
 using System.Web.Script.Serialization;
 using System.Web.Services;
+using Npgsql;
 
 namespace prjApplication.SLOTS
 {
@@ -64,7 +65,8 @@ namespace prjApplication.SLOTS
         [WebMethod]
         public static object GetFlights()
         {
-            DateTime today = DateTime.UtcNow.Date;
+            // Ngay du lieu tracks duoc loc theo Asia/Ho_Chi_Minh trong PostgreSQL.
+            DateTime today = DateTime.Today;
             List<TrackRow> tracks = LoadTodayTracks(today);
             Dictionary<string, FlightMeta> metadata = LoadFlightMetadata(today, tracks);
 
@@ -122,6 +124,66 @@ namespace prjApplication.SLOTS
         }
 
         private static List<TrackRow> LoadTodayTracks(DateTime today)
+        {
+            const string sql = @"
+                SELECT DISTINCT ON (normalized_callsign)
+                       flight_id_current,
+                       normalized_callsign,
+                       updated_at_utc::timestamptz,
+                       last_lat,
+                       last_lon,
+                       COALESCE(last_track_deg, 0)
+                  FROM
+                  (
+                      SELECT flight_id_current,
+                             UPPER(TRIM(SPLIT_PART(COALESCE(flight_id_current, ''), '-', 1))) AS normalized_callsign,
+                             updated_at_utc,
+                             last_lat,
+                             last_lon,
+                             last_track_deg
+                        FROM public.tracks
+                       WHERE flight_id_current IS NOT NULL
+                         AND updated_at_utc IS NOT NULL
+                         AND last_lat IS NOT NULL
+                         AND last_lon IS NOT NULL
+                         AND (updated_at_utc::timestamptz AT TIME ZONE 'Asia/Ho_Chi_Minh') >= @fromDate
+                         AND (updated_at_utc::timestamptz AT TIME ZONE 'Asia/Ho_Chi_Minh') < @toDate
+                  ) source
+                 WHERE normalized_callsign <> ''
+                 ORDER BY normalized_callsign, updated_at_utc::timestamptz DESC";
+
+            ConnectionStringSettings settings = ConfigurationManager.ConnectionStrings["TracksPostgres"];
+            if (settings == null || String.IsNullOrWhiteSpace(settings.ConnectionString))
+                throw new ConfigurationErrorsException("Missing connectionStrings/TracksPostgres in Web.config.");
+
+            var rows = new List<TrackRow>();
+            using (var connection = new NpgsqlConnection(settings.ConnectionString))
+            using (var command = new NpgsqlCommand(sql, connection))
+            {
+                command.CommandTimeout = 30;
+                command.Parameters.AddWithValue("fromDate", today.Date);
+                command.Parameters.AddWithValue("toDate", today.Date.AddDays(1));
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        rows.Add(new TrackRow
+                        {
+                            FlightId = Convert.ToString(reader[0]),
+                            Callsign = Convert.ToString(reader[1]),
+                            UpdatedAt = Convert.ToDateTime(reader[2], CultureInfo.InvariantCulture),
+                            Latitude = Convert.ToDouble(reader[3], CultureInfo.InvariantCulture),
+                            Longitude = Convert.ToDouble(reader[4], CultureInfo.InvariantCulture),
+                            Heading = reader.IsDBNull(5) ? 0 : Convert.ToDouble(reader[5], CultureInfo.InvariantCulture)
+                        });
+                    }
+                }
+            }
+            return rows;
+        }
+
+        private static List<TrackRow> LoadTodayTracksFromApi(DateTime today)
         {
             string baseUrl = RequireAppSetting("FlightTrackingApiBaseUrl").TrimEnd('/');
             string endpoint = baseUrl + "/api/v1/tracks?date=" + today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
