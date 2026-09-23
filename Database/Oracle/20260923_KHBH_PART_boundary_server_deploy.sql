@@ -8,10 +8,12 @@
 -- Yeu cau 2 file cung thu muc:
 --   20260923_CATDONG69KYTU_word_wrap.sql
 --   20260923_PERMISSION2TEXT_part_boundary.sql
+--   20260923_GEN_OVER_FLIGHTS_new_v2.sql
 --
 -- Tac dong:
 --   1. CATDONG69KYTU ngat toi da 69 ky tu theo ranh gioi tu.
 --   2. PERMISSION2TEXT.FLIGHT2TEXT_new chi tach PART tai ranh gioi chuyen bay.
+--   3. Over-flight cua FLIGHT2TEXT_new dung GEN_OVER_FLIGHTS_new_v2 toi uu.
 -- Khong ghi/sua du lieu nghiep vu.
 -- ============================================================================
 
@@ -85,7 +87,13 @@ PROMPT ========================================================================
 @@20260923_PERMISSION2TEXT_part_boundary.sql
 
 PROMPT ========================================================================
-PROMPT 4. VERIFY CUOI CUNG
+PROMPT 4. CAP NHAT GEN_OVER_FLIGHTS_NEW_V2 CHO OVER-FLIGHT
+PROMPT ========================================================================
+
+@@20260923_GEN_OVER_FLIGHTS_new_v2.sql
+
+PROMPT ========================================================================
+PROMPT 5. VERIFY CUOI CUNG
 PROMPT ========================================================================
 
 DECLARE
@@ -111,8 +119,22 @@ BEGIN
         );
     END IF;
 
+    SELECT COUNT(*)
+      INTO l_error_count
+      FROM USER_ARGUMENTS
+     WHERE PACKAGE_NAME = 'P_FLY'
+       AND OBJECT_NAME = 'GEN_OVER_FLIGHTS_NEW_V2'
+       AND ARGUMENT_NAME IN ('DATE_FLY', 'PARTS_NUMBER', 'PARTS_CONTENT', 'PART_ID');
+
+    IF l_error_count <> 4 THEN
+        RAISE_APPLICATION_ERROR(
+            -20983,
+            'Khong tim thay du chu ky P_FLY.GEN_OVER_FLIGHTS_NEW_V2'
+        );
+    END IF;
+
     DBMS_OUTPUT.PUT_LINE(
-        'VERIFY OK: CATDONG69KYTU, P_FLY, PERMISSION2TEXT deu VALID.'
+        'VERIFY OK: CATDONG69KYTU, P_FLY, PERMISSION2TEXT deu VALID; V2 OK.'
     );
 END;
 /
