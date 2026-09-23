@@ -169,6 +169,7 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
         v_to_airp         VARCHAR2(4000);
         v_purpose         VARCHAR2(4000);
         v_oper_id         VARCHAR2(4000);
+        v_oper_id_list    VARCHAR2(4000);
         v_permtype        VARCHAR2(4000);
         v_flight_type     VARCHAR2(4000);
         v_craft_type      VARCHAR2(4000);
@@ -220,6 +221,10 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
         v_to_airp := NULLIF(UPPER(TRIM(TO_AIRP)), '');
         v_purpose := NULLIF(UPPER(TRIM(PURPOSE)), '');
         v_oper_id := NULLIF(UPPER(TRIM(OPER_ID)), '');
+        -- OPER_ID = |HVN|VJC| thi tim exact-match bat ky OPER trong danh sach.
+        IF SUBSTR(v_oper_id, 1, 1) = '|' THEN
+            v_oper_id_list := TRIM(BOTH '|' FROM v_oper_id);
+        END IF;
         v_permtype := NULLIF(UPPER(TRIM(PERMTYPE)), '');
         v_flight_type := NULLIF(UPPER(TRIM(FLIGHT_TYPE)), '');
         v_craft_type := NULLIF(UPPER(TRIM(CRAFT_TYPE)), '');
@@ -357,8 +362,20 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                      AND
                      (
                          v_oper_id IS NULL
-                         OR UPPER(t.OPER_ID) LIKE
-                            '%' || v_oper_id || '%'
+                         OR
+                         (
+                             v_oper_id_list IS NOT NULL
+                             AND INSTR(
+                                 '|' || v_oper_id_list || '|',
+                                 '|' || UPPER(TRIM(t.OPER_ID)) || '|'
+                             ) > 0
+                         )
+                         OR
+                         (
+                             v_oper_id_list IS NULL
+                             AND UPPER(t.OPER_ID) LIKE
+                                 '%' || v_oper_id || '%'
+                         )
                      )
                      AND
                      (

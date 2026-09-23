@@ -162,6 +162,9 @@
         .advanced-update-field { display: block; margin-bottom: 15px; color: #315a77; font-size: 12px; font-weight: 700; text-transform: none; }
         .advanced-update-field select, .advanced-update-field input { display: block; width: 100%; height: 38px; margin-top: 6px; padding: 7px 10px; border: 1px solid #b9d0de; border-radius: 4px; color: #1c3d54; background: #fff; font-weight: 400; text-transform: none; }
         .advanced-update-note { margin: 0; color: #6a7d89; font-size: 12px; line-height: 1.45; text-transform: none; }
+        .advanced-search-popup { width: min(560px, 100%); }
+        .advanced-search-field { display: block; margin-bottom: 12px; color: #315a77; font-size: 12px; font-weight: 700; text-transform: none; }
+        .advanced-search-field textarea { display: block; width: 100%; min-height: 130px; margin-top: 6px; padding: 9px 10px; resize: vertical; border: 1px solid #b9d0de; border-radius: 4px; color: #1c3d54; background: #fff; font-weight: 400; line-height: 1.45; text-transform: uppercase; }
 
         .bravo-compare-backdrop { position: fixed; inset: 0; z-index: 2100; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(12,30,50,.58); }
         .bravo-compare-backdrop[hidden] { display: none; }
@@ -520,6 +523,7 @@
         <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
         <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>EXPORT BRAVO</button>
         <button type="button" id="btnBravoCompare" class="btn btn-sm btn-primary" onclick="openBravoComparePopup()"><i class="fa fa-balance-scale"></i>Đ/C BRAVO</button>
+        <button type="button" id="btnSearchAdv" class="btn btn-sm btn-primary" onclick="openAdvancedSearchPopup()"><i class="fa fa-search-plus"></i>SEARCH ADV</button>
         <button type="button" id="btnSearch" class="btn btn-sm btn-primary finished-search-button" onclick="btnSearch_OnClick()"><i class="fa fa-search"></i>SREACH</button>
         <asp:Literal ID="lit" runat="server"></asp:Literal>
         </div>
@@ -541,6 +545,24 @@
             <div class="export-popup-footer">
                 <button type="button" class="btn btn-default" onclick="closeExportPopup()">HUỶ</button>
                 <button type="button" class="btn btn-primary" onclick="executeSelectedExport()"><i class="fa fa-download"></i> EXPORT EXCEL</button>
+            </div>
+        </div>
+    </div>
+    <div id="advancedSearchBackdrop" class="export-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="advancedSearchTitle">
+        <div class="export-popup advanced-search-popup">
+            <div class="export-popup-header">
+                <h4 id="advancedSearchTitle"><i class="fa fa-search-plus"></i> SEARCH ADV THEO OPER</h4>
+                <button type="button" class="export-popup-close" onclick="closeAdvancedSearchPopup()" aria-label="Dong">&times;</button>
+            </div>
+            <div class="export-popup-body">
+                <label class="advanced-search-field" for="txtAdvancedOperList">DANH SACH OPER
+                    <textarea id="txtAdvancedOperList" maxlength="3500" placeholder="Vi du: HVN, VJC, VNA&#10;Ngan cach bang dau phay, cham phay, khoang trang hoac xuong dong."></textarea>
+                </label>
+                <p class="advanced-update-note">Tim theo bat ky OPER nao trong danh sach va dong thoi ap dung toan bo dieu kien dang chon tren man hinh.</p>
+            </div>
+            <div class="export-popup-footer">
+                <button type="button" class="btn btn-default" onclick="closeAdvancedSearchPopup()">HUY</button>
+                <button type="button" class="btn btn-primary" onclick="runAdvancedSearch()"><i class="fa fa-search"></i> TIM KIEM</button>
             </div>
         </div>
     </div>
@@ -938,6 +960,8 @@
             return val == null ? "" : val;
         }
         var finishedSearchSequence = 0;
+        // Chuoi |OPER1|OPER2| danh dau bo loc exact-match nhieu OPER cho Oracle.
+        var advancedOperSearchValue = '';
 
         function CompareGoingOnCount(criteria, finishedCount, sequence) {
             $.ajax({
@@ -1271,7 +1295,7 @@
                 TO_AIRP: $('#txtTO_AIRP').val() || '',
                 PURPOSE: $('#txtPURPOSE').val() || '',
                 VALIDHOURS: 0,
-                OPER_ID: $('#txtOPER_ID').val() || '',
+                OPER_ID: advancedOperSearchValue || $('#txtOPER_ID').val() || '',
                 PERMTYPE: $('#txtPERMTYPE').val() || '',
                 FLIGHT_TYPE: '',
                 CRAFT_TYPE: $('#txtCRAFT_TYPE').attr('data-craftid') || '',
@@ -1908,6 +1932,46 @@
             btnSearch_Full();
         }
         function btnSearch_OnClick() {
+            advancedOperSearchValue = '';
+            btnSearch_Full();
+        }
+
+        function normalizeAdvancedOperList(value) {
+            var operators = String(value || '').toUpperCase().split(/[\s,;|]+/);
+            var unique = {};
+            var result = [];
+            for (var i = 0; i < operators.length; i++) {
+                var oper = $.trim(operators[i]);
+                if (!oper || unique[oper]) continue;
+                unique[oper] = true;
+                result.push(oper);
+            }
+            return result;
+        }
+
+        function openAdvancedSearchPopup() {
+            var current = advancedOperSearchValue
+                ? advancedOperSearchValue.replace(/^\|+|\|+$/g, '').replace(/\|/g, ', ')
+                : '';
+            $('#txtAdvancedOperList').val(current);
+            $('#advancedSearchBackdrop').addClass('is-open');
+            window.setTimeout(function () { $('#txtAdvancedOperList').focus(); }, 0);
+        }
+
+        function closeAdvancedSearchPopup() {
+            $('#advancedSearchBackdrop').removeClass('is-open');
+        }
+
+        function runAdvancedSearch() {
+            var operators = normalizeAdvancedOperList($('#txtAdvancedOperList').val());
+            if (operators.length === 0) {
+                alert('Vui long nhap it nhat mot OPER de tim kiem.');
+                $('#txtAdvancedOperList').focus();
+                return;
+            }
+            advancedOperSearchValue = '|' + operators.join('|') + '|';
+            $('#txtOPER_ID').val('');
+            closeAdvancedSearchPopup();
             btnSearch_Full();
         }
 
@@ -1946,6 +2010,7 @@
             $('#txtATA').val('');
             $('#txtPERMTYPE').val('');
             $('#txtOPER_ID').val('');
+            advancedOperSearchValue = '';
             $('#txtCRAFT_ID').val('');
             $('#txtCRAFT_TYPE').val('');
             $('#txtPURPOSE').val('');
