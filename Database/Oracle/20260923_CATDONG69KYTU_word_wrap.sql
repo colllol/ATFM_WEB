@@ -143,4 +143,4 @@ SELECT OBJECT_NAME, OBJECT_TYPE, STATUS
  WHERE OBJECT_NAME IN ('CATDONG69KYTU', 'P_FLY')
  ORDER BY OBJECT_NAME, OBJECT_TYPE;
 
-EXIT SUCCESS
+-- Khong EXIT tai day: cho phep script tong hop server_deploy goi bang @@.

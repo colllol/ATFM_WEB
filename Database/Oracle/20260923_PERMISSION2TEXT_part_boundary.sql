@@ -325,4 +325,4 @@ SELECT OBJECT_NAME, OBJECT_TYPE, STATUS
  WHERE OBJECT_NAME = 'PERMISSION2TEXT'
  ORDER BY OBJECT_TYPE;
 
-EXIT SUCCESS
+-- Khong EXIT tai day: cho phep script tong hop server_deploy goi bang @@.
