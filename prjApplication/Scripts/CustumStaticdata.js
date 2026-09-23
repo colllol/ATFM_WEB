@@ -1254,13 +1254,25 @@ function CheckListOper(ele) {
     }
 }
 function CheckListAero(ele) {
-    if (listAero.findIndex(item=>item.AE_REM == $(ele).val().toUpperCase()) == -1) {
+    var value = $.trim($(ele).val()).toUpperCase();
+    var index = listAero.findIndex(function (item) {
+        return String(item.AE_CODE || '').toUpperCase() === value;
+    });
+
+    // Người dùng có thể nhập IATA (HAN), còn dữ liệu lưu phải là ICAO (VVNB).
+    // Chỉ tra IATA khi chưa phải mã ICAO để không ghi đè nhầm giá trị hợp lệ.
+    if (index === -1) {
+        index = listAero.findIndex(function (item) {
+            return String(item.AE_REM || '').toUpperCase() === value;
+        });
+    }
+
+    if (index === -1) {
         $(ele).val('');
         $(ele).css('border-color: red;');
     } else {
         $(ele).css('border-color: \'\'');
-        $(ele).val(listAero[listAero.findIndex(item=>axx = (item.AE_REM == $(ele).val().toUpperCase()))].AE_CODE);
-        
+        $(ele).val(String(listAero[index].AE_CODE || '').toUpperCase());
     }
 }
 function CheckPermType(ele) {

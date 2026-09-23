@@ -523,7 +523,7 @@
     </div>
     <script src="<%=Global.ApplicationPath%>/Style/assets/js/jquery-2.1.4.min.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomDynamic.js"></script>
-    <script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js"></script>
+    <script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js?v=20260923-1"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomPaging.js"></script>
     <script>
 
