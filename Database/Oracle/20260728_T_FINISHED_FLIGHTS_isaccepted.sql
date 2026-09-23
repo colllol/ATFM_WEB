@@ -170,6 +170,10 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
         v_purpose         VARCHAR2(4000);
         v_oper_id         VARCHAR2(4000);
         v_oper_id_list    VARCHAR2(4000);
+        v_from_airp_list  VARCHAR2(4000);
+        v_to_airp_list    VARCHAR2(4000);
+        v_via_list        VARCHAR2(4000);
+        v_purpose_list    VARCHAR2(4000);
         v_permtype        VARCHAR2(4000);
         v_flight_type     VARCHAR2(4000);
         v_craft_type      VARCHAR2(4000);
@@ -225,12 +229,32 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
         IF SUBSTR(v_oper_id, 1, 1) = '|' THEN
             v_oper_id_list := TRIM(BOTH '|' FROM v_oper_id);
         END IF;
+        v_from_airp_list := NULL;
+        IF SUBSTR(v_from_airp, 1, 1) = '|' THEN
+            v_from_airp_list := TRIM(BOTH '|' FROM v_from_airp);
+            v_from_airp := NULL;
+        END IF;
+        v_to_airp_list := NULL;
+        IF SUBSTR(v_to_airp, 1, 1) = '|' THEN
+            v_to_airp_list := TRIM(BOTH '|' FROM v_to_airp);
+            v_to_airp := NULL;
+        END IF;
+        v_purpose_list := NULL;
+        IF SUBSTR(v_purpose, 1, 1) = '|' THEN
+            v_purpose_list := TRIM(BOTH '|' FROM v_purpose);
+            v_purpose := NULL;
+        END IF;
         v_permtype := NULLIF(UPPER(TRIM(PERMTYPE)), '');
         v_flight_type := NULLIF(UPPER(TRIM(FLIGHT_TYPE)), '');
         v_craft_type := NULLIF(UPPER(TRIM(CRAFT_TYPE)), '');
         v_real_craft_type := NULLIF(UPPER(TRIM(REAL_CRAFT_TYPE)), '');
         v_flight_nbr := NULLIF(UPPER(TRIM(FLIGHTNBR)), '');
         v_via := NULLIF(UPPER(TRIM(VIA)), '');
+        v_via_list := NULL;
+        IF SUBSTR(v_via, 1, 1) = '|' THEN
+            v_via_list := TRIM(BOTH '|' FROM v_via);
+            v_via := NULL;
+        END IF;
         v_fpl_via := NULLIF(UPPER(TRIM(FPL_VIA)), '');
         v_remark := NULLIF(UPPER(TRIM(REMARK)), '');
         v_eta := NULLIF(UPPER(TRIM(ETA)), '');
@@ -375,6 +399,48 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                              v_oper_id_list IS NULL
                              AND UPPER(t.OPER_ID) LIKE
                                  '%' || v_oper_id || '%'
+                         )
+                     )
+                     AND
+                     (
+                         v_from_airp_list IS NULL
+                         OR INSTR(
+                             '|' || v_from_airp_list || '|',
+                             '|' || UPPER(TRIM(t.FROM_AIRP)) || '|'
+                         ) > 0
+                     )
+                     AND
+                     (
+                         v_to_airp_list IS NULL
+                         OR INSTR(
+                             '|' || v_to_airp_list || '|',
+                             '|' || UPPER(TRIM(t.TO_AIRP)) || '|'
+                         ) > 0
+                     )
+                     AND
+                     (
+                         v_purpose_list IS NULL
+                         OR INSTR(
+                             '|' || v_purpose_list || '|',
+                             '|' || UPPER(TRIM(t.PURPOSE)) || '|'
+                         ) > 0
+                     )
+                     AND
+                     (
+                         v_via_list IS NULL
+                         OR EXISTS
+                         (
+                             SELECT 1
+                               FROM
+                               (
+                                   SELECT REGEXP_SUBSTR(
+                                              v_via_list, '[^|]+', 1, LEVEL
+                                          ) AS VIA_TOKEN
+                                     FROM DUAL
+                                  CONNECT BY LEVEL <= REGEXP_COUNT(v_via_list, '\|') + 1
+                               ) via_tokens
+                              WHERE via_tokens.VIA_TOKEN IS NOT NULL
+                                AND UPPER(t.VIA) LIKE '%' || via_tokens.VIA_TOKEN || '%'
                          )
                      )
                      AND
