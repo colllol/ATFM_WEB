@@ -1472,6 +1472,8 @@
     <Content Include="Static\Country\ListCountry.aspx" />
     <Content Include="Static\CraftType\EditCraftType.aspx" />
     <Content Include="Static\CraftType\ListCraftType.aspx" />
+    <Content Include="Static\Craft\EditCRAFT.aspx" />
+    <Content Include="Static\Craft\ListCRAFT.aspx" />
     <Content Include="Static\Document\EditDocument.aspx" />
     <Content Include="Static\Document\ViewDocument.aspx" />
     <Content Include="Static\Document\ListDocument.aspx" />
@@ -4040,6 +4042,20 @@
     </Compile>
     <Compile Include="Static\Oper\ListOper.aspx.designer.cs">
       <DependentUpon>ListOper.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Static\Craft\EditCRAFT.aspx.cs">
+      <DependentUpon>EditCRAFT.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Static\Craft\EditCRAFT.aspx.designer.cs">
+      <DependentUpon>EditCRAFT.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Static\Craft\ListCRAFT.aspx.cs">
+      <DependentUpon>ListCRAFT.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Static\Craft\ListCRAFT.aspx.designer.cs">
+      <DependentUpon>ListCRAFT.aspx</DependentUpon>
     </Compile>
     <Compile Include="Static\REPORTING_POINT\EditReportingPoint.aspx.cs">
       <DependentUpon>EditReportingPoint.aspx</DependentUpon>
