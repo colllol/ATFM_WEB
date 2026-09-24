@@ -75,7 +75,7 @@ BEGIN
 
         l_body := REGEXP_REPLACE(
             l_body,
-            'v_from_airp[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(FROM_AIRP\)\),[[:space:]]*''''''\);',
+            'v_from_airp[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(FROM_AIRP\)\),[[:space:]]*''''\);',
             'v_from_airp := NULLIF(UPPER(TRIM(FROM_AIRP)), '''');' || CHR(10)
             || '        ' || c_marker || CHR(10)
             || '        v_from_airp_list := NULL;' || CHR(10)
@@ -87,7 +87,7 @@ BEGIN
         );
         l_body := REGEXP_REPLACE(
             l_body,
-            'v_to_airp[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(TO_AIRP\)\),[[:space:]]*''''''\);',
+            'v_to_airp[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(TO_AIRP\)\),[[:space:]]*''''\);',
             'v_to_airp := NULLIF(UPPER(TRIM(TO_AIRP)), '''');' || CHR(10)
             || '        v_to_airp_list := NULL;' || CHR(10)
             || '        IF SUBSTR(v_to_airp, 1, 1) = ''|'' THEN' || CHR(10)
@@ -98,7 +98,7 @@ BEGIN
         );
         l_body := REGEXP_REPLACE(
             l_body,
-            'v_purpose[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(PURPOSE\)\),[[:space:]]*''''''\);',
+            'v_purpose[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(PURPOSE\)\),[[:space:]]*''''\);',
             'v_purpose := NULLIF(UPPER(TRIM(PURPOSE)), '''');' || CHR(10)
             || '        v_purpose_list := NULL;' || CHR(10)
             || '        IF SUBSTR(v_purpose, 1, 1) = ''|'' THEN' || CHR(10)
@@ -109,7 +109,7 @@ BEGIN
         );
         l_body := REGEXP_REPLACE(
             l_body,
-            'v_via[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(VIA\)\),[[:space:]]*''''''\);',
+            'v_via[[:space:]]*:=[[:space:]]*NULLIF\(UPPER\(TRIM\(VIA\)\),[[:space:]]*''''\);',
             'v_via := NULLIF(UPPER(TRIM(VIA)), '''');' || CHR(10)
             || '        v_via_list := NULL;' || CHR(10)
             || '        IF SUBSTR(v_via, 1, 1) = ''|'' THEN' || CHR(10)
