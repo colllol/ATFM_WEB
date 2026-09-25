@@ -28,9 +28,9 @@
             </div>
         </section>
         <section class="email-kpis">
-            <article><small>Tổng email</small><strong id="emailTotal">0</strong></article>
-            <article><small>Đã gửi</small><strong id="emailSent">0</strong></article>
-            <article><small>Lỗi</small><strong id="emailFailed">0</strong></article>
+            <article><small>Tổng số file</small><strong id="emailTotal">0</strong></article>
+            <article><small>Số file đọc thành công</small><strong id="emailSent">0</strong></article>
+            <article><small>Số file lỗi</small><strong id="emailFailed">0</strong></article>
             <article><small>Trang hiện tại</small><strong id="emailPageLabel">1</strong></article>
         </section>
         <section class="email-card email-table-card">
@@ -43,7 +43,7 @@
                 <button id="emailReportSend" type="button"><i class="fa fa-paper-plane"></i> Gửi qua Gmail</button>
                 <span id="emailReportMessage" class="email-report-message"></span>
             </div>
-            <div class="email-table-wrap"><table class="email-table"><thead><tr><th>STT</th><th>Thời gian</th><th>Tiêu đề</th><th>Người gửi</th><th>Tệp đính kèm</th><th>Trạng thái</th><th>Xem</th></tr></thead><tbody id="emailRows"></tbody></table></div>
+            <div class="email-table-wrap"><table class="email-table"><thead><tr><th>STT</th><th>Thời gian</th><th>Tiêu đề</th><th>Người gửi</th><th>Thông báo lỗi</th><th>Trạng thái</th><th>Xem</th></tr></thead><tbody id="emailRows"></tbody></table></div>
             <div class="email-pagination"><button id="emailPrev" type="button">‹ Trước</button><span id="emailPageInfo">Trang 1/1</span><button id="emailNext" type="button">Sau ›</button></div>
         </section>
         <div id="emailDetailBackdrop" class="email-detail-backdrop" hidden>
@@ -63,5 +63,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260910-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260923-1") %>"></script>
 </asp:Content>

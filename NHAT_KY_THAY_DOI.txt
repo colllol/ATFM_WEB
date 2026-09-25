@@ -1,5 +1,7 @@
 NHẬT KÝ THAY ĐỔI DỰ ÁN ATFM_WEB
 
+2026-09-25 | prjApplication/SLOTS/EmailReports.aspx; EmailReports.js; EmailReports.css | Đổi cột "Tệp đính kèm" thành "Thông báo lỗi" hiển thị errorMessage; đổi KPI "Tổng email/Đã gửi/Lỗi" thành "Tổng số file/Số file đọc thành công/Số file lỗi" áp dụng bộ lọc; màu dòng chỉ còn 2 loại: xanh (có dữ liệu DB) và đỏ (không có dữ liệu DB).
+
 2026-09-14 | prjApplication/ActionHistory/List_ActionHistory.aspx; List_ActionHistory.aspx.cs | Bổ sung lọc riêng theo tên người dùng, mã thao tác, HostIP và khoảng thời gian thực hiện; hỗ trợ dd/MM/yyyy HH:mm, tự động kết thúc 23:59:59 khi chỉ nhập ngày kết thúc, kiểm tra thứ tự thời gian và dùng cùng điều kiện khi export Excel.
 2026-09-14 | prjApplication/Day_Flights/DaylyFlight.aspx | Chuẩn hóa mã trả về ListValue của LoadDataGrid_Finished, gửi JSON đúng kiểu và hiển thị chi tiết lỗi theo bước khi Export Finished thất bại.
 2026-09-14 | prjApplication/Receive_LogFile/Inbox.aspx | Thêm nút Export Excel cạnh Search; xuất toàn bộ kết quả lọc với các cột NBR, CONTENT và ORIGIN.
@@ -1960,8 +1962,8 @@ Quy ước:
 2026-09-18 | C:\Users\Admin\Documents\APP_V2\HDSD_FlightTrackingMap_NguoiDung_VietLai.docx | Viết lại hướng dẫn người dùng theo phần view và thao tác thực tế của SLOTS/FlightTrackingMap.aspx: thẻ tổng hợp LD/O/F/Khác, tự cập nhật 5 giây, xem chi tiết chuyến bay, zoom/kéo/khôi phục bản đồ và xử lý tình huống.
 
 
-2026-09-18 | TaiLieu/Huong_dan_su_dung_HTSLB_ATFM_WEB_20260918.docx | T?o t�i li?u Word hu?ng d?n s? d?ng theo M?c III Ph? l?c HTSLB, d?i chi?u menu v� lu?ng thao t�c th?c t? c?a ATFM Web; b? sung checklist v� b?ng �nh x? 32 y�u c?u.
-2026-09-18 | create_user_guide.py | Th�m script t?o t�i li?u hu?ng d?n Word d? t�i t?o/di?u ch?nh t�i li?u.
+2026-09-18 | TaiLieu/Huong_dan_su_dung_HTSLB_ATFM_WEB_20260918.docx | T?o t�i li?u Word hu?ng d?n s? d?ng theo M?c III Ph? l?c HTSLB, d?i chi?u menu v� lu?ng thao t�c th?c t? c?a ATFM Web; b? sung checklist v� b?ng �nh x? 32 y�u c?u.
+2026-09-18 | create_user_guide.py | Th�m script t?o t�i li?u hu?ng d?n Word d? t�i t?o/di?u ch?nh t�i li?u.
 
 2026-09-18 | C:\Users\Admin\Documents\APP_V2\HDSD_FlightTrackingMap_NguoiDung_VietLai.docx | Bổ sung hướng dẫn ReportNew/AdsBPerformanceReport.aspx: lọc ngày/PERMTYPE/hãng, KPI, biểu đồ, bảng phân trang, báo cáo cuối ngày và xuất PDF/Excel/CSV.
 
@@ -1974,3 +1976,4 @@ Quy ước:
 2026-09-19 | TaiLieu/TracksSyncPython_GUI_20260919.png; tools/generate_adsb_tools_user_guide.py; TaiLieu/Huong_dan_su_dung_Tool_ADS-B_20260919.docx | Thay anh bao cao ADS-B bang anh chup giao dien thuc te ATFM FIR Tracks Logger cua tools/TracksSyncPython.
 
 2026-09-22 | services/FlightTrackingApi/FlightTrackingApi.csproj; services/FlightTrackingApi/.env.example; services/FlightTrackingApi/Program.cs; services/FlightTrackingApi/build-package.ps1; services/FlightTrackingApi/README.md; services/FlightTrackingApi/Dockerfile; services/FlightTrackingApi/.dockerignore; services/FlightTrackingApi/appsettings.json; .gitignore | Khoi phuc source FlightTrackingApi .NET 8 va bo sung cau hinh .env: build/publish sinh .env mau canh EXE, EXE nap .env tu thu muc chay, giu uu tien bien moi truong/command line; ZIP dong goi ca .env va khong theo doi file .env chua cau hinh that. Da build Release, build goi win-x64 va kiem tra EXE doc API key tu .env.
+2026-09-23 | prjApplication/SLOTS/EmailReports.aspx; prjApplication/SLOTS/EmailReports.js | Toi uu danh sach Email Reports sang phan trang server-side: moi lan chi lay trang hien tai theo page size, chi kiem tra GetTargetPermId cho cac dong dang hien thi, dung chung request dang chay theo syncJobId va chan response cu ghi de khi chuyen trang nhanh; giu luong xuat bao cao toi da 500 dong rieng. Tang cache JavaScript len 20260923-1; node --check va git diff --check dat.

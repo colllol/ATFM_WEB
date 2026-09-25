@@ -9,7 +9,9 @@
     var sendReportEndpoint = page.getAttribute('data-send-report-endpoint');
     var allItems = [], filteredItems = [], currentPage = 1, pageSize = 50, totalItems = 0, totalPages = 1;
     var detailRequestId = 0;
+    var loadRequestId = 0;
     var databaseCache = {};
+    var databaseRequests = {};
     var $ = function (id) { return document.getElementById(id); };
     function esc(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
     function text(item, keys) { for (var i = 0; i < keys.length; i++) if (item && item[keys[i]] != null) return String(item[keys[i]]); return ''; }
@@ -89,18 +91,28 @@
         load();
     }
     function draw() {
-        var pages = Math.max(1, totalPages), start = (currentPage - 1) * pageSize, rows = filteredItems.slice(start, start + pageSize);
+        var pages = Math.max(1, totalPages), start = (currentPage - 1) * pageSize, rows = filteredItems;
         $('emailRows').innerHTML = rows.length ? rows.map(function (item, index) {
             var state = status(item), subject = text(item,['subject','title']) || '(Không có tiêu đề)';
             var sender = text(item,['sender','from','senderEmail']);
-            var fileName = text(item,['attachmentName']);
-            var rowClass = item._databaseState === 'found' ? 'email-row--has-data' : item._databaseState === 'missing' ? 'email-row--no-data' : item._databaseState === 'error' ? 'email-row--db-error' : 'email-row--checking';
-            var databaseTitle = item._databaseState === 'found' ? 'Có dữ liệu trong database' : item._databaseState === 'missing' ? 'Không có dữ liệu trong database' : item._databaseState === 'error' ? 'Không kiểm tra được database' : item._databaseState === 'pending' ? 'Đang chờ worker xử lý' : 'Đang kiểm tra database';
-            return '<tr class="' + rowClass + '" title="' + databaseTitle + '"><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(fileName) + '">' + esc(fileName) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + index + '" title="Xem chi tiết email"><i class="fa fa-eye"></i></button></td></tr>';
+            var errorMsg = text(item,['errorMessage']) || '';
+            var rowClass = item._databaseState === 'found' ? 'email-row--has-data' : 'email-row--no-data';
+            var databaseTitle = item._databaseState === 'found' ? 'Có dữ liệu trong database' : 'Không có dữ liệu trong database';
+            return '<tr class="' + rowClass + '" title="' + databaseTitle + '"><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(errorMsg) + '">' + esc(errorMsg) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + index + '" title="Xem chi tiết email"><i class="fa fa-eye"></i></button></td></tr>';
         }).join('') : '<tr><td colspan="7" class="email-empty-cell">Không có email phù hợp.</td></tr>';
         Array.prototype.forEach.call(document.querySelectorAll('.email-detail-button'), function (button) { button.onclick = function () { showDetail(filteredItems[parseInt(this.getAttribute('data-index'), 10)]); }; });
-        $('emailTotal').textContent = totalItems.toLocaleString('vi-VN'); $('emailPageLabel').textContent = currentPage;
-        $('emailPageInfo').textContent = 'Trang ' + currentPage + '/' + pages + ' · ' + totalItems.toLocaleString('vi-VN') + ' ' + sourceLabel();
+
+        var successCount = 0, errorCount = 0;
+        filteredItems.forEach(function (item) {
+            if (item._databaseState === 'found') successCount++;
+            else errorCount++;
+        });
+
+        $('emailTotal').textContent = filteredItems.length.toLocaleString('vi-VN');
+        $('emailSent').textContent = successCount.toLocaleString('vi-VN');
+        $('emailFailed').textContent = errorCount.toLocaleString('vi-VN');
+        $('emailPageLabel').textContent = currentPage;
+        $('emailPageInfo').textContent = 'Trang ' + currentPage + '/' + pages + ' · ' + filteredItems.length.toLocaleString('vi-VN') + ' ' + sourceLabel();
         $('emailTableInfo').textContent = rows.length.toLocaleString('vi-VN') + ' bản ghi trên trang'; $('emailPrev').disabled = currentPage <= 1; $('emailNext').disabled = currentPage >= pages;
         var checking = rows.some(function (item) { return !/^(found|missing|error)$/.test(item._databaseState || ''); });
         $('emailReportDownload').disabled = !rows.length || checking;
@@ -134,7 +146,8 @@
         item._databaseMessage = cached.message || cached.permitImportError;
     }
     function fetchDatabaseResult(syncJobId) {
-        return fetch(jobEndpoint, {
+        if (databaseRequests[syncJobId]) return databaseRequests[syncJobId];
+        databaseRequests[syncJobId] = fetch(jobEndpoint, {
             method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify({ syncJobId: syncJobId })
         }).then(function (response) {
@@ -142,7 +155,14 @@
                 if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || 'Không kiểm tra được database');
                 return unwrapJobResult(payload);
             });
+        }).then(function (result) {
+            delete databaseRequests[syncJobId];
+            return result;
+        }).catch(function (error) {
+            delete databaseRequests[syncJobId];
+            throw error;
         });
+        return databaseRequests[syncJobId];
     }
     function inspectDatabase(item) {
         var syncJobId = text(item, ['syncJobId']);
@@ -349,6 +369,7 @@
         });
     }
     function load(retriesRemaining) {
+        var requestId = ++loadRequestId;
         retriesRemaining = Math.max(0, parseInt(retriesRemaining, 10) || 0);
         var apply = $('emailApply');
         apply.disabled = true;
@@ -356,7 +377,7 @@
         setConnection(false, 'Đang kết nối...');
         var baseRequest = { query: $('emailSearch').value.trim(), processingStatus: $('emailStatus').value,
             fromDate: $('emailFrom').value ? $('emailFrom').value + 'T00:00:00' : '',
-            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', size: 100 };
+            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', size: pageSize };
         function requestPage(pageNumber) {
             var request = { query: baseRequest.query, processingStatus: baseRequest.processingStatus,
                 fromDate: baseRequest.fromDate, toDate: baseRequest.toDate, page: pageNumber, size: baseRequest.size };
@@ -367,26 +388,18 @@
             });
             });
         }
-        requestPage(0).then(function (firstPayload) {
-            if (firstPayload && typeof firstPayload.d === 'string') firstPayload = JSON.parse(firstPayload.d);
-            var apiPages = Number(firstPayload && firstPayload.totalPages), apiTotal = Number(firstPayload && firstPayload.totalElements);
-            if (!apiPages && apiTotal) apiPages = Math.ceil(apiTotal / baseRequest.size);
-            apiPages = Math.max(1, apiPages || 1);
-            var requests = [], payloads = [firstPayload], pageNumber;
-            for (pageNumber = 1; pageNumber < apiPages; pageNumber++) requests.push(requestPage(pageNumber));
-            return Promise.all(requests).then(function (remaining) { return payloads.concat(remaining); });
-        }).then(function (payloads) {
-            allItems = [];
-            payloads.forEach(function (payload) {
-                if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
-                allItems = allItems.concat(payloadItems(payload));
-            });
+        requestPage(currentPage - 1).then(function (payload) {
+            if (requestId !== loadRequestId) return;
+            if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
+            allItems = payloadItems(payload);
             filteredItems = applyFileTypeFilter(allItems);
-            totalItems = filteredItems.length;
-            totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-            var sent = 0, failed = 0; allItems.forEach(function (item) { var cls = statusClass(status(item)); if (cls === 'success') sent++; if (cls === 'failed') failed++; });
-            $('emailSent').textContent = sent.toLocaleString('vi-VN'); $('emailFailed').textContent = failed.toLocaleString('vi-VN'); $('emailLastUpdated').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN'); setConnection(true, 'Đã kết nối'); draw(); inspectCurrentPage();
+            totalItems = Number(payload && payload.totalElements);
+            if (!isFinite(totalItems) || totalItems < 0) totalItems = filteredItems.length;
+            totalPages = Number(payload && payload.totalPages);
+            if (!isFinite(totalPages) || totalPages < 1) totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+            $('emailLastUpdated').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN'); setConnection(true, 'Đã kết nối'); draw(); inspectCurrentPage();
         }).catch(function (error) {
+            if (requestId !== loadRequestId) return;
             if (retriesRemaining > 0) {
                 setConnection(false, 'Đang thử lại...');
                 window.setTimeout(function () { load(retriesRemaining - 1); }, 600);
@@ -394,6 +407,7 @@
             }
             allItems = []; filteredItems = []; totalItems = 0; totalPages = 1; draw(); setConnection(false, 'Không kết nối'); $('emailError').textContent = 'Không thể tải dữ liệu ' + sourceLabel() + ': ' + error.message; $('emailError').hidden = false;
         }).then(function () {
+            if (requestId !== loadRequestId) return;
             apply.disabled = false;
             apply.innerHTML = '<i class="fa fa-search"></i> Tìm kiếm';
         });
