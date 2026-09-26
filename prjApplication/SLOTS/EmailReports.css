@@ -32,3 +32,5 @@
 
 /* Chuyển nhanh giữa dữ liệu email và dữ liệu lấy từ thư mục Incoming. */
 .email-source-tabs{display:inline-flex;gap:4px;margin-top:18px;padding:4px;border:1px solid var(--border);border-radius:10px;background:#edf5fa}.email-source-tabs button{display:inline-flex;align-items:center;gap:7px;min-width:112px;justify-content:center;padding:9px 16px;border:0;border-radius:7px;color:#497087;background:transparent;font-weight:700;cursor:pointer}.email-source-tabs button.is-active{color:#fff;background:var(--blue);box-shadow:0 4px 10px rgba(25,119,181,.22)}.email-source-tabs button:focus{outline:2px solid #85c6e8;outline-offset:2px}
+
+.email-stats-info{margin:10px 2px 0;color:#71879a;font-size:12px;line-height:1.5}

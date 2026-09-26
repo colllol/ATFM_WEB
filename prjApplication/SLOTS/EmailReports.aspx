@@ -29,10 +29,11 @@
         </section>
         <section class="email-kpis">
             <article><small>Tổng số file</small><strong id="emailTotal">0</strong></article>
-            <article><small>Số file đọc thành công</small><strong id="emailSent">0</strong></article>
-            <article><small>Số file lỗi</small><strong id="emailFailed">0</strong></article>
+            <article title="Số bản ghi sau lọc đã xác nhận có dữ liệu trong database"><small>Số file đọc thành công</small><strong id="emailSent">0</strong></article>
+            <article title="Số bản ghi sau lọc đã xác nhận chưa có dữ liệu DB hoặc lỗi xử lý; không gồm đang chờ hay lỗi kết nối"><small>Số file lỗi</small><strong id="emailFailed">0</strong></article>
             <article><small>Trang hiện tại</small><strong id="emailPageLabel">1</strong></article>
         </section>
+        <p id="emailStatsInfo" class="email-muted email-stats-info" role="status" aria-live="polite">Thống kê trên toàn bộ kết quả sau lọc.</p>
         <section class="email-card email-table-card">
             <div class="email-table-heading"><div><h2 id="emailTableTitle">Danh sách email</h2><p id="emailTableInfo">Chưa có dữ liệu</p></div><label class="email-page-size">Số dòng<select id="emailPageSize"><option>25</option><option selected>50</option><option>100</option></select></label></div>
             <div class="email-report-tools">
@@ -63,5 +64,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260923-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260926-1") %>"></script>
 </asp:Content>

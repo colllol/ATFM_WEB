@@ -10,10 +10,12 @@
     var allItems = [], filteredItems = [], currentPage = 1, pageSize = 50, totalItems = 0, totalPages = 1;
     var detailRequestId = 0;
     var loadRequestId = 0;
-    var databaseCache = {};
-    var databaseRequests = {};
+    // Each search owns its data/cache. Old requests cannot update a newer search.
+    var activeLoad = null;
+    var loading = false, listReady = false, reportBusy = false;
+    var summary = { found: 0, missing: 0, error: 0, pending: 0, unknown: 0, checked: 0 };
     var $ = function (id) { return document.getElementById(id); };
-    function esc(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
+    function esc(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
     function text(item, keys) { for (var i = 0; i < keys.length; i++) if (item && item[keys[i]] != null) return String(item[keys[i]]); return ''; }
     function payloadItems(payload) {
         var data = payload && (payload.content || payload.data || payload.items || payload.emails || payload.results || payload.ListValue || payload.d || payload);
@@ -75,61 +77,83 @@
         if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'gif' || ext === 'bmp' || ext === 'tif' || ext === 'tiff' || ext === 'webp') return 'image';
         return 'other';
     }
-    function applyFileTypeFilter(items) {
-        var type = $('emailFileType').value;
-        if (!type) return items.slice();
-        return items.filter(function (item) { return fileTypeOf(item) === type; });
+    function readFilters() {
+        return { query: $('emailSearch').value.trim(), processingStatus: $('emailStatus').value,
+            fromDate: $('emailFrom').value, toDate: $('emailTo').value, fileType: $('emailFileType').value };
     }
-    function applyFilters() {
-        if ($('emailFrom').value && $('emailTo').value && $('emailFrom').value > $('emailTo').value) {
-            $('emailError').textContent = 'Từ ngày không được lớn hơn đến ngày.';
-            $('emailError').hidden = false;
-            return;
-        }
-        $('emailError').hidden = true;
-        currentPage = 1;
-        load();
+    function filterItems(items, filters, source) {
+        return items.filter(function (item) {
+            if (filters.fileType && fileTypeOf(item) !== filters.fileType) return false;
+            // Incoming currently ignores query/status/date parameters in the upstream API.
+            if (source !== 'incoming') return true;
+            if (filters.processingStatus && status(item).toUpperCase() !== filters.processingStatus.toUpperCase()) return false;
+            var day = dateKey(date(item));
+            if (filters.fromDate && (!day || day < filters.fromDate)) return false;
+            if (filters.toDate && (!day || day > filters.toDate)) return false;
+            var searchText = [text(item, ['subject','title']), text(item, ['sender','from','senderEmail']),
+                text(item, ['body','content','message','text','html']), attachmentName(item),
+                text(item, ['attachmentName']), text(item, ['errorMessage'])].join(' ').toLowerCase();
+            return !filters.query || searchText.indexOf(filters.query.toLowerCase()) >= 0;
+        });
+    }
+    function applyFilters() { return load(); }
+    function updateSummary() {
+        summary = { found: 0, missing: 0, error: 0, pending: 0, unknown: 0, checked: 0 };
+        filteredItems.forEach(function (item) {
+            var state = item._databaseState;
+            if (/^(found|missing|error|pending)$/.test(state || '')) summary[state]++;
+            else summary.unknown++;
+            if (state && state !== 'checking') summary.checked++;
+        });
     }
     function draw() {
-        var pages = Math.max(1, totalPages), start = (currentPage - 1) * pageSize, rows = filteredItems;
+        totalItems = filteredItems.length;
+        totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        currentPage = Math.max(1, Math.min(currentPage, totalPages));
+        var start = (currentPage - 1) * pageSize, rows = filteredItems.slice(start, start + pageSize);
         $('emailRows').innerHTML = rows.length ? rows.map(function (item, index) {
             var state = status(item), subject = text(item,['subject','title']) || '(Không có tiêu đề)';
             var sender = text(item,['sender','from','senderEmail']);
             var errorMsg = text(item,['errorMessage']) || '';
-            var rowClass = item._databaseState === 'found' ? 'email-row--has-data' : 'email-row--no-data';
-            var databaseTitle = item._databaseState === 'found' ? 'Có dữ liệu trong database' : 'Không có dữ liệu trong database';
-            return '<tr class="' + rowClass + '" title="' + databaseTitle + '"><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(errorMsg) + '">' + esc(errorMsg) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + index + '" title="Xem chi tiết email"><i class="fa fa-eye"></i></button></td></tr>';
-        }).join('') : '<tr><td colspan="7" class="email-empty-cell">Không có email phù hợp.</td></tr>';
+            var dbState = item._databaseState;
+            var rowClass = dbState === 'found' ? 'email-row--has-data' : /^(missing|error)$/.test(dbState || '') ? 'email-row--no-data' : '';
+            var databaseTitle = dbState === 'found' ? 'Có dữ liệu trong database'
+                : dbState === 'pending' ? 'Đang chờ xử lý'
+                : dbState === 'lookup-error' ? 'Không kiểm tra được database; chưa tính vào số file lỗi'
+                : /^(missing|error)$/.test(dbState || '') ? 'Chưa có dữ liệu trong database' : 'Đang kiểm tra database';
+            return '<tr class="' + rowClass + '" title="' + databaseTitle + '"><td>' + (start + index + 1) + '</td><td><span class="email-cell-clamp" title="' + esc(date(item)) + '">' + esc(date(item)) + '</span></td><td class="email-subject" title="' + esc(subject) + '"><span class="email-cell-clamp">' + esc(subject) + '</span></td><td><span class="email-cell-clamp" title="' + esc(sender) + '">' + esc(sender) + '</span></td><td><span class="email-cell-clamp" title="' + esc(errorMsg) + '">' + esc(errorMsg) + '</span></td><td><span class="email-status ' + statusClass(state) + '">' + esc(state) + '</span></td><td><button type="button" class="email-detail-button" data-index="' + (start + index) + '" title="Xem chi tiết email"><i class="fa fa-eye"></i></button></td></tr>';
+        }).join('') : '<tr><td colspan="7" class="email-empty-cell">' + (loading ? 'Đang lấy đầy đủ dữ liệu theo bộ lọc...' : listReady ? 'Không có email phù hợp.' : 'Chưa có kết quả đầy đủ. Vui lòng tìm kiếm lại.') + '</td></tr>';
         Array.prototype.forEach.call(document.querySelectorAll('.email-detail-button'), function (button) { button.onclick = function () { showDetail(filteredItems[parseInt(this.getAttribute('data-index'), 10)]); }; });
-
-        var successCount = 0, errorCount = 0;
-        filteredItems.forEach(function (item) {
-            if (item._databaseState === 'found') successCount++;
-            else errorCount++;
-        });
-
-        $('emailTotal').textContent = filteredItems.length.toLocaleString('vi-VN');
-        $('emailSent').textContent = successCount.toLocaleString('vi-VN');
-        $('emailFailed').textContent = errorCount.toLocaleString('vi-VN');
+        var statsReady = listReady && summary.checked === totalItems;
+        $('emailTotal').textContent = listReady ? totalItems.toLocaleString('vi-VN') : '--';
+        $('emailSent').textContent = statsReady ? summary.found.toLocaleString('vi-VN') : '--';
+        $('emailFailed').textContent = statsReady ? (summary.missing + summary.error).toLocaleString('vi-VN') : '--';
         $('emailPageLabel').textContent = currentPage;
-        $('emailPageInfo').textContent = 'Trang ' + currentPage + '/' + pages + ' · ' + filteredItems.length.toLocaleString('vi-VN') + ' ' + sourceLabel();
-        $('emailTableInfo').textContent = rows.length.toLocaleString('vi-VN') + ' bản ghi trên trang'; $('emailPrev').disabled = currentPage <= 1; $('emailNext').disabled = currentPage >= pages;
-        var checking = rows.some(function (item) { return !/^(found|missing|error)$/.test(item._databaseState || ''); });
-        $('emailReportDownload').disabled = !rows.length || checking;
-        $('emailReportSend').disabled = !rows.length || checking;
+        $('emailPageInfo').textContent = 'Trang ' + currentPage + '/' + totalPages + ' · ' + (listReady ? totalItems.toLocaleString('vi-VN') : '--') + ' ' + sourceLabel();
+        $('emailTableInfo').textContent = listReady ? (totalItems ? 'Hiển thị ' + (start + 1) + '–' + (start + rows.length) + ' / ' + totalItems.toLocaleString('vi-VN') + ' bản ghi sau lọc' : '0 bản ghi sau lọc') : 'Chưa có kết quả đầy đủ';
+        if (listReady) $('emailStatsInfo').textContent = !statsReady
+            ? 'Đang kiểm tra database: ' + summary.checked + '/' + totalItems + ' file. Chưa công bố số thành công/lỗi.'
+            : 'Thống kê trên toàn bộ ' + totalItems.toLocaleString('vi-VN') + ' bản ghi sau lọc, không phụ thuộc số dòng/trang.'
+                + (summary.pending ? ' Đang chờ xử lý: ' + summary.pending + '.' : '')
+                + (summary.unknown ? ' Không kiểm tra được DB: ' + summary.unknown + '; chưa tính thành công/lỗi. Bấm làm mới để thử lại.' : '');
+        $('emailPrev').disabled = !listReady || currentPage <= 1;
+        $('emailNext').disabled = !listReady || currentPage >= totalPages;
+        $('emailReportDownload').disabled = !statsReady || !totalItems || reportBusy;
+        $('emailReportSend').disabled = !statsReady || !totalItems || reportBusy;
     }
     function unwrapJobResult(payload) {
         var result = payload && payload.d != null ? payload.d : payload;
         if (typeof result === 'string') result = JSON.parse(result);
         return result || {};
     }
-    function applyDatabaseResult(item, syncJobId, result) {
+    function applyDatabaseResult(item, syncJobId, result, context) {
+        if (context !== activeLoad) return;
         var targetPermId = result.targetPermId || null;
-        var state = result.hasDatabaseData === false
-            ? (result.state || 'missing')
-            : targetPermId ? 'found' : (result.state || 'missing');
+        var state = result.state || (result.hasDatabaseData === true && targetPermId ? 'found' : 'missing');
+        if (result.hasDatabaseData === false && state === 'found') state = 'missing';
         var cached = {
             state: state,
+            hasDatabaseData: state === 'found',
             oper: result.oper || '',
             targetPermId: targetPermId,
             editPage: result.editPage || (result.targetTable === 'NO' ? 'Edit_PermNO4Mail.aspx' : 'Edit_PermSC4Mail.aspx'),
@@ -138,16 +162,16 @@
             permitImportStatus: result.permitImportStatus || '',
             permitImportError: result.permitImportError || ''
         };
-        databaseCache[syncJobId] = cached;
+        context.cache[syncJobId] = cached;
         item._databaseState = cached.state;
         item._oper = cached.oper;
         item._targetPermId = cached.targetPermId;
         item._editPage = cached.editPage;
         item._databaseMessage = cached.message || cached.permitImportError;
     }
-    function fetchDatabaseResult(syncJobId) {
-        if (databaseRequests[syncJobId]) return databaseRequests[syncJobId];
-        databaseRequests[syncJobId] = fetch(jobEndpoint, {
+    function fetchDatabaseResult(syncJobId, context) {
+        if (context.requests[syncJobId]) return context.requests[syncJobId];
+        context.requests[syncJobId] = fetch(jobEndpoint, {
             method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify({ syncJobId: syncJobId })
         }).then(function (response) {
@@ -156,42 +180,52 @@
                 return unwrapJobResult(payload);
             });
         }).then(function (result) {
-            delete databaseRequests[syncJobId];
+            delete context.requests[syncJobId];
             return result;
         }).catch(function (error) {
-            delete databaseRequests[syncJobId];
+            delete context.requests[syncJobId];
             throw error;
         });
-        return databaseRequests[syncJobId];
+        return context.requests[syncJobId];
     }
-    function inspectDatabase(item) {
+    function inspectDatabase(item, context) {
+        if (context !== activeLoad) return Promise.resolve();
         var syncJobId = text(item, ['syncJobId']);
-        if (!syncJobId) { item._databaseState = 'missing'; return Promise.resolve(); }
-        if (databaseCache[syncJobId]) {
-            applyDatabaseResult(item, syncJobId, databaseCache[syncJobId]);
+        if (!syncJobId) {
+            item._databaseState = /^(DISCOVERED|DOWNLOADED|PROCESSING|RESERVED|PENDING)$/.test(status(item).trim().toUpperCase()) ? 'pending' : 'missing';
+            return Promise.resolve();
+        }
+        if (context.cache[syncJobId]) {
+            applyDatabaseResult(item, syncJobId, context.cache[syncJobId], context);
             return Promise.resolve();
         }
         item._databaseState = 'checking';
-        return fetchDatabaseResult(syncJobId).then(function (result) {
-            applyDatabaseResult(item, syncJobId, result);
+        return fetchDatabaseResult(syncJobId, context).then(function (result) {
+            applyDatabaseResult(item, syncJobId, result, context);
         }).catch(function (error) {
-            databaseCache[syncJobId] = { state: 'error', oper: '', targetPermId: null, message: error.message || 'Không kiểm tra được database' };
-            applyDatabaseResult(item, syncJobId, databaseCache[syncJobId]);
+            if (context !== activeLoad) return;
+            context.cache[syncJobId] = { state: 'lookup-error', oper: '', targetPermId: null, message: error.message || 'Không kiểm tra được database' };
+            applyDatabaseResult(item, syncJobId, context.cache[syncJobId], context);
         });
     }
-    function inspectItems(items) {
-        var queue = items.slice(), cursor = 0;
+    function inspectItems(items, context) {
+        var cursor = 0, completed = 0, lastDraw = 0;
         function worker() {
-            if (cursor >= queue.length) return Promise.resolve();
-            return inspectDatabase(queue[cursor++]).then(worker);
+            if (context !== activeLoad || cursor >= items.length) return Promise.resolve();
+            return inspectDatabase(items[cursor++], context).then(function () {
+                if (context !== activeLoad) return;
+                completed++;
+                if (completed === items.length || Date.now() - lastDraw > 250) {
+                    lastDraw = Date.now(); updateSummary(); draw();
+                }
+                return worker();
+            });
         }
         return Promise.all([worker(), worker(), worker(), worker()]);
     }
-    function inspectCurrentPage() {
-        return inspectItems(filteredItems).then(draw);
-    }
     function showDetail(item) {
-        if (!item) return;
+        if (!item || !activeLoad) return;
+        var context = activeLoad;
         var subject = text(item,['subject','title']) || '(Không có tiêu đề)';
         var syncJobId = text(item, ['syncJobId']);
         var fileName = attachmentName(item);
@@ -227,12 +261,14 @@
         }
 
         permissionMessage.textContent = 'Đang lấy số phép bay...';
-        var cached = databaseCache[syncJobId];
+        var cached = context.cache[syncJobId];
         var lookup = cached && cached.state === 'found'
             ? Promise.resolve(cached)
-            : fetchDatabaseResult(syncJobId).then(function (result) {
-                applyDatabaseResult(item, syncJobId, result);
-                return databaseCache[syncJobId];
+            : fetchDatabaseResult(syncJobId, context).then(function (result) {
+                if (context !== activeLoad) return null;
+                applyDatabaseResult(item, syncJobId, result, context);
+                updateSummary(); draw();
+                return context.cache[syncJobId];
             });
         lookup.then(function (result) {
             if (requestId !== detailRequestId) return;
@@ -263,7 +299,7 @@
     }
     function reportRows(items) {
         return items.map(function (item) {
-            return { Oper: oper(item), FileName: attachmentName(item) || '--', Status: status(item), HasDatabaseData: item._databaseState === 'found', DatabaseState: item._databaseState };
+            return { Oper: oper(item), FileName: attachmentName(item) || '--', Status: status(item), HasDatabaseData: item._databaseState === 'found', DatabaseState: item._databaseState === 'lookup-error' ? 'error' : item._databaseState };
         });
     }
     function reportHtml(rows) {
@@ -274,44 +310,13 @@
         return '<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #777;padding:7px}th{background:#dceef8}</style></head><body><h2>BÁO CÁO TRẠNG THÁI DỮ LIỆU EMAIL</h2><table><thead><tr><th>STT</th><th>OPER (Tên hãng)</th><th>Tên file</th><th>Trạng thái</th></tr></thead><tbody>' + body + '</tbody></table></body></html>';
     }
     function loadReportItems() {
+        if (!listReady || summary.checked !== totalItems) return Promise.reject(new Error('Vui lòng chờ thống kê đầy đủ.'));
         var senderFilter = $('emailReportSender').value.trim().toLowerCase();
-        var baseRequest = {
-            query: senderFilter || $('emailSearch').value.trim(), processingStatus: $('emailStatus').value,
-            fromDate: $('emailFrom').value ? $('emailFrom').value + 'T00:00:00' : '',
-            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', size: 100
-        };
-        function requestPage(pageNumber) {
-            var request = {
-                query: baseRequest.query, processingStatus: baseRequest.processingStatus,
-                fromDate: baseRequest.fromDate, toDate: baseRequest.toDate,
-                page: pageNumber, size: baseRequest.size
-            };
-            return fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
-                return response.json().catch(function () { return null; }).then(function (payload) {
-                    if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
-                    if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
-                    return payload;
-                });
-            });
-        }
-        return requestPage(0).then(function (firstPayload) {
-            var firstItems = payloadItems(firstPayload), totalPagesFromApi = Number(firstPayload && firstPayload.totalPages);
-            var totalElements = Number(firstPayload && firstPayload.totalElements);
-            var availablePages = totalPagesFromApi > 0 ? totalPagesFromApi : totalElements > 0 ? Math.ceil(totalElements / 100) : 1;
-            var requests = [], pageLimit = Math.min(5, Math.max(1, availablePages));
-            for (var pageNumber = 1; pageNumber < pageLimit; pageNumber++) requests.push(requestPage(pageNumber));
-            return Promise.all(requests).then(function (remainingPayloads) {
-                var items = firstItems.slice();
-                remainingPayloads.forEach(function (payload) { items = items.concat(payloadItems(payload)); });
-                return items;
-            });
-        }).then(function (items) {
-            items = items.filter(function (item) {
-                return !senderFilter || text(item, ['sender','from','senderEmail']).toLowerCase().indexOf(senderFilter) >= 0;
-            }).slice(0, 500);
-            if (!items.length) throw new Error('Không có email phù hợp với bộ lọc báo cáo.');
-            return inspectItems(items).then(function () { return items; });
-        });
+        // Export the same applied snapshot; do not replace its query or lose its file-type filter.
+        var items = filteredItems.filter(function (item) {
+            return !senderFilter || text(item, ['sender','from','senderEmail']).toLowerCase().indexOf(senderFilter) >= 0;
+        }).slice(0, 500);
+        return items.length ? Promise.resolve(items) : Promise.reject(new Error('Không có email phù hợp với bộ lọc báo cáo.'));
     }
     function validateReportSender() {
         var input = $('emailReportSender');
@@ -325,6 +330,7 @@
     function downloadReport() {
         if (!validateReportSender()) return;
         var button = $('emailReportDownload'), message = $('emailReportMessage');
+        reportBusy = true; draw();
         button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tạo...';
         message.className = 'email-report-message'; message.textContent = 'Đang lấy tối đa 500 bản ghi ' + sourceLabel() + ' và kiểm tra database...';
         loadReportItems().then(function (items) {
@@ -338,7 +344,8 @@
         }).catch(function (error) {
             message.className = 'email-report-message is-error'; message.textContent = 'Không thể tạo báo cáo: ' + error.message;
         }).then(function () {
-            button.disabled = false; button.innerHTML = '<i class="fa fa-download"></i> Tải báo cáo';
+            reportBusy = false; draw();
+            button.innerHTML = '<i class="fa fa-download"></i> Tải báo cáo';
         });
     }
     function sendReport() {
@@ -347,6 +354,7 @@
         if (!recipient || !$('emailReportRecipient').checkValidity()) {
             message.className = 'email-report-message is-error'; message.textContent = 'Vui lòng nhập Gmail người nhận hợp lệ.'; return;
         }
+        reportBusy = true; draw();
         button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang gửi...';
         message.className = 'email-report-message'; message.textContent = '';
         message.textContent = 'Đang lấy tối đa 500 bản ghi ' + sourceLabel() + ' và kiểm tra database...';
@@ -365,55 +373,142 @@
         }).catch(function (error) {
             message.className = 'email-report-message is-error'; message.textContent = 'Không thể gửi báo cáo: ' + error.message;
         }).then(function () {
-            button.disabled = false; button.innerHTML = '<i class="fa fa-paper-plane"></i> Gửi qua Gmail';
+            reportBusy = false; draw();
+            button.innerHTML = '<i class="fa fa-paper-plane"></i> Gửi qua Gmail';
+        });
+    }
+    function readListPayload(payload) {
+        var data = payload && payload.d != null ? payload.d : payload;
+        if (typeof data === 'string') data = JSON.parse(data);
+        // Do not interpret an invalid/error response as an empty, successful search.
+        var candidates = data && (data.content || data.items || data.emails || data.results || data.ListValue || data.data || data);
+        if (candidates && !Array.isArray(candidates)) candidates = candidates.content || candidates.items || candidates.emails || candidates.results || candidates.data;
+        if (!Array.isArray(candidates)) throw new Error('API trả dữ liệu danh sách không hợp lệ.');
+        return { data: data, items: candidates };
+    }
+    function loadAllItems(context, retriesRemaining) {
+        var filters = context.filters, pages = [], expectedTotal = null, expectedPages = null;
+        function requestPage(pageNumber, retries) {
+            if (context !== activeLoad) return Promise.reject(new Error('Search superseded'));
+            var request = { query: filters.query, processingStatus: filters.processingStatus,
+                fromDate: filters.fromDate ? filters.fromDate + 'T00:00:00' : '',
+                toDate: filters.toDate ? filters.toDate + 'T23:59:59' : '', page: pageNumber, size: 100 };
+            return fetch(context.endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            }).then(function (payload) {
+                if (context !== activeLoad) throw new Error('Search superseded');
+                var parsed = readListPayload(payload), data = parsed.data;
+                if (data.page != null && Number(data.page) !== pageNumber) throw new Error('API trả sai trang dữ liệu.');
+                if (expectedTotal !== null && data.totalElements != null && Number(data.totalElements) !== expectedTotal)
+                    throw new Error('Dữ liệu nguồn thay đổi trong lúc tải. Vui lòng tìm kiếm lại để có thống kê đầy đủ.');
+                if (expectedPages !== null && data.totalPages != null && Math.max(1, Number(data.totalPages)) !== expectedPages)
+                    throw new Error('Số trang nguồn thay đổi trong lúc tải. Vui lòng tìm kiếm lại.');
+                return parsed;
+            }).catch(function (error) {
+                if (context === activeLoad && retries > 0) return new Promise(function (resolve) { window.setTimeout(resolve, 600); }).then(function () { return requestPage(pageNumber, retries - 1); });
+                throw error;
+            });
+        }
+        return requestPage(0, retriesRemaining).then(function (first) {
+            var data = first.data;
+            if (data.totalElements != null) {
+                expectedTotal = Number(data.totalElements);
+                if (!isFinite(expectedTotal) || expectedTotal < 0 || Math.floor(expectedTotal) !== expectedTotal) throw new Error('Tổng bản ghi từ API không hợp lệ.');
+            }
+            if (data.totalPages != null) {
+                expectedPages = Number(data.totalPages);
+                if (!isFinite(expectedPages) || expectedPages < 0 || Math.floor(expectedPages) !== expectedPages) throw new Error('Số trang từ API không hợp lệ.');
+                expectedPages = Math.max(1, expectedPages);
+            } else if (expectedTotal !== null) {
+                var apiSize = Number(data.size) || first.items.length || 100;
+                expectedPages = Math.max(1, Math.ceil(expectedTotal / apiSize));
+            }
+            pages[0] = first.items;
+            var completed = 1, nextPage = 1;
+            function progress() {
+                if (context === activeLoad) $('emailStatsInfo').textContent = 'Đang lấy đủ dữ liệu: ' + completed + (expectedPages !== null ? '/' + expectedPages : '') + ' trang nguồn. Chưa công bố tổng số.';
+            }
+            progress();
+            function worker() {
+                if (context !== activeLoad || nextPage >= expectedPages) return Promise.resolve();
+                var number = nextPage++;
+                return requestPage(number, retriesRemaining).then(function (result) {
+                    pages[number] = result.items; completed++; progress(); return worker();
+                });
+            }
+            // Legacy array responses/hasNext-only APIs: continue until the explicit end.
+            function sequential(previous) {
+                if (context !== activeLoad || previous.data.hasNext === false || (previous.data.hasNext == null && previous.items.length < (Number(previous.data.size) || 100))) return Promise.resolve();
+                var number = nextPage++;
+                return requestPage(number, retriesRemaining).then(function (result) {
+                    if (!result.items.length && result.data.hasNext === true) throw new Error('API báo còn trang nhưng trả danh sách rỗng.');
+                    pages[number] = result.items; completed++; progress(); return sequential(result);
+                });
+            }
+            return expectedPages !== null ? Promise.all([worker(), worker(), worker(), worker()]) : sequential(first);
+        }).then(function () {
+            if (context !== activeLoad) throw new Error('Search superseded');
+            var items = [];
+            pages.forEach(function (batch) { items = items.concat(batch); });
+            var seen = Object.create(null);
+            items.forEach(function (item) {
+                if (item.id == null) return;
+                var key = String(item.id) + ':' + (item.attachmentIndex == null ? '' : item.attachmentIndex);
+                if (seen[key]) throw new Error('Các trang nguồn có bản ghi trùng. Vui lòng tìm kiếm lại để tránh đếm sai.');
+                seen[key] = true;
+            });
+            if (expectedTotal !== null && items.length !== expectedTotal) throw new Error('Chưa lấy đủ bản ghi từ API. Vui lòng tìm kiếm lại; không sử dụng tổng số chưa đầy đủ.');
+            return items;
         });
     }
     function load(retriesRemaining) {
-        var requestId = ++loadRequestId;
-        retriesRemaining = Math.max(0, parseInt(retriesRemaining, 10) || 0);
-        var apply = $('emailApply');
-        apply.disabled = true;
-        apply.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm...';
-        setConnection(false, 'Đang kết nối...');
-        var baseRequest = { query: $('emailSearch').value.trim(), processingStatus: $('emailStatus').value,
-            fromDate: $('emailFrom').value ? $('emailFrom').value + 'T00:00:00' : '',
-            toDate: $('emailTo').value ? $('emailTo').value + 'T23:59:59' : '', size: pageSize };
-        function requestPage(pageNumber) {
-            var request = { query: baseRequest.query, processingStatus: baseRequest.processingStatus,
-                fromDate: baseRequest.fromDate, toDate: baseRequest.toDate, page: pageNumber, size: baseRequest.size };
-            return fetch(endpoint, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(request) }).then(function (response) {
-            return response.json().catch(function () { return null; }).then(function (payload) {
-                if (!response.ok) throw new Error(payload && (payload.Message || payload.message) || ('HTTP ' + response.status));
-                return payload;
-            });
-            });
+        var filters = readFilters();
+        if (filters.fromDate && filters.toDate && filters.fromDate > filters.toDate) {
+            $('emailError').textContent = 'Từ ngày không được lớn hơn đến ngày.'; $('emailError').hidden = false;
+            return Promise.resolve();
         }
-        requestPage(currentPage - 1).then(function (payload) {
-            if (requestId !== loadRequestId) return;
-            if (payload && typeof payload.d === 'string') payload = JSON.parse(payload.d);
-            allItems = payloadItems(payload);
-            filteredItems = applyFileTypeFilter(allItems);
-            totalItems = Number(payload && payload.totalElements);
-            if (!isFinite(totalItems) || totalItems < 0) totalItems = filteredItems.length;
-            totalPages = Number(payload && payload.totalPages);
-            if (!isFinite(totalPages) || totalPages < 1) totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-            $('emailLastUpdated').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN'); setConnection(true, 'Đã kết nối'); draw(); inspectCurrentPage();
+        var context = { id: ++loadRequestId, endpoint: endpoint, source: sourceMode, filters: filters, cache: Object.create(null), requests: Object.create(null) };
+        activeLoad = context;
+        retriesRemaining = Math.max(0, parseInt(retriesRemaining, 10) || 0);
+        closeDetail();
+        loading = true; listReady = false; currentPage = 1; allItems = []; filteredItems = [];
+        updateSummary(); draw();
+        $('emailError').hidden = true; $('emailLastUpdated').textContent = 'Đang cập nhật...';
+        $('emailStatsInfo').textContent = 'Đang lấy đầy đủ dữ liệu theo bộ lọc...';
+        var apply = $('emailApply');
+        apply.disabled = true; apply.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tìm...';
+        setConnection(false, 'Đang tải dữ liệu...');
+        return loadAllItems(context, retriesRemaining).then(function (items) {
+            if (context !== activeLoad) return;
+            allItems = items;
+            filteredItems = filterItems(allItems, context.filters, context.source);
+            listReady = true; loading = false;
+            updateSummary(); draw(); setConnection(true, 'Đã kết nối');
+            return inspectItems(filteredItems, context).then(function () {
+                if (context !== activeLoad) return;
+                updateSummary(); draw();
+                $('emailLastUpdated').textContent = 'Cập nhật ' + new Date().toLocaleTimeString('vi-VN');
+            });
         }).catch(function (error) {
-            if (requestId !== loadRequestId) return;
-            if (retriesRemaining > 0) {
-                setConnection(false, 'Đang thử lại...');
-                window.setTimeout(function () { load(retriesRemaining - 1); }, 600);
-                return;
-            }
-            allItems = []; filteredItems = []; totalItems = 0; totalPages = 1; draw(); setConnection(false, 'Không kết nối'); $('emailError').textContent = 'Không thể tải dữ liệu ' + sourceLabel() + ': ' + error.message; $('emailError').hidden = false;
+            if (context !== activeLoad) return;
+            activeLoad = null; loading = false; listReady = false; allItems = []; filteredItems = [];
+            updateSummary(); draw(); setConnection(false, 'Không tải đủ dữ liệu');
+            $('emailStatsInfo').textContent = 'Chưa có thống kê đầy đủ. Vui lòng thử lại.';
+            $('emailLastUpdated').textContent = 'Cập nhật thất bại';
+            $('emailError').textContent = 'Không thể tải dữ liệu ' + sourceLabel() + ': ' + error.message; $('emailError').hidden = false;
         }).then(function () {
-            if (requestId !== loadRequestId) return;
-            apply.disabled = false;
-            apply.innerHTML = '<i class="fa fa-search"></i> Tìm kiếm';
+            if (context.id !== loadRequestId) return;
+            apply.disabled = false; apply.innerHTML = '<i class="fa fa-search"></i> Tìm kiếm';
         });
     }
-    $('emailApply').onclick = applyFilters; $('emailSearch').onkeydown = function (event) { if (event.key === 'Enter') applyFilters(); }; $('emailFileType').onchange = applyFilters; $('emailRefresh').onclick = function () { $('emailError').hidden = true; load(); }; $('emailPageSize').onchange = function () { pageSize = parseInt(this.value, 10); currentPage = 1; load(); };
-    $('emailPrev').onclick = function () { if (currentPage > 1) { currentPage--; load(); } }; $('emailNext').onclick = function () { if (currentPage < totalPages) { currentPage++; load(); } };
+    $('emailApply').onclick = applyFilters;
+    $('emailSearch').onkeydown = function (event) { if (event.key === 'Enter') { event.preventDefault(); applyFilters(); } };
+    $('emailFileType').onchange = applyFilters;
+    $('emailRefresh').onclick = function () { return load(); };
+    $('emailPageSize').onchange = function () { pageSize = parseInt(this.value, 10) || 50; currentPage = 1; draw(); };
+    $('emailPrev').onclick = function () { if (currentPage > 1) { currentPage--; draw(); } };
+    $('emailNext').onclick = function () { if (currentPage < totalPages) { currentPage++; draw(); } };
     $('emailReportDownload').onclick = downloadReport; $('emailReportSend').onclick = sendReport;
     Array.prototype.forEach.call(document.querySelectorAll('[data-report-source]'), function (button) { button.onclick = function () { if (this.getAttribute('data-report-source') !== sourceMode) selectSource(this.getAttribute('data-report-source')); }; });
     $('emailDetailClose').onclick = closeDetail; $('emailDetailBackdrop').onclick = function (event) { if (event.target === this) closeDetail(); };
