@@ -1981,3 +1981,4 @@ Quy ước:
 2026-09-26 | prjApplication/SLOTS/EmailReports.aspx; prjApplication/SLOTS/EmailReports.js | Sửa thứ tự lấy đủ dữ liệu, lọc, thống kê toàn bộ rồi phân trang 25/50/100 dòng; bổ sung tiến độ, không công bố tổng khi thiếu trang; Incoming lọc cục bộ theo hợp đồng API hiện tại; cô lập cache từng lượt tìm/làm mới và phân biệt chờ xử lý/lỗi kiểm tra DB; báo cáo dùng cùng tập kết quả đã lọc.
 2026-09-26 | tests/test_email_reports.js | Thêm kiểm thử hồi quy Node VM chạy JavaScript thật: tổng sau lọc, đủ dòng từng trang, KPI toàn tập, cache, Incoming, xuất báo cáo, request cũ và lỗi/thiếu dữ liệu API.
 2026-09-26 | prjApplication/SLOTS/EmailReports.css | Bổ sung kiểu hiển thị dòng tiến độ/thống kê toàn bộ kết quả sau lọc.
+2026-09-26 | TaiLieu/EmailReports_API_contract_20260926.md | Tai lieu ban giao backend: mo rong API Email/Incoming cho loc/count/KPI, chi tiet theo nhu cau; dung URL goc hien co, khong them Web.config key.
