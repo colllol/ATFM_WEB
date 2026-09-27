@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
+<%@ Page Title="" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true"
     CodeBehind="Edit_PermNo.aspx.cs" Inherits="prjApplication.Permission.Edit_PermNo" %>
 
 <%@ Register Assembly="CustomControl" Namespace="CustomControl" TagPrefix="cc1" %>
@@ -643,7 +643,7 @@
             setSelectedValue(ddlAUTHOR_ID.id, obj['AUTHOR_ID']);
             ddlOPER_ID.value = obj['OPER_ID'];
             setSelectedValue(ddlPERMTYPE.id, obj['PERMTYPE']);
-            setSelectedValue(ddlFLIGHTTYPE.id, obj['FLIGHTTYPE']);            
+            setSelectedValue(ddlFLIGHTTYPE.id, obj['FLIGHTTYPE'] || (isPermNoApprovalMode ? 'NO' : ''));            
             txtBillingAddress.value = obj['BILLINGADDRESS'] == null ? '' : obj['BILLINGADDRESS'].replace(/<br>/gi, '\r\n');
             txtPermContent.value = obj['PERMCONTENT'] == null ? '' : obj['PERMCONTENT'].replace(/<br>/gi, '\r\n');
         }
