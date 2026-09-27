@@ -4,6 +4,10 @@
     <section id="emailReportsPage" class="email-reports-page"
         data-email-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmails") %>"
         data-incoming-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetIncoming") %>"
+        data-email-summary-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmailSummary") %>"
+        data-incoming-summary-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetIncomingSummary") %>"
+        data-email-detail-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmailDetail") %>"
+        data-incoming-detail-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetIncomingDetail") %>"
         data-job-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetTargetPermId") %>"
         data-send-report-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/SendReport") %>">
         <header class="email-hero">
@@ -64,5 +68,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260926-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260927-1") %>"></script>
 </asp:Content>

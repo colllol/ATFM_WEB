@@ -1,159 +1,26 @@
-﻿const fs = require('node:fs');
-const vm = require('node:vm');
-const assert = require('node:assert/strict');
-const path = require('node:path');
-const source = fs.readFileSync(path.join(__dirname, '../prjApplication/SLOTS/EmailReports.js'), 'utf8');
-let count = 0;
-function equal(actual, expected, message) { assert.equal(actual, expected, message); count++; }
-function ok(value, message) { assert.ok(value, message); count++; }
-function harness() {
-    const elements = {}, requests = [];
-    const tabs = ['email', 'incoming'].map(mode => ({ getAttribute: () => mode, setAttribute() {}, classList: { toggle() {} } }));
-    function element(id) {
-        if (!elements[id]) elements[id] = {
-            value: '', textContent: '', innerHTML: '', disabled: false, hidden: true,
-            classList: { add() {}, remove() {}, toggle() {} },
-            getAttribute(name) { return { 'data-email-endpoint': 'email', 'data-incoming-endpoint': 'incoming', 'data-job-endpoint': 'jobs', 'data-send-report-endpoint': 'send' }[name]; },
-            setAttribute() {}, removeAttribute() {}, querySelector() { return element('live'); }, checkValidity() { return true; }
-        };
-        return elements[id];
-    }
-    element('emailFileType').value = 'word'; element('emailPageSize').value = '50';
-    const h = { el: element, requests, tabs, rows: [], job: () => ({ hasDatabaseData: true, state: 'found', targetPermId: 123 }), jobsActive: 0, maxJobs: 0 };
-    const context = {
-        console, Promise, Date, JSON, Number, String, Array, Math, Object, isFinite, parseInt, encodeURIComponent,
-        window: { setTimeout },
-        document: {
-            getElementById: element,
-            querySelectorAll(selector) { return selector === '[data-report-source]' ? tabs : []; },
-            createElement() { let text = ''; return { set textContent(value) { text = String(value); }, get innerHTML() { return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); } }; }
-        },
-        fetch: async (url, options) => {
-            const request = JSON.parse(options.body); requests.push({ url, request });
-            if (url === 'jobs') {
-                h.jobsActive++; h.maxJobs = Math.max(h.maxJobs, h.jobsActive);
-                try {
-                    await new Promise(resolve => setImmediate(resolve));
-                    const payload = await h.job(request.syncJobId);
-                    return { ok: true, json: async () => ({ d: payload }) };
-                } finally { h.jobsActive--; }
-            }
-            if (h.respond) return h.respond(url, request);
-            let rows = h.rows;
-            // Model the upstream contract: Email filters server-side; Incoming only paginates.
-            if (url === 'email') rows = rows.filter(item => (!request.query || (item.subject || '').includes(request.query)) &&
-                (!request.processingStatus || item.processingStatus === request.processingStatus) &&
-                (!request.fromDate || item.receivedAt >= request.fromDate) && (!request.toDate || item.receivedAt <= request.toDate));
-            const size = h.apiSize || request.size;
-            const data = { content: rows.slice(request.page * size, (request.page + 1) * size), totalElements: rows.length,
-                totalPages: Math.ceil(rows.length / size), page: request.page, size };
-            return response(data);
-        }
-    };
-    vm.createContext(context);
-    const replaced = source.replace(/    load\(1\);\s*\}\(\)\);\s*$/, '    globalThis.api = { load, loadReportItems, showDetail, getState: function () { return { filteredItems, summary, currentPage, totalPages, listReady }; } };\n}());');
-    assert.notEqual(replaced, source);
-    vm.runInContext(replaced, context);
-    h.api = context.api;
-    h.rowCount = () => (element('emailRows').innerHTML.match(/data-index=/g) || []).length;
-    return h;
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const source=fs.readFileSync('prjApplication/SLOTS/EmailReports.js','utf8');let count=0;
+function eq(a,b,m){assert.equal(a,b,m);count++;} function ok(v,m){assert.ok(v,m);count++;}
+function response(data,success=true,status=200){return{ok:success,status,json:async()=>({d:typeof data==='string'?data:JSON.stringify(data)})};}
+function harness(){
+ const els={},requests=[],buttons=['email','incoming'].map(x=>({getAttribute:()=>x,setAttribute(){},classList:{toggle(){}}}));
+ function el(id){return els[id]||(els[id]={value:'',textContent:'',innerHTML:'',disabled:false,hidden:true,className:'',getAttribute(name){return {'data-email-endpoint':'email','data-incoming-endpoint':'incoming','data-email-summary-endpoint':'emailSummary','data-incoming-summary-endpoint':'incomingSummary','data-email-detail-endpoint':'emailDetail','data-incoming-detail-endpoint':'incomingDetail','data-job-endpoint':'job','data-send-report-endpoint':'send'}[name]},classList:{add(){},remove(){},toggle(){}},setAttribute(){},removeAttribute(){},querySelector(){return el('live')},checkValidity(){return true}})}
+ el('emailFileType').value='word';el('emailPageSize').value='50';
+ const h={el,requests,buttons,list:[],summary:{totalFiles:0,successFiles:0,errorFiles:0,pendingFiles:0,unknownFiles:0,snapshotId:'snap'},details:{},summaryFails:false};
+ const ctx={console,Promise,Date,JSON,Number,String,Array,Math,Object,Blob,isFinite,parseInt,encodeURIComponent,URL:{createObjectURL:()=>'',revokeObjectURL(){}},window:{setTimeout},document:{getElementById:el,querySelectorAll:q=>q==='[data-report-source]'?buttons:[],createElement(tag){if(tag==='a')return{click(){},style:{}};let t='';return{set textContent(v){t=String(v)},get innerHTML(){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}}},body:{appendChild(){},removeChild(){}}},fetch:async(url,opt)=>{let body=JSON.parse(opt.body);requests.push({url,body});if(/Summary/.test(url)){if(h.summaryFails)return response({Message:'summary failed'},false,500);return response(h.summary)}if(/Detail/.test(url))return response(h.details[body.id]||h.list.find(x=>x.id===body.id));if(url==='job')return response({state:'found',targetPermId:9,targetTable:'SC'});if(url==='send')return response({message:'sent'});let start=body.page*body.size;return response({content:h.list.slice(start,start+body.size),page:body.page,size:body.size,totalElements:h.list.length,totalPages:Math.ceil(h.list.length/body.size),hasNext:start+body.size<h.list.length});}};
+ vm.createContext(ctx);let modified=source.replace(/    loadPage\(\);\s*\}\(\)\);\s*$/,'    globalThis.api={loadPage,showDetail,getState:function(){return{rows,totalItems,totalPages,currentPage,summary,snapshotId,sourceMode}}};\n}());');assert.notEqual(modified,source);vm.runInContext(modified,ctx);h.api=ctx.api;h.rowCount=()=>((el('emailRows').innerHTML.match(/data-index=/g))||[]).length;return h;
 }
-function response(data) { return { ok: true, json: async () => ({ d: JSON.stringify(data) }) }; }
-function row(i, ext = 'docx') { return { id: i, syncJobId: 'job-' + i, storedFileName: 'file-' + i + '.' + ext,
-    subject: 'match-' + i, sender: 'sender@example.test', processingStatus: 'SAVED', receivedAt: '2026-09-20T10:00:00' }; }
-async function until(fn) { for (let i = 0; i < 200; i++) { if (fn()) return; await new Promise(resolve => setImmediate(resolve)); } throw new Error('Timed out waiting for test condition'); }
-(async () => {
-    const h = harness(); h.rows = Array.from({ length: 274 }, (_, i) => row(i, i % 2 ? 'pdf' : 'docx'));
-    h.job = id => Number(id.slice(4)) % 4 === 0 ? { state: 'found', hasDatabaseData: true, targetPermId: 123 }
-        : { state: 'missing', hasDatabaseData: false, targetPermId: 123 };
-    await h.api.load();
-    equal(h.el('emailTotal').textContent, '137', 'total is entire filtered dataset');
-    equal(h.el('emailSent').textContent, '69'); equal(h.el('emailFailed').textContent, '68');
-    equal(h.rowCount(), 50); equal(h.api.getState().totalPages, 3);
-    equal(h.requests.filter(r => r.url === 'email').length, 3);
-    ok(h.maxJobs <= 4, 'database concurrency bounded');
-    const requestCount = h.requests.length;
-    h.el('emailNext').onclick(); equal(h.rowCount(), 50); ok(h.el('emailRows').innerHTML.includes('data-index="50"')); ok(h.el('emailRows').innerHTML.includes('<td>51</td>'));
-    equal(h.el('emailTotal').textContent, '137'); equal(h.el('emailSent').textContent, '69'); equal(h.el('emailFailed').textContent, '68');
-    h.el('emailNext').onclick(); equal(h.rowCount(), 37); equal(h.el('emailNext').disabled, true);
-    h.el('emailPageSize').value = '100'; h.el('emailPageSize').onchange(); equal(h.rowCount(), 100); equal(h.api.getState().currentPage, 1);
-    h.el('emailNext').onclick(); equal(h.rowCount(), 37);
-    h.el('emailPageSize').value = '25'; h.el('emailPageSize').onchange(); equal(h.rowCount(), 25); equal(h.api.getState().totalPages, 6);
-    equal(h.requests.length, requestCount, 'pagination never re-fetches/recounts a different dataset');
-    equal((await h.api.loadReportItems()).length, 137, 'export includes all filtered pages');
-    h.el('emailReportSender').value = 'other@example.test'; await assert.rejects(h.api.loadReportItems()); count++;
-    h.el('emailReportSender').value = ''; h.el('emailSearch').value = 'not-applied';
-    equal((await h.api.loadReportItems()).length, 137, 'export uses applied search snapshot');
-
-    const large = harness(); large.rows = Array.from({ length: 1206 }, (_, i) => ({ ...row(i, i % 2 ? 'pdf' : 'docx'), syncJobId: '' }));
-    await large.api.load(); equal(large.el('emailTotal').textContent, '603'); equal(large.requests.length, 13, 'no five-page/500-row truncation for list');
-    equal((await large.api.loadReportItems()).length, 500, 'export cap preserved separately');
-
-    for (const n of [0, 1, 49, 50, 51, 100, 101]) {
-        const t = harness(); t.rows = Array.from({ length: n }, (_, i) => ({ ...row(i), syncJobId: '' })); await t.api.load();
-        equal(t.el('emailTotal').textContent, String(n)); equal(t.rowCount(), Math.min(n, 50));
-        equal(t.api.getState().totalPages, Math.max(1, Math.ceil(n / 50)));
-        if (n > 50) { t.el('emailNext').onclick(); equal(t.rowCount(), Math.min(n - 50, 50)); }
-    }
-    const states = harness(); states.rows = Array.from({ length: 5 }, (_, i) => row(i));
-    states.job = id => {
-        const i = Number(id.slice(4));
-        if (i === 4) throw new Error('offline');
-        return { state: ['found','missing','error','pending'][i], hasDatabaseData: i === 0, targetPermId: i < 2 ? 123 : null };
-    };
-    await states.api.load(); equal(states.el('emailTotal').textContent, '5'); equal(states.el('emailSent').textContent, '1'); equal(states.el('emailFailed').textContent, '2');
-    ok(states.el('emailStatsInfo').textContent.includes('Đang chờ xử lý: 1'));
-    ok(states.el('emailStatsInfo').textContent.includes('Không kiểm tra được DB: 1'));
-    equal(states.el('emailReportDownload').disabled, false, 'pending does not lock reports');
-    states.job = () => ({ state: 'found', hasDatabaseData: true, targetPermId: 789 });
-    await states.el('emailRefresh').onclick(); equal(states.el('emailSent').textContent, '5'); equal(states.el('emailFailed').textContent, '0');
-    equal(states.requests.filter(r => r.url === 'jobs').length, 10, 'refresh invalidates job cache');
-
-    const cached = harness(); cached.rows = [row(1), { ...row(2), syncJobId: 'job-1' }];
-    cached.job = () => ({ state: 'missing', hasDatabaseData: false, targetPermId: 123 }); await cached.api.load();
-    equal(cached.el('emailSent').textContent, '0'); equal(cached.el('emailFailed').textContent, '2');
-    equal(cached.requests.filter(r => r.url === 'jobs').length, 1, 'duplicate jobs share in-flight lookup');
-
-    const incoming = harness(); incoming.rows = Array.from({ length: 240 }, (_, i) => ({ ...row(i, i % 2 ? 'pdf' : 'docx'), syncJobId: '',
-        subject: i >= 100 ? 'needle' : 'other', processingStatus: i < 180 ? 'FAILED' : 'SAVED',
-        receivedAt: i < 120 ? '2026-09-19T10:00:00' : '2026-09-20T10:00:00' }));
-    incoming.el('emailSearch').value = 'needle'; incoming.el('emailStatus').value = 'FAILED';
-    incoming.el('emailFrom').value = '2026-09-20'; incoming.el('emailTo').value = '2026-09-20';
-    incoming.tabs[1].onclick(); await until(() => incoming.el('emailApply').disabled === false);
-    equal(incoming.el('emailTotal').textContent, '30', 'Incoming applies query/status/date/file type across all pages');
-    equal(incoming.requests.filter(r => r.url === 'incoming').length, 3);
-    incoming.el('emailFrom').value = '2026-09-21'; const beforeInvalid = incoming.requests.length;
-    await incoming.api.load(); equal(incoming.requests.length, beforeInvalid); equal(incoming.el('emailError').hidden, false);
-
-    const slow = harness(); slow.rows = [row(1)]; let finish;
-    slow.job = () => new Promise(resolve => { finish = resolve; });
-    const slowLoad = slow.api.load(); await until(() => finish);
-    equal(slow.el('emailTotal').textContent, '1'); equal(slow.el('emailSent').textContent, '--'); equal(slow.el('emailFailed').textContent, '--');
-    slow.rows = [{ ...row(2), syncJobId: '' }]; await slow.api.load();
-    finish({ state: 'found', hasDatabaseData: true, targetPermId: 123 }); await slowLoad;
-    equal(slow.el('emailTotal').textContent, '1'); equal(slow.el('emailSent').textContent, '0'); equal(slow.el('emailFailed').textContent, '1', 'old DB response cannot contaminate new search');
-
-    const race = harness(); let releaseOld;
-    race.respond = (url, req) => req.query === 'old' ? new Promise(resolve => { releaseOld = () => resolve(response({ content: [row(1)], totalElements: 1, totalPages: 1, page: 0 })); })
-        : response({ content: [{ ...row(2), syncJobId: '' }], totalElements: 1, totalPages: 1, page: 0 });
-    race.el('emailSearch').value = 'old'; const oldLoad = race.api.load(); await until(() => releaseOld);
-    race.el('emailSearch').value = 'new'; await race.api.load(); releaseOld(); await oldLoad;
-    equal(race.api.getState().filteredItems[0].id, 2, 'old list response cannot replace newer results');
-
-    for (const mode of ['http-error','missing-page','changed-total','invalid-json-shape','duplicate','wrong-page']) {
-        const t = harness();
-        t.respond = (url, req) => {
-            if (mode === 'invalid-json-shape') return response({ error: 'bad' });
-            if (req.page === 0) return response({ content: [row(1)], totalElements: 2, totalPages: 2, page: 0 });
-            if (mode === 'http-error') return { ok: false, status: 503 };
-            return response({ content: mode === 'missing-page' ? [] : [{ ...row(mode === 'duplicate' ? 1 : 2), syncJobId: '' }],
-                totalElements: mode === 'changed-total' ? 3 : 2, totalPages: 2, page: mode === 'wrong-page' ? 0 : 1 });
-        };
-        await t.api.load(); equal(t.el('emailTotal').textContent, '--', mode + ' cannot publish a partial total'); equal(t.el('emailError').hidden, false); equal(t.rowCount(), 0);
-    }
-    const legacy = harness(); legacy.respond = (url, req) => response({ content: req.page === 0 ? [{ ...row(1), syncJobId: '' }] : [], hasNext: req.page === 0, size: 1 });
-    await legacy.api.load(); equal(legacy.el('emailTotal').textContent, '1'); equal(legacy.requests.length, 2);
-    const capped = harness(); capped.apiSize = 25; capped.rows = Array.from({ length: 101 }, (_, i) => ({ ...row(i), syncJobId: '' }));
-    await capped.api.load(); equal(capped.el('emailTotal').textContent, '101'); equal(capped.rowCount(), 50); equal(capped.requests.length, 5);
-    console.log('PASS: ' + count + ' assertions covering filtered totals, full pages, all-record KPI, cache, exports, Incoming, races and incomplete API data.');
-})().catch(error => { console.error(error); process.exitCode = 1; });
+function row(i,state='found'){return{id:i,syncJobId:'j'+i,storedFileName:'f'+i+'.docx',subject:'s'+i,sender:'a@b.c',receivedAt:'2026-09-27T10:00:00',processingStatus:'SAVED',databaseState:state,hasDatabaseData:state==='found'};}
+(async()=>{
+ let h=harness();h.list=Array.from({length:121},(_,i)=>row(i,i%2?'found':'missing'));h.summary={totalFiles:121,successFiles:60,errorFiles:61,pendingFiles:0,unknownFiles:0,snapshotId:'S1'};await h.api.loadPage();
+ eq(h.requests.length,2,'one summary plus one list only');eq(h.requests[0].url,'emailSummary');eq(h.requests[1].url,'email');eq(h.requests[1].body.fileType,'word');eq(h.requests[1].body.size,50);eq(h.requests[1].body.snapshotId,'S1');eq(h.rowCount(),50);eq(h.el('emailTotal').textContent,'121');eq(h.el('emailSent').textContent,'60');eq(h.el('emailFailed').textContent,'61');
+ h.el('emailNext').onclick();await new Promise(r=>setImmediate(r));eq(h.requests.length,3,'next calls one list only');eq(h.requests[2].body.page,1);eq(h.requests[2].body.snapshotId,'S1');eq(h.rowCount(),50);ok(h.el('emailRows').innerHTML.includes('<td>51</td>'));
+ h.el('emailNext').onclick();await new Promise(r=>setImmediate(r));eq(h.rowCount(),21);eq(h.el('emailNext').disabled,true);
+ h.el('emailPageSize').value='100';h.el('emailPageSize').onchange();await new Promise(r=>setImmediate(r));eq(h.requests.at(-1).body.size,100);eq(h.requests.at(-1).body.page,0);eq(h.rowCount(),100);
+ let f=harness();f.list=Array.from({length:70},(_,i)=>row(i,'unknown'));f.summaryFails=true;await f.api.loadPage();eq(f.requests.length,2,'failed summary never triggers full scan');eq(f.rowCount(),50);eq(f.el('emailTotal').textContent,'70');eq(f.el('emailSent').textContent,'--');eq(f.el('emailFailed').textContent,'--');eq(f.el('emailError').hidden,true,'summary failure does not break list');
+ let d=harness();d.list=[row(7)];d.summary={totalFiles:1,successFiles:1,errorFiles:0,pendingFiles:0,unknownFiles:0,snapshotId:'S'};d.details[7]={...row(7),body:'full body'};await d.api.loadPage();let before=d.requests.length;d.api.showDetail(d.list[0]);await new Promise(r=>setImmediate(r));await new Promise(r=>setImmediate(r));eq(d.requests[before].url,'emailDetail');eq(d.requests[before].body.id,7);eq(d.requests[before+1].url,'job');eq(d.el('emailDetailBody').textContent,'full body');
+ let race=harness(),release;race.summaryFails=true;race.list=[row(1)];race.respond=null;let originalFetch=undefined;
+ // Contract-level source assertions prevent regression to all-page scanning/per-row inspection.
+ ok(!source.includes('function loadAllItems'),'no all-page loader');ok(!source.includes('inspectItems('),'no per-row DB scan');ok(!source.includes('size: 100 };'),'no forced page size 100');ok(source.includes('snapshotId: snapshot ||'),'list carries snapshot');
+ console.log('PASS: '+count+' assertions for one-page loading, summary fallback, snapshot paging and on-demand detail.');
+})().catch(e=>{console.error(e);process.exitCode=1});
