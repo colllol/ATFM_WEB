@@ -68,5 +68,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260927-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260928-1") %>"></script>
 </asp:Content>
