@@ -521,9 +521,9 @@
         <button type="button" id="btnUpdateAdv" class="btn btn-sm btn-primary" onclick="openAdvancedUpdatePopup()"><i class="fa fa-pencil-square-o"></i>UPDATE ADV</button>
         <button type="button" id="btnDeleteByChecked" class="btn btn-sm btn-danger" onclick="btnDeleteByChecked_Onclick()"><i class="fa fa-trash"></i>DELETE</button>
         <button type="button" id="btnClearSearch" class="btn btn-sm btn-default" onclick="btnClearValue_OnClick()"><i class="fa fa-eraser"></i>CLEAR SREACH</button>
-        <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL</button>
-        <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>EXPORT EXCEL CANCEL</button>
-        <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>EXPORT BRAVO</button>
+        <button type="button" id="btnExport" class="btn btn-sm btn-primary" onclick="openExportPopup('finished')"><i class="fa fa-file-excel-o"></i>EXP EXCEL</button>
+        <button type="button" id="btnExport80" class="btn btn-sm btn-primary" onclick="openExportPopup('cancel')"><i class="fa fa-file-excel-o"></i>EXP EXCEL CANCEL</button>
+        <button type="button" id="btnExport801" class="btn btn-sm btn-primary" onclick="ExportBravo()"><i class="fa fa-download"></i>EXP BRAVO</button>
         <button type="button" id="btnBravoCompare" class="btn btn-sm btn-primary" onclick="openBravoComparePopup()"><i class="fa fa-balance-scale"></i>Đ/C BRAVO</button>
         <button type="button" id="btnSearchAdv" class="btn btn-sm btn-primary" onclick="openAdvancedSearchPopup()"><i class="fa fa-search-plus"></i>SEARCH ADV</button>
         <button type="button" id="btnSearch" class="btn btn-sm btn-primary finished-search-button" onclick="btnSearch_OnClick()"><i class="fa fa-search"></i>SREACH</button>
@@ -1009,6 +1009,8 @@
         function LoadDataGrid(compareCounts) {
             var sequence = ++finishedSearchSequence;
             var criteria = GetFinishedAcceptedSearchRequest(false);
+            console.log(criteria);
+            console.log(urlApi + "api/ApiExtension/ExcuteTable?packageName=FINISHED_STATUS_PKG&storeName=GET_FINISHED_FLIGHTS");
             var $request = $.ajax({
                 method: "PUT",
                 url: urlApi + "api/ApiExtension/ExcuteTable?packageName=FINISHED_STATUS_PKG&storeName=GET_FINISHED_FLIGHTS",
@@ -1043,9 +1045,11 @@
                     return;
                 }
                 var finishedCount = data.ListValue.length ? Number(data.ListValue[0].SUMRECORD) : 0;
-                if (compareCounts === true && isFinite(finishedCount)) {
-                    CompareGoingOnCount(criteria, finishedCount, sequence);
-                }
+                console.log(finishedCount)
+                //if (compareCounts === true && isFinite(finishedCount)) {
+                    //CompareGoingOnCount(criteria, finishedCount, sequence);
+                //}
+                
                 if (!data || !data.ListValue || data.ListValue.length === 0) {
                     $('#tblSource tbody tr').remove();
                     $('#tblSource').attr('data-total', 0);

@@ -350,7 +350,7 @@ namespace prjApplication.Day_Flights
             string key = NoticeFlightKey(Convert.ToDateTime(row["FLIGHTDATE"]),
                 Convert.ToInt64(row["FLIGHT_ID"]));
             return noticeFlights.Contains(key)
-                ? "<span style='display:block;color:red!important;font-weight:bold;font-size:11px' title='Chuyến bay có trong điện văn THONG BAO cùng ngày, STATUS=0'>NEW</span>"
+                ? "<span style='display:block;color:red!important;font-weight:bold;font-size:11px' title='Chuyến bay có trong điện văn mới'>NEW</span>"
                 : String.Empty;
         }
 

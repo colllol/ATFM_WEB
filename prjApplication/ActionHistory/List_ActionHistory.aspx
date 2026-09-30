@@ -41,48 +41,32 @@
             <td style="text-align: right">
                 <div class="classSearchHeader">
                     <table border="0" cellspacing="1px" cellspacing="1px" style="text-align: right; width: 100%">
-                        <tr>
-                            <td style="width: 5%; text-align: left;" class="Titlelbl">Tên truy cập:
+                       <tr>
+                            <td style="width: 8%; text-align: left;" class="Titlelbl">Tên truy cập:
                             </td>
                             <td style="width: 10%; text-align: left">
-                                <asp:DropDownList ID="ddlTenTruyCap" CssClass="wid_40" Width="100%" runat="server"></asp:DropDownList>                                          
+                                <asp:DropDownList ID="ddlTenTruyCap" CssClass="wid_40" runat="server"></asp:DropDownList>                                          
                              </td>
-                            <%--<td style="width: 15%; text-align: left">
-                                <asp:DropDownList ID="ddlTenTruyCap" TabIndex="3" runat="server" Width="100%" CssClass="inputtext">
-                                </asp:DropDownList>
-                            </td>--%>
-                            <%--<td style="width: 10%; text-align: right" class="Titlelbl">Từ ngày(<span class="req_Field">*</span>):
-                            </td>
-                            <td style="width: 15%; text-align: left">
-                                <input id="txtTungay" runat="server" class="datepicker text-input" autocomplete="off"
-                                    style="width: 100%" onkeypress='return check_num(this,14,event)' />
-                            </td>
-                            <td style="width: 10%; text-align: right" class="titlelbl">đến ngày(<span class="req_field">*</span>):
-                            </td>   
-                            <td style="width: 15%; text-align: left">
-                                <input id="txtDenngay" runat="server" class="datepicker text-input" autocomplete="off"
-                                    style="width: 100%" onkeypress='return check_num(this,14,event)' />
-                            </td> --%>    
-                            <td style="width: 40%; text-align: left;">
-                                <asp:Button CausesValidation="false" runat="server" ID="linkSearch" CssClass="iconFind" 
+                            <td style="width: 7%; text-align: left;" class="Titlelbl">Mã thao tác:</td>
+                            <td style="width: 10%; text-align: left;"><input id="txtActionCode" runat="server" class="inputtext" style="width: 100%;" maxlength="100" /></td>
+                            <td style="width: 5%; text-align: left;" class="Titlelbl">HostIP:</td>
+                            <td style="width: 10%; text-align: left;"><input id="txtHostIP" runat="server" class="inputtext" style="width: 100%;" maxlength="100" /></td>
+                            <td style="width: 7%; text-align: left;" class="Titlelbl">Từ thời gian:</td>
+                            <td style="width: 8%; text-align: left;"><input id="txtTungay" runat="server" class="text-input action-history-datetime" autocomplete="off" style="width: 100%;" placeholder="dd/MM/yyyy HH:mm" maxlength="16" /></td>
+                            <td style="width: 9%; text-align: left;" class="Titlelbl">Đến thời gian:</td>
+                            <td style="width: 8%; text-align: left;"><input id="txtDenngay" runat="server" class="text-input action-history-datetime" autocomplete="off" style="width: 100%;" placeholder="dd/MM/yyyy HH:mm" maxlength="16" /></td>
+                            <td>
+                                 <asp:Button CausesValidation="false" runat="server" ID="linkSearch" CssClass="iconFind" 
                                     Font-Bold="true" OnClick="linkSearch_Click" Text="" Width="40px" Height="38px"></asp:Button>
                                   <asp:LinkButton runat="server" ID="btnExportExel" CssClass="btn btn-sm btn-primary btn-bold"
                                     OnClick="btnExcel_Click">
                                                     <span class="glyphicon glyphicon-download-alt"></span>
-                                                    Export data into Excel
+                                                    Export
                                 </asp:LinkButton>
-                            </td>                                              
-                        </tr>
-                        <tr>
-                            <td style="width: 5%; text-align: left;" class="Titlelbl">Mã thao tác:</td>
-                            <td style="width: 18%; text-align: left;"><input id="txtActionCode" runat="server" class="inputtext" style="width: 100%;" maxlength="100" /></td>
-                            <td style="width: 5%; text-align: left;" class="Titlelbl">HostIP:</td>
-                            <td style="width: 18%; text-align: left;"><input id="txtHostIP" runat="server" class="inputtext" style="width: 100%;" maxlength="100" /></td>
-                            <td style="width: 5%; text-align: left;" class="Titlelbl">Từ thời gian:</td>
-                            <td style="width: 18%; text-align: left;"><input id="txtTungay" runat="server" class="text-input action-history-datetime" autocomplete="off" style="width: 100%;" placeholder="dd/MM/yyyy HH:mm" maxlength="16" /></td>
-                            <td style="width: 5%; text-align: left;" class="Titlelbl">Đến thời gian:</td>
-                            <td style="width: 18%; text-align: left;"><input id="txtDenngay" runat="server" class="text-input action-history-datetime" autocomplete="off" style="width: 100%;" placeholder="dd/MM/yyyy HH:mm" maxlength="16" /></td>
-                        </tr>
+                            </td>     
+                       </tr>
+                       
+                        
                     </table>
                 </div>
             </td>

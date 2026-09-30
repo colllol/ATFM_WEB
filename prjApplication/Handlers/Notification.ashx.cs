@@ -271,7 +271,7 @@ ORDER BY RN";
         private static void WriteError(HttpContext context, int status, string message)
         {
             context.Response.StatusCode = status;
-            context.Response.Write(JsonConvert.SerializeObject(new { Code = "-99", Message = message }));
+            context.Response.Write(JsonConvert.SerializeObject(new { Code = "-99", Message = message, Context= context.ToString() }));
         }
     }
 }

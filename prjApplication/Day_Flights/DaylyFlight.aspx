@@ -3391,13 +3391,13 @@
                 alert('Flight date is invalid. Required format: DD-MM-YYYY.');
                 return;
             }
-
+          
             showFinishedExportLoading();
 
             // Nhường một nhịp render để overlay hiển thị trước khi bắt đầu xử lý.
             window.setTimeout(function () {
                 var url = urlApi + "api/ApiExtension/ExcuteReturnInt?packageName=MAKE_FINISHED&storeName=make_finished_flights_news4day";
-
+               
                 $.ajax({
                     method: "PUT",
                     url: url,
@@ -3526,7 +3526,7 @@
                 document.getElementById('txt_popATA').disabled=true;
                 //document.getElementById('txt_popPERMDATE').disabled=true;
                 
-               document.getElementById('txt_popPERMNBR').disabled=false;
+                //document.getElementById('txt_popPERMNBR').disabled=false;
                  document.getElementById('txt_popCRAFT_T').disabled=false;
                 
             }
@@ -3537,7 +3537,7 @@
                 document.getElementById('txt_popATD').disabled=false;
                 document.getElementById('txt_popATA').disabled=false;
 
-                document.getElementById('txt_popPERMNBR').disabled=true;
+                //document.getElementById('txt_popPERMNBR').disabled=true;
                 document.getElementById('txt_popCRAFT_T').disabled=true;
 
 		$('#txt_FID').val(ax.attr('data-id'));
