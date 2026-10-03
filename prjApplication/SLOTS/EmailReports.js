@@ -167,7 +167,18 @@
         if (normalized === 'QUARANTINED') return 'quarantine';
         return '';
     }
+    function storageRelativePath(item) {
+        var storage = text(item, ['storage']).trim();
+        if (!storage) return '';
+        var normalized = storage.replace(/\\/g, '/');
+        var marker = '/vatm-storage/';
+        var markerIndex = normalized.toLowerCase().indexOf(marker);
+        if (markerIndex < 0) return '';
+        return normalized.slice(markerIndex + marker.length).split('/').filter(function (part) { return part; }).map(encodeURIComponent).join('/');
+    }
     function downloadUrl(item) {
+        var relativePath = storageRelativePath(item);
+        if (relativePath) return 'http://172.29.79.49/vatm-storage/' + relativePath;
         var fileName = attachmentName(item), itemDate = dateKey(date(item)), folder = storageFolder(item);
         if (!fileName || !itemDate || !folder) return '';
         return 'http://172.29.79.49/vatm-storage/' + folder + '/' + itemDate.replace(/-/g, '/') + '/' + encodeURIComponent(fileName);
