@@ -317,7 +317,8 @@
         var start = (pageIndex - 1) * size, current = rows.slice(start, start + size);
         byId('adsbTableBody').innerHTML = current.map(function (row) {
             var statusClass = Number(row.status) === 1 ? 's1' : (Number(row.status) === 2 ? 's2' : 'unknown');
-            return '<tr><td>' + row.no + '</td><td><strong>' + escapeHtml(row.callsign) + '</strong></td><td>' + escapeHtml(row.oper || '-') + '</td>' +
+            var rowClass = isOther(row) ? ' class="is-other"' : '';
+            return '<tr' + rowClass + '><td>' + row.no + '</td><td><strong>' + escapeHtml(row.callsign) + '</strong></td><td>' + escapeHtml(row.oper || '-') + '</td>' +
                 '<td><span class="adsb-perm ' + (isOther(row) ? 'other' : (row.permType === 'LD' ? 'ld' : 'of')) + '">' + escapeHtml(isOther(row) ? 'OTHER' : (row.permType || '-')) + '</span></td>' +
                 '<td>' + escapeHtml(row.fromAirp || '-') + '</td><td>' + escapeHtml(row.toAirp || '-') + '</td><td>' + escapeHtml(row.etd || '-') + '</td><td>' + escapeHtml(row.eta || '-') + '</td>' +
                 '<td><span class="adsb-status ' + statusClass + '">' + escapeHtml(row.statusText) + '</span></td><td>' + escapeHtml(row.date) + '</td><td>' + escapeHtml(row.updatedAtUtc || '-') + '</td></tr>';

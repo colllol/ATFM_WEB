@@ -23,40 +23,126 @@ namespace prjApplication.SLOTS
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static string GetEmails(string query, string processingStatus, string fromDate, string toDate, int page, int size)
+        public static string GetEmails(string query, string processingStatus, string fileType,
+                                       string fromDate, string toDate, string snapshotId,
+                                       int page, int size)
         {
-            return GetReportData("APIEmail", "email", query, processingStatus, fromDate, toDate, page, size);
+            return GetReportData("APIEmail", "email", query, processingStatus, fileType,
+                                 fromDate, toDate, snapshotId, page, size);
         }
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static string GetIncoming(string query, string processingStatus, string fromDate, string toDate, int page, int size)
+        public static string GetIncoming(string query, string processingStatus, string fileType,
+                                         string fromDate, string toDate, string snapshotId,
+                                         int page, int size)
         {
-            return GetReportData("APIIncoming", "Incoming", query, processingStatus, fromDate, toDate, page, size);
+            return GetReportData("APIIncoming", "Incoming", query, processingStatus, fileType,
+                                 fromDate, toDate, snapshotId, page, size);
         }
 
-        private static string GetReportData(string settingKey, string sourceName, string query, string processingStatus, string fromDate, string toDate, int page, int size)
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string GetEmailSummary(string query, string processingStatus, string fileType,
+                                             string fromDate, string toDate)
         {
-            string endpoint = ConfigurationManager.AppSettings[settingKey];
-            if (String.IsNullOrWhiteSpace(endpoint))
-                throw new ConfigurationErrorsException("Chưa cấu hình " + settingKey + " trong Web.config.");
+            return GetSummaryData("APIEmail", "email", query, processingStatus, fileType, fromDate, toDate);
+        }
 
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string GetIncomingSummary(string query, string processingStatus, string fileType,
+                                                string fromDate, string toDate)
+        {
+            return GetSummaryData("APIIncoming", "Incoming", query, processingStatus, fileType, fromDate, toDate);
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string GetEmailDetail(long id)
+        {
+            return GetDetailData("APIEmail", "email", id);
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string GetIncomingDetail(long id)
+        {
+            return GetDetailData("APIIncoming", "Incoming", id);
+        }
+
+        private static string GetReportData(string settingKey, string sourceName, string query,
+                                            string processingStatus, string fileType, string fromDate,
+                                            string toDate, string snapshotId, int page, int size)
+        {
+            var parameters = BuildFilterParameters(query, processingStatus, fileType, fromDate, toDate);
+            AddParameter(parameters, "snapshotId", snapshotId);
+            parameters.Add("page=" + Math.Max(0, page));
+            parameters.Add("size=" + Math.Max(1, Math.Min(size, 100)));
+            return GetApiContent(BuildConfiguredUrl(settingKey, null, parameters), sourceName, 300000);
+        }
+
+        private static string GetSummaryData(string settingKey, string sourceName, string query,
+                                             string processingStatus, string fileType,
+                                             string fromDate, string toDate)
+        {
+            return GetApiContent(
+                BuildConfiguredUrl(settingKey, "summary",
+                    BuildFilterParameters(query, processingStatus, fileType, fromDate, toDate)),
+                sourceName + " summary", 30000);
+        }
+
+        private static string GetDetailData(string settingKey, string sourceName, long id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("ID email khong hop le.");
+            return GetApiContent(BuildConfiguredUrl(settingKey, id.ToString(), null), sourceName + " detail", 90000);
+        }
+
+        private static List<string> BuildFilterParameters(string query, string processingStatus,
+                                                          string fileType, string fromDate, string toDate)
+        {
             var parameters = new List<string>();
             AddParameter(parameters, "query", query);
             AddParameter(parameters, "processingStatus", processingStatus);
+            AddParameter(parameters, "fileType", fileType);
             AddParameter(parameters, "from", fromDate);
             AddParameter(parameters, "to", toDate);
-            parameters.Add("page=" + Math.Max(0, page));
-            parameters.Add("size=" + Math.Max(1, Math.Min(size, 100)));
+            return parameters;
+        }
 
-            string separator = endpoint.Contains("?") ? "&" : "?";
-            string requestUrl = endpoint + separator + String.Join("&", parameters);
+        private static string BuildConfiguredUrl(string settingKey, string childPath,
+                                                 ICollection<string> parameters)
+        {
+            string endpoint = ConfigurationManager.AppSettings[settingKey];
+            if (String.IsNullOrWhiteSpace(endpoint))
+                throw new ConfigurationErrorsException("Chua cau hinh " + settingKey + " trong Web.config.");
+
+            UriBuilder builder = new UriBuilder(endpoint.Trim());
+            if (!String.IsNullOrWhiteSpace(childPath))
+                builder.Path = builder.Path.TrimEnd('/') + "/" + Uri.EscapeDataString(childPath);
+
+            var query = new List<string>();
+            if (!String.IsNullOrWhiteSpace(builder.Query))
+                query.Add(builder.Query.TrimStart('?'));
+            if (parameters != null)
+                query.AddRange(parameters);
+            builder.Query = String.Join("&", query.Where(value => !String.IsNullOrWhiteSpace(value)));
+            return builder.Uri.AbsoluteUri;
+        }
+
+        private static string GetApiContent(string requestUrl, string sourceName, int timeoutMilliseconds)
+        {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(requestUrl);
             request.Method = "GET";
             request.Accept = "application/json";
-            request.Timeout = 30000;
-            request.ReadWriteTimeout = 30000;
+            // The new backend performs filtered counting and ATFM batch verification.
+            // Allow the filtered count/ATFM verification to finish while the backend is being optimized.
+            request.Timeout = timeoutMilliseconds;
+            request.ReadWriteTimeout = timeoutMilliseconds;
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            if (System.Web.HttpContext.Current != null)
+                System.Web.HttpContext.Current.Server.ScriptTimeout = Math.Max(60, timeoutMilliseconds / 1000 + 15);
 
             try
             {
@@ -70,10 +156,11 @@ namespace prjApplication.SLOTS
             catch (WebException ex)
             {
                 string detail = ReadErrorResponse(ex);
-                throw new InvalidOperationException(
-                    "Không thể kết nối API báo cáo " + sourceName + " từ máy chủ ATFM." +
-                    (String.IsNullOrWhiteSpace(detail) ? String.Empty : " Chi tiết: " + detail),
-                    ex);
+                string prefix = ex.Response == null
+                    ? "Khong the ket noi API bao cao " + sourceName + " tu may chu ATFM."
+                    : "API bao cao " + sourceName + " tra loi.";
+                throw new InvalidOperationException(prefix +
+                    (String.IsNullOrWhiteSpace(detail) ? String.Empty : " Chi tiet: " + detail), ex);
             }
         }
 

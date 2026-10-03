@@ -36,6 +36,7 @@ prjApplicationOnline/
 *.secrets.config
 *.local.json
 *.watermark.log
+**/.env
 prjApplication/Upload/
 prjApplication/Uploads/
 prjApplication/App_Data/*.mdf
