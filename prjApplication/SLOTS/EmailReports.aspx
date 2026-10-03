@@ -4,6 +4,10 @@
     <section id="emailReportsPage" class="email-reports-page"
         data-email-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmails") %>"
         data-incoming-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetIncoming") %>"
+        data-email-summary-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmailSummary") %>"
+        data-incoming-summary-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetIncomingSummary") %>"
+        data-email-detail-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetEmailDetail") %>"
+        data-incoming-detail-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetIncomingDetail") %>"
         data-job-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/GetTargetPermId") %>"
         data-send-report-endpoint="<%= ResolveUrl("~/SLOTS/EmailReports.aspx/SendReport") %>">
         <header class="email-hero">
@@ -28,11 +32,12 @@
             </div>
         </section>
         <section class="email-kpis">
-            <article><small>Tổng email</small><strong id="emailTotal">0</strong></article>
-            <article><small>Đã gửi</small><strong id="emailSent">0</strong></article>
-            <article><small>Lỗi</small><strong id="emailFailed">0</strong></article>
+            <article><small>Tổng số file</small><strong id="emailTotal">0</strong></article>
+            <article title="Số bản ghi sau lọc đã xác nhận có dữ liệu trong database"><small>Số file đọc thành công</small><strong id="emailSent">0</strong></article>
+            <article title="Số bản ghi sau lọc đã xác nhận chưa có dữ liệu DB hoặc lỗi xử lý; không gồm đang chờ hay lỗi kết nối"><small>Số file lỗi</small><strong id="emailFailed">0</strong></article>
             <article><small>Trang hiện tại</small><strong id="emailPageLabel">1</strong></article>
         </section>
+        <p id="emailStatsInfo" class="email-muted email-stats-info" role="status" aria-live="polite">Thống kê trên toàn bộ kết quả sau lọc.</p>
         <section class="email-card email-table-card">
             <div class="email-table-heading"><div><h2 id="emailTableTitle">Danh sách email</h2><p id="emailTableInfo">Chưa có dữ liệu</p></div><label class="email-page-size">Số dòng<select id="emailPageSize"><option>25</option><option selected>50</option><option>100</option></select></label></div>
             <div class="email-report-tools">
@@ -43,7 +48,7 @@
                 <button id="emailReportSend" type="button"><i class="fa fa-paper-plane"></i> Gửi qua Gmail</button>
                 <span id="emailReportMessage" class="email-report-message"></span>
             </div>
-            <div class="email-table-wrap"><table class="email-table"><thead><tr><th>STT</th><th>Thời gian</th><th>Tiêu đề</th><th>Người gửi</th><th>Tệp đính kèm</th><th>Trạng thái</th><th>Xem</th></tr></thead><tbody id="emailRows"></tbody></table></div>
+            <div class="email-table-wrap"><table class="email-table"><thead><tr><th>STT</th><th>Thời gian</th><th>Tiêu đề</th><th>Người gửi</th><th>Thông báo lỗi</th><th>Trạng thái</th><th>Xem</th></tr></thead><tbody id="emailRows"></tbody></table></div>
             <div class="email-pagination"><button id="emailPrev" type="button">‹ Trước</button><span id="emailPageInfo">Trang 1/1</span><button id="emailNext" type="button">Sau ›</button></div>
         </section>
         <div id="emailDetailBackdrop" class="email-detail-backdrop" hidden>
@@ -63,5 +68,5 @@
             </article>
         </div>
     </section>
-    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260910-1") %>"></script>
+    <script src="<%= ResolveUrl("~/SLOTS/EmailReports.js?v=20260928-1") %>"></script>
 </asp:Content>
