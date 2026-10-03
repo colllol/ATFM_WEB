@@ -2352,39 +2352,134 @@
             isSearch = false;
             return _obj;
         }
-        function generate_excel(html) {           
-            
-            //OK
-            exportExel(html);
-            
-        }
-                
-        function exportExel(_html) {                  
-            
+        var exportZipThreshold = 10000;
+
+        function getExportPostfix() {
             var dt = new Date();
             var day = dt.getDate();
             var month = dt.getMonth() + 1;
             var year = dt.getFullYear();
             var hour = dt.getHours();
             var mins = dt.getMinutes();
-            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+            return day + "." + month + "." + year + "_" + hour + "." + mins;
+        }
+
+        function downloadExportBlob(blob, fileName) {
+            var downloadUrl = window.URL.createObjectURL(blob);
+            var downloadLink = document.createElement("a");
+            downloadLink.download = fileName;
+            downloadLink.href = downloadUrl;
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            window.setTimeout(function () {
+                window.URL.revokeObjectURL(downloadUrl);
+                if (downloadLink.parentNode) downloadLink.parentNode.removeChild(downloadLink);
+            }, 1000);
+        }
+
+        function zipCrc32(bytes) {
+            var crc = 0 ^ (-1);
+            for (var i = 0; i < bytes.length; i++) {
+                crc = crc ^ bytes[i];
+                for (var bit = 0; bit < 8; bit++) {
+                    crc = (crc >>> 1) ^ ((crc & 1) ? 0xEDB88320 : 0);
+                }
+            }
+            return (crc ^ (-1)) >>> 0;
+        }
+
+        function zipDosDateTime(date) {
+            return {
+                time: (date.getSeconds() >> 1) | (date.getMinutes() << 5) | (date.getHours() << 11),
+                date: date.getDate() | ((date.getMonth() + 1) << 5) | ((date.getFullYear() - 1980) << 9)
+            };
+        }
+
+        function writeZipLocalHeader(nameBytes, dataBytes, crc, dateTime, method) {
+            var header = new Uint8Array(30 + nameBytes.length);
+            var view = new DataView(header.buffer);
+            view.setUint32(0, 0x04034b50, true);
+            view.setUint16(4, 20, true);
+            view.setUint16(8, method, true);
+            view.setUint16(10, dateTime.time, true);
+            view.setUint16(12, dateTime.date, true);
+            view.setUint32(14, crc, true);
+            view.setUint32(18, dataBytes.originalLength || dataBytes.length, true);
+            view.setUint32(22, dataBytes.length, true);
+            view.setUint16(26, nameBytes.length, true);
+            header.set(nameBytes, 30);
+            return header;
+        }
+
+        function createZipExportBlob(fileName, excelBlob) {
+            var textEncoder = new TextEncoder();
+            return excelBlob.arrayBuffer().then(function (buffer) {
+                var original = new Uint8Array(buffer);
+                var nameBytes = textEncoder.encode(fileName);
+                var crc = zipCrc32(original);
+                var now = zipDosDateTime(new Date());
+                var compressedPromise;
+                if (window.CompressionStream) {
+                    var compression = new CompressionStream('deflate-raw');
+                    compressedPromise = new Response(new Blob([original]).stream().pipeThrough(compression)).arrayBuffer()
+                        .then(function (compressed) { return new Uint8Array(compressed); });
+                } else {
+                    // ZIP remains valid when stored; modern Edge/Chrome uses deflate-raw above.
+                    compressedPromise = Promise.resolve(original);
+                }
+                return compressedPromise.then(function (payload) {
+                    payload.originalLength = original.length;
+                    var method = payload.length === original.length ? 0 : 8;
+                    var local = writeZipLocalHeader(nameBytes, payload, crc, now, method);
+                    var central = new Uint8Array(46 + nameBytes.length);
+                    var view = new DataView(central.buffer);
+                    view.setUint32(0, 0x02014b50, true);
+                    view.setUint16(4, 20, true);
+                    view.setUint16(6, 20, true);
+                    view.setUint16(10, method, true);
+                    view.setUint16(12, now.time, true);
+                    view.setUint16(14, now.date, true);
+                    view.setUint32(16, crc, true);
+                    view.setUint32(20, original.length, true);
+                    view.setUint32(24, payload.length, true);
+                    view.setUint16(28, nameBytes.length, true);
+                    view.setUint32(42, 0, true);
+                    central.set(nameBytes, 46);
+                    var end = new Uint8Array(22);
+                    view = new DataView(end.buffer);
+                    view.setUint32(0, 0x06054b50, true);
+                    view.setUint16(8, 1, true);
+                    view.setUint16(10, 1, true);
+                    view.setUint32(12, central.length, true);
+                    view.setUint32(16, local.length + payload.length, true);
+                    return new Blob([local, payload, central, end], { type: 'application/zip' });
+                });
+            });
+        }
+
+        function generate_excel(html, recordCount) {
+            exportExel(html, recordCount);
+        }
+        function exportExel(_html, recordCount) {
+            var postfix = getExportPostfix();
 
             var textToSave = '\ufeff' + _html;
             var textToSaveAsBlob = new Blob([textToSave], { type: "application/vnd.ms-excel;charset=utf-8" });
-            var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
             var fileNameToSaveAs = 'exported_finished_flight_' + postfix + '.xls';
-            var downloadLink = document.createElement("a");
-            downloadLink.download = fileNameToSaveAs;
-            downloadLink.innerHTML = "Download File";
-            downloadLink.href = textToSaveAsURL;
-            downloadLink.onclick = destroyClickedElement;
-            downloadLink.style.display = "none";
-            document.body.appendChild(downloadLink);
-            downloadLink.click();           
-
-        }
-        function destroyClickedElement(event) {
-            document.body.removeChild(event.target);
+            if (recordCount > exportZipThreshold) {
+                createZipExportBlob(fileNameToSaveAs, textToSaveAsBlob)
+                    .then(function (zipBlob) {
+                        downloadExportBlob(zipBlob, fileNameToSaveAs.replace(/\.xls$/i, '.zip'));
+                    })
+                    .catch(function () {
+                        // Do not lose a large export if the browser cannot create the ZIP.
+                        alert('Không thể tạo ZIP, hệ thống sẽ xuất trực tiếp file Excel.');
+                        downloadExportBlob(textToSaveAsBlob, fileNameToSaveAs);
+                    });
+                return;
+            }
+            downloadExportBlob(textToSaveAsBlob, fileNameToSaveAs);
         }
         function RenderTableKhExport(data) {
             var kq = '';
@@ -2471,7 +2566,7 @@
                         + "</table>";
 
 
-                generate_excel(filterExportColumns(strHtml));
+                generate_excel(filterExportColumns(strHtml), data.ListValue.length);
 
 
             });
@@ -2529,7 +2624,7 @@
                         + "</table>";
 
 
-                generate_excel(filterExportColumns(strHtml));
+                generate_excel(filterExportColumns(strHtml), data.ListValue.length);
                 
 
             });
