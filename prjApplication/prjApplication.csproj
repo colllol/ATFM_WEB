@@ -669,6 +669,7 @@
     <Content Include="ReportNew\AirportTakeoffLanding.aspx" />
     <Content Include="ReportNew\AirportTakeoffLanding.js" />
     <Content Include="ReportNew\CivilFlightSummary.aspx" />
+    <Content Include="ReportNew\FlightStatusRateKpis.css" />
     <Content Include="ReportNew\FlightSummaryReports.js" />
     <Content Include="ReportNew\Dashboard.js" />
     <Content Include="ReportNew\FlightOperationOverview.aspx" />

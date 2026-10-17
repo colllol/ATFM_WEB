@@ -20,6 +20,7 @@ namespace prjApplication.ReportNew
             public string AtdDay { get; set; }
             public string AtaDay { get; set; }
             public string EobtDay { get; set; }
+            public string FlightDate { get; set; }
             public string Status { get; set; }
         }
 
@@ -64,6 +65,7 @@ namespace prjApplication.ReportNew
                     AtdDay = Convert.ToString(row["ATDDAY"]),
                     AtaDay = Convert.ToString(row["ATADAY"]),
                     EobtDay = Convert.ToString(row["EOBTDAY"]),
+                    FlightDate = Convert.ToDateTime(row["FLIGHTDATE"], CultureInfo.InvariantCulture).ToString("yyyy-MM-dd"),
                     Status = state
                 });
 
@@ -103,6 +105,7 @@ namespace prjApplication.ReportNew
                     atdDay = item.AtdDay,
                     ataDay = item.AtaDay,
                     eobtDay = item.EobtDay,
+                    flightDate = item.FlightDate,
                     status = item.Status
                 }).ToList()
             };

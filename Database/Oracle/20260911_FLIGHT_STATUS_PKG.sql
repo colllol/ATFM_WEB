@@ -50,7 +50,7 @@ CREATE OR REPLACE PACKAGE FLIGHT_STATUS_PKG AS
     TYPE T_CURSOR IS REF CURSOR;
 
     -- Danh sach chuyen bay kem trang thai phan loai (FLIGHT_STATE):
-    --   FINISHED / CANCEL / WAIT / DELAY_15_29 / DELAY_30_59 / DELAY_60_PLUS.
+    --   FINISHED / CANCEL / WAIT / DELAY_0_15 / DELAY_16_30 / DELAY_31_45 / DELAY_46_60 / DELAY_60_PLUS.
     -- P_TO_DATE bao gom ca ngay ket thuc. P_OPER/P_AIRPORT: NULL hoac 'ALL' = khong loc.
     -- P_CURRENT_DAY: 1 = T_DAY_FLIGHTS_GOINGON (hom nay), 0 = T_FINISHED_FLIGHTS (qua khu).
     PROCEDURE GET_STATUS
@@ -230,40 +230,29 @@ CREATE OR REPLACE PACKAGE BODY FLIGHT_STATUS_PKG AS
                 ), classified_rows AS (
                     SELECT m.*,
                            CASE
-                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=60 THEN 'DELAY_60_PLUS'
-                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=30 THEN 'DELAY_30_59'
-                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=15 THEN 'DELAY_15_29'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>60 THEN 'DELAY_60_PLUS'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=46 THEN 'DELAY_46_60'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=31 THEN 'DELAY_31_45'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=16 THEN 'DELAY_16_30'
                              WHEN (domestic=1 AND has_from=1 AND has_to=1 AND has_atd=1 AND has_ata=1)
-                               OR (domestic=0 AND (
-                                    (foreign_from=1 AND has_to=1 AND has_ata=1)
-                                    OR (foreign_to=1 AND has_from=1 AND has_atd=1)
-                                  )) THEN 'FINISHED'
-                             WHEN domestic=0 AND (
-                                    (foreign_to=1 AND (has_from=0 OR has_atd=0))
-                                    OR (foreign_from=1 AND (has_to=0 OR has_ata=0))
-                                  ) THEN 'CANCEL'
-                             WHEN domestic=1 AND departing_vietnam=1
-                                  AND has_to=1 AND planned_timestamp IS NOT NULL AND has_atd=0 THEN 'WAIT'
+                               OR (domestic=0 AND ((foreign_from=1 AND has_to=1 AND has_ata=1) OR (foreign_to=1 AND has_from=1 AND has_atd=1))) THEN 'FINISHED'
+                             WHEN domestic=0 AND ((foreign_to=1 AND (has_from=0 OR has_atd=0)) OR (foreign_from=1 AND (has_to=0 OR has_ata=0))) THEN 'CANCEL'
+                             WHEN domestic=1 AND departing_vietnam=1 AND has_to=1 AND planned_timestamp IS NOT NULL AND has_atd=0 THEN 'WAIT'
                              WHEN domestic=1 AND (has_from=0 OR has_to=0 OR has_atd=0 OR has_ata=0) THEN 'CANCEL'
                              ELSE 'CANCEL'
-                           END FLIGHT_STATE
+                           END FLIGHT_STATE,
+                           CASE WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 0 AND 15 THEN 'DELAY_0_15'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 16 AND 30 THEN 'DELAY_16_30'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 31 AND 45 THEN 'DELAY_31_45'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 46 AND 60 THEN 'DELAY_46_60'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>60 THEN 'DELAY_60_PLUS' END DELAY_BUCKET
                       FROM metric_rows m
                 )
                 SELECT FLIGHTDATE, FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
-                       NULLIF(TRIM(ATD), '') ATDDAY,
-                       NULLIF(TRIM(ATA), '') ATADAY,
-                       planned_raw EOBTDAY,
-                       FLIGHT_STATE
+                       NULLIF(TRIM(ATD), '') ATDDAY, NULLIF(TRIM(ATA), '') ATADAY,
+                       planned_raw EOBTDAY, FLIGHT_STATE, DELAY_BUCKET
                   FROM classified_rows
                  WHERE UPPER(TRIM(PERMTYPE))='LD'
-                    OR (
-                         UPPER(TRIM(PERMTYPE))='O/F'
-                         AND (
-                              FLIGHT_STATE='CANCEL'
-                              OR FLIGHT_STATE='FINISHED'
-                              OR FLIGHT_STATE LIKE 'DELAY_%'
-                         )
-                    )
                  ORDER BY FLIGHTDATE, FLIGHTNBR;
         ELSE
             OPEN P_OUT_CURSOR FOR
@@ -412,9 +401,10 @@ CREATE OR REPLACE PACKAGE BODY FLIGHT_STATUS_PKG AS
                 ), classified_rows AS (
                     SELECT m.*,
                            CASE
-                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=60 THEN 'DELAY_60_PLUS'
-                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=30 THEN 'DELAY_30_59'
-                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=15 THEN 'DELAY_15_29'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>60 THEN 'DELAY_60_PLUS'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=46 THEN 'DELAY_46_60'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=31 THEN 'DELAY_31_45'
+                             WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>=16 THEN 'DELAY_16_30'
                              WHEN (domestic=1 AND has_from=1 AND has_to=1 AND has_atd=1 AND has_ata=1)
                                OR (domestic=0 AND (
                                     (foreign_from=1 AND has_to=1 AND has_ata=1)
@@ -426,16 +416,18 @@ CREATE OR REPLACE PACKAGE BODY FLIGHT_STATUS_PKG AS
                                   ) THEN 'CANCEL'
                              WHEN domestic=1 AND (has_from=0 OR has_to=0 OR has_atd=0 OR has_ata=0) THEN 'CANCEL'
                              ELSE 'CANCEL'
-                           END FLIGHT_STATE
+                             END FLIGHT_STATE,
+                           CASE WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 0 AND 15 THEN 'DELAY_0_15'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 16 AND 30 THEN 'DELAY_16_30'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 31 AND 45 THEN 'DELAY_31_45'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes BETWEEN 46 AND 60 THEN 'DELAY_46_60'
+                                WHEN departing_vietnam=1 AND has_to=1 AND has_atd=1 AND delay_minutes>60 THEN 'DELAY_60_PLUS' END DELAY_BUCKET
                       FROM metric_rows m
                 )
                 SELECT FLIGHTDATE, FLIGHTNBR, OPER_ID, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP,
-                       NULLIF(TRIM(ATD), '') ATDDAY,
-                       NULLIF(TRIM(ATA), '') ATADAY,
-                       planned_raw EOBTDAY,
-                       FLIGHT_STATE
+                       NULLIF(TRIM(ATD), '') ATDDAY, NULLIF(TRIM(ATA), '') ATADAY, planned_raw EOBTDAY, FLIGHT_STATE, DELAY_BUCKET
                   FROM classified_rows
-                 WHERE UPPER(TRIM(PERMTYPE))='LD'
+                 WHERE UPPER(TRIM(PERMTYPE))='LD' OR (UPPER(TRIM(PERMTYPE))='O/F' AND (FLIGHT_STATE='CANCEL' OR FLIGHT_STATE='FINISHED' OR FLIGHT_STATE LIKE 'DELAY_%'))
                     OR (
                          UPPER(TRIM(PERMTYPE))='O/F'
                          AND (

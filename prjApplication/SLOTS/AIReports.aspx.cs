@@ -11,7 +11,7 @@ namespace prjApplication.SLOTS
 {
     public partial class AIReports : Page
     {
-        // private const string DefaultEndpoint = "http://172.29.79.49:8000/api/reports/ai";
+        // private const string DefaultEndpoint = "http://192.168.131.30:8000/api/reports/ai";
         private const string DefaultApiKey = "atfm";
 
         [WebMethod]

@@ -266,3 +266,9 @@
         flex: 1 1 100%;
     }
 }
+
+.rn-airport-trend{margin-top:22px;padding-top:18px;border-top:1px solid #e0e9f0}.rn-airport-trend h3{margin:0;color:#244b6b;font-size:15px}.rn-airport-trend-scroll{overflow-x:auto}.rn-airport-trend svg{display:block;width:100%;min-width:560px;max-height:320px}
+
+.rn-trend-year-row{grid-template-columns:minmax(0,1fr);margin-top:-10px}.rn-trend-year-row .rn-kpi{max-width:100%;padding:14px 18px;border-radius:8px}.rn-trend-kpis .rn-kpi{border-radius:8px}
+
+.rn-airport-trend{margin-top:22px;padding-top:18px;border-top:1px solid #e0e9f0}.rn-airport-trend h3{margin:0;color:#244b6b;font-size:15px}.rn-airport-trend-scroll{overflow-x:auto}.rn-airport-trend svg{display:block;width:100%;min-width:560px;max-height:320px}.rn-trend-year-row{grid-template-columns:minmax(0,1fr);margin-top:-10px}.rn-trend-year-row .rn-kpi{max-width:100%;padding:14px 18px;border-radius:8px}.rn-trend-kpis .rn-kpi{border-radius:8px}
