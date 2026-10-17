@@ -1996,3 +1996,9 @@ Quy ước:
 2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.js | Bo o KPI tong hop va the trang thai, giu bieu do cang/hac san bay va bang chi tiet.
 2026-10-17 | prjApplication/ReportNew/FlightTrendAnalysis.js | Hien dong tong hop va duong line cho tung nam truoc; tooltip liet ke tat ca nam.
 2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.aspx.cs; FlightOperationOverview.js | Gui them co currentDay theo ngay local cua trinh duyet de chon "hien tai" doc dung bang live.
+2026-10-17 | prjApplication/ReportNew/FlightStatusRate.js; FlightStatusRateKpis.css | Giu nguyen 4 o KPI goc (Tong chuyen, Hoan thanh, H?y), chi them 5 o nho muc delay trong o Delay.
+2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.js | Bo hang KPI tong hop va the donut trang thai; giu bieu do cang/hac san bay va bang chi tiet.
+2026-10-17 | prjApplication/ReportNew/FlightTrendAnalysis.js | Dung comparisonPeriods de ve dong tong hop va line cho tung nam truoc; tooltip liet ke tat ca nam.
+2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.aspx.cs; FlightOperationOverview.js | Gui currentDay tu trinh duyet de chon ngay hien tai dung bang live.
+2026-10-17 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Dem delay bucket doc lap voi FLIGHT_STATE de co ca nhom 0-15 ma khong doi trang thai chuyen bay.
+2026-10-17 | Database/Oracle/20260911_FLIGHT_STATUS_PKG.sql | Them cot DELAY_BUCKET 0-15/16-30/31-45/46-60/60+ tach khoi FLIGHT_STATE.
