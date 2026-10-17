@@ -96,21 +96,20 @@
             var previous = periods[0] || { total: data.previousTotal, from: data.previousFrom, to: data.previousTo, year: new Date().getFullYear() - 1 };
             var changeColor = data.difference >= 0 ? '#20b486' : '#ef5b5b';
             var changeText = (data.changePercent > 0 ? '+' : '') + Number(data.changePercent || 0).toLocaleString('vi-VN') + '%';
-            var html = '<div class="rn-kpis rn-trend-kpis"><div class="rn-kpi" style="--accent:#2387c8"><span>K\u1ef3 hi\u1ec7n t\u1ea1i</span><strong>' + number(data.currentTotal) + '</strong><small>Finished ' + number(data.currentFinished) + ' ? Delay ' + number(data.currentDelay) + '</small></div>' +
-                '<div class="rn-kpi" style="--accent:#9bb0c1"><span>C\u00f9ng k\u1ef3 n\u0103m ' + previous.year + '</span><strong>' + number(previous.total) + '</strong><small>' + esc(previous.from + ' ? ' + previous.to) + '</small></div>' +
-                '<div class="rn-kpi" style="--accent:' + changeColor + '"><span>Ch\u00eanh l\u1ec7ch</span><strong>' + signed(data.difference) + '</strong><small>Chuy\u1ebfn bay</small></div>' +
-                '<div class="rn-kpi" style="--accent:#8a6ee8"><span>T\u1ef7 l\u1ec7 thay \u0111\u1ed5i</span><strong>' + changeText + '</strong><small>So v\u1edbi c\u00f9ng k\u1ef3</small></div></div>';
-            periods.slice(1).forEach(function (item, index) { var color = ['#20b486','#ef5b5b','#f5a623','#8a6ee8'][index % 4]; html += '<div class="rn-kpis rn-trend-year-row"><div class="rn-kpi" style="--accent:' + color + '"><span>C?ng k? n?m ' + item.year + '</span><strong>' + number(item.total) + '</strong><small>' + esc(item.from + ' ? ' + item.to) + '</small></div></div>'; });
+            var html = '<div class="rn-kpis rn-trend-kpis"><div class="rn-kpi" style="--accent:#2387c8"><span>K\\u1ef3 hi\\u1ec7n t\\u1ea1i</span><strong>' + number(data.currentTotal) + '</strong><small>Ho\\u00e0n th\\u00e0nh ' + number(data.currentFinished) + ' \\u2022 Delay ' + number(data.currentDelay) + '</small></div>' +
+                '<div class="rn-kpi" style="--accent:#9bb0c1"><span>C\\u00f9ng k\\u1ef3 n\\u0103m ' + previous.year + '</span><strong>' + number(previous.total) + '</strong><small>' + esc(previous.from + ' \\u2013 ' + previous.to) + '</small></div>' +
+                '<div class="rn-kpi" style="--accent:' + changeColor + '"><span>Ch\\u00eanh l\\u1ec7ch</span><strong>' + signed(data.difference) + '</strong><small>Chuy\\u1ebfn bay</small></div>' +
+                '<div class="rn-kpi" style="--accent:#8a6ee8"><span>T\\u1ef7 l\\u1ec7 thay \\u0111\\u1ed5i</span><strong>' + changeText + '</strong><small>So v\\u1edbi c\\u00f9ng k\\u1ef3</small></div></div>';
+            periods.forEach(function (item, index) { var color = ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][index % 5]; html += '<div class="rn-kpis rn-trend-year-row"><div class="rn-kpi" style="--accent:' + color + '"><span>C\\u00f9ng k\\u1ef3 n\\u0103m ' + item.year + '</span><strong>' + number(item.total) + '</strong><small>' + esc(item.from + ' \\u2013 ' + item.to) + '</small></div></div>'; });
             var old = app.querySelector('.rn-kpis'); if (old) old.outerHTML = html;
         }
 
         function renderChart(data) {
-            var legend = '<span><i style="background:#2387c8"></i>Current</span>' + (data.comparisonPeriods || []).map(function (item, index) { return '<span><i style="background:' + ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][index] + '"></i>' + item.year + '</span>'; }).join('');
-            var html = '<div class="rn-grid"><article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Trend by ' + (data.period === 'month' ? 'month' : 'day') + '</h2><p class="rn-card-subtitle">Completed and delayed flights</p></div><div class="rn-trend-legend">' + legend + '</div></div>' +
-                '<div class="rn-trend-chart-wrap"><canvas id="rnTrendInteractive" class="rn-trend-canvas"></canvas><div id="rnTrendTooltip" class="rn-trend-tooltip" role="status"></div></div>' +
-                '<p class="rn-trend-hint">Hover a point to inspect each series.</p></article></div>';
-            var oldGrid = app.querySelector('.rn-grid');
-            if (oldGrid) oldGrid.outerHTML = html;
+            var colors = ['#2387c8','#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'];
+            var legend = '<span><i style="background:' + colors[0] + '"></i>K\\u1ef3 hi\\u1ec7n t\\u1ea1i</span>' + (data.comparisonPeriods || []).map(function (item, index) { return '<span><i style="background:' + colors[index + 1] + '"></i>N\\u0103m ' + item.year + '</span>'; }).join('');
+            var html = '<div class="rn-grid"><article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu h\\u01b0\\u1edbng khai th\\u00e1c theo ' + (data.period === 'month' ? 'th\\u00e1ng' : 'ng\\u00e0y') + '</h2><p class="rn-card-subtitle">Ch\\u1ec9 g\\u1ed3m chuy\\u1ebfn Ho\\u00e0n th\\u00e0nh v\\u00e0 Delay \\u2022 Ngu\\u1ed3n: ' + esc(data.source) + '</p></div><div class="rn-trend-legend">' + legend + '</div></div>' +
+                '<div class="rn-trend-chart-wrap"><canvas id="rnTrendInteractive" class="rn-trend-canvas"></canvas><div id="rnTrendTooltip" class="rn-trend-tooltip" role="status"></div></div><p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chu\\u1ed9t l\\u00ean t\\u1eebng m\\u1ed1c \\u0111\\u1ec3 xem s\\u1ed1 l\\u01b0\\u1ee3ng chuy\\u1ebfn bay.</p></article></div>';
+            var oldGrid = app.querySelector('.rn-grid'); if (oldGrid) oldGrid.outerHTML = html;
             createChart(app.querySelector('#rnTrendInteractive'), app.querySelector('#rnTrendTooltip'), data);
         }
 
@@ -160,7 +159,7 @@
                 var allValues = current.slice(); previous.forEach(function (values) { allValues = allValues.concat(values); });
                 var maximum = Math.max.apply(null, allValues.concat([1]));
                 maximum = Math.max(5, Math.ceil(maximum * 1.15 / 5) * 5);
-                var stepX = labels.length > 1 ? plotWidth / (labels.length - 1) : 0;
+                var stepX = labels.length > 1 ? plotWidth / (labels.length - 1) : plotWidth;
                 var xAt = function (index) { return labels.length > 1 ? pad.left + stepX * index : pad.left + plotWidth / 2; };
                 var yAt = function (value) { return pad.top + plotHeight - (value * valueProgress / maximum) * plotHeight; };
 
@@ -260,7 +259,7 @@
                 if (mouseX < geometry.left - 18 || mouseX > geometry.right + 18) return;
                 hoverIndex = index;
                 draw(1);
-                tooltip.innerHTML = '<strong>' + esc(labels[index]) + '</strong><span><i style="background:#2387c8"></i>Current: <b>' + number(current[index]) + '</b></span>' + comparisons.map(function (item, seriesIndex) { return '<span><i style="background:' + ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][seriesIndex] + '"></i>' + item.year + ': <b>' + number((item.values || [])[index] || 0) + '</b></span>'; }).join('');
+                tooltip.innerHTML = '<strong>' + esc(labels[index]) + '</strong><span><i style="background:#2387c8"></i>K\u1ef3 hi\u1ec7n t\u1ea1i: <b>' + number(current[index]) + ' chuy\u1ebfn</b></span>' + comparisons.map(function (item, seriesIndex) { return '<span><i style="background:' + ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][seriesIndex] + '"></i>N\u0103m ' + item.year + ': <b>' + number((item.values || [])[index] || 0) + ' chuy\u1ebfn</b></span>'; }).join('');
                 tooltip.classList.add('is-visible');
                 var tooltipLeft = geometry.points[index] ? geometry.points[index].x : mouseX;
                 tooltip.style.left = Math.max(90, Math.min(geometry.width - 90, tooltipLeft)) + 'px';

@@ -19,7 +19,7 @@ namespace prjApplication.ReportNew
         }
 
         [WebMethod]
-        public static object GetTrend(string fromDate, string toDate, string airport, string oper, string period, int yearsBack)
+        public static object GetTrend(string fromDate, string toDate, string airport, string oper, string period)
         {
             DateTime from;
             DateTime to;
@@ -28,7 +28,7 @@ namespace prjApplication.ReportNew
             if (mode == "day" && (to - from).TotalDays > 366)
                 throw new ArgumentException("Chế độ theo ngày hỗ trợ tối đa 367 ngày. Hãy chọn theo tháng cho khoảng dài hơn.");
 
-            yearsBack = Math.Max(1, Math.Min(5, yearsBack));
+            int yearsBack = 1;
             string selectedAirport = NormalizeFilter(airport);
             string selectedOper = NormalizeFilter(oper);
             bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;

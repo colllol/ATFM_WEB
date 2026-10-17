@@ -132,7 +132,6 @@
                     var key = this.getAttribute('data-status');
                     selectedStatus = selectedStatus === key ? '' : key;
                     page = 1;
-                    renderDonut();
                     renderPage();
                 };
             });
@@ -140,25 +139,6 @@
             subtitle.textContent = selectedBar
                 ? selectedBar.code + ' - ' + airportName(selectedBar.code) + ' • Hoàn thành + Delay'
                 : 'Tất cả sân bay • Hoàn thành + Delay';
-        }
-
-        function renderAirportTrend(clicked) {
-            var host = app.querySelector('#rnAirportTrend');
-            if (!clicked) { host.hidden = true; host.innerHTML = ''; return; }
-            var flights = (data.flights || []).filter(function (flight) {
-                return clicked.movement === 'departure' ? flight.fromAirp === clicked.code : flight.toAirp === clicked.code;
-            });
-            var sameMonth = from.value.slice(0, 7) === to.value.slice(0, 7), grouped = {};
-            flights.forEach(function (flight) {
-                var date = String(flight.flightDate || ''); if (!date) return;
-                var key = sameMonth ? date : date.slice(0, 7); grouped[key] = (grouped[key] || 0) + 1;
-            });
-            var keys = Object.keys(grouped).sort(), width = 760, height = 300, left = 54, right = 20, top = 28, bottom = 46;
-            var plotW = width - left - right, plotH = height - top - bottom, max = Math.max(1, Math.ceil(Math.max.apply(null, keys.map(function(k){return grouped[k];}).concat([1])) * 1.15));
-            var step = plotW / Math.max(1, keys.length), parts = [];
-            for (var grid=0;grid<=4;grid++) { var gy=top+plotH*grid/4; parts.push('<line x1="'+left+'" y1="'+gy+'" x2="'+(width-right)+'" y2="'+gy+'" stroke="#e4edf4"/>'); parts.push('<text x="'+(left-8)+'" y="'+(gy+4)+'" text-anchor="end" fill="#718397" font-size="11">'+Math.round(max*(4-grid)/4)+'</text>'); }
-            keys.forEach(function(key,index){var barW=Math.min(38,step*.56),x=left+step*index+(step-barW)/2,bh=grouped[key]/max*plotH,y=top+plotH-bh;parts.push('<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+Math.max(1,bh).toFixed(1)+'" rx="3" fill="#2387c8"><title>'+key+': '+number(grouped[key])+'</title></rect>');parts.push('<text x="'+(x+barW/2).toFixed(1)+'" y="'+(height-15)+'" text-anchor="middle" fill="#60778b" font-size="10">'+(sameMonth?key.slice(8,10):key.slice(5,7)+'/'+key.slice(0,4))+'</text>');});
-            host.hidden=false; host.innerHTML='<h3>'+ (clicked.movement==='departure'?'C?t c?nh':'H? c?nh') +' t?i '+esc(clicked.code)+' - '+esc(airportName(clicked.code))+'</h3><p class="rn-card-subtitle">S? chuy?n theo '+(sameMonth?'ng?y':'th?ng')+' ('+number(flights.length)+' chuy?n)</p>'+(keys.length?'<div class="rn-airport-trend-scroll"><svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="S? chuy?n theo th?i gian">'+parts.join('')+'</svg></div>':'<p class="rn-no-data">Kh?ng c? d? li?u trong kho?ng l?c.</p>');
         }
 
         function renderBars() {
@@ -182,11 +162,8 @@
                     var clicked = { code: this.getAttribute('data-airport'), movement: this.getAttribute('data-movement') };
                     if (selectedBar && selectedBar.code === clicked.code && selectedBar.movement === clicked.movement) selectedBar = null;
                     else selectedBar = clicked;
-                    selectedStatus = '';
                     page = 1;
                     renderBars();
-                    renderDonut();
-                    renderAirportTrend(selectedBar);
                     renderPage();
                 };
             });
@@ -214,22 +191,18 @@
         function render(result) {
             data = result;
             selectedBar = null;
-            selectedStatus = '';
             page = 1;
             syncAirportOptions(data.airports);
-            var grid = '<div class="rn-grid"><article class="rn-card"><h2>Cơ cấu trạng thái</h2><p class="rn-card-subtitle" id="rnDonutSubtitle"></p><div id="rnOverviewDonut"></div></article>' +
-                '<article class="rn-card"><h2>Cất/hạ cánh theo sân bay</h2><p class="rn-card-subtitle">Nhấn vào từng cột để cập nhật biểu đồ trạng thái và danh sách chi tiết</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span></div><div id="rnAirportTrend" class="rn-airport-trend" hidden></div></article>' +
-                '<article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnOverviewListTitle">Danh sách chuyến bay</h2><p class="rn-card-subtitle">Dữ liệu chi tiết giống báo cáo trạng thái; có thể lọc tiếp bằng cột sân bay và biểu đồ tròn</p></div><label class="rn-page-size">Số dòng <select id="rnOverviewPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
-                '<div class="rn-table-wrap rn-flight-detail-wrap"><table class="rn-table rn-flight-detail-table"><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>REGISTRATION</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ATDDAY</th><th>ATADAY</th><th>EOBTDAY</th><th>TRẠNG THÁI</th></tr></thead><tbody id="rnOverviewRows"></tbody></table></div>' +
-                '<div class="rn-flight-pager"><button type="button" class="rn-filter-button" id="rnOverviewPrev">‹ Trước</button><span id="rnOverviewPageInfo"></span><button type="button" class="rn-filter-button" id="rnOverviewNext">Sau ›</button></div></article></div>';
+            var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>C\\u1ea5t/h\\u1ea1 c\\u00e1nh theo s\\u00e2n bay</h2><p class="rn-card-subtitle">Ch\\u1ecdn c\\u1ed9t \\u0111\\u1ec3 l\\u1ecdc danh s\\u00e1ch chi ti\\u1ebft chuy\\u1ebfn bay</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>C\\u1ea5t c\\u00e1nh</span><span><i class="rn-dot" style="background:#20b486"></i>H\\u1ea1 c\\u00e1nh</span></div></article>' +
+                '<article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnOverviewListTitle">Danh s\\u00e1ch chuy\\u1ebfn bay</h2><p class="rn-card-subtitle">Chi ti\\u1ebft c\\u00e1c chuy\\u1ebfn bay theo b\\u1ed9 l\\u1ecdc v\\u00e0 s\\u00e2n bay \\u0111\\u00e3 ch\\u1ecdn</p></div><label class="rn-page-size">S\\u1ed1 d\\u00f2ng <select id="rnOverviewPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
+                '<div class="rn-table-wrap rn-flight-detail-wrap"><table class="rn-table rn-flight-detail-table"><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>REGISTRATION</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ATDDAY</th><th>ATADAY</th><th>EOBTDAY</th><th>TR\\u1ea0NG TH\\u00c1I</th></tr></thead><tbody id="rnOverviewRows"></tbody></table></div>' +
+                '<div class="rn-flight-pager"><button type="button" class="rn-filter-button" id="rnOverviewPrev">\\u2039 Tr\\u01b0\\u1edbc</button><span id="rnOverviewPageInfo"></span><button type="button" class="rn-filter-button" id="rnOverviewNext">Sau \\u203a</button></div></article></div>';
             var oldGrid = app.querySelector('.rn-grid');
             if (oldGrid) oldGrid.outerHTML = grid;
             app.querySelector('#rnOverviewPageSize').onchange = function () { pageSize = parseInt(this.value, 10); page = 1; renderPage(); };
             app.querySelector('#rnOverviewPrev').onclick = function () { if (page > 1) { page--; renderPage(); } };
             app.querySelector('#rnOverviewNext').onclick = function () { var pages = Math.max(1, Math.ceil(detailFlights().length / pageSize)); if (page < pages) { page++; renderPage(); } };
             renderBars();
-            renderDonut();
-            renderAirportTrend(selectedBar);
             renderPage();
         }
 

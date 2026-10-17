@@ -1992,3 +1992,7 @@ Quy ước:
 2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.aspx.cs; FlightOperationOverview.js; ReportInteractive.css | Bo KPI delay tren tong quan; them bieu do drill-down san bay theo ngay/thang khi bam cot, giu bang chi tiet.
 2026-10-17 | prjApplication/ReportNew/FlightTrendAnalysis.aspx; FlightTrendAnalysis.aspx.cs; FlightTrendAnalysis.js; ReportNew.js | Them chon 1-5 nam truoc; tra va ve nhieu dong/nhieu line so sanh theo tung nam.
 2026-10-17 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Dem delay bucket doc lap voi FLIGHT_STATE de bao gom ca bucket 0-15 ma khong thay doi trang thai chi tiet.
+2026-10-17 | prjApplication/ReportNew/FlightStatusRate.js; FlightStatusRateKpis.css | Giu lai 4 o KPI cu, chi them 5 o nho muc delay 0-15, 16-30, 31-45, 46-60, 60+.
+2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.js | Bo o KPI tong hop va the trang thai, giu bieu do cang/hac san bay va bang chi tiet.
+2026-10-17 | prjApplication/ReportNew/FlightTrendAnalysis.js | Hien dong tong hop va duong line cho tung nam truoc; tooltip liet ke tat ca nam.
+2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.aspx.cs; FlightOperationOverview.js | Gui them co currentDay theo ngay local cua trinh duyet de chon "hien tai" doc dung bang live.
