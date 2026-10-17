@@ -55,6 +55,8 @@ namespace prjApplication.ReportNew
             foreach (DataRow row in statusData.Rows)
             {
                 string state = Convert.ToString(row["FLIGHT_STATE"]);
+                string bucket = Text(row["DELAY_BUCKET"]);
+                if (delayBuckets.ContainsKey(bucket)) delayBuckets[bucket]++;
                 // Với kỳ quá khứ, danh sách hủy phải lấy duy nhất từ bảng chuyên biệt bên dưới.
                 if (!currentDay && state == "CANCEL")
                     continue;
@@ -63,8 +65,6 @@ namespace prjApplication.ReportNew
                 else if (state.StartsWith("DELAY", StringComparison.Ordinal))
                 {
                     delay++;
-                    string bucket = Text(row["DELAY_BUCKET"]);
-                    if (delayBuckets.ContainsKey(bucket)) delayBuckets[bucket]++;
                 }
                 else wait++;
                 flights.Add(new {

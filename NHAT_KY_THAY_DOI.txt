@@ -1991,3 +1991,4 @@ Quy ước:
 2026-10-17 | Database/Oracle/20260911_FLIGHT_STATUS_PKG.sql; prjApplication/ReportNew/FlightStatusRate.aspx.cs; FlightStatusRate.js; FlightStatusRateKpis.css | Chia bucket delay 0-15, 16-30, 31-45, 46-60, 60+; tra so dem tong/% tren giao dien.
 2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.aspx.cs; FlightOperationOverview.js; ReportInteractive.css | Bo KPI delay tren tong quan; them bieu do drill-down san bay theo ngay/thang khi bam cot, giu bang chi tiet.
 2026-10-17 | prjApplication/ReportNew/FlightTrendAnalysis.aspx; FlightTrendAnalysis.aspx.cs; FlightTrendAnalysis.js; ReportNew.js | Them chon 1-5 nam truoc; tra va ve nhieu dong/nhieu line so sanh theo tung nam.
+2026-10-17 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Dem delay bucket doc lap voi FLIGHT_STATE de bao gom ca bucket 0-15 ma khong thay doi trang thai chi tiet.
