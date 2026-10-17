@@ -98,4 +98,4 @@
 
 .rn-delay-kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.rn-delay-kpi{padding:14px 12px;border-radius:8px}.rn-delay-kpi strong{font-size:25px}.rn-delay-kpi small{display:block;margin-top:2px}@media(max-width:900px){.rn-delay-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:560px){.rn-delay-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-.rn-delay-kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.rn-delay-kpi{padding:14px 12px;border-radius:8px}.rn-delay-kpi strong{font-size:25px}.rn-delay-kpi small{display:block;margin-top:2px}@media(max-width:900px){.rn-delay-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:560px){.rn-delay-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
