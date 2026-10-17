@@ -99,6 +99,17 @@
             return flights;
         }
 
+        function renderKpis() {
+            var total = data.total || 0;
+            var kpis = '<div class="rn-kpis">' +
+                '<div class="rn-kpi" style="--accent:#2387c8"><span>Tổng chuyến bay</span><strong>' + number(total) + '</strong><small>Hoàn thành + Delay</small></div>' +
+                '<div class="rn-kpi" style="--accent:#20b486"><span>Chuyến hoàn thành</span><strong>' + number(data.finished) + '</strong><small>' + (total ? (data.finished * 100 / total).toFixed(1) : 0) + '%</small></div>' +
+                '<div class="rn-kpi" style="--accent:#f5a623"><span>Chuyến Delay</span><strong>' + number(data.delay) + '</strong><small>' + (total ? (data.delay * 100 / total).toFixed(1) : 0) + '%</small></div>' +
+                '<div class="rn-kpi" style="--accent:#8a6ee8"><span>Sân bay khai thác</span><strong>' + number(data.airportCount) + '</strong><small>Nguồn ' + esc(data.source) + '</small></div></div>';
+            var old = app.querySelector('.rn-kpis');
+            if (old) old.outerHTML = kpis;
+        }
+
         function donutHtml() {
             var flights = airportFlights(selectedBar ? selectedBar.code : '');
             var finished = flights.filter(function (flight) { return statusKey(flight.status) === 'finished'; }).length;
@@ -132,6 +143,7 @@
                     var key = this.getAttribute('data-status');
                     selectedStatus = selectedStatus === key ? '' : key;
                     page = 1;
+                    renderDonut();
                     renderPage();
                 };
             });
@@ -162,8 +174,10 @@
                     var clicked = { code: this.getAttribute('data-airport'), movement: this.getAttribute('data-movement') };
                     if (selectedBar && selectedBar.code === clicked.code && selectedBar.movement === clicked.movement) selectedBar = null;
                     else selectedBar = clicked;
+                    selectedStatus = '';
                     page = 1;
                     renderBars();
+                    renderDonut();
                     renderPage();
                 };
             });
@@ -191,6 +205,7 @@
         function render(result) {
             data = result;
             selectedBar = null;
+            selectedStatus = '';
             page = 1;
             syncAirportOptions(data.airports);
             var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>C\\u1ea5t/h\\u1ea1 c\\u00e1nh theo s\\u00e2n bay</h2><p class="rn-card-subtitle">Ch\\u1ecdn c\\u1ed9t \\u0111\\u1ec3 l\\u1ecdc danh s\\u00e1ch chi ti\\u1ebft chuy\\u1ebfn bay</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>C\\u1ea5t c\\u00e1nh</span><span><i class="rn-dot" style="background:#20b486"></i>H\\u1ea1 c\\u00e1nh</span></div></article>' +
@@ -203,6 +218,7 @@
             app.querySelector('#rnOverviewPrev').onclick = function () { if (page > 1) { page--; renderPage(); } };
             app.querySelector('#rnOverviewNext').onclick = function () { var pages = Math.max(1, Math.ceil(detailFlights().length / pageSize)); if (page < pages) { page++; renderPage(); } };
             renderBars();
+            renderDonut();
             renderPage();
         }
 

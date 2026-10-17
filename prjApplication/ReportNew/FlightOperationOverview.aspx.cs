@@ -20,7 +20,6 @@ namespace prjApplication.ReportNew
             public string AtdDay { get; set; }
             public string AtaDay { get; set; }
             public string EobtDay { get; set; }
-            public string FlightDate { get; set; }
             public string Status { get; set; }
         }
 
@@ -32,13 +31,13 @@ namespace prjApplication.ReportNew
         }
 
         [WebMethod]
-        public static object GetData(string fromDate, string toDate, string airport, bool currentDay)
+        public static object GetData(string fromDate, string toDate, string airport)
         {
             DateTime from;
             DateTime to;
             ParseDateRange(fromDate, toDate, out from, out to);
             string selectedAirport = NormalizeAirport(airport, true);
-            currentDay = currentDay;
+            bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
             var flights = new List<FlightRow>();
             var metrics = new Dictionary<string, AirportMetric>(StringComparer.OrdinalIgnoreCase);
             int finished = 0;
@@ -65,7 +64,6 @@ namespace prjApplication.ReportNew
                     AtdDay = Convert.ToString(row["ATDDAY"]),
                     AtaDay = Convert.ToString(row["ATADAY"]),
                     EobtDay = Convert.ToString(row["EOBTDAY"]),
-                    FlightDate = Convert.ToDateTime(row["FLIGHTDATE"], CultureInfo.InvariantCulture).ToString("yyyy-MM-dd"),
                     Status = state
                 });
 
@@ -105,7 +103,6 @@ namespace prjApplication.ReportNew
                     atdDay = item.AtdDay,
                     ataDay = item.AtaDay,
                     eobtDay = item.EobtDay,
-                    flightDate = item.FlightDate,
                     status = item.Status
                 }).ToList()
             };

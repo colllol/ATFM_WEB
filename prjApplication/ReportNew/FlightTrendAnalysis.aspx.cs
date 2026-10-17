@@ -28,53 +28,50 @@ namespace prjApplication.ReportNew
             if (mode == "day" && (to - from).TotalDays > 366)
                 throw new ArgumentException("Chế độ theo ngày hỗ trợ tối đa 367 ngày. Hãy chọn theo tháng cho khoảng dài hơn.");
 
-            int yearsBack = 1;
             string selectedAirport = NormalizeFilter(airport);
             string selectedOper = NormalizeFilter(oper);
             bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
-            var comparisonPeriods = new List<object>();
+            DateTime compareFrom = from.AddYears(-1);
+            DateTime compareTo = to.AddYears(-1);
+            PeriodCounts current = LoadCounts(from, to, selectedAirport, selectedOper, mode);
+            PeriodCounts previous = LoadCounts(compareFrom, compareTo, selectedAirport, selectedOper, mode);
+            var labels = new List<string>();
+            var currentValues = new List<int>();
+            var previousValues = new List<int>();
             DateTime cursor = mode == "month" ? new DateTime(from.Year, from.Month, 1) : from.Date;
             DateTime end = mode == "month" ? new DateTime(to.Year, to.Month, 1) : to.Date;
-            var labels = new List<string>();
+
             while (cursor <= end)
             {
+                string currentKey = BucketKey(cursor, mode);
+                string previousKey = BucketKey(cursor.AddYears(-1), mode);
                 labels.Add(mode == "month" ? cursor.ToString("MM/yyyy") : cursor.ToString("dd/MM"));
+                currentValues.Add(GetCount(current.Buckets, currentKey));
+                previousValues.Add(GetCount(previous.Buckets, previousKey));
                 cursor = mode == "month" ? cursor.AddMonths(1) : cursor.AddDays(1);
             }
-            PeriodCounts current = LoadCounts(from, to, selectedAirport, selectedOper, mode);
-            var currentValues = new List<int>();
-            for (int index = 0; index < labels.Count; index++)
-            {
-                DateTime bucket = mode == "month" ? new DateTime(from.Year, from.Month, 1).AddMonths(index) : from.Date.AddDays(index);
-                currentValues.Add(GetCount(current.Buckets, BucketKey(bucket, mode)));
-            }
-            PeriodCounts closestPrevious = null;
-            for (int years = 1; years <= yearsBack; years++)
-            {
-                DateTime compareFrom = from.AddYears(-years), compareTo = to.AddYears(-years);
-                PeriodCounts previous = LoadCounts(compareFrom, compareTo, selectedAirport, selectedOper, mode);
-                if (years == 1) closestPrevious = previous;
-                var values = new List<int>();
-                DateTime compareCursor = mode == "month" ? new DateTime(compareFrom.Year, compareFrom.Month, 1) : compareFrom.Date;
-                for (int index = 0; index < labels.Count; index++)
-                {
-                    values.Add(GetCount(previous.Buckets, BucketKey(compareCursor, mode)));
-                    compareCursor = mode == "month" ? compareCursor.AddMonths(1) : compareCursor.AddDays(1);
-                }
-                comparisonPeriods.Add(new { year = from.Year - years, from = compareFrom.ToString("dd/MM/yyyy"), to = compareTo.ToString("dd/MM/yyyy"), total = previous.Total, values = values });
-            }
-            int difference = current.Total - closestPrevious.Total;
-            double changePercent = closestPrevious.Total == 0
+
+            int difference = current.Total - previous.Total;
+            double changePercent = previous.Total == 0
                 ? (current.Total == 0 ? 0 : 100)
-                : Math.Round(difference * 100.0 / closestPrevious.Total, 1);
+                : Math.Round(difference * 100.0 / previous.Total, 1);
+
             return new {
-                source = from.Date == DateTime.Today && to.Date == DateTime.Today ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS",
-                period = mode, currentFrom = from.ToString("dd/MM/yyyy"), currentTo = to.ToString("dd/MM/yyyy"),
-                previousFrom = from.AddYears(-1).ToString("dd/MM/yyyy"), previousTo = to.AddYears(-1).ToString("dd/MM/yyyy"),
-                currentTotal = current.Total, previousTotal = closestPrevious.Total,
-                currentFinished = current.Finished, currentDelay = current.Delay,
-                difference = difference, changePercent = changePercent,
-                labels = labels, current = currentValues, comparisonPeriods = comparisonPeriods
+                source = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS",
+                period = mode,
+                currentFrom = from.ToString("dd/MM/yyyy"),
+                currentTo = to.ToString("dd/MM/yyyy"),
+                previousFrom = compareFrom.ToString("dd/MM/yyyy"),
+                previousTo = compareTo.ToString("dd/MM/yyyy"),
+                currentTotal = current.Total,
+                previousTotal = previous.Total,
+                currentFinished = current.Finished,
+                currentDelay = current.Delay,
+                difference = difference,
+                changePercent = changePercent,
+                labels = labels,
+                current = currentValues,
+                previous = previousValues
             };
         }
 

@@ -46,26 +46,17 @@ namespace prjApplication.ReportNew
             string table = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS";
             var flights = new List<object>();
             int finished = 0, cancel = 0, delay = 0, wait = 0;
-            var delayBuckets = new Dictionary<string, int> {
-                { "DELAY_0_15", 0 }, { "DELAY_16_30", 0 }, { "DELAY_31_45", 0 },
-                { "DELAY_46_60", 0 }, { "DELAY_60_PLUS", 0 }
-            };
 
             DataTable statusData = LoadStatus(fromDate, toDate, NormalizeFilter(oper), NormalizeFilter(airport), currentDay);
             foreach (DataRow row in statusData.Rows)
             {
                 string state = Convert.ToString(row["FLIGHT_STATE"]);
-                string bucket = Text(row["DELAY_BUCKET"]);
-                if (delayBuckets.ContainsKey(bucket)) delayBuckets[bucket]++;
                 // Với kỳ quá khứ, danh sách hủy phải lấy duy nhất từ bảng chuyên biệt bên dưới.
                 if (!currentDay && state == "CANCEL")
                     continue;
                 if (state == "FINISHED") finished++;
                 else if (state == "CANCEL") cancel++;
-                else if (state.StartsWith("DELAY", StringComparison.Ordinal))
-                {
-                    delay++;
-                }
+                else if (state.StartsWith("DELAY", StringComparison.Ordinal)) delay++;
                 else wait++;
                 flights.Add(new {
                     callsign = Text(row["FLIGHTNBR"]),
@@ -109,7 +100,6 @@ namespace prjApplication.ReportNew
                 finished = finished,
                 cancel = cancel,
                 delay = delay,
-                delayBuckets = delayBuckets,
                 wait = wait,
                 flights = flights
             };
