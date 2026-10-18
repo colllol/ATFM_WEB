@@ -274,3 +274,7 @@
         flex: 1 1 100%;
     }
 }
+
+/* Trend comparison rows: one full-width row for each selected previous year. */
+.rn-app[data-report-view="trend"] .rn-trend-year-row { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; margin: -8px 0 18px; }
+.rn-app[data-report-view="trend"] .rn-trend-year-row .rn-kpi { width: 100%; max-width: none; padding: 14px 18px; border-radius: 8px; }

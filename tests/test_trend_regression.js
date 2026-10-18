@@ -1,0 +1,18 @@
+const fs = require('fs');
+const assert = require('assert');
+const js = fs.readFileSync('prjApplication/ReportNew/FlightTrendAnalysis.js', 'utf8');
+const template = fs.readFileSync('prjApplication/ReportNew/ReportNew.js', 'utf8');
+const page = fs.readFileSync('prjApplication/ReportNew/FlightTrendAnalysis.aspx', 'utf8');
+const css = fs.readFileSync('prjApplication/ReportNew/ReportInteractive.css', 'utf8');
+assert.ok(js.includes('function comparisonPeriods(data)'), 'trend normalizes comparison periods');
+assert.ok(js.includes('slice(0, 5)'), 'trend caps comparison years at five');
+assert.ok(js.includes("yearsBack: parseInt(yearsBack.value, 10) || 1"), 'selected years are sent to API');
+assert.ok(js.includes('comparisonPeriods(data).map'), 'legend uses all comparison periods');
+assert.ok(js.includes('var previous = comparisons.map'), 'chart builds one series per comparison year');
+assert.ok(js.includes('periods.forEach(function (item, index)'), 'KPI row is rendered for every comparison year');
+for (const year of ['1', '2', '3', '4', '5']) assert.ok(template.includes('<option value="' + year + '"'), 'years option ' + year + ' exists');
+assert.ok(css.includes('.rn-app[data-report-view="trend"] .rn-trend-year-row'), 'comparison rows occupy full width');
+assert.ok(css.includes('grid-template-columns: minmax(0,1fr)'), 'comparison row has one full-width KPI');
+assert.ok(page.includes('FlightTrendAnalysis.js?v=20261018-2'), 'trend JS cache-buster updated');
+assert.ok(page.includes('ReportInteractive.css?v=20261018-3'), 'trend CSS cache-buster updated');
+console.log('PASS 10 multi-year trend UI checks');

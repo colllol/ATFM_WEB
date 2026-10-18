@@ -90,10 +90,25 @@
         }
 
         renderOperators([], 'ALL');
+        yearsBack.value = yearsBack.value || '1';
+
+        function comparisonPeriods(data) {
+            var periods = Array.isArray(data.comparisonPeriods) ? data.comparisonPeriods.slice(0, 5) : [];
+            if (!periods.length && (data.previousTotal != null || data.previousFrom || data.previousTo)) {
+                periods.push({
+                    year: new Date().getFullYear() - 1,
+                    total: data.previousTotal || 0,
+                    from: data.previousFrom || '',
+                    to: data.previousTo || '',
+                    values: data.previous || []
+                });
+            }
+            return periods;
+        }
 
         function renderKpis(data) {
-            var periods = data.comparisonPeriods || [];
-            var previous = periods[0] || { total: data.previousTotal, from: data.previousFrom, to: data.previousTo, year: new Date().getFullYear() - 1 };
+            var periods = comparisonPeriods(data);
+            var previous = periods[0] || { total: 0, from: '', to: '', year: new Date().getFullYear() - 1 };
             var changeColor = data.difference >= 0 ? '#20b486' : '#ef5b5b';
             var changeText = (data.changePercent > 0 ? '+' : '') + Number(data.changePercent || 0).toLocaleString('vi-VN') + '%';
             var html = '<div class="rn-kpis rn-trend-kpis"><div class="rn-kpi" style="--accent:#2387c8"><span>K\\u1ef3 hi\\u1ec7n t\\u1ea1i</span><strong>' + number(data.currentTotal) + '</strong><small>Ho\\u00e0n th\\u00e0nh ' + number(data.currentFinished) + ' \\u2022 Delay ' + number(data.currentDelay) + '</small></div>' +
@@ -106,7 +121,7 @@
 
         function renderChart(data) {
             var colors = ['#2387c8','#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'];
-            var legend = '<span><i style="background:' + colors[0] + '"></i>K\\u1ef3 hi\\u1ec7n t\\u1ea1i</span>' + (data.comparisonPeriods || []).map(function (item, index) { return '<span><i style="background:' + colors[index + 1] + '"></i>N\\u0103m ' + item.year + '</span>'; }).join('');
+            var legend = '<span><i style="background:' + colors[0] + '"></i>K\\u1ef3 hi\\u1ec7n t\\u1ea1i</span>' + comparisonPeriods(data).map(function (item, index) { return '<span><i style="background:' + colors[index + 1] + '"></i>N\\u0103m ' + item.year + '</span>'; }).join('');
             var html = '<div class="rn-grid"><article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu h\\u01b0\\u1edbng khai th\\u00e1c theo ' + (data.period === 'month' ? 'th\\u00e1ng' : 'ng\\u00e0y') + '</h2><p class="rn-card-subtitle">Ch\\u1ec9 g\\u1ed3m chuy\\u1ebfn Ho\\u00e0n th\\u00e0nh v\\u00e0 Delay \\u2022 Ngu\\u1ed3n: ' + esc(data.source) + '</p></div><div class="rn-trend-legend">' + legend + '</div></div>' +
                 '<div class="rn-trend-chart-wrap"><canvas id="rnTrendInteractive" class="rn-trend-canvas"></canvas><div id="rnTrendTooltip" class="rn-trend-tooltip" role="status"></div></div><p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chu\\u1ed9t l\\u00ean t\\u1eebng m\\u1ed1c \\u0111\\u1ec3 xem s\\u1ed1 l\\u01b0\\u1ee3ng chuy\\u1ebfn bay.</p></article></div>';
             var oldGrid = app.querySelector('.rn-grid'); if (oldGrid) oldGrid.outerHTML = html;
@@ -117,7 +132,7 @@
             if (resizeHandler) window.removeEventListener('resize', resizeHandler);
             var labels = data.labels || [];
             var current = data.current || [];
-            var comparisons = data.comparisonPeriods || [];
+            var comparisons = comparisonPeriods(data);
             var previous = comparisons.map(function (item) { return item.values || []; });
             var hoverIndex = -1;
             var progress = 0;
