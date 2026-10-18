@@ -25,4 +25,4 @@ assert.ok(css.includes('grid-template-columns: minmax(150px,1.15fr) minmax(150px
 assert.ok(css.includes('> :nth-child(7) { grid-column: 7; grid-row: 1; }'), 'apply button stays on the same row');
 assert.ok(page.includes('FlightTrendAnalysis.js?v=20261018-3'), 'trend JS cache-buster updated');
 assert.ok(page.includes('ReportInteractive.css?v=20261018-4'), 'trend CSS cache-buster updated');
-console.log('PASS 19 multi-year trend UI checks');
+console.log('PASS 22 trend filter regression checks');
