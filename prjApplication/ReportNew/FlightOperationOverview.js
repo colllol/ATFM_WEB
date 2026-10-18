@@ -53,7 +53,6 @@
         var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         var data = null;
         var selectedBar = null;
-        var selectedStatus = '';
         var page = 1;
         var pageSize = 100;
 
