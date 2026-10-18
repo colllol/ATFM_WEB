@@ -21,6 +21,7 @@ namespace prjApplication.ReportNew
             public string AtaDay { get; set; }
             public string EobtDay { get; set; }
             public string Status { get; set; }
+            public string FlightDate { get; set; }
         }
 
         private sealed class AirportMetric
@@ -31,19 +32,29 @@ namespace prjApplication.ReportNew
         }
 
         [WebMethod]
-        public static object GetData(string fromDate, string toDate, string airport, bool currentDay)
+        public static object GetData(string fromDate, string toDate, string airport)
         {
             DateTime from;
             DateTime to;
             ParseDateRange(fromDate, toDate, out from, out to);
             string selectedAirport = NormalizeAirport(airport, true);
+            DateTime today = DateTime.UtcNow.AddHours(7).Date;
+            bool currentDay = from == today && to == today;
 
             var flights = new List<FlightRow>();
             var metrics = new Dictionary<string, AirportMetric>(StringComparer.OrdinalIgnoreCase);
             int finished = 0;
             int delay = 0;
 
-            DataTable statusData = FlightStatusRate.LoadStatus(fromDate, toDate, null, selectedAirport, currentDay);
+            DataTable statusData;
+            if (to == today && from < today)
+            {
+                statusData = FlightStatusRate.LoadStatus(fromDate, today.AddDays(-1).ToString("yyyy-MM-dd"), null, selectedAirport, false);
+                DataTable live = FlightStatusRate.LoadStatus(today.ToString("yyyy-MM-dd"), toDate, null, selectedAirport, true);
+                statusData.Merge(live);
+            }
+            else
+                statusData = FlightStatusRate.LoadStatus(fromDate, toDate, null, selectedAirport, currentDay);
             foreach (DataRow row in statusData.Rows)
             {
                 string state = Convert.ToString(row["FLIGHT_STATE"]);
@@ -64,6 +75,7 @@ namespace prjApplication.ReportNew
                     AtdDay = Convert.ToString(row["ATDDAY"]),
                     AtaDay = Convert.ToString(row["ATADAY"]),
                     EobtDay = Convert.ToString(row["EOBTDAY"]),
+                    FlightDate = Convert.ToDateTime(row["FLIGHTDATE"], CultureInfo.InvariantCulture).ToString("yyyy-MM-dd"),
                     Status = state
                 });
 
@@ -85,7 +97,8 @@ namespace prjApplication.ReportNew
                 .ToList();
 
             return new {
-                source = currentDay ? "T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS",
+                source = currentDay ? "T_DAY_FLIGHTS_GOINGON" : to == today ? "T_FINISHED_FLIGHTS + T_DAY_FLIGHTS_GOINGON" : "T_FINISHED_FLIGHTS",
+                fromDate = fromDate, toDate = toDate,
                 total = finished + delay,
                 finished = finished,
                 delay = delay,
@@ -103,6 +116,7 @@ namespace prjApplication.ReportNew
                     atdDay = item.AtdDay,
                     ataDay = item.AtaDay,
                     eobtDay = item.EobtDay,
+                    flightDate = item.FlightDate,
                     status = item.Status
                 }).ToList()
             };
@@ -113,7 +127,7 @@ namespace prjApplication.ReportNew
             if (!DateTime.TryParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out from) ||
                 !DateTime.TryParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out to))
                 throw new ArgumentException("Ngày lọc không hợp lệ.");
-            if (from > to || to > DateTime.Today)
+            if (from > to || to > DateTime.UtcNow.AddHours(7).Date)
                 throw new ArgumentException("Khoảng ngày phải hợp lệ và không vượt quá ngày hiện tại.");
         }
 

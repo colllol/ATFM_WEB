@@ -9,16 +9,42 @@
     };
 
     function post(method, data) {
-        return fetch(window.reportApiBase + 'api/FlightOperationOverview/' + method, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        return fetch(window.location.pathname + '/' + method, {
+            method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         }).then(function (response) {
-            return response.json().then(function (result) {
-                if (!response.ok || (result.Code && result.Code !== '00')) throw new Error(result.Message || 'Không thể tải dữ liệu báo cáo.');
-                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result.d);
+            return response.text().then(function (text) {
+                var result;
+                try { result = JSON.parse(text); }
+                catch (_) { throw new Error('Không nhận được dữ liệu JSON. Vui lòng đăng nhập lại hoặc thử lại.'); }
+                result = result && Object.prototype.hasOwnProperty.call(result, 'd') ? result.d : result;
+                if (!response.ok || !result || (result.Code && result.Code !== '00'))
+                    throw new Error(result && result.Message || 'Không thể tải dữ liệu báo cáo.');
+                return camelize(Object.prototype.hasOwnProperty.call(result, 'ListValue') ? result.ListValue : result);
             });
         });
+    }
+
+    function airportSeries(flights, code, fromDate, toDate) {
+        var daily = fromDate.slice(0, 7) === toDate.slice(0, 7);
+        var start = new Date(fromDate + 'T00:00:00Z'), end = new Date(toDate + 'T00:00:00Z');
+        if (!daily) start.setUTCDate(1);
+        var buckets = [], lookup = {};
+        while (start <= end) {
+            var key = start.toISOString().slice(0, daily ? 10 : 7);
+            var item = { key: key, label: daily ? key.slice(8) + '/' + key.slice(5,7) : key.slice(5,7) + '/' + key.slice(0,4), departures: 0, arrivals: 0 };
+            buckets.push(item); lookup[key] = item;
+            if (daily) start.setUTCDate(start.getUTCDate() + 1); else start.setUTCMonth(start.getUTCMonth() + 1);
+        }
+        flights.forEach(function (flight) {
+            var date = String(flight.flightDate || '').slice(0,10);
+            if (date < fromDate || date > toDate) return;
+            var bucket = lookup[date.slice(0, daily ? 10 : 7)];
+            if (!bucket) return;
+            if (flight.fromAirp === code) bucket.departures++;
+            if (flight.toAirp === code) bucket.arrivals++;
+        });
+        return { daily: daily, buckets: buckets };
     }
 
     function esc(value) {
@@ -43,15 +69,18 @@
     function init() {
         var app = document.querySelector('.rn-app[data-report-view="overview"]');
         if (!app) return;
+        var templateKpis = app.querySelector('.rn-kpis');
+        if (templateKpis) templateKpis.remove();
         var airport = app.querySelector('#rnAirport');
         var from = app.querySelector('#rnFrom');
         var to = app.querySelector('#rnTo');
         var apply = app.querySelector('#rnApply');
         app.querySelector('.rn-filters').insertAdjacentHTML('beforeend', '<button class="rn-filter-button rn-export-button" type="button" id="rnOverviewExport"><i class="fa fa-file-excel-o"></i> Export Excel</button>');
-        if (window.ReportControls) window.ReportControls.enhanceAll(app.querySelector('.rn-filters'));
+        if (window.ReportControls && window.ReportControls.enhanceAll) window.ReportControls.enhanceAll(app.querySelector('.rn-filters'));
         var today = new Date();
         var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        var data = null;
+        var data = { flights: [] };
+        var appliedFrom = '', appliedTo = '';
         var selectedBar = null;
         var page = 1;
         var pageSize = 100;
@@ -120,9 +149,32 @@
                     else selectedBar = clicked;
                     page = 1;
                     renderBars();
+                    renderAirportTrend();
                     renderPage();
                 };
             });
+        }
+
+        function renderAirportTrend() {
+            var host = app.querySelector('#rnAirportTrend');
+            host.hidden = !selectedBar;
+            if (!selectedBar) { host.innerHTML = ''; return; }
+            var series = airportSeries(data.flights || [], selectedBar.code, appliedFrom, appliedTo);
+            var width = Math.max(760, series.buckets.length * 58), height = 300, left = 55, top = 25, plotH = 225;
+            var maximum = Math.max(1, series.buckets.reduce(function (m, b) { return Math.max(m,b.departures,b.arrivals); }, 0));
+            var step = (width - left - 20) / Math.max(1,series.buckets.length), parts = [];
+            for (var g=0;g<=4;g++) {
+                var y=top+plotH*g/4;
+                parts.push('<line x1="'+left+'" y1="'+y+'" x2="'+(width-20)+'" y2="'+y+'" stroke="#e0e9f0"/><text x="'+(left-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="11">'+Math.round(maximum*(4-g)/4)+'</text>');
+            }
+            series.buckets.forEach(function (bucket,i) {
+                ['departures','arrivals'].forEach(function (key,j) {
+                    var value=bucket[key], h=value/maximum*plotH, x=left+i*step+step*(j ? .52 : .17);
+                    parts.push('<rect x="'+x+'" y="'+(top+plotH-h)+'" width="'+(step*.3)+'" height="'+h+'" fill="'+(j ? '#20b486' : '#2387c8')+'"><title>'+esc(bucket.label)+': '+(j ? 'Hạ cánh' : 'Cất cánh')+' '+value+'</title></rect>');
+                });
+                parts.push('<text x="'+(left+step*(i+.5))+'" y="280" text-anchor="middle" font-size="11">'+esc(bucket.label)+'</text>');
+            });
+            host.innerHTML='<h2>'+esc(selectedBar.code+' - '+airportName(selectedBar.code))+'</h2><p class="rn-card-subtitle">Số lượt cất/hạ cánh theo '+(series.daily ? 'ngày' : 'tháng')+'</p><div style="overflow-x:auto"><svg role="img" aria-label="Biểu đồ cất hạ cánh theo thời gian" viewBox="0 0 '+width+' '+height+'" style="width:100%;min-width:'+width+'px">'+parts.join('')+'</svg></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>Cất cánh</span><span><i class="rn-dot" style="background:#20b486"></i>Hạ cánh</span></div>';
         }
 
         function renderPage() {
@@ -145,11 +197,13 @@
 
         function render(result) {
             data = result;
+            appliedFrom = result.fromDate; appliedTo = result.toDate;
             selectedBar = null;
+            if (liveNote) liveNote.textContent = 'Nguồn ' + result.source;
             page = 1;
             syncAirportOptions(data.airports);
             var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>C\u1ea5t/h\u1ea1 c\u00e1nh theo s\u00e2n bay</h2><p class="rn-card-subtitle">Ch\u1ecdn c\u1ed9t \u0111\u1ec3 l\u1ecdc danh s\u00e1ch chi ti\u1ebft chuy\u1ebfn bay</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>C\u1ea5t c\u00e1nh</span><span><i class="rn-dot" style="background:#20b486"></i>H\u1ea1 c\u00e1nh</span></div></article>' +
-                '<article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnOverviewListTitle">Danh s\u00e1ch chuy\u1ebfn bay</h2><p class="rn-card-subtitle">Chi ti\u1ebft c\u00e1c chuy\u1ebfn bay theo b\u1ed9 l\u1ecdc v\u00e0 s\u00e2n bay \u0111\u00e3 ch\u1ecdn</p></div><label class="rn-page-size">S\u1ed1 d\u00f2ng <select id="rnOverviewPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
+                '<article id="rnAirportTrend" class="rn-card wide" hidden></article><article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnOverviewListTitle">Danh s\u00e1ch chuy\u1ebfn bay</h2><p class="rn-card-subtitle">Chi ti\u1ebft c\u00e1c chuy\u1ebfn bay theo b\u1ed9 l\u1ecdc v\u00e0 s\u00e2n bay \u0111\u00e3 ch\u1ecdn</p></div><label class="rn-page-size">S\u1ed1 d\u00f2ng <select id="rnOverviewPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
                 '<div class="rn-table-wrap rn-flight-detail-wrap"><table class="rn-table rn-flight-detail-table"><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>REGISTRATION</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ATDDAY</th><th>ATADAY</th><th>EOBTDAY</th><th>TR\u1ea0NG TH\u00c1I</th></tr></thead><tbody id="rnOverviewRows"></tbody></table></div>' +
                 '<div class="rn-flight-pager"><button type="button" class="rn-filter-button" id="rnOverviewPrev">\u2039 Tr\u01b0\u1edbc</button><span id="rnOverviewPageInfo"></span><button type="button" class="rn-filter-button" id="rnOverviewNext">Sau \u203a</button></div></article></div>';
             var oldGrid = app.querySelector('.rn-grid');
@@ -158,14 +212,15 @@
             app.querySelector('#rnOverviewPrev').onclick = function () { if (page > 1) { page--; renderPage(); } };
             app.querySelector('#rnOverviewNext').onclick = function () { var pages = Math.max(1, Math.ceil(detailFlights().length / pageSize)); if (page < pages) { page++; renderPage(); } };
             renderBars();
+            renderAirportTrend();
             renderPage();
         }
 
         function load() {
+            if (!from.value || !to.value || from.value > to.value || to.value > formatDate(new Date())) { alert('Khoảng ngày lọc không hợp lệ.'); return; }
             apply.disabled = true;
             apply.textContent = 'Đang tải...';
-            var currentDay = from.value === formatDate(today) && to.value === formatDate(today);
-            post('GetData', { fromDate: from.value, toDate: to.value, airport: airport.value, currentDay: currentDay })
+            post('GetData', { fromDate: from.value, toDate: to.value, airport: airport.value })
                 .then(render)
                 .catch(function (error) { alert(error.message); })
                 .then(function () {
@@ -178,8 +233,9 @@
         app.querySelector('#rnOverviewExport').onclick = function () {
             var rows = detailFlights();
             if (!rows.length) { alert('Không có dữ liệu để xuất Excel.'); return; }
+            if (!window.ReportControls || !window.ReportControls.exportExcel) { alert('Chức năng xuất Excel chưa sẵn sàng.'); return; }
             window.ReportControls.exportExcel({
-                fileName: 'FlightOperationOverview_' + from.value + '_' + to.value,
+                fileName: 'FlightOperationOverview_' + appliedFrom + '_' + appliedTo,
                 rows: rows,
                 columns: [
                     { label: 'No', key: '__no' }, { label: 'CALLSIGN', key: 'callsign' },

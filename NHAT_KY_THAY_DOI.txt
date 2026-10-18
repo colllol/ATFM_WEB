@@ -2006,3 +2006,5 @@ Quy ước:
 2026-10-18 | prjApplication/ReportNew/FlightStatusRate.js; FlightStatusRateKpis.css | Giu cac KPI goc va dat 5 muc delay ben trong KPI Delay.
 2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js; FlightTrendAnalysis.aspx | Them dong/line cho tung nam so sanh, tooltip hien thi day du series; cache-buster.
 2026-10-18 | C:/Users/Admin/Documents/GitHub/API/QLB.BusinessLogic/Report/FlightAnalyticsDAL.cs | Ton trong co CurrentDay tu web de chon nguon live cho Overview va Trend.
+
+2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.aspx; prjApplication/ReportNew/FlightOperationOverview.js; prjApplication/ReportNew/FlightOperationOverview.aspx.cs; tests/test_overview_regression.js | Sửa Overview: bỏ KPI mẫu ngay khi tải, dùng WebMethod cùng website với chữ ký 3 tham số tương thích Dashboard; tách nguồn lịch sử/hôm nay theo UTC+7; trả ngày bay, khôi phục biểu đồ cất/hạ cánh theo ngày/tháng khi chọn sân bay; giữ delay trong chi tiết. 25 kiểm tra hồi quy và build ATFM.sln đạt. Claude CLI review chỉ đọc; chưa nghiệm thu UI đăng nhập (IIS chuyển login).
