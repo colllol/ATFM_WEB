@@ -121,7 +121,7 @@
 .rn-filters.rn-trend-filters { grid-template-columns: 1.2fr 1.2fr 1fr 1fr .8fr auto; }
 .rn-trend-card { overflow: hidden; }
 .rn-trend-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-.rn-trend-legend { display: flex; align-items: center; gap: 16px; color: #60778b; font-size: 12px; white-space: nowrap; }
+.rn-trend-legend { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px 16px; color: #60778b; font-size: 12px; }
 .rn-trend-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .rn-trend-legend i,.rn-trend-tooltip i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
 .rn-trend-chart-wrap { position: relative; min-height: 390px; padding: 4px 0 0; overflow: hidden; border-radius: 12px; background: linear-gradient(180deg,#fbfdff,#fff); }
@@ -279,6 +279,13 @@
     }
 }
 
-/* Trend comparison rows: one full-width row for each selected previous year. */
-.rn-app[data-report-view="trend"] .rn-trend-year-row { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; margin: -8px 0 18px; }
-.rn-app[data-report-view="trend"] .rn-trend-year-row .rn-kpi { width: 100%; max-width: none; padding: 14px 18px; border-radius: 8px; }
+/* Trend comparison: one horizontal four-card KPI row for each selected previous year. */
+.rn-app[data-report-view="trend"] .rn-trend-kpis { display: block; }
+.rn-app[data-report-view="trend"] .rn-trend-year-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; margin: 0 0 18px; gap: 14px; }
+.rn-app[data-report-view="trend"] .rn-trend-year-row .rn-kpi { width: auto; max-width: none; min-width: 0; padding: 14px 18px; border-radius: 8px; }
+@media (max-width: 991px) {
+    .rn-app[data-report-view="trend"] .rn-trend-year-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+    .rn-app[data-report-view="trend"] .rn-trend-year-row { grid-template-columns: 1fr; }
+}

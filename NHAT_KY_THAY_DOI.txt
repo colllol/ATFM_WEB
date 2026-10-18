@@ -2022,3 +2022,9 @@ Quy ước:
 2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js; prjApplication/ReportNew/ReportInteractive.css; prjApplication/ReportNew/FlightTrendAnalysis.aspx; prjApplication/ReportNew/ReportNew.js; tests/test_trend_regression.js | Hoàn thiện bộ lọc 1–5 năm so sánh: chuẩn hóa mảng năm so sánh, render một hàng KPI cho mỗi năm, vẽ một line cho mỗi năm và line hiện tại, giữ tương thích response chỉ có một năm; cập nhật cache-buster và thêm kiểm tra hồi quy.
 
 2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js; prjApplication/ReportNew/ReportInteractive.css; prjApplication/ReportNew/FlightTrendAnalysis.aspx; prjApplication/ReportControls.js; prjApplication/ReportNew/ReportNew.js; tests/test_trend_regression.js | S?a l?i hi?n th? ti?ng Vi?t do escape Unicode hai l?n; ch? n?ng c?p dropdown s?n bay v? h?ng bay th?nh b? t?m ki?m, gi? dropdown ch? ?? xem v? s? n?m d?ng native; ?p b? l?c Trend v? n?t ?p d?ng tr?n c?ng m?t h?ng, c?p nh?t cache-buster v? ki?m tra h?i quy (22 assertion).
+
+2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.aspx.cs | S?a API WebMethod GetTrend nh?n s? n?m so s?nh 1-10; tr? v? ??y ?? d? li?u t?ng n?m, KPI v? series theo c?ng b? l?c; x? l? c? kho?ng ng?y giao gi?a d? li?u l?ch s? v? ng?y hi?n t?i.
+2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js | S?a g?i d? li?u c?ng trang, render m?i n?m m?t h?ng KPI g?m k? hi?n t?i, k? so s?nh, ch?nh l?ch v? t? l? thay ??i; bi?u ??/tooltip d?ng m?u ri?ng cho t?i ?a 10 series.
+2026-10-18 | prjApplication/ReportNew/ReportNew.js | M? r?ng b? ch?n s? n?m tr??c t? 1-5 l?n 1-10.
+2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.aspx; prjApplication/ReportNew/ReportInteractive.css | T?ng cache-buster v? ??nh d?ng h?ng KPI ngang b?n th?, responsive theo m?n h?nh.
+2026-10-18 | tests/test_trend_regression.js | C?p nh?t ki?m tra h?i quy cho gi?i h?n 10 n?m, h?ng KPI so s?nh v? m?u series.

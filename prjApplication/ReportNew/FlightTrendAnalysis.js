@@ -15,7 +15,7 @@
     ];
 
     function post(method, data) {
-        return fetch(window.reportApiBase + 'api/FlightTrendAnalysis/' + method, {
+        return fetch(window.location.pathname + '/' + method, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
@@ -33,6 +33,12 @@
         return node.innerHTML;
     }
 
+    var trendSeriesColors = [
+        '#2387c8', '#9bb0c1', '#20b486', '#ef5b5b', '#f5a623', '#8a6ee8',
+        '#d14d72', '#0f9d8a', '#5b6ee1', '#8b5e34', '#607d8b'
+    ];
+
+    function seriesColor(index) { return trendSeriesColors[index % trendSeriesColors.length]; }
     function number(value) { return Number(value || 0).toLocaleString('vi-VN'); }
     function signed(value) { value = Number(value || 0); return (value > 0 ? '+' : '') + number(value); }
     function formatDate(value) {
@@ -95,36 +101,65 @@
         renderOperators([], 'ALL');
         yearsBack.value = yearsBack.value || '1';
 
+        function currentYear(data) {
+            var match = String(data.currentFrom || '').match(/(\d{4})$/);
+            return match ? parseInt(match[1], 10) : new Date().getFullYear();
+        }
+
         function comparisonPeriods(data) {
-            var periods = Array.isArray(data.comparisonPeriods) ? data.comparisonPeriods.slice(0, 5) : [];
+            var periods = Array.isArray(data.comparisonPeriods) ? data.comparisonPeriods.slice(0, 10) : [];
+            var baseYear = currentYear(data);
             if (!periods.length && (data.previousTotal != null || data.previousFrom || data.previousTo)) {
                 periods.push({
-                    year: new Date().getFullYear() - 1,
+                    year: baseYear - 1,
                     total: data.previousTotal || 0,
                     from: data.previousFrom || '',
                     to: data.previousTo || '',
                     values: data.previous || []
                 });
             }
-            return periods;
+            return periods.map(function (item, index) {
+                return {
+                    year: Number(item.year) || (baseYear - index - 1),
+                    total: Number(item.total) || 0,
+                    from: item.from || '',
+                    to: item.to || '',
+                    values: Array.isArray(item.values) ? item.values : []
+                };
+            });
+        }
+
+        function comparisonPercent(current, previous) {
+            current = Number(current || 0);
+            previous = Number(previous || 0);
+            if (previous === 0) return current === 0 ? 0 : 100;
+            return Math.round((current - previous) * 1000 / previous) / 10;
         }
 
         function renderKpis(data) {
             var periods = comparisonPeriods(data);
-            var previous = periods[0] || { total: 0, from: '', to: '', year: new Date().getFullYear() - 1 };
-            var changeColor = data.difference >= 0 ? '#20b486' : '#ef5b5b';
-            var changeText = (data.changePercent > 0 ? '+' : '') + Number(data.changePercent || 0).toLocaleString('vi-VN') + '%';
-            var html = '<div class="rn-kpis rn-trend-kpis"><div class="rn-kpi" style="--accent:#2387c8"><span>K\u1ef3 hi\u1ec7n t\u1ea1i</span><strong>' + number(data.currentTotal) + '</strong><small>Ho\u00e0n th\u00e0nh ' + number(data.currentFinished) + ' \u2022 Delay ' + number(data.currentDelay) + '</small></div>' +
-                '<div class="rn-kpi" style="--accent:#9bb0c1"><span>C\u00f9ng k\u1ef3 n\u0103m ' + previous.year + '</span><strong>' + number(previous.total) + '</strong><small>' + esc(previous.from + ' \u2013 ' + previous.to) + '</small></div>' +
-                '<div class="rn-kpi" style="--accent:' + changeColor + '"><span>Ch\u00eanh l\u1ec7ch</span><strong>' + signed(data.difference) + '</strong><small>Chuy\u1ebfn bay</small></div>' +
-                '<div class="rn-kpi" style="--accent:#8a6ee8"><span>T\u1ef7 l\u1ec7 thay \u0111\u1ed5i</span><strong>' + changeText + '</strong><small>So v\u1edbi c\u00f9ng k\u1ef3</small></div></div>';
-            periods.forEach(function (item, index) { var color = ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][index % 5]; html += '<div class="rn-kpis rn-trend-year-row"><div class="rn-kpi" style="--accent:' + color + '"><span>C\u00f9ng k\u1ef3 n\u0103m ' + item.year + '</span><strong>' + number(item.total) + '</strong><small>' + esc(item.from + ' \u2013 ' + item.to) + '</small></div></div>'; });
+            var currentTotal = Number(data.currentTotal || 0);
+            var currentYearValue = currentYear(data);
+            var currentDates = (data.currentFrom || '') + ' \u2013 ' + (data.currentTo || '');
+            var html = periods.map(function (item, index) {
+                var difference = currentTotal - item.total;
+                var changePercent = comparisonPercent(currentTotal, item.total);
+                var differenceColor = difference >= 0 ? '#20b486' : '#ef5b5b';
+                var percentColor = changePercent >= 0 ? '#20b486' : '#ef5b5b';
+                var comparisonColor = seriesColor(index + 1);
+                var changeText = (changePercent > 0 ? '+' : '') + Number(changePercent).toLocaleString('vi-VN') + '%';
+                return '<div class="rn-kpis rn-trend-year-row" data-compare-year="' + esc(item.year) + '">' +
+                    '<div class="rn-kpi" style="--accent:#2387c8"><span>K\u1ef3 hi\u1ec7n t\u1ea1i ' + currentYearValue + '</span><strong>' + number(currentTotal) + '</strong><small>Ho\u00e0n th\u00e0nh ' + number(data.currentFinished) + ' \u2022 Delay ' + number(data.currentDelay) + '<br>' + esc(currentDates) + '</small></div>' +
+                    '<div class="rn-kpi" style="--accent:' + comparisonColor + '"><span>C\u00f9ng k\u1ef3 n\u0103m ' + esc(item.year) + '</span><strong>' + number(item.total) + '</strong><small>' + esc(item.from + ' \u2013 ' + item.to) + '</small></div>' +
+                    '<div class="rn-kpi" style="--accent:' + differenceColor + '"><span>Ch\u00eanh l\u1ec7ch v\u1edbi ' + esc(item.year) + '</span><strong>' + signed(difference) + '</strong><small>Chuy\u1ebfn bay</small></div>' +
+                    '<div class="rn-kpi" style="--accent:' + percentColor + '"><span>T\u1ef7 l\u1ec7 thay \u0111\u1ed5i</span><strong>' + changeText + '</strong><small>So v\u1edbi n\u0103m ' + esc(item.year) + '</small></div>' +
+                    '</div>';
+            }).join('');
             var old = app.querySelector('.rn-kpis'); if (old) old.outerHTML = html;
         }
 
         function renderChart(data) {
-            var colors = ['#2387c8','#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'];
-            var legend = '<span><i style="background:' + colors[0] + '"></i>K\u1ef3 hi\u1ec7n t\u1ea1i</span>' + comparisonPeriods(data).map(function (item, index) { return '<span><i style="background:' + colors[index + 1] + '"></i>N\u0103m ' + item.year + '</span>'; }).join('');
+            var legend = '<span><i style="background:' + seriesColor(0) + '"></i>K\u1ef3 hi\u1ec7n t\u1ea1i</span>' + comparisonPeriods(data).map(function (item, index) { return '<span><i style="background:' + seriesColor(index + 1) + '"></i>N\u0103m ' + item.year + '</span>'; }).join('');
             var html = '<div class="rn-grid"><article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu h\u01b0\u1edbng khai th\u00e1c theo ' + (data.period === 'month' ? 'th\u00e1ng' : 'ng\u00e0y') + '</h2><p class="rn-card-subtitle">Ch\u1ec9 g\u1ed3m chuy\u1ebfn Ho\u00e0n th\u00e0nh v\u00e0 Delay \u2022 Ngu\u1ed3n: ' + esc(data.source) + '</p></div><div class="rn-trend-legend">' + legend + '</div></div>' +
                 '<div class="rn-trend-chart-wrap"><canvas id="rnTrendInteractive" class="rn-trend-canvas"></canvas><div id="rnTrendTooltip" class="rn-trend-tooltip" role="status"></div></div><p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chu\u1ed9t l\u00ean t\u1eebng m\u1ed1c \u0111\u1ec3 xem s\u1ed1 l\u01b0\u1ee3ng chuy\u1ebfn bay.</p></article></div>';
             var oldGrid = app.querySelector('.rn-grid'); if (oldGrid) oldGrid.outerHTML = html;
@@ -219,15 +254,14 @@
                     ctx.fill();
                 }
 
-                var seriesColors = ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'];
-                previousPoints.forEach(function (points, seriesIndex) { drawLine(ctx, points, seriesColors[seriesIndex % 5], 2.5); });
-                drawLine(ctx, currentPoints, '#2387c8', 3.5);
+                previousPoints.forEach(function (points, seriesIndex) { drawLine(ctx, points, seriesColor(seriesIndex + 1), 2.5); });
+                drawLine(ctx, currentPoints, seriesColor(0), 3.5);
                 previousPoints.concat([currentPoints]).forEach(function (points, seriesIndex) {
                     points.forEach(function (point, index) {
                         var active = index === hoverIndex;
                         ctx.beginPath();
                         ctx.arc(point.x, point.y, active ? 6 : 3.5, 0, Math.PI * 2);
-                        ctx.fillStyle = seriesIndex === previousPoints.length ? '#2387c8' : seriesColors[seriesIndex % 5];
+                        ctx.fillStyle = seriesIndex === previousPoints.length ? seriesColor(0) : seriesColor(seriesIndex + 1);
                         ctx.fill();
                         if (active) {
                             ctx.lineWidth = 4;
@@ -277,7 +311,7 @@
                 if (mouseX < geometry.left - 18 || mouseX > geometry.right + 18) return;
                 hoverIndex = index;
                 draw(1);
-                tooltip.innerHTML = '<strong>' + esc(labels[index]) + '</strong><span><i style="background:#2387c8"></i>K\u1ef3 hi\u1ec7n t\u1ea1i: <b>' + number(current[index]) + ' chuy\u1ebfn</b></span>' + comparisons.map(function (item, seriesIndex) { return '<span><i style="background:' + ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][seriesIndex] + '"></i>N\u0103m ' + item.year + ': <b>' + number((item.values || [])[index] || 0) + ' chuy\u1ebfn</b></span>'; }).join('');
+                tooltip.innerHTML = '<strong>' + esc(labels[index]) + '</strong><span><i style="background:' + seriesColor(0) + '"></i>K\u1ef3 hi\u1ec7n t\u1ea1i: <b>' + number(current[index]) + ' chuy\u1ebfn</b></span>' + comparisons.map(function (item, seriesIndex) { return '<span><i style="background:' + seriesColor(seriesIndex + 1) + '"></i>N\u0103m ' + item.year + ': <b>' + number((item.values || [])[index] || 0) + ' chuy\u1ebfn</b></span>'; }).join('');
                 tooltip.classList.add('is-visible');
                 var tooltipLeft = geometry.points[index] ? geometry.points[index].x : mouseX;
                 tooltip.style.left = Math.max(90, Math.min(geometry.width - 90, tooltipLeft)) + 'px';
