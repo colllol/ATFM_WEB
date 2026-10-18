@@ -61,7 +61,7 @@
 
     function enhanceAll(root) {
         Array.prototype.forEach.call((root || document).querySelectorAll(
-            '.rn-filters .rn-field select,.rn-military-filters .rn-field select,.adsb-filter-card select,.airport-filter select[data-searchable="true"]'
+            '.rn-filters .rn-field select:not(.rn-native-select),.rn-military-filters .rn-field select:not(.rn-native-select),.adsb-filter-card select:not(.rn-native-select),.airport-filter select[data-searchable="true"]:not(.rn-native-select)'
         ), enhance);
     }
 

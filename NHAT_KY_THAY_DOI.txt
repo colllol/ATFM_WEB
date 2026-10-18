@@ -2019,4 +2019,8 @@ Quy ước:
 
 2026-10-18 | prjApplication/ReportNew/ReportInteractive.css; prjApplication/ReportNew/FlightOperationOverview.aspx; tests/test_overview_regression.js | Nới rộng nhóm cột sân bay trên Overview, tăng khoảng cách cặp cột và giảm nhẹ cỡ nhãn số để tránh chồng; tăng cache-buster CSS.
 
-2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js; prjApplication/ReportNew/ReportInteractive.css; prjApplication/ReportNew/FlightTrendAnalysis.aspx; prjApplication/ReportNew/ReportNew.js; tests/test_trend_regression.js | Hoàn thiện bộ lọc 1–5 năm so sánh: chuẩn hóa mảng năm so sánh, render một hàng KPI cho mỗi năm, vẽ một line cho mỗi năm và line hiện tại, giữ tương thích response chỉ có một năm; cập nhật cache-buster và thêm kiểm tra hồi quy.
+
+
+2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js; prjApplication/ReportNew/ReportInteractive.css; prjApplication/ReportNew/FlightTrendAnalysis.aspx; tests/test_trend_regression.js | Sửa lỗi hiển tiếng Việt do escape Unicode hai lần; chỉ nâng cấp dropdown sân bay và hãng bay thành bộ tìm kiếm, giữ dropdown chế độ xem và số năm dạng native; ép bộ lọc Trend và nút Áp dụng trên cùng một hàng, cập nhật cache-buster và kiểm tra hồi quy.
+
+2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js; prjApplication/ReportNew/ReportInteractive.css; prjApplication/ReportNew/FlightTrendAnalysis.aspx; prjApplication/ReportNew/ReportControls.js; prjApplication/ReportNew/ReportNew.js; tests/test_trend_regression.js | Sửa lỗi hiển tiếng tiếng Việt do escape Unicode hai lần; chỉ nâng cấp dropdown sân bay và hãng bay thành bộ tìm kiếm, giữ dropdown chế độ xem và số năm dạng native; ép các trướng lọc và nút Áp dụng trên một hàng, cập nhật cache-buster và kiểm tra hồi quy.
