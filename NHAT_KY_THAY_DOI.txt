@@ -2008,3 +2008,5 @@ Quy ước:
 2026-10-18 | C:/Users/Admin/Documents/GitHub/API/QLB.BusinessLogic/Report/FlightAnalyticsDAL.cs | Ton trong co CurrentDay tu web de chon nguon live cho Overview va Trend.
 
 2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.aspx; prjApplication/ReportNew/FlightOperationOverview.js; prjApplication/ReportNew/FlightOperationOverview.aspx.cs; tests/test_overview_regression.js | Sửa Overview: bỏ KPI mẫu ngay khi tải, dùng WebMethod cùng website với chữ ký 3 tham số tương thích Dashboard; tách nguồn lịch sử/hôm nay theo UTC+7; trả ngày bay, khôi phục biểu đồ cất/hạ cánh theo ngày/tháng khi chọn sân bay; giữ delay trong chi tiết. 25 kiểm tra hồi quy và build ATFM.sln đạt. Claude CLI review chỉ đọc; chưa nghiệm thu UI đăng nhập (IIS chuyển login).
+
+2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.aspx; prjApplication/ReportNew/FlightOperationOverview.js; prjApplication/ReportNew/ReportNew.js; tests/test_overview_regression.js | Hoàn thiện trạng thái tải/lỗi/không có dữ liệu cho Overview, bỏ dữ liệu biểu đồ mẫu trước khi gọi WebMethod, giữ drill-down biểu đồ sân bay và bổ sung kiểm tra hồi quy.

@@ -81,6 +81,8 @@
         var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         var data = { flights: [] };
         var appliedFrom = '', appliedTo = '';
+        app.querySelector('.rn-filters').insertAdjacentHTML('afterend', '<p id="rnOverviewLoadState" role="status" aria-live="polite" hidden></p>');
+        var loadState = app.querySelector('#rnOverviewLoadState');
         var selectedBar = null;
         var page = 1;
         var pageSize = 100;
@@ -218,11 +220,21 @@
 
         function load() {
             if (!from.value || !to.value || from.value > to.value || to.value > formatDate(new Date())) { alert('Khoảng ngày lọc không hợp lệ.'); return; }
+            loadState.hidden = false;
+            loadState.textContent = 'Đang tải dữ liệu khai thác bay…';
             apply.disabled = true;
             apply.textContent = 'Đang tải...';
             post('GetData', { fromDate: from.value, toDate: to.value, airport: airport.value })
-                .then(render)
-                .catch(function (error) { alert(error.message); })
+                .then(function (result) {
+                    render(result);
+                    loadState.textContent = (result.flights || []).length ? '' : 'Không có chuyến bay trong khoảng lọc đã chọn.';
+                    loadState.hidden = !!(result.flights || []).length;
+                })
+                .catch(function (error) {
+                    loadState.hidden = false;
+                    loadState.textContent = 'Không tải được dữ liệu: ' + error.message;
+                    if (!appliedFrom) app.querySelector('.rn-grid').innerHTML = '<article class="rn-card wide"><p>Chưa có dữ liệu báo cáo. Kiểm tra thông báo phía trên và nhấn Áp dụng để thử lại.</p></article>';
+                })
                 .then(function () {
                     apply.disabled = false;
                     apply.innerHTML = '<i class="fa fa-filter"></i> Áp dụng';

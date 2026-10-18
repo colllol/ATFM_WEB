@@ -62,3 +62,10 @@ vm.runInContext(section('    function post(', '    function airportSeries('),ctx
  ok(cs.includes('flightDate = item.FlightDate'),'dates available for grouping');
  console.log('PASS '+checks+' overview regression checks');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
+const template = fs.readFileSync('prjApplication/ReportNew/ReportNew.js','utf8');
+const overview = template.slice(template.indexOf("else if(view==='overview'){"),template.indexOf("else if(view==='military'){"));
+assert.ok(!/kpis\(|donut\(|bars\(|table\(/.test(overview),'Overview must not render fixture charts before fetching');
+assert.ok(overview.includes('aria-live="polite"'),'loading status is accessible');
+assert.ok(source.includes("loadState.textContent = 'Không tải được dữ liệu: '"),'load error remains visible');
+console.log('PASS 3 Overview initial-loading checks');
