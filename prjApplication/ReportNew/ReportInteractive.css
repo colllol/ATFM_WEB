@@ -81,6 +81,14 @@
 .rn-airport-bar-group > b { margin-top: 8px; color: #31546f; font-size: 11px; }
 .rn-airport-bar-group > small { display: block; max-width: 82px; overflow: hidden; color: #8193a3; font-size: 9px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .rn-airport-empty { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #718397; }
+
+/* Overview: give paired count labels enough separation at every airport group. */
+.rn-app[data-report-view="overview"] .rn-airport-chart { gap: 12px; }
+.rn-app[data-report-view="overview"] .rn-airport-bar-group { min-width: 136px; flex: 0 0 136px; }
+.rn-app[data-report-view="overview"] .rn-airport-bar-pair { gap: 10px; }
+.rn-app[data-report-view="overview"] .rn-airport-bar { width: calc(50% - 5px); }
+.rn-app[data-report-view="overview"] .rn-airport-bar span { font-size: 10px; }
+
 /* Nổi bật sân bay có tổng lượt cất/hạ cánh cao nhất trong kỳ. */
 .rn-airport-bar-group.is-peak .rn-airport-bar { box-shadow: 0 0 0 3px rgba(245,166,35,.45), 0 8px 16px rgba(31,71,103,.2); }
 .rn-airport-bar-group.is-peak > b { color: #b97b0a; }

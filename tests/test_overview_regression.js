@@ -116,3 +116,10 @@ assert.ok(zeroHost.innerHTML.includes(String.fromCharCode(84,7893,110,103,32,99,
 assert.ok(zeroHost.innerHTML.includes(String.fromCharCode(83,226,110,32,98,97,121,32,107,104,97,105,32,116,104,225,99)), 'airport Vietnamese label preserved');
 assert.ok(!/[A-Za-z]\?[A-Za-z]/.test(source), 'no question marks replacing Vietnamese letters');
 console.log('PASS 5 Vietnamese encoding checks');
+
+const interactiveCss = fs.readFileSync('prjApplication/ReportNew/ReportInteractive.css', 'utf8');
+assert.ok(interactiveCss.includes('.rn-app[data-report-view="overview"] .rn-airport-bar-group { min-width: 136px; flex: 0 0 136px; }'), 'overview airport groups have enough horizontal spacing');
+assert.ok(interactiveCss.includes('.rn-app[data-report-view="overview"] .rn-airport-bar-pair { gap: 10px; }'), 'paired bars are spaced apart');
+assert.ok(interactiveCss.includes('.rn-app[data-report-view="overview"] .rn-airport-bar { width: calc(50% - 5px); }'), 'paired bars distribute evenly within group');
+assert.ok(fs.readFileSync('prjApplication/ReportNew/FlightOperationOverview.aspx', 'utf8').includes('ReportInteractive.css?v=20261018-2'), 'interactive CSS cache-buster updated');
+console.log('PASS 4 paired-bar label layout checks');
