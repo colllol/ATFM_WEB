@@ -69,8 +69,7 @@
     function init() {
         var app = document.querySelector('.rn-app[data-report-view="overview"]');
         if (!app) return;
-        var templateKpis = app.querySelector('.rn-kpis');
-        if (templateKpis) templateKpis.remove();
+        app.querySelector('.rn-filters').insertAdjacentHTML('afterend', '<div class="rn-kpis" id="rnOverviewKpis"></div>');
         var airport = app.querySelector('#rnAirport');
         var from = app.querySelector('#rnFrom');
         var to = app.querySelector('#rnTo');
@@ -128,8 +127,24 @@
             return flights;
         }
 
+        function renderKpis() {
+            var items = [
+                { label: 'T?ng chuy?n bay', value: data.total, color: '#2387c8' },
+                { label: 'Ho?n th?nh', value: data.finished, color: '#20b486' },
+                { label: 'Delay', value: data.delay, color: '#f5a623' },
+                { label: 'S?n bay khai th?c', value: data.airportCount, color: '#8a6ee8' }
+            ];
+            app.querySelector('#rnOverviewKpis').innerHTML = items.map(function (item) {
+                return '<div class="rn-kpi" style="--accent:' + item.color + '"><span>' + item.label + '</span><strong>' + number(item.value) + '</strong></div>';
+            }).join('');
+        }
+
         function renderBars() {
             var items = data.airports || [];
+            if (!items.length) {
+                var codes = airport.value && airport.value !== 'ALL' ? [airport.value] : Object.keys(airportNames);
+                items = codes.map(function (code) { return { code: code, departures: 0, arrivals: 0 }; });
+            }
             var max = 0;
             items.forEach(function (item) { max = Math.max(max, item.departures, item.arrivals); });
             var bars = items.map(function (item) {
@@ -213,6 +228,7 @@
             app.querySelector('#rnOverviewPageSize').onchange = function () { pageSize = parseInt(this.value, 10); page = 1; renderPage(); };
             app.querySelector('#rnOverviewPrev').onclick = function () { if (page > 1) { page--; renderPage(); } };
             app.querySelector('#rnOverviewNext').onclick = function () { var pages = Math.max(1, Math.ceil(detailFlights().length / pageSize)); if (page < pages) { page++; renderPage(); } };
+            renderKpis();
             renderBars();
             renderAirportTrend();
             renderPage();
@@ -259,6 +275,7 @@
                 ]
             });
         };
+        render({ flights: [], airports: [], fromDate: from.value, toDate: to.value, source: 'd? li?u khai th?c bay' });
         load();
     }
 
