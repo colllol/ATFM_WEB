@@ -114,6 +114,10 @@
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Npgsql, Version=4.1.14.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Npgsql.4.1.14\lib\net461\Npgsql.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.121.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Oracle.DataAccess.dll</HintPath>
@@ -1469,6 +1473,8 @@
     <Content Include="Static\Country\ListCountry.aspx" />
     <Content Include="Static\CraftType\EditCraftType.aspx" />
     <Content Include="Static\CraftType\ListCraftType.aspx" />
+    <Content Include="Static\Craft\EditCRAFT.aspx" />
+    <Content Include="Static\Craft\ListCRAFT.aspx" />
     <Content Include="Static\Document\EditDocument.aspx" />
     <Content Include="Static\Document\ViewDocument.aspx" />
     <Content Include="Static\Document\ListDocument.aspx" />
@@ -4037,6 +4043,20 @@
     </Compile>
     <Compile Include="Static\Oper\ListOper.aspx.designer.cs">
       <DependentUpon>ListOper.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Static\Craft\EditCRAFT.aspx.cs">
+      <DependentUpon>EditCRAFT.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Static\Craft\EditCRAFT.aspx.designer.cs">
+      <DependentUpon>EditCRAFT.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Static\Craft\ListCRAFT.aspx.cs">
+      <DependentUpon>ListCRAFT.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Static\Craft\ListCRAFT.aspx.designer.cs">
+      <DependentUpon>ListCRAFT.aspx</DependentUpon>
     </Compile>
     <Compile Include="Static\REPORTING_POINT\EditReportingPoint.aspx.cs">
       <DependentUpon>EditReportingPoint.aspx</DependentUpon>

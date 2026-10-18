@@ -1,4 +1,4 @@
-﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="ATFM.Master.cs" Inherits="prjApplication.Masters.ATFM" %>
+﻿    <%@ Master Language="C#" AutoEventWireup="true" CodeBehind="ATFM.Master.cs" Inherits="prjApplication.Masters.ATFM" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="cc2" %>
 <%@ Register Assembly="prjComponents" Namespace="prjComponents" TagPrefix="cc1" %>

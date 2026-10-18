@@ -1,4 +1,4 @@
-<%@ Page Title="Cancel Permission SC V2" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master"
+<%@ Page Title="Cancel Permission" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master"
     AutoEventWireup="true" CodeBehind="ImportsPermSC_LD_V2.aspx.cs"
     Inherits="prjApplication.Tool.ImportsPermSC_LD_V2" %>
 
@@ -9,7 +9,7 @@
     <section class="impv2" data-page-method-url="ImportsPermSC_LD_V2.aspx/">
         <header class="impv2__header">
             <div>
-                <h2>HỦY CHUYẾN PERMISSION SC V2</h2>
+                <h2>HỦY CHUYẾN</h2>
                 <p>Phân tích, kiểm tra và xem trước danh sách chuyến bay cần hủy trước khi ghi nhận.</p>
             </div>
             <span class="impv2__legacy">Chức năng cũ vẫn được giữ nguyên</span>

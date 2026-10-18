@@ -523,7 +523,7 @@
     </div>
     <script src="<%=Global.ApplicationPath%>/Style/assets/js/jquery-2.1.4.min.js"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomDynamic.js"></script>
-    <script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js"></script>
+    <script src="<%=Global.ApplicationPath%>/Scripts/CustumStaticdata.js?v=20260923-1"></script>
     <script src="<%=Global.ApplicationPath%>/Scripts/CustomPaging.js"></script>
     <script>
 
@@ -1606,8 +1606,8 @@
                     +  "<td id='b_"+b.RNUM+"'>" +  b.RNUM + "</td>"
                     + "<td><input type='text' data-control='_updateAll' data-minlenght='3' maxlength='9' class='sInput' id='txtFLIGHTNBR"+a+"' data-oldValue='"+returnEmpty(b.FLIGHTNBR)+"' value='"+returnEmpty(b.FLIGHTNBR)+"' onchange='checkIsUpdate(this)' /></td>"
                     + "<td><input type='text' data-control='_updateAll' class='sInput' id='txtREGISTRATION"+a+"' data-oldValue='"+returnEmpty(b.REGISTRATION)+"' value='"+returnEmpty(b.REGISTRATION)+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input type='text' data-control='_updateAll' data-minlenght='2'  class='sInput' id='txtFROM_AIRP"+a+"' data-oldValue='"+b.FROM_AIRP+"' data-autocomplete=\'AERO\' value='"+b.FROM_AIRP+"' onchange='checkIsUpdate(this)' /></td>"
-                    + "<td><input type='text' data-control='_updateAll' data-minlenght='2' class='sInput' id='txtTO_AIRP"+a+"' data-oldValue='"+b.TO_AIRP+"' data-autocomplete=\'AERO\' value='"+b.TO_AIRP+"' onchange='checkIsUpdate(this)'/></td>" 
+                        + "<td><input type='text' data-control='_updateAll' data-minlenght='2'  class='sInput' id='txtFROM_AIRP" + a + "' data-oldValue='" + b.FROM_AIRP +"' onfocusin='binAutocomplete(this,\"AERO\")' value='"+b.FROM_AIRP+"' onchange='checkIsUpdate(this)' /></td>"
+                        + "<td><input type='text' data-control='_updateAll' data-minlenght='2' class='sInput' id='txtTO_AIRP" + a + "' data-oldValue='" + b.TO_AIRP +"' onfocusin='binAutocomplete(this,\"AERO\")'  value='"+b.TO_AIRP+"' onchange='checkIsUpdate(this)'/></td>" 
                     + "<td><input type='text' data-control='_updateAll' maxlength='5' data-minlenght='4' class='sInput' id='txtETD"+a+"' data-oldValue='"+returnEmpty(b.ETD)+"'  value='"+returnEmpty(b.ETD)+"' onchange='checkIsUpdate(this)'/></td>"   
                     + "<td><input type='text' data-control='_updateAll' maxlength='5'  class='sInput' id='txtETA"+a+"' data-oldValue='"+returnEmpty(b.ETA)+"' value='"+returnEmpty(b.ETA)+"' onchange='checkIsUpdate(this)'/></td>"  
                     + "<td style='background-color: antiquewhite!important;'><input id=\"chkAll"+ b.RNUM +"\" type=\"checkbox\" onchange='checkAllChange(\""+b.RNUM+"\");' /></td>"

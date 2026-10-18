@@ -237,14 +237,15 @@
             vn = 0;
             ld = 0;
             of = 0;
+            messType = '';
             if ($('#chkVN').prop("checked") == true) {
-                vn = 1;
+                vn = 1; messType = 'HVN MESSAGE';
             }
             if ($('#chkLD').prop("checked") == true) {
-                ld = 1;
+                ld = 1; messType = 'LANDING FLIGHTS';
             }
             if ($('#chkOF').prop("checked") == true) {
-                of = 1;
+                of = 1; messType = 'OVER FLIGHTS';
             }
 
             dd = $('#ctl00_MainContent_txtBEGINDATE').val();

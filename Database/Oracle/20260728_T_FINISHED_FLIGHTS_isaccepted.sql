@@ -163,6 +163,42 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
         v_start_date  DATE;
         v_finish_date DATE;
         v_filter_date DATE;
+        v_permnbr         VARCHAR2(4000);
+        v_registration    VARCHAR2(4000);
+        v_from_airp       VARCHAR2(4000);
+        v_to_airp         VARCHAR2(4000);
+        v_purpose         VARCHAR2(4000);
+        v_oper_id         VARCHAR2(4000);
+        v_oper_id_list    VARCHAR2(4000);
+        v_from_airp_list  VARCHAR2(4000);
+        v_to_airp_list    VARCHAR2(4000);
+        v_via_list        VARCHAR2(4000);
+        v_purpose_list    VARCHAR2(4000);
+        v_permtype        VARCHAR2(4000);
+        v_flight_type     VARCHAR2(4000);
+        v_craft_type      VARCHAR2(4000);
+        v_real_craft_type VARCHAR2(4000);
+        v_flight_nbr      VARCHAR2(4000);
+        v_via             VARCHAR2(4000);
+        v_fpl_via         VARCHAR2(4000);
+        v_remark          VARCHAR2(4000);
+        v_eta             VARCHAR2(4000);
+        v_etd             VARCHAR2(4000);
+        v_ata             VARCHAR2(4000);
+        v_atd             VARCHAR2(4000);
+        v_khunggio1       VARCHAR2(4000);
+        v_khunggio2       VARCHAR2(4000);
+        v_fir             VARCHAR2(4000);
+        v_sanbaydi        VARCHAR2(4000);
+        v_sanbayden       VARCHAR2(4000);
+        v_validhours      NUMBER;
+        v_craft_id        NUMBER;
+        v_cat_ha          NUMBER;
+        v_typeoper        NUMBER;
+        v_typeflight      NUMBER;
+        v_isaccepted      NUMBER;
+        v_pagesize_input  NUMBER;
+        v_pageindex_input NUMBER;
         v_first_row   PLS_INTEGER;
         v_last_row    PLS_INTEGER;
         v_page_size   PLS_INTEGER;
@@ -182,8 +218,65 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
             v_filter_date := PARSE_DATE(WHECONDITION);
         END IF;
 
-        v_page_size := GREATEST(NVL(PAGESIZE, 100), 1);
-        v_page_index := GREATEST(NVL(PAGEINDEX, 0), 0);
+        -- Tat ca tham so loc dung bien v_ de tranh trung ten cot trong SQL.
+        v_permnbr := NULLIF(UPPER(TRIM(PERMNBR)), '');
+        v_registration := NULLIF(UPPER(TRIM(REGISTRATION)), '');
+        v_from_airp := NULLIF(UPPER(TRIM(FROM_AIRP)), '');
+        v_to_airp := NULLIF(UPPER(TRIM(TO_AIRP)), '');
+        v_purpose := NULLIF(UPPER(TRIM(PURPOSE)), '');
+        v_oper_id := NULLIF(UPPER(TRIM(OPER_ID)), '');
+        -- OPER_ID = |HVN|VJC| thi tim exact-match bat ky OPER trong danh sach.
+        IF SUBSTR(v_oper_id, 1, 1) = '|' THEN
+            v_oper_id_list := TRIM(BOTH '|' FROM v_oper_id);
+        END IF;
+        v_from_airp_list := NULL;
+        IF SUBSTR(v_from_airp, 1, 1) = '|' THEN
+            v_from_airp_list := TRIM(BOTH '|' FROM v_from_airp);
+            v_from_airp := NULL;
+        END IF;
+        v_to_airp_list := NULL;
+        IF SUBSTR(v_to_airp, 1, 1) = '|' THEN
+            v_to_airp_list := TRIM(BOTH '|' FROM v_to_airp);
+            v_to_airp := NULL;
+        END IF;
+        v_purpose_list := NULL;
+        IF SUBSTR(v_purpose, 1, 1) = '|' THEN
+            v_purpose_list := TRIM(BOTH '|' FROM v_purpose);
+            v_purpose := NULL;
+        END IF;
+        v_permtype := NULLIF(UPPER(TRIM(PERMTYPE)), '');
+        v_flight_type := NULLIF(UPPER(TRIM(FLIGHT_TYPE)), '');
+        v_craft_type := NULLIF(UPPER(TRIM(CRAFT_TYPE)), '');
+        v_real_craft_type := NULLIF(UPPER(TRIM(REAL_CRAFT_TYPE)), '');
+        v_flight_nbr := NULLIF(UPPER(TRIM(FLIGHTNBR)), '');
+        v_via := NULLIF(UPPER(TRIM(VIA)), '');
+        v_via_list := NULL;
+        IF SUBSTR(v_via, 1, 1) = '|' THEN
+            v_via_list := TRIM(BOTH '|' FROM v_via);
+            v_via := NULL;
+        END IF;
+        v_fpl_via := NULLIF(UPPER(TRIM(FPL_VIA)), '');
+        v_remark := NULLIF(UPPER(TRIM(REMARK)), '');
+        v_eta := NULLIF(UPPER(TRIM(ETA)), '');
+        v_etd := NULLIF(UPPER(TRIM(ETD)), '');
+        v_ata := NULLIF(UPPER(TRIM(ATA)), '');
+        v_atd := NULLIF(UPPER(TRIM(ATD)), '');
+        v_khunggio1 := NVL(TRIM(KHUNGGIO1), '0000');
+        v_khunggio2 := NVL(TRIM(KHUNGGIO2), '2359');
+        v_fir := NVL(TRIM(FIR), '0');
+        v_sanbaydi := NULLIF(UPPER(TRIM(SANBAYDI)), '');
+        v_sanbayden := NULLIF(UPPER(TRIM(SANBAYDEN)), '');
+        v_validhours := VALIDHOURS;
+        v_craft_id := CRAFT_ID;
+        v_cat_ha := NVL(CAT_HA, 0);
+        v_typeoper := NVL(TYPEOPER, 0);
+        v_typeflight := NVL(TYPEFLIGHT, 0);
+        v_isaccepted := NVL(P_ISACCEPTED, 0);
+        v_pagesize_input := PAGESIZE;
+        v_pageindex_input := PAGEINDEX;
+
+        v_page_size := GREATEST(NVL(v_pagesize_input, 100), 1);
+        v_page_index := GREATEST(NVL(v_pageindex_input, 0), 0);
         v_first_row := (v_page_size * v_page_index) + 1;
         v_last_row := v_page_size * (v_page_index + 1);
 
@@ -203,7 +296,7 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                       ) AS RNUM,
                       t.*
                     FROM T_FINISHED_FLIGHTS t
-                   WHERE t.ISACCEPTED = NVL(P_ISACCEPTED, 0)
+                   WHERE t.ISACCEPTED = v_isaccepted
                      AND t.FLIGHTDATE >= v_start_date
                      AND t.FLIGHTDATE < v_finish_date + 1
                      AND
@@ -217,124 +310,178 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                      )
                      AND
                      (
-                         TRIM(PERMTYPE) IS NULL
-                         OR UPPER(t.PERMTYPE) = UPPER(TRIM(PERMTYPE))
+                         v_permtype IS NULL
+                         OR UPPER(t.PERMTYPE) = v_permtype
                      )
                      AND
                      (
-                         TRIM(PURPOSE) IS NULL
-                         OR UPPER(t.PURPOSE) = UPPER(TRIM(PURPOSE))
+                         v_purpose IS NULL
+                         OR UPPER(t.PURPOSE) = v_purpose
                      )
                      AND
                      (
-                         TRIM(PERMNBR) IS NULL
+                         v_permnbr IS NULL
                          OR UPPER(t.PERMNBR) LIKE
-                            '%' || UPPER(TRIM(PERMNBR)) || '%'
+                            '%' || v_permnbr || '%'
                      )
                      AND
                      (
-                         TRIM(REGISTRATION) IS NULL
+                         v_registration IS NULL
                          OR UPPER(t.REGISTRATION) LIKE
-                            '%' || UPPER(TRIM(REGISTRATION)) || '%'
+                            '%' || v_registration || '%'
                      )
                      AND
                      (
-                         TRIM(REMARK) IS NULL
+                         v_remark IS NULL
                          OR UPPER(t.REMARK) LIKE
-                            '%' || UPPER(TRIM(REMARK)) || '%'
+                            '%' || v_remark || '%'
                      )
                      AND
                      (
-                         CRAFT_ID IS NULL
-                         OR CRAFT_ID = 0
-                         OR t.CRAFT_ID = CRAFT_ID
+                         v_craft_id IS NULL
+                         OR v_craft_id = 0
+                         OR t.CRAFT_ID = v_craft_id
                      )
                      AND
                      (
-                         TRIM(CRAFT_TYPE) IS NULL
-                         OR UPPER(t.CRAFT_TYPE) = UPPER(TRIM(CRAFT_TYPE))
+                         v_craft_type IS NULL
+                         OR UPPER(t.CRAFT_TYPE) = v_craft_type
                      )
                      AND
                      (
-                         TRIM(REAL_CRAFT_TYPE) IS NULL
+                         v_real_craft_type IS NULL
                          OR UPPER(t.REAL_CRAFT_TYPE) LIKE
-                            '%' || UPPER(TRIM(REAL_CRAFT_TYPE)) || '%'
+                            '%' || v_real_craft_type || '%'
                      )
                      AND
                      (
-                         TRIM(FLIGHT_TYPE) IS NULL
+                         v_flight_type IS NULL
                          OR UPPER(t.FLIGHT_TYPE) LIKE
-                            '%' || UPPER(TRIM(FLIGHT_TYPE)) || '%'
+                            '%' || v_flight_type || '%'
                      )
                      AND
                      (
-                         TRIM(FROM_AIRP) IS NULL
+                         v_from_airp IS NULL
                          OR UPPER(t.FROM_AIRP) LIKE
-                            '%' || UPPER(TRIM(FROM_AIRP)) || '%'
+                            '%' || v_from_airp || '%'
                      )
                      AND
                      (
-                         TRIM(TO_AIRP) IS NULL
+                         v_to_airp IS NULL
                          OR UPPER(t.TO_AIRP) LIKE
-                            '%' || UPPER(TRIM(TO_AIRP)) || '%'
+                            '%' || v_to_airp || '%'
                      )
                      AND
                      (
-                         TRIM(VIA) IS NULL
+                         v_via IS NULL
                          OR UPPER(t.VIA) LIKE
-                            '%' || UPPER(TRIM(VIA)) || '%'
+                            '%' || v_via || '%'
                      )
                      AND
                      (
-                         TRIM(FPL_VIA) IS NULL
+                         v_fpl_via IS NULL
                          OR UPPER(t.FPL_VIA) LIKE
-                            '%' || UPPER(TRIM(FPL_VIA)) || '%'
+                            '%' || v_fpl_via || '%'
                      )
                      AND
                      (
-                         TRIM(OPER_ID) IS NULL
-                         OR UPPER(t.OPER_ID) LIKE
-                            '%' || UPPER(TRIM(OPER_ID)) || '%'
+                         v_oper_id IS NULL
+                         OR
+                         (
+                             v_oper_id_list IS NOT NULL
+                             AND INSTR(
+                                 '|' || v_oper_id_list || '|',
+                                 '|' || UPPER(TRIM(t.OPER_ID)) || '|'
+                             ) > 0
+                         )
+                         OR
+                         (
+                             v_oper_id_list IS NULL
+                             AND UPPER(t.OPER_ID) LIKE
+                                 '%' || v_oper_id || '%'
+                         )
                      )
                      AND
                      (
-                         VALIDHOURS IS NULL
-                         OR VALIDHOURS = 0
-                         OR t.VALIDHOURS = VALIDHOURS
+                         v_from_airp_list IS NULL
+                         OR INSTR(
+                             '|' || v_from_airp_list || '|',
+                             '|' || UPPER(TRIM(t.FROM_AIRP)) || '|'
+                         ) > 0
                      )
                      AND
                      (
-                         TRIM(FLIGHTNBR) IS NULL
-                         OR UPPER(t.FLIGHTNBR) LIKE
-                            '%' || UPPER(TRIM(FLIGHTNBR)) || '%'
+                         v_to_airp_list IS NULL
+                         OR INSTR(
+                             '|' || v_to_airp_list || '|',
+                             '|' || UPPER(TRIM(t.TO_AIRP)) || '|'
+                         ) > 0
                      )
                      AND
                      (
-                         TRIM(ETD) IS NULL
+                         v_purpose_list IS NULL
+                         OR INSTR(
+                             '|' || v_purpose_list || '|',
+                             '|' || UPPER(TRIM(t.PURPOSE)) || '|'
+                         ) > 0
+                     )
+                     AND
+                     (
+                         v_via_list IS NULL
+                         OR EXISTS
+                         (
+                             SELECT 1
+                               FROM
+                               (
+                                   SELECT REGEXP_SUBSTR(
+                                              v_via_list, '[^|]+', 1, LEVEL
+                                          ) AS VIA_TOKEN
+                                     FROM DUAL
+                                  CONNECT BY LEVEL <= REGEXP_COUNT(v_via_list, '\|') + 1
+                               ) via_tokens
+                              WHERE via_tokens.VIA_TOKEN IS NOT NULL
+                                AND UPPER(t.VIA) LIKE '%' || via_tokens.VIA_TOKEN || '%'
+                         )
+                     )
+                     AND
+                     (
+                         v_validhours IS NULL
+                         OR v_validhours = 0
+                         OR t.VALIDHOURS = v_validhours
+                     )
+                     AND
+                     (
+                         v_flight_nbr IS NULL
+                         OR UPPER(TRIM(t.FLIGHTNBR)) LIKE
+                            '%' || v_flight_nbr || '%'
+                     )
+                     AND
+                     (
+                         v_etd IS NULL
                          OR UPPER(t.ETD) LIKE
-                            '%' || UPPER(TRIM(ETD)) || '%'
+                            '%' || v_etd || '%'
                      )
                      AND
                      (
-                         TRIM(ETA) IS NULL
+                         v_eta IS NULL
                          OR UPPER(t.ETA) LIKE
-                            '%' || UPPER(TRIM(ETA)) || '%'
+                            '%' || v_eta || '%'
                      )
                      AND
                      (
-                         TRIM(ATD) IS NULL
+                         v_atd IS NULL
                          OR UPPER(t.ATD) LIKE
-                            '%' || UPPER(TRIM(ATD)) || '%'
+                            '%' || v_atd || '%'
                      )
                      AND
                      (
-                         TRIM(ATA) IS NULL
+                         v_ata IS NULL
                          OR UPPER(t.ATA) LIKE
-                            '%' || UPPER(TRIM(ATA)) || '%'
+                            '%' || v_ata || '%'
                      )
                      AND
                      (
-                         NVL(TYPEOPER, 0) = 0
+                         v_typeoper = 0
                          OR EXISTS
                          (
                              SELECT 1
@@ -342,24 +489,24 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                               WHERE op.OPER_ICAO = t.OPER_ID
                                 AND
                                 (
-                                    (TYPEOPER = 1 AND op.IS_DOMESTIC = 1)
+                                    (v_typeoper = 1 AND op.IS_DOMESTIC = 1)
                                     OR
-                                    (TYPEOPER = 2 AND op.IS_DOMESTIC = 0)
+                                    (v_typeoper = 2 AND op.IS_DOMESTIC = 0)
                                 )
                          )
                      )
                      AND
                      (
-                         NVL(TYPEFLIGHT, 0) = 0
+                         v_typeflight = 0
                          OR
                          (
-                             TYPEFLIGHT = 1
+                             v_typeflight = 1
                              AND t.FROM_AIRP LIKE 'VV%'
                              AND t.TO_AIRP LIKE 'VV%'
                          )
                          OR
                          (
-                             TYPEFLIGHT = 2
+                             v_typeflight = 2
                              AND
                              (
                                  t.FROM_AIRP NOT LIKE 'VV%'
@@ -369,10 +516,10 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                      )
                      AND
                      (
-                         NVL(FIR, '0') = '0'
+                         v_fir = '0'
                          OR
                          (
-                             FIR = '1'
+                             v_fir = '1'
                              AND
                              (
                                  (
@@ -396,7 +543,7 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                          )
                          OR
                          (
-                             FIR = '2'
+                             v_fir = '2'
                              AND
                              (
                                  (
@@ -426,48 +573,48 @@ CREATE OR REPLACE PACKAGE BODY FINISHED_STATUS_PKG AS
                      AND
                      (
                          (
-                             TRIM(SANBAYDI) IS NULL
-                             AND TRIM(SANBAYDEN) IS NULL
+                             v_sanbaydi IS NULL
+                             AND v_sanbayden IS NULL
                          )
                          OR
                          (
-                             TRIM(SANBAYDI) IS NOT NULL
+                             v_sanbaydi IS NOT NULL
                              AND UPPER(t.FROM_AIRP) LIKE
-                                 '%' || UPPER(TRIM(SANBAYDI)) || '%'
+                                 '%' || v_sanbaydi || '%'
                          )
                          OR
                          (
-                             TRIM(SANBAYDEN) IS NOT NULL
+                             v_sanbayden IS NOT NULL
                              AND UPPER(t.TO_AIRP) LIKE
-                                 '%' || UPPER(TRIM(SANBAYDEN)) || '%'
+                                 '%' || v_sanbayden || '%'
                          )
                      )
                      AND
                      (
-                         NVL(CAT_HA, 0) = 0
+                         v_cat_ha = 0
                          OR
                          (
-                             CAT_HA = 1
+                             v_cat_ha = 1
                              AND SUBSTR(TRIM(t.ETD), 1, 4)
-                                 BETWEEN KHUNGGIO1 AND KHUNGGIO2
+                                 BETWEEN v_khunggio1 AND v_khunggio2
                          )
                          OR
                          (
-                             CAT_HA = 2
+                             v_cat_ha = 2
                              AND SUBSTR(TRIM(t.ETA), 1, 4)
-                                 BETWEEN KHUNGGIO1 AND KHUNGGIO2
+                                 BETWEEN v_khunggio1 AND v_khunggio2
                          )
                          OR
                          (
-                             CAT_HA = 3
+                             v_cat_ha = 3
                              AND SUBSTR(TRIM(t.ATD), 1, 4)
-                                 BETWEEN KHUNGGIO1 AND KHUNGGIO2
+                                 BETWEEN v_khunggio1 AND v_khunggio2
                          )
                          OR
                          (
-                             CAT_HA = 4
+                             v_cat_ha = 4
                              AND SUBSTR(TRIM(t.ATA), 1, 4)
-                                 BETWEEN KHUNGGIO1 AND KHUNGGIO2
+                                 BETWEEN v_khunggio1 AND v_khunggio2
                          )
                      )
               ) page_data
