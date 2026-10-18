@@ -47,6 +47,7 @@
         var from = app.querySelector('#rnFrom');
         var to = app.querySelector('#rnTo');
         var period = app.querySelector('#rnPeriod');
+        var yearsBack = app.querySelector('#rnYearsBack');
         var apply = app.querySelector('#rnApply');
         var today = new Date();
         var resizeHandler = null;
@@ -91,23 +92,24 @@
         renderOperators([], 'ALL');
 
         function renderKpis(data) {
+            var periods = data.comparisonPeriods || [];
+            var previous = periods[0] || { total: data.previousTotal, from: data.previousFrom, to: data.previousTo, year: new Date().getFullYear() - 1 };
             var changeColor = data.difference >= 0 ? '#20b486' : '#ef5b5b';
             var changeText = (data.changePercent > 0 ? '+' : '') + Number(data.changePercent || 0).toLocaleString('vi-VN') + '%';
-            var html = '<div class="rn-kpis">' +
-                '<div class="rn-kpi" style="--accent:#2387c8"><span>Kỳ hiện tại</span><strong>' + number(data.currentTotal) + '</strong><small>Finished ' + number(data.currentFinished) + ' • Delay ' + number(data.currentDelay) + '</small></div>' +
-                '<div class="rn-kpi" style="--accent:#9bb0c1"><span>Cùng kỳ năm trước</span><strong>' + number(data.previousTotal) + '</strong><small>' + esc(data.previousFrom + ' – ' + data.previousTo) + '</small></div>' +
-                '<div class="rn-kpi" style="--accent:' + changeColor + '"><span>Chênh lệch</span><strong>' + signed(data.difference) + '</strong><small>Chuyến bay</small></div>' +
-                '<div class="rn-kpi" style="--accent:#8a6ee8"><span>Tỷ lệ thay đổi</span><strong>' + changeText + '</strong><small>So với cùng kỳ</small></div></div>';
-            var old = app.querySelector('.rn-kpis');
-            if (old) old.outerHTML = html;
+            var html = '<div class="rn-kpis rn-trend-kpis"><div class="rn-kpi" style="--accent:#2387c8"><span>K\\u1ef3 hi\\u1ec7n t\\u1ea1i</span><strong>' + number(data.currentTotal) + '</strong><small>Ho\\u00e0n th\\u00e0nh ' + number(data.currentFinished) + ' \\u2022 Delay ' + number(data.currentDelay) + '</small></div>' +
+                '<div class="rn-kpi" style="--accent:#9bb0c1"><span>C\\u00f9ng k\\u1ef3 n\\u0103m ' + previous.year + '</span><strong>' + number(previous.total) + '</strong><small>' + esc(previous.from + ' \\u2013 ' + previous.to) + '</small></div>' +
+                '<div class="rn-kpi" style="--accent:' + changeColor + '"><span>Ch\\u00eanh l\\u1ec7ch</span><strong>' + signed(data.difference) + '</strong><small>Chuy\\u1ebfn bay</small></div>' +
+                '<div class="rn-kpi" style="--accent:#8a6ee8"><span>T\\u1ef7 l\\u1ec7 thay \\u0111\\u1ed5i</span><strong>' + changeText + '</strong><small>So v\\u1edbi c\\u00f9ng k\\u1ef3</small></div></div>';
+            periods.forEach(function (item, index) { var color = ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][index % 5]; html += '<div class="rn-kpis rn-trend-year-row"><div class="rn-kpi" style="--accent:' + color + '"><span>C\\u00f9ng k\\u1ef3 n\\u0103m ' + item.year + '</span><strong>' + number(item.total) + '</strong><small>' + esc(item.from + ' \\u2013 ' + item.to) + '</small></div></div>'; });
+            var old = app.querySelector('.rn-kpis'); if (old) old.outerHTML = html;
         }
 
         function renderChart(data) {
-            var html = '<div class="rn-grid"><article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu hướng khai thác theo ' + (data.period === 'month' ? 'tháng' : 'ngày') + '</h2><p class="rn-card-subtitle">Chỉ gồm chuyến Hoàn thành và Delay • Nguồn: ' + esc(data.source) + '</p></div><div class="rn-trend-legend"><span><i style="background:#9bb0c1"></i>Cùng kỳ năm trước</span><span><i style="background:#2387c8"></i>Kỳ hiện tại</span></div></div>' +
-                '<div class="rn-trend-chart-wrap"><canvas id="rnTrendInteractive" class="rn-trend-canvas"></canvas><div id="rnTrendTooltip" class="rn-trend-tooltip" role="status"></div></div>' +
-                '<p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chuột lên từng mốc để xem số lượng chuyến bay.</p></article></div>';
-            var oldGrid = app.querySelector('.rn-grid');
-            if (oldGrid) oldGrid.outerHTML = html;
+            var colors = ['#2387c8','#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'];
+            var legend = '<span><i style="background:' + colors[0] + '"></i>K\\u1ef3 hi\\u1ec7n t\\u1ea1i</span>' + (data.comparisonPeriods || []).map(function (item, index) { return '<span><i style="background:' + colors[index + 1] + '"></i>N\\u0103m ' + item.year + '</span>'; }).join('');
+            var html = '<div class="rn-grid"><article class="rn-card wide rn-trend-card"><div class="rn-trend-head"><div><h2>Xu h\\u01b0\\u1edbng khai th\\u00e1c theo ' + (data.period === 'month' ? 'th\\u00e1ng' : 'ng\\u00e0y') + '</h2><p class="rn-card-subtitle">Ch\\u1ec9 g\\u1ed3m chuy\\u1ebfn Ho\\u00e0n th\\u00e0nh v\\u00e0 Delay \\u2022 Ngu\\u1ed3n: ' + esc(data.source) + '</p></div><div class="rn-trend-legend">' + legend + '</div></div>' +
+                '<div class="rn-trend-chart-wrap"><canvas id="rnTrendInteractive" class="rn-trend-canvas"></canvas><div id="rnTrendTooltip" class="rn-trend-tooltip" role="status"></div></div><p class="rn-trend-hint"><i class="fa fa-mouse-pointer"></i> Di chu\\u1ed9t l\\u00ean t\\u1eebng m\\u1ed1c \\u0111\\u1ec3 xem s\\u1ed1 l\\u01b0\\u1ee3ng chuy\\u1ebfn bay.</p></article></div>';
+            var oldGrid = app.querySelector('.rn-grid'); if (oldGrid) oldGrid.outerHTML = html;
             createChart(app.querySelector('#rnTrendInteractive'), app.querySelector('#rnTrendTooltip'), data);
         }
 
@@ -115,7 +117,8 @@
             if (resizeHandler) window.removeEventListener('resize', resizeHandler);
             var labels = data.labels || [];
             var current = data.current || [];
-            var previous = data.previous || [];
+            var comparisons = data.comparisonPeriods || [];
+            var previous = comparisons.map(function (item) { return item.values || []; });
             var hoverIndex = -1;
             var progress = 0;
             var startedAt = null;
@@ -153,9 +156,10 @@
                 var pad = { left: 58, right: 28, top: 34, bottom: 48 };
                 var plotWidth = width - pad.left - pad.right;
                 var plotHeight = height - pad.top - pad.bottom;
-                var maximum = Math.max.apply(null, current.concat(previous).concat([1]));
+                var allValues = current.slice(); previous.forEach(function (values) { allValues = allValues.concat(values); });
+                var maximum = Math.max.apply(null, allValues.concat([1]));
                 maximum = Math.max(5, Math.ceil(maximum * 1.15 / 5) * 5);
-                var stepX = labels.length > 1 ? plotWidth / (labels.length - 1) : 0;
+                var stepX = labels.length > 1 ? plotWidth / (labels.length - 1) : plotWidth;
                 var xAt = function (index) { return labels.length > 1 ? pad.left + stepX * index : pad.left + plotWidth / 2; };
                 var yAt = function (value) { return pad.top + plotHeight - (value * valueProgress / maximum) * plotHeight; };
 
@@ -175,7 +179,7 @@
                     ctx.fillText(number(Math.round(gridValue)), pad.left - 10, gridY);
                 }
 
-                var previousPoints = previous.map(function (value, index) { return { x: xAt(index), y: yAt(value), value: value }; });
+                var previousPoints = previous.map(function (series) { return series.map(function (value, index) { return { x: xAt(index), y: yAt(value), value: value }; }); });
                 var currentPoints = current.map(function (value, index) { return { x: xAt(index), y: yAt(value), value: value }; });
 
                 if (currentPoints.length) {
@@ -197,14 +201,15 @@
                     ctx.fill();
                 }
 
-                drawLine(ctx, previousPoints, '#9bb0c1', 3);
+                var seriesColors = ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'];
+                previousPoints.forEach(function (points, seriesIndex) { drawLine(ctx, points, seriesColors[seriesIndex % 5], 2.5); });
                 drawLine(ctx, currentPoints, '#2387c8', 3.5);
-                [previousPoints, currentPoints].forEach(function (points, seriesIndex) {
+                previousPoints.concat([currentPoints]).forEach(function (points, seriesIndex) {
                     points.forEach(function (point, index) {
                         var active = index === hoverIndex;
                         ctx.beginPath();
                         ctx.arc(point.x, point.y, active ? 6 : 3.5, 0, Math.PI * 2);
-                        ctx.fillStyle = seriesIndex ? '#2387c8' : '#9bb0c1';
+                        ctx.fillStyle = seriesIndex === previousPoints.length ? '#2387c8' : seriesColors[seriesIndex % 5];
                         ctx.fill();
                         if (active) {
                             ctx.lineWidth = 4;
@@ -254,7 +259,7 @@
                 if (mouseX < geometry.left - 18 || mouseX > geometry.right + 18) return;
                 hoverIndex = index;
                 draw(1);
-                tooltip.innerHTML = '<strong>' + esc(labels[index]) + '</strong><span><i style="background:#2387c8"></i>Kỳ hiện tại: <b>' + number(current[index]) + ' chuyến</b></span><span><i style="background:#9bb0c1"></i>Cùng kỳ năm trước: <b>' + number(previous[index]) + ' chuyến</b></span>';
+                tooltip.innerHTML = '<strong>' + esc(labels[index]) + '</strong><span><i style="background:#2387c8"></i>K\u1ef3 hi\u1ec7n t\u1ea1i: <b>' + number(current[index]) + ' chuy\u1ebfn</b></span>' + comparisons.map(function (item, seriesIndex) { return '<span><i style="background:' + ['#9bb0c1','#20b486','#ef5b5b','#f5a623','#8a6ee8'][seriesIndex] + '"></i>N\u0103m ' + item.year + ': <b>' + number((item.values || [])[index] || 0) + ' chuy\u1ebfn</b></span>'; }).join('');
                 tooltip.classList.add('is-visible');
                 var tooltipLeft = geometry.points[index] ? geometry.points[index].x : mouseX;
                 tooltip.style.left = Math.max(90, Math.min(geometry.width - 90, tooltipLeft)) + 'px';
@@ -278,7 +283,9 @@
                 toDate: to.value,
                 airport: airport.value,
                 oper: oper.value,
-                period: period.value
+                period: period.value,
+                currentDay: from.value === formatDate(today) && to.value === formatDate(today),
+                yearsBack: parseInt(yearsBack.value, 10) || 1
             }).then(function (data) {
                 renderKpis(data);
                 renderChart(data);

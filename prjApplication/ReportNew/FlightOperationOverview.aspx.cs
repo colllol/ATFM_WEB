@@ -31,13 +31,13 @@ namespace prjApplication.ReportNew
         }
 
         [WebMethod]
-        public static object GetData(string fromDate, string toDate, string airport)
+        public static object GetData(string fromDate, string toDate, string airport, bool currentDay)
         {
             DateTime from;
             DateTime to;
             ParseDateRange(fromDate, toDate, out from, out to);
             string selectedAirport = NormalizeAirport(airport, true);
-            bool currentDay = from.Date == DateTime.Today && to.Date == DateTime.Today;
+
             var flights = new List<FlightRow>();
             var metrics = new Dictionary<string, AirportMetric>(StringComparer.OrdinalIgnoreCase);
             int finished = 0;

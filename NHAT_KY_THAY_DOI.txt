@@ -2002,3 +2002,7 @@ Quy ước:
 2026-10-17 | prjApplication/ReportNew/FlightOperationOverview.aspx.cs; FlightOperationOverview.js | Gui currentDay tu trinh duyet de chon ngay hien tai dung bang live.
 2026-10-17 | prjApplication/ReportNew/FlightStatusRate.aspx.cs | Dem delay bucket doc lap voi FLIGHT_STATE de co ca nhom 0-15 ma khong doi trang thai chuyen bay.
 2026-10-17 | Database/Oracle/20260911_FLIGHT_STATUS_PKG.sql | Them cot DELAY_BUCKET 0-15/16-30/31-45/46-60/60+ tach khoi FLIGHT_STATE.
+2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.js; FlightOperationOverview.aspx.cs; ReportInteractive.css | Bo render KPI va donut trang thai, giu bieu do san bay + bang chi tiet; gui currentDay tu client va day dung nguon live.
+2026-10-18 | prjApplication/ReportNew/FlightStatusRate.js; FlightStatusRateKpis.css | Giu cac KPI goc va dat 5 muc delay ben trong KPI Delay.
+2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.js; FlightTrendAnalysis.aspx | Them dong/line cho tung nam so sanh, tooltip hien thi day du series; cache-buster.
+2026-10-18 | C:/Users/Admin/Documents/GitHub/API/QLB.BusinessLogic/Report/FlightAnalyticsDAL.cs | Ton trong co CurrentDay tu web de chon nguon live cho Overview va Trend.

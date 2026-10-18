@@ -95,62 +95,7 @@
                         : flight.toAirp === selectedBar.code;
                 });
             }
-            if (selectedStatus) flights = flights.filter(function (flight) { return statusKey(flight.status) === selectedStatus; });
             return flights;
-        }
-
-        function renderKpis() {
-            var total = data.total || 0;
-            var kpis = '<div class="rn-kpis">' +
-                '<div class="rn-kpi" style="--accent:#2387c8"><span>Tổng chuyến bay</span><strong>' + number(total) + '</strong><small>Hoàn thành + Delay</small></div>' +
-                '<div class="rn-kpi" style="--accent:#20b486"><span>Chuyến hoàn thành</span><strong>' + number(data.finished) + '</strong><small>' + (total ? (data.finished * 100 / total).toFixed(1) : 0) + '%</small></div>' +
-                '<div class="rn-kpi" style="--accent:#f5a623"><span>Chuyến Delay</span><strong>' + number(data.delay) + '</strong><small>' + (total ? (data.delay * 100 / total).toFixed(1) : 0) + '%</small></div>' +
-                '<div class="rn-kpi" style="--accent:#8a6ee8"><span>Sân bay khai thác</span><strong>' + number(data.airportCount) + '</strong><small>Nguồn ' + esc(data.source) + '</small></div></div>';
-            var old = app.querySelector('.rn-kpis');
-            if (old) old.outerHTML = kpis;
-        }
-
-        function donutHtml() {
-            var flights = airportFlights(selectedBar ? selectedBar.code : '');
-            var finished = flights.filter(function (flight) { return statusKey(flight.status) === 'finished'; }).length;
-            var delay = flights.length - finished;
-            var total = flights.length;
-            var items = [
-                { key: 'finished', name: 'Hoàn thành', value: finished, color: '#20b486' },
-                { key: 'delay', name: 'Delay', value: delay, color: '#f5a623' }
-            ];
-            var circumference = 2 * Math.PI * 82;
-            var offset = 0;
-            var segments = items.map(function (item) {
-                var length = total ? item.value / total * circumference : 0;
-                var segment = '<circle class="rn-donut-segment' + (selectedStatus === item.key ? ' is-active' : '') + '" data-status="' + item.key + '" stroke="' + item.color + '" cx="120" cy="120" r="82" stroke-dasharray="' + length + ' ' + (circumference - length) + '" stroke-dashoffset="' + (-offset) + '"></circle>';
-                offset += length;
-                return segment;
-            }).join('');
-            var cards = items.map(function (item) {
-                return '<div class="rn-status' + (selectedStatus === item.key ? ' is-active' : '') + '" data-status="' + item.key + '" style="--status-color:' + item.color + '"><span>' + item.name + '</span><b>' + number(item.value) + '</b><small>' + (total ? (item.value * 100 / total).toFixed(1) : 0) + '%</small></div>';
-            }).join('');
-            var centerValue = selectedStatus ? items.filter(function (item) { return item.key === selectedStatus; })[0].value : total;
-            var centerLabel = selectedStatus === 'finished' ? 'Hoàn thành' : selectedStatus === 'delay' ? 'Delay' : selectedBar ? selectedBar.code : 'Tổng chuyến';
-            return '<div class="rn-donut-layout"><div class="rn-donut' + (selectedStatus ? ' has-active' : '') + '"><svg viewBox="0 0 240 240"><circle class="rn-donut-track" cx="120" cy="120" r="82"></circle>' + segments + '</svg><div class="rn-donut-center"><strong>' + number(centerValue) + '</strong><span>' + esc(centerLabel) + '</span></div></div><div class="rn-status-list' + (selectedStatus ? ' has-active' : '') + '">' + cards + '</div></div>';
-        }
-
-        function renderDonut() {
-            var holder = app.querySelector('#rnOverviewDonut');
-            holder.innerHTML = donutHtml();
-            Array.prototype.forEach.call(holder.querySelectorAll('.rn-status,.rn-donut-segment'), function (node) {
-                node.onclick = function () {
-                    var key = this.getAttribute('data-status');
-                    selectedStatus = selectedStatus === key ? '' : key;
-                    page = 1;
-                    renderDonut();
-                    renderPage();
-                };
-            });
-            var subtitle = app.querySelector('#rnDonutSubtitle');
-            subtitle.textContent = selectedBar
-                ? selectedBar.code + ' - ' + airportName(selectedBar.code) + ' • Hoàn thành + Delay'
-                : 'Tất cả sân bay • Hoàn thành + Delay';
         }
 
         function renderBars() {
@@ -174,10 +119,8 @@
                     var clicked = { code: this.getAttribute('data-airport'), movement: this.getAttribute('data-movement') };
                     if (selectedBar && selectedBar.code === clicked.code && selectedBar.movement === clicked.movement) selectedBar = null;
                     else selectedBar = clicked;
-                    selectedStatus = '';
                     page = 1;
                     renderBars();
-                    renderDonut();
                     renderPage();
                 };
             });
@@ -195,7 +138,6 @@
             app.querySelector('#rnOverviewRows').innerHTML = rows;
             var title = 'Danh sách chuyến bay';
             if (selectedBar) title += ' ' + (selectedBar.movement === 'departure' ? 'cất cánh' : 'hạ cánh') + ' tại ' + selectedBar.code;
-            if (selectedStatus) title += ' - ' + (selectedStatus === 'finished' ? 'Hoàn thành' : 'Delay');
             app.querySelector('#rnOverviewListTitle').textContent = title + ' (' + number(flights.length) + ')';
             app.querySelector('#rnOverviewPageInfo').textContent = 'Trang ' + page + '/' + pages + ' • ' + number(flights.length) + ' dòng';
             app.querySelector('#rnOverviewPrev').disabled = page <= 1;
@@ -205,27 +147,26 @@
         function render(result) {
             data = result;
             selectedBar = null;
-            selectedStatus = '';
             page = 1;
             syncAirportOptions(data.airports);
-            var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>C\\u1ea5t/h\\u1ea1 c\\u00e1nh theo s\\u00e2n bay</h2><p class="rn-card-subtitle">Ch\\u1ecdn c\\u1ed9t \\u0111\\u1ec3 l\\u1ecdc danh s\\u00e1ch chi ti\\u1ebft chuy\\u1ebfn bay</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>C\\u1ea5t c\\u00e1nh</span><span><i class="rn-dot" style="background:#20b486"></i>H\\u1ea1 c\\u00e1nh</span></div></article>' +
-                '<article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnOverviewListTitle">Danh s\\u00e1ch chuy\\u1ebfn bay</h2><p class="rn-card-subtitle">Chi ti\\u1ebft c\\u00e1c chuy\\u1ebfn bay theo b\\u1ed9 l\\u1ecdc v\\u00e0 s\\u00e2n bay \\u0111\\u00e3 ch\\u1ecdn</p></div><label class="rn-page-size">S\\u1ed1 d\\u00f2ng <select id="rnOverviewPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
-                '<div class="rn-table-wrap rn-flight-detail-wrap"><table class="rn-table rn-flight-detail-table"><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>REGISTRATION</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ATDDAY</th><th>ATADAY</th><th>EOBTDAY</th><th>TR\\u1ea0NG TH\\u00c1I</th></tr></thead><tbody id="rnOverviewRows"></tbody></table></div>' +
-                '<div class="rn-flight-pager"><button type="button" class="rn-filter-button" id="rnOverviewPrev">\\u2039 Tr\\u01b0\\u1edbc</button><span id="rnOverviewPageInfo"></span><button type="button" class="rn-filter-button" id="rnOverviewNext">Sau \\u203a</button></div></article></div>';
+            var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>C\u1ea5t/h\u1ea1 c\u00e1nh theo s\u00e2n bay</h2><p class="rn-card-subtitle">Ch\u1ecdn c\u1ed9t \u0111\u1ec3 l\u1ecdc danh s\u00e1ch chi ti\u1ebft chuy\u1ebfn bay</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>C\u1ea5t c\u00e1nh</span><span><i class="rn-dot" style="background:#20b486"></i>H\u1ea1 c\u00e1nh</span></div></article>' +
+                '<article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnOverviewListTitle">Danh s\u00e1ch chuy\u1ebfn bay</h2><p class="rn-card-subtitle">Chi ti\u1ebft c\u00e1c chuy\u1ebfn bay theo b\u1ed9 l\u1ecdc v\u00e0 s\u00e2n bay \u0111\u00e3 ch\u1ecdn</p></div><label class="rn-page-size">S\u1ed1 d\u00f2ng <select id="rnOverviewPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
+                '<div class="rn-table-wrap rn-flight-detail-wrap"><table class="rn-table rn-flight-detail-table"><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>REGISTRATION</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ATDDAY</th><th>ATADAY</th><th>EOBTDAY</th><th>TR\u1ea0NG TH\u00c1I</th></tr></thead><tbody id="rnOverviewRows"></tbody></table></div>' +
+                '<div class="rn-flight-pager"><button type="button" class="rn-filter-button" id="rnOverviewPrev">\u2039 Tr\u01b0\u1edbc</button><span id="rnOverviewPageInfo"></span><button type="button" class="rn-filter-button" id="rnOverviewNext">Sau \u203a</button></div></article></div>';
             var oldGrid = app.querySelector('.rn-grid');
             if (oldGrid) oldGrid.outerHTML = grid;
             app.querySelector('#rnOverviewPageSize').onchange = function () { pageSize = parseInt(this.value, 10); page = 1; renderPage(); };
             app.querySelector('#rnOverviewPrev').onclick = function () { if (page > 1) { page--; renderPage(); } };
             app.querySelector('#rnOverviewNext').onclick = function () { var pages = Math.max(1, Math.ceil(detailFlights().length / pageSize)); if (page < pages) { page++; renderPage(); } };
             renderBars();
-            renderDonut();
             renderPage();
         }
 
         function load() {
             apply.disabled = true;
             apply.textContent = 'Đang tải...';
-            post('GetData', { fromDate: from.value, toDate: to.value, airport: airport.value })
+            var currentDay = from.value === formatDate(today) && to.value === formatDate(today);
+            post('GetData', { fromDate: from.value, toDate: to.value, airport: airport.value, currentDay: currentDay })
                 .then(render)
                 .catch(function (error) { alert(error.message); })
                 .then(function () {

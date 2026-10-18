@@ -136,10 +136,22 @@
             var value = Number(buckets[bucket.key] || 0);
             return '<div class="rn-delay-breakdown-item" style="--accent:' + bucket.color + '"><span>' + bucket.label + '</span><strong>' + value.toLocaleString('vi-VN') + '</strong><small>' + (total ? (value * 100 / total).toFixed(1) : 0) + '%</small></div>';
         }).join('') + '</div>';
-        var kpis = '<div class="rn-kpis"><div class="rn-kpi" style="--accent:#2387c8"><span>T?ng chuy?n</span><strong>' + total.toLocaleString('vi-VN') + '</strong><small>100%</small></div>' +
-            '<div class="rn-kpi" style="--accent:#20b486"><span>Ho?n th?nh</span><strong>' + Number(data.finished || 0).toLocaleString('vi-VN') + '</strong><small>' + (total ? (data.finished * 100 / total).toFixed(1) : 0) + '%</small></div>' +
-            '<div class="rn-kpi rn-kpi-delay" style="--accent:#f5a623"><span>Delay</span><strong>' + Number(data.delay || 0).toLocaleString('vi-VN') + '</strong><small>' + (total ? (data.delay * 100 / total).toFixed(1) : 0) + '% t?ng chuy?n</small>' + delayChildren + '</div>' +
-            '<div class="rn-kpi" style="--accent:#ef5b5b"><span>H?y</span><strong>' + Number(data.cancel || 0).toLocaleString('vi-VN') + '</strong><small>' + (total ? (data.cancel * 100 / total).toFixed(1) : 0) + '%</small></div></div>';
+        var delayItems = [
+            { key: 'DELAY_0_15', label: "0'-15'", color: '#20b486' },
+            { key: 'DELAY_16_30', label: "16'-30'", color: '#7abf45' },
+            { key: 'DELAY_31_45', label: "31'-45'", color: '#f5a623' },
+            { key: 'DELAY_46_60', label: "46'-60'", color: '#ef7d45' },
+            { key: 'DELAY_60_PLUS', label: "60'+", color: '#ef5b5b' }
+        ];
+        var buckets = data.delayBuckets || {};
+        var delayChildren = '<div class="rn-delay-breakdown">' + delayItems.map(function (bucket) {
+            var value = Number(buckets[bucket.key] || 0);
+            return '<div class="rn-delay-breakdown-item" style="--accent:' + bucket.color + '"><span>' + bucket.label + '</span><strong>' + value.toLocaleString('vi-VN') + '</strong><small>' + (total ? (value * 100 / total).toFixed(1) : 0) + '%</small></div>';
+        }).join('') + '</div>';
+        var kpis = '<div class="rn-kpis"><div class="rn-kpi" style="--accent:#2387c8"><span>T\u1ed5ng chuy\u1ebfn</span><strong>' + total.toLocaleString('vi-VN') + '</strong><small>100%</small></div>' +
+            '<div class="rn-kpi" style="--accent:#20b486"><span>Ho\u00e0n th\u00e0nh</span><strong>' + Number(data.finished || 0).toLocaleString('vi-VN') + '</strong><small>' + (total ? (data.finished * 100 / total).toFixed(1) : 0) + '%</small></div>' +
+            '<div class="rn-kpi" style="--accent:#ef5b5b"><span>H\u1ee7y</span><strong>' + Number(data.cancel || 0).toLocaleString('vi-VN') + '</strong><small>' + (total ? (data.cancel * 100 / total).toFixed(1) : 0) + '%</small></div>' +
+            '<div class="rn-kpi rn-kpi-delay" style="--accent:#f5a623"><span>Delay</span><strong>' + Number(data.delay || 0).toLocaleString('vi-VN') + '</strong><small>' + (total ? (data.delay * 100 / total).toFixed(1) : 0) + '% t\u1ed5ng chuy\u1ebfn</small>' + delayChildren + '</div></div>';
 
         var grid = '<div class="rn-grid">' +
             '<article class="rn-card wide"><h2>Tỷ lệ trạng thái</h2><p class="rn-card-subtitle">Nguồn: ' + esc(data.source) + ' • Bốn nhóm loại trừ nhau</p>' +
