@@ -107,3 +107,12 @@ zeroCtx.renderStatusDonut();
 assert.ok(zeroHost.innerHTML.includes('<strong>4</strong>'), 'donut total uses real counts');
 assert.ok(zeroHost.innerHTML.includes('75%') && zeroHost.innerHTML.includes('25%'), 'donut real proportions');
 console.log('PASS 5 donut rendering checks');
+
+zeroCtx.renderStatusDonut();
+assert.ok(zeroHost.innerHTML.includes(String.fromCharCode(72,111,224,110,32,116,104,224,110,104)), 'donut Vietnamese label preserved');
+assert.ok(zeroHost.innerHTML.includes(String.fromCharCode(84,7893,110,103,32,99,104,117,121,7871,110)), 'donut Vietnamese total preserved');
+zeroCtx.renderKpis();
+assert.ok(zeroHost.innerHTML.includes(String.fromCharCode(84,7893,110,103,32,99,104,117,121,7871,110,32,98,97,121)), 'KPI Vietnamese label preserved');
+assert.ok(zeroHost.innerHTML.includes(String.fromCharCode(83,226,110,32,98,97,121,32,107,104,97,105,32,116,104,225,99)), 'airport Vietnamese label preserved');
+assert.ok(!/[A-Za-z]\?[A-Za-z]/.test(source), 'no question marks replacing Vietnamese letters');
+console.log('PASS 5 Vietnamese encoding checks');

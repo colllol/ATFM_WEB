@@ -2014,3 +2014,5 @@ Quy ước:
 2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.js; prjApplication/ReportNew/FlightOperationOverview.aspx; tests/test_overview_regression.js | Gi? KPI v? bi?u ?? Overview hi?n th? t? l?c kh?i t?o; d? li?u r?ng hi?n 0 ? b?n KPI v? c?c c?t s?n bay, d? li?u th?t c?p nh?t sau t?i; gi? th?ng b?o l?i ri?ng, t?ng cache-buster v? ki?m tra h?i quy.
 
 2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.js; FlightOperationOverview.aspx; tests/test_overview_regression.js | Kh?i ph?c bi?u ?? tr?n c? c?u tr?ng th?i chuy?n bay (Ho?n th?nh/Delay), hi?n th? t?ng v? t? l? 0 khi kh?ng c? d? li?u, c?p nh?t cache-buster v? ki?m tra h?i quy.
+
+2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.js; prjApplication/ReportNew/FlightOperationOverview.aspx; tests/test_overview_regression.js | Sửa nhãn tiếng Việt KPI/biểu đồ bị thay bằng dấu hỏi do mã hóa shell; ghi UTF-8, tăng cache-buster và kiểm tra chuỗi render.
