@@ -92,4 +92,18 @@ zeroCtx.data.airports = [{ code: 'VVNB', departures: 3, arrivals: 2 }];
 zeroCtx.renderBars();
 assert.ok(zeroHost.innerHTML.includes('<span>3</span>') && zeroHost.innerHTML.includes('<span>2</span>'), 'chart displays actual counts');
 assert.ok(!fs.readFileSync('prjApplication/ReportNew/FlightOperationOverview.aspx', 'utf8').includes('.rn-kpis{display:none}'), 'page does not hide KPIs');
+assert.ok(source.includes('function renderStatusDonut()'), 'overview keeps status donut');
+assert.ok(source.includes('id=\"rnOverviewDonut\"'), 'overview renders donut host');
 console.log('PASS 10 Overview zero-data checks');
+
+vm.runInContext(section('        function renderStatusDonut()', '        function renderBars()'), zeroCtx);
+zeroCtx.data = {};
+zeroCtx.renderStatusDonut();
+assert.ok(zeroHost.innerHTML.includes('<strong>0</strong>'), 'empty donut total is zero');
+assert.strictEqual((zeroHost.innerHTML.match(/<small>0%<\/small>/g) || []).length, 2, 'empty donut percentages are zero');
+assert.ok(!/NaN|Infinity/.test(zeroHost.innerHTML), 'empty donut geometry is finite');
+zeroCtx.data = { finished: 3, delay: 1 };
+zeroCtx.renderStatusDonut();
+assert.ok(zeroHost.innerHTML.includes('<strong>4</strong>'), 'donut total uses real counts');
+assert.ok(zeroHost.innerHTML.includes('75%') && zeroHost.innerHTML.includes('25%'), 'donut real proportions');
+console.log('PASS 5 donut rendering checks');

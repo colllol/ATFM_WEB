@@ -2012,3 +2012,5 @@ Quy ước:
 2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.aspx; prjApplication/ReportNew/FlightOperationOverview.js; prjApplication/ReportNew/ReportNew.js; tests/test_overview_regression.js | Hoàn thiện trạng thái tải/lỗi/không có dữ liệu cho Overview, bỏ dữ liệu biểu đồ mẫu trước khi gọi WebMethod, giữ drill-down biểu đồ sân bay và bổ sung kiểm tra hồi quy.
 
 2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.js; prjApplication/ReportNew/FlightOperationOverview.aspx; tests/test_overview_regression.js | Gi? KPI v? bi?u ?? Overview hi?n th? t? l?c kh?i t?o; d? li?u r?ng hi?n 0 ? b?n KPI v? c?c c?t s?n bay, d? li?u th?t c?p nh?t sau t?i; gi? th?ng b?o l?i ri?ng, t?ng cache-buster v? ki?m tra h?i quy.
+
+2026-10-18 | prjApplication/ReportNew/FlightOperationOverview.js; FlightOperationOverview.aspx; tests/test_overview_regression.js | Kh?i ph?c bi?u ?? tr?n c? c?u tr?ng th?i chuy?n bay (Ho?n th?nh/Delay), hi?n th? t?ng v? t? l? 0 khi kh?ng c? d? li?u, c?p nh?t cache-buster v? ki?m tra h?i quy.

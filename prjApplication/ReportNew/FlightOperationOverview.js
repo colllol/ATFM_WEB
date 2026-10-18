@@ -139,6 +139,26 @@
             }).join('');
         }
 
+        function renderStatusDonut() {
+            var finished = Number(data.finished || 0), delay = Number(data.delay || 0), total = finished + delay;
+            var radius = 82, circumference = 2 * Math.PI * radius, offset = 0;
+            var values = [
+                { key: 'finished', label: 'Ho?n th?nh', value: finished, color: '#20b486' },
+                { key: 'delay', label: 'Delay', value: delay, color: '#f5a623' }
+            ];
+            var segments = values.map(function (item) {
+                var length = total ? item.value / total * circumference : 0;
+                var segment = '<circle class="rn-donut-segment" data-status="' + item.key + '" data-value="' + item.value + '" cx="120" cy="120" r="' + radius + '" stroke="' + item.color + '" stroke-dasharray="' + length + ' ' + (circumference - length) + '" stroke-dashoffset="-' + offset + '"></circle>';
+                offset += length;
+                return segment;
+            }).join('');
+            var cards = values.map(function (item) {
+                var percent = total ? Math.round(item.value / total * 100) : 0;
+                return '<div class="rn-status" style="--status-color:' + item.color + '" data-status="' + item.key + '"><span>' + item.label + '</span><b>' + number(item.value) + '</b><small>' + percent + '%</small></div>';
+            }).join('');
+            app.querySelector('#rnOverviewDonut').innerHTML = '<div class="rn-donut-layout"><div class="rn-donut"><svg viewBox="0 0 240 240" role="img" aria-label="C? c?u tr?ng th?i chuy?n bay"><circle class="rn-donut-track" cx="120" cy="120" r="' + radius + '"></circle>' + segments + '</svg><div class="rn-donut-center"><strong>' + number(total) + '</strong><span>T?ng chuy?n</span></div></div><div class="rn-status-list">' + cards + '</div></div>';
+        }
+
         function renderBars() {
             var items = data.airports || [];
             if (!items.length) {
@@ -219,7 +239,7 @@
             if (liveNote) liveNote.textContent = 'Nguồn ' + result.source;
             page = 1;
             syncAirportOptions(data.airports);
-            var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>C\u1ea5t/h\u1ea1 c\u00e1nh theo s\u00e2n bay</h2><p class="rn-card-subtitle">Ch\u1ecdn c\u1ed9t \u0111\u1ec3 l\u1ecdc danh s\u00e1ch chi ti\u1ebft chuy\u1ebfn bay</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>C\u1ea5t c\u00e1nh</span><span><i class="rn-dot" style="background:#20b486"></i>H\u1ea1 c\u00e1nh</span></div></article>' +
+            var grid = '<div class="rn-grid"><article class="rn-card wide"><h2>C? c?u tr?ng th?i chuy?n bay</h2><p class="rn-card-subtitle">Chuy?n ho?n th?nh v? chuy?n delay trong k?</p><div id="rnOverviewDonut"></div></article><article class="rn-card wide"><h2>C\u1ea5t/h\u1ea1 c\u00e1nh theo s\u00e2n bay</h2><p class="rn-card-subtitle">Ch\u1ecdn c\u1ed9t \u0111\u1ec3 l\u1ecdc danh s\u00e1ch chi ti\u1ebft chuy\u1ebfn bay</p><div class="rn-airport-chart-scroll rn-overview-chart-scroll"><div class="rn-airport-chart" id="rnOverviewBars"></div></div><div class="rn-legend"><span><i class="rn-dot" style="background:#2387c8"></i>C\u1ea5t c\u00e1nh</span><span><i class="rn-dot" style="background:#20b486"></i>H\u1ea1 c\u00e1nh</span></div></article>' +
                 '<article id="rnAirportTrend" class="rn-card wide" hidden></article><article class="rn-card wide rn-flight-list-card"><div class="rn-flight-list-head"><div><h2 id="rnOverviewListTitle">Danh s\u00e1ch chuy\u1ebfn bay</h2><p class="rn-card-subtitle">Chi ti\u1ebft c\u00e1c chuy\u1ebfn bay theo b\u1ed9 l\u1ecdc v\u00e0 s\u00e2n bay \u0111\u00e3 ch\u1ecdn</p></div><label class="rn-page-size">S\u1ed1 d\u00f2ng <select id="rnOverviewPageSize"><option>25</option><option>50</option><option selected>100</option><option>200</option><option>500</option><option>1000</option></select></label></div>' +
                 '<div class="rn-table-wrap rn-flight-detail-wrap"><table class="rn-table rn-flight-detail-table"><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>REGISTRATION</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ATDDAY</th><th>ATADAY</th><th>EOBTDAY</th><th>TR\u1ea0NG TH\u00c1I</th></tr></thead><tbody id="rnOverviewRows"></tbody></table></div>' +
                 '<div class="rn-flight-pager"><button type="button" class="rn-filter-button" id="rnOverviewPrev">\u2039 Tr\u01b0\u1edbc</button><span id="rnOverviewPageInfo"></span><button type="button" class="rn-filter-button" id="rnOverviewNext">Sau \u203a</button></div></article></div>';
@@ -229,6 +249,7 @@
             app.querySelector('#rnOverviewPrev').onclick = function () { if (page > 1) { page--; renderPage(); } };
             app.querySelector('#rnOverviewNext').onclick = function () { var pages = Math.max(1, Math.ceil(detailFlights().length / pageSize)); if (page < pages) { page++; renderPage(); } };
             renderKpis();
+            renderStatusDonut();
             renderBars();
             renderAirportTrend();
             renderPage();
