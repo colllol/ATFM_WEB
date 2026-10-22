@@ -18,6 +18,7 @@ from waitress import serve
 LOGGER = logging.getLogger("flight_tracking_api")
 CONFIG_FILE_NAME = "FlightTrackingApi.local.json"
 DATE_FORMAT = "%Y-%m-%d"
+VIETNAM_UTC_OFFSET = timedelta(hours=7)
 
 LATEST_TRACKS_SQL = """
     SELECT DISTINCT ON (normalized_callsign)
@@ -219,7 +220,8 @@ def connection_parameters(config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def fetch_latest_tracks(config: Dict[str, Any], requested_date: date) -> List[Dict[str, Any]]:
-    from_date = datetime.combine(requested_date, time.min)
+    # API date is the Vietnam calendar day; source timestamps are stored in UTC.
+    from_date = datetime.combine(requested_date, time.min) - VIETNAM_UTC_OFFSET
     to_date = from_date + timedelta(days=1)
     with psycopg.connect(**connection_parameters(config)) as connection:
         with connection.cursor() as cursor:
@@ -327,9 +329,9 @@ def create_app(
             except ValueError:
                 return jsonify(error="Tham số date phải có định dạng yyyy-MM-dd."), 400
         else:
-            requested_date = datetime.now(timezone.utc).date()
+            requested_date = (datetime.now(timezone.utc) + VIETNAM_UTC_OFFSET).date()
 
-        today = datetime.now(timezone.utc).date()
+        today = (datetime.now(timezone.utc) + VIETNAM_UTC_OFFSET).date()
         earliest = today - timedelta(days=config["api"]["max_lookback_days"])
         if requested_date < earliest or requested_date > today:
             return jsonify(error=f"Chỉ được truy vấn từ {earliest:%Y-%m-%d} đến {today:%Y-%m-%d}."), 400

@@ -1,5 +1,6 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
 
 from tools.FlightTrackingApiPython import main
 
@@ -80,6 +81,45 @@ class FlightTrackingApiTests(unittest.TestCase):
     def test_validate_config_requires_database_credentials(self):
         with self.assertRaisesRegex(ValueError, "host"):
             main.validate_config(main.deepcopy(main.DEFAULT_CONFIG))
+
+    def test_tracks_date_is_vietnam_day_and_query_uses_utc_bounds(self):
+        requested_day = date(2026, 10, 22)
+        connection = MagicMock()
+        cursor = MagicMock()
+        connection.__enter__.return_value = connection
+        connection.cursor.return_value.__enter__.return_value = cursor
+        cursor.fetchall.return_value = []
+
+        with patch.object(main.psycopg, "connect", return_value=connection):
+            rows = main.fetch_latest_tracks(config(), requested_day)
+
+        self.assertEqual([], rows)
+        parameters = cursor.execute.call_args.args[1]
+        self.assertEqual(datetime(2026, 10, 21, 17, 0), parameters[0])
+        self.assertEqual(datetime(2026, 10, 22, 17, 0), parameters[1])
+
+    def test_tracks_endpoint_accepts_vietnam_date_during_utc_previous_day(self):
+        utc_now = datetime(2026, 10, 21, 18, 0, tzinfo=timezone.utc)
+        local_day = (utc_now + timedelta(hours=7)).date()
+        app = main.create_app(
+            config(),
+            track_loader=lambda _config, requested_date: [
+                {"flightIdCurrent": "HVN123-20261022", "callsign": "HVN123",
+                 "updatedAtUtc": "2026-10-22T00:30:00", "latitude": 21.0,
+                 "longitude": 105.0, "heading": 180.0}
+            ] if requested_date == local_day else [],
+        )
+
+        with patch.object(main, "datetime") as clock:
+            clock.now.return_value = utc_now
+            clock.strptime = datetime.strptime
+            clock.combine = datetime.combine
+            clock.min = datetime.min
+            response = app.test_client().get(f"/api/v1/tracks?date={local_day:%Y-%m-%d}")
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(local_day.strftime("%Y-%m-%d"), response.get_json()["day"])
+        self.assertEqual(1, response.get_json()["count"])
 
 
 if __name__ == "__main__":
