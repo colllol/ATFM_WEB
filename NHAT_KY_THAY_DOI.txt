@@ -2052,3 +2052,4 @@ Quy ước:
 2026-10-18 | prjApplication/ReportNew/ReportNew.js | M? r?ng b? ch?n s? n?m tr??c t? 1-5 l?n 1-10.
 2026-10-18 | prjApplication/ReportNew/FlightTrendAnalysis.aspx; prjApplication/ReportNew/ReportInteractive.css | T?ng cache-buster v? ??nh d?ng h?ng KPI ngang b?n th?, responsive theo m?n h?nh.
 2026-10-18 | tests/test_trend_regression.js | C?p nh?t ki?m tra h?i quy cho gi?i h?n 10 n?m, h?ng KPI so s?nh v? m?u series.
+2026-10-22 | ATFM-ADS-B-Tools.spec; tools/AdsBUnified/main.py; tools/AdsBUnified/README.md; tools/build_adsb_unified_tool.ps1; tests/test_adsb_unified.py; .gitignore; tools/dist/ATFM-ADS-B-Tools.exe | Tao EXE ADS-B hop nhat: mo FIR Tracks Logger va tu khoi chay/dung Flight Tracking API cung tien trinh; them build script, huong dan va smoke test API.
