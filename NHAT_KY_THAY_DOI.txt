@@ -2062,3 +2062,4 @@ Quy ước:
 - prjApplication/ReportNew/AdsBPerformanceReport.js: ?p d?ng l?c th?i gian ETA/ETD, l?c c?t, ph?n trang v? t?ng h?p bi?u ??/KPI theo t?p d? li?u ?? l?c.
 - prjApplication/ReportNew/AdsBPerformanceReportExtras.css: ??nh d?ng control th?i gian, checkbox v? h?ng l?c b?ng.
 - Ki?m tra: node --check prjApplication/ReportNew/AdsBPerformanceReport.js (??t).
+2026-10-24 | Database/Oracle/20260911_SLOT_COMPARE_PKG.sql; tests/slot_compare_package_contract.py | Sua nguon doi chieu: lay CARRIE lam ma hang SLOT thay vi uu tien AERO la ma san bay; loai cac dong Phep bay NOPERM khoi nguon so sanh.
