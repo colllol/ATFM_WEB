@@ -5,6 +5,8 @@
     if (!page) return;
 
     var rows = [], currentTrend = [], pageIndex = 1;
+    var columnFilters = {};
+    var timeFilter = { from: null, to: null, eta: true, etd: true };
     var restoreSidebarAfterModal = false;
     function byId(id) { return document.getElementById(id); }
     function value(id) { return byId(id).value; }
@@ -93,9 +95,11 @@
         var today = new Date(), first = new Date(today.getFullYear(), today.getMonth(), 1);
         if (!value('adsbFromDate')) byId('adsbFromDate').value = iso(first);
         if (!value('adsbToDate')) byId('adsbToDate').value = iso(today);
+        if (!value('adsbFromTime')) byId('adsbFromTime').value = iso(first) + 'T00:00';
+        if (!value('adsbToTime')) byId('adsbToTime').value = iso(today) + 'T23:59';
     }
     function payload(includeOper) {
-        var data = { fromDate: value('adsbFromDate'), toDate: value('adsbToDate'), permType: value('adsbPermType') };
+        var data = { fromDate: value('adsbFromDate'), toDate: value('adsbToDate'), fromTime: value('adsbFromTime'), toTime: value('adsbToTime'), filterEta: byId('adsbTimeEta').checked, filterEtd: byId('adsbTimeEtd').checked, permType: value('adsbPermType') };
         if (includeOper) data.oper = value('adsbOper');
         return data;
     }
@@ -114,6 +118,16 @@
             }).join('');
             if ([].some.call(select.options, function (option) { return option.value === current; })) select.value = current;
         });
+    }
+    function filteredSummary(list, serverTime) {
+        var trendMap = {};
+        list.forEach(function (row) {
+            var match = String(row.date || '').match(/(\d{2})[\/-](\d{2})[\/-](\d{4})/); if (!match) return;
+            var key = match[3] + '-' + match[2] + '-' + match[1];
+            if (!trendMap[key]) trendMap[key] = { key: key, label: match[1] + '/' + match[2], ld: 0, of: 0, other: 0 };
+            if (isOther(row)) trendMap[key].other++; else if (String(row.permType || '').toUpperCase() === 'LD') trendMap[key].ld++; else if (String(row.permType || '').toUpperCase() === 'O/F') trendMap[key].of++;
+        });
+        return { total: list.length, ld: list.filter(function (row) { return !isOther(row) && String(row.permType || '').toUpperCase() === 'LD'; }).length, of: list.filter(function (row) { return !isOther(row) && String(row.permType || '').toUpperCase() === 'O/F'; }).length, other: list.filter(isOther).length, operatorCount: list.map(function (row) { return row.oper; }).filter(function (oper, index, all) { return String(oper || '').trim() && all.indexOf(oper) === index; }).length, serverTime: serverTime, trend: Object.keys(trendMap).sort().map(function (key) { return trendMap[key]; }) };
     }
     function renderKpis(data) {
         var total = Number(data.total || 0), ld = Number(data.ld || 0), of = Number(data.of || 0);
@@ -311,10 +325,50 @@
         });
     }
 
+    function parseClock(clock) {
+        var match = String(clock || '').trim().match(/(\d{1,2})[:.]?(\d{2})/);
+        if (!match) return null;
+        var hour = Number(match[1]), minute = Number(match[2]);
+        return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 ? hour * 60 + minute : null;
+    }
+    function applyTimeFilter(list) {
+        var from = new Date(value('adsbFromTime')), to = new Date(value('adsbToTime'));
+        var useEta = byId('adsbTimeEta').checked, useEtd = byId('adsbTimeEtd').checked;
+        timeFilter = { from: from, to: to, eta: useEta, etd: useEtd };
+        if (isNaN(from.getTime()) || isNaN(to.getTime()) || from > to || (!useEta && !useEtd)) return list;
+        return list.filter(function (row) {
+            var match = String(row.date || '').match(/(\d{2})[\/-](\d{2})[\/-](\d{4})/);
+            if (!match) return false;
+            var day = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+            function inRange(clock) {
+                var minutes = parseClock(clock);
+                if (minutes == null) return false;
+                var instant = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(minutes / 60), minutes % 60);
+                return instant >= from && instant <= to;
+            }
+            var eta = inRange(row.eta), etd = inRange(row.etd);
+            return useEta && useEtd ? eta && etd && parseClock(row.eta) <= parseClock(row.etd) : (useEta ? eta : etd);
+        });
+    }
+    function columnValue(row, key) {
+        if (key === 'permType') return isOther(row) ? 'OTHER' : row.permType;
+        if (key === 'status') return statusText(row.status);
+        return row[key];
+    }
+    function filteredRows() {
+        var filtered = applyTimeFilter(rows);
+        return filtered.filter(function (row) {
+            return Object.keys(columnFilters).every(function (key) {
+                var expected = String(columnFilters[key] || '').trim().toLowerCase();
+                var actual = columnValue(row, key);
+                return !expected || String(actual == null ? '' : actual).toLowerCase().indexOf(expected) >= 0;
+            });
+        });
+    }
     function renderTable() {
-        var size = Number(value('adsbPageSize')), pages = Math.max(1, Math.ceil(rows.length / size));
+        var visibleRows = filteredRows(), size = Number(value('adsbPageSize')), pages = Math.max(1, Math.ceil(visibleRows.length / size));
         pageIndex = Math.min(Math.max(1, pageIndex), pages);
-        var start = (pageIndex - 1) * size, current = rows.slice(start, start + size);
+        var start = (pageIndex - 1) * size, current = visibleRows.slice(start, start + size);
         byId('adsbTableBody').innerHTML = current.map(function (row) {
             var statusClass = Number(row.status) === 1 ? 's1' : (Number(row.status) === 2 ? 's2' : 'unknown');
             var rowClass = isOther(row) ? ' class="is-other"' : '';
@@ -336,7 +390,10 @@
         var button = byId('adsbApply'); button.disabled = true; hideError();
         return post(page.dataset.endpoint, payload(true)).then(function (data) {
             data = normalizeData(data);
-            rows = data.rows || []; currentTrend = data.trend || []; pageIndex = 1; renderKpis(data); renderChart(currentTrend); renderTotalChart(currentTrend); renderTable();
+            rows = data.rows || [];
+            var displayRows = applyTimeFilter(rows);
+            var displayData = filteredSummary(displayRows, data.serverTime);
+            currentTrend = displayData.trend || []; pageIndex = 1; renderKpis(displayData); renderChart(currentTrend); renderTotalChart(currentTrend); renderTable();
         }).catch(showError).then(function () { button.disabled = false; });
     }
     function apply() { loadOperators(true).then(loadData).catch(showError); }
@@ -348,6 +405,17 @@
     document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeEndDay(); });
     byId('adsbPermType').addEventListener('change', function () { loadOperators(false).catch(showError); });
     byId('adsbPageSize').addEventListener('change', function () { pageIndex = 1; renderTable(); });
+    document.querySelectorAll('[data-column-filter]').forEach(function (input) {
+        input.addEventListener('input', function () { columnFilters[this.getAttribute('data-column-filter')] = this.value; pageIndex = 1; renderTable(); });
+    });
+    byId('adsbClearColumnFilters').addEventListener('click', function () {
+        columnFilters = {};
+        document.querySelectorAll('[data-column-filter]').forEach(function (input) { input.value = ''; });
+        pageIndex = 1; renderTable();
+    });
+    [byId('adsbFromTime'), byId('adsbToTime'), byId('adsbTimeEta'), byId('adsbTimeEtd')].forEach(function (control) {
+        control.addEventListener('change', function () { pageIndex = 1; renderTable(); });
+    });
     byId('adsbPrev').addEventListener('click', function () { if (pageIndex > 1) { pageIndex--; renderTable(); } });
     byId('adsbNext').addEventListener('click', function () { pageIndex++; renderTable(); });
     byId('adsbExportPdf').addEventListener('click', exportPdf);

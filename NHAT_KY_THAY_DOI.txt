@@ -2055,3 +2055,10 @@ Quy ước:
 2026-10-22 | ATFM-ADS-B-Tools.spec; tools/AdsBUnified/main.py; tools/AdsBUnified/README.md; tools/build_adsb_unified_tool.ps1; tests/test_adsb_unified.py; .gitignore; tools/dist/ATFM-ADS-B-Tools.exe | Tao EXE ADS-B hop nhat: mo FIR Tracks Logger va tu khoi chay/dung Flight Tracking API cung tien trinh; them build script, huong dan va smoke test API.
 2026-10-22 | prjApplication/SLOTS/FlightTrackingMap.aspx.cs; prjApplication/Web.config; prjApplication/prjApplication.csproj; prjApplication/packages.config; tools/FlightTrackingApiPython/main.py; tests/test_flight_tracking_api.py; tools/dist/ATFM-ADS-B-Tools.exe | Chuyen GetFlights sang lay tracks qua FlightTrackingApiBaseUrl, bo ket noi PostgreSQL truc tiep va dependency Npgsql khoi web; chuan hoa ngay truy van API theo UTC+7; cap nhat EXE hop nhat. Build web thanh cong, 28 test Python va regression JS dat.
 2026-10-24 | prjApplication/SLOTS/SlotComparisonService.cs; prjApplication/SLOTS/SlotComparisonRules.cs; prjApplication/prjApplication.csproj; tests/SlotComparisonRulesTests.cs | S?a ?i?u ki?n KQ3: ch? ??a chuy?n c? trong KHB h?ng nh?ng v?ng ??ng th?i ? SLOT v? Ph?p bay; th?m ki?m th? b?n t? h?p ngu?n ?? ng?n t?i ph?t.
+
+
+[24/10/2026]
+- prjApplication/ReportNew/AdsBPerformanceReport.aspx: th?m b? l?c t?/??n gi?, checkbox ETA/ETD v? h?ng l?c theo t?ng c?t trong b?ng chi ti?t.
+- prjApplication/ReportNew/AdsBPerformanceReport.js: ?p d?ng l?c th?i gian ETA/ETD, l?c c?t, ph?n trang v? t?ng h?p bi?u ??/KPI theo t?p d? li?u ?? l?c.
+- prjApplication/ReportNew/AdsBPerformanceReportExtras.css: ??nh d?ng control th?i gian, checkbox v? h?ng l?c b?ng.
+- Ki?m tra: node --check prjApplication/ReportNew/AdsBPerformanceReport.js (??t).

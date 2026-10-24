@@ -1,7 +1,7 @@
 <%@ Page Title="Tổng hợp chỉ số hiệu suất bay từ ADS-B" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" CodeBehind="AdsBPerformanceReport.aspx.cs" Inherits="prjApplication.ReportNew.AdsBPerformanceReport" %>
 <asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.css?v=20260722-1") %>" />
-    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20260918-1") %>" />
+    <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReportExtras.css?v=20261024-1") %>" />
     <link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportInteractive.css?v=20260911-1") %>" />
     <section class="adsb-report-page"
             data-endpoint="<%= System.Configuration.ConfigurationManager.AppSettings["ApplicationPath.API"] %>api/AdsBPerformance/GetData"
@@ -17,7 +17,9 @@
         <div class="adsb-filter-card">
             <div><label for="adsbFromDate">Từ ngày</label><input id="adsbFromDate" type="date" /></div>
             <div><label for="adsbToDate">Đến ngày</label><input id="adsbToDate" type="date" /></div>
-            <div><label for="adsbPermType">PERMTYPE</label><select id="adsbPermType"><option value="ALL">Tất cả</option><option value="LD">LD</option><option value="O/F">O/F</option></select></div>
+            <div><label for="adsbFromTime">From time</label><input id="adsbFromTime" type="datetime-local" step="60" /></div>
+            <div><label for="adsbToTime">To time</label><input id="adsbToTime" type="datetime-local" step="60" /></div>
+            <fieldset class="adsb-time-fields"><legend>Time fields</legend><label><input id="adsbTimeEta" type="checkbox" checked /> ETA</label><label><input id="adsbTimeEtd" type="checkbox" checked /> ETD</label></fieldset>            <div><label for="adsbPermType">PERMTYPE</label><select id="adsbPermType"><option value="ALL">Tất cả</option><option value="LD">LD</option><option value="O/F">O/F</option></select></div>
             <div><label for="adsbOper">Hãng khai thác (OPER)</label><select id="adsbOper"><option value="ALL">Tất cả hãng</option></select></div>
             <button type="button" id="adsbApply">⌕ Áp dụng</button>
             <button type="button" id="adsbEndDay" class="adsb-endday-button">Báo cáo cuối ngày</button>
@@ -46,7 +48,7 @@
 
         <section class="adsb-card adsb-table-card">
             <div class="adsb-card-heading"><div><h2>Chi tiết dữ liệu.</h2><p id="adsbTableInfo">Chưa có dữ liệu</p></div><label class="adsb-page-size">Số dòng <select id="adsbPageSize"><option>50</option><option selected>100</option><option>200</option><option>500</option></select></label></div>
-            <div class="adsb-table-scroll"><table><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th><th>STATUS</th><th>DATE</th><th>UPDATED_AT_UTC</th></tr></thead><tbody id="adsbTableBody"></tbody></table></div>
+            <div class="adsb-table-scroll"><table><thead><tr><th>STT</th><th>CALLSIGN</th><th>OPER</th><th>PERMTYPE</th><th>FROM_AIRP</th><th>TO_AIRP</th><th>ETD</th><th>ETA</th><th>STATUS</th><th>DATE</th><th>UPDATED_AT_UTC</th></tr><tr class="adsb-filter-row"><th><button type="button" id="adsbClearColumnFilters" class="adsb-search-button" title="Clear column filters" aria-label="Clear column filters">&#128269;</button></th><th><input data-column-filter="callsign" aria-label="Filter CALLSIGN" placeholder="Filter..." /></th><th><input data-column-filter="oper" aria-label="Filter OPER" placeholder="Filter..." /></th><th><input data-column-filter="permType" aria-label="Filter PERMTYPE" placeholder="Filter..." /></th><th><input data-column-filter="fromAirp" aria-label="Filter FROM_AIRP" placeholder="Filter..." /></th><th><input data-column-filter="toAirp" aria-label="Filter TO_AIRP" placeholder="Filter..." /></th><th><input data-column-filter="etd" aria-label="Filter ETD" placeholder="Filter..." /></th><th><input data-column-filter="eta" aria-label="Filter ETA" placeholder="Filter..." /></th><th><input data-column-filter="status" aria-label="Filter STATUS" placeholder="Filter..." /></th><th><input data-column-filter="date" aria-label="Filter DATE" placeholder="Filter..." /></th><th><input data-column-filter="updatedAtUtc" aria-label="Filter UPDATED_AT_UTC" placeholder="Filter..." /></th></tr></thead><tbody id="adsbTableBody"></tbody></table></div>
             <div class="adsb-pagination"><span id="adsbPageInfo"></span><div><button type="button" id="adsbPrev">‹ Trang trước</button><button type="button" id="adsbNext">Trang sau ›</button></div></div>
         </section>
         <div id="adsbError" class="adsb-error" hidden></div>
@@ -76,5 +78,5 @@
         </div>
     </div>
     <script src="<%= ResolveUrl("~/ReportNew/ReportControls.js?v=20260911-1") %>"></script>
-    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20260918-1") %>"></script>
+    <script src="<%= ResolveUrl("~/ReportNew/AdsBPerformanceReport.js?v=20261024-1") %>"></script>
 </asp:Content>
