@@ -1,0 +1,2550 @@
+import os
+import re
+import unicodedata
+from pathlib import Path
+
+from docx import Document
+from docx.document import Document as DocumentObject
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Cm, Pt
+from docx.table import Table
+from docx.text.paragraph import Paragraph
+
+
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = Path(os.environ.get(
+    "SRS_ATFM_MASTER_OUTPUT",
+    ROOT / "TaiLieu" / "SRS_ATFM_WEB_Khung_Suon.docx",
+))
+INCLUDE_INSPECTION_CONTENT = os.environ.get(
+    "SRS_ATFM_INCLUDE_INSPECTION_CONTENT", "1"
+).strip().lower() not in {"0", "false", "no"}
+AEROSYNC_SOURCE = ROOT / "TaiLieu" / "SRS_VATM_AeroSync_Hien_Tai.docx"
+INTEGRATION_SOURCES = [
+    ("5.4", "FR-INT-002", "Thu thập và xử lý dữ liệu ADS-B cho khai thác O/F", "SRS_VATM_ADS-B.docx"),
+    ("5.5", "FR-INT-003", "Tích hợp lọc SLOT vào hệ thống SLB", "SRS_VATM_SLOT.docx"),
+    ("5.6", "FR-INT-004", "Kết nối trực tiếp AMHS để gửi/nhận điện văn", "SRS_ATFM_AMHS_004.docx"),
+    ("5.7", "FR-INT-005", "Chuẩn hóa API chia sẻ dữ liệu", "SRS_ATFM_API_Gateway_005.docx"),
+]
+ALT002_SOURCE = ROOT / "TaiLieu" / "SRS_Live_Fire_Message.docx"
+AI_NL2SQL_SOURCE = "SRS_NL2SQL_Vanna_Oracle_Hien_Tai.docx"
+
+
+SECTIONS = [
+    ("I", "PHÂN HỆ TÍCH HỢP VÀ TỰ ĐỘNG HÓA DỮ LIỆU", [
+        "Tự động cập nhật dữ liệu từ email và thư mục lưu trữ",
+        "Thu thập và xử lý dữ liệu ADS-B cho khai thác O/F",
+        "Tích hợp lọc SLOT vào hệ thống SLB",
+        "Kết nối trực tiếp AMHS để gửi/nhận điện văn",
+        "Chuẩn hóa API chia sẻ dữ liệu",
+    ]),
+    ("II", "PHÂN HỆ CẢNH BÁO VÀ TIỆN ÍCH HỖ TRỢ", [
+        "Hệ thống cảnh báo thông minh đa kịch bản",
+        "Quản lý thông tin KHB quân sự và sử dụng vùng trời",
+    ]),
+    ("III", "PHÂN HỆ NÂNG CẤP VÀ TỐI ƯU CHỨC NĂNG HTSLB", [
+        "Mở rộng thời gian lưu trữ điện văn INBOX",
+        "Cảnh báo NOPERM cho điện văn không có trong KHBN",
+        "Áp dụng quy tắc 120 giờ ICAO cho hiển thị FPL",
+        "Tìm kiếm chuyến bay đa trường và theo từ khóa",
+        "Tìm kiếm nâng cao phục vụ báo cáo",
+        "Phân loại chuyến bay Quốc nội/Quốc tế tự động",
+        "Export dữ liệu chia tách ba loại file ALL, LD, OF",
+        "Chức năng Edit info chuyến bay",
+        "Hiển thị lịch sử thao tác của người xử lý chuyến bay",
+        "Đồng bộ dữ liệu điện văn liên ngày",
+        "Thống kê theo khung giờ, chặng và đường bay",
+        "Cảnh báo chuyến bay không có trong phép bay/KHB ngày",
+        "Hỗ trợ hủy phép bay quốc tế/quốc nội",
+        "Tối ưu hiệu năng ExportBravo dưới 3 phút",
+        "Chức năng F8 ép dòng trong Calendar Accepted",
+        "Tối ưu Gen KHB ngày hôm sau ra AFTN dưới 3 phút",
+        "Mở rộng phạm vi tra cứu INBOX trên 7 ngày",
+        "Tự động cập nhật khi sửa KHB đã build",
+        "Cảnh báo chuyến bay cấp sai ngày bay so với thực tế",
+        "Bổ sung trường Mục đích chuyến bay trong KHB ngày",
+        "Logic cảnh báo đỏ chính xác cho chuyến bay hết hiệu lực",
+        "Tự động cập nhật đường bay theo đoạn từ FPL thực tế",
+        "Tự động nhận diện và chuyển ngày cho chuyến bay quốc tế hạ cánh hôm sau",
+        "Theo dõi kế hoạch bay hằng ngày với cập nhật liên tục",
+        "Thông báo thời điểm nhận số liệu bay Đi/Đến từ Trung tâm TBHĐB",
+        "Cập nhật số liệu bay từ HTSLB sang Bravo",
+        "Khắc phục lỗi nhầm ngày so với thực tế",
+        "Sửa nhiều chuyến bay cùng nội dung trong một thao tác",
+        "Đối chiếu số liệu bay giữa HTSLB và Bravo",
+        "Mở rộng tìm kiếm trên giao diện Daily Military Report",
+        "Thêm lựa chọn theo tất cả tiêu chí thống kê trong báo cáo",
+        "Đánh giá, so sánh số liệu của KHBHĐBN",
+    ]),
+    ("IV", "PHÂN HỆ PHÂN TÍCH VÀ BÁO CÁO THÔNG MINH", [
+        "Biểu đồ thông tin tổng quan khai thác bay",
+        "Phân tích xu hướng khai thác theo thời gian",
+        "Phát hiện và cảnh báo dữ liệu bất thường",
+        "Tích hợp ADS-B cho báo cáo khai thác thực tế",
+        "Tổng hợp chỉ số hiệu suất bay từ ADS-B O/F",
+        "Biểu đồ thống kê trạng thái chuyến bay theo tỷ lệ phần trăm",
+        "Biểu đồ so sánh hoạt động bay giữa các sân bay",
+        "Báo cáo chuyến bay quân sự theo tiêu chí mở rộng",
+        "Báo cáo tổng hợp hoạt động bay tại tất cả sân bay dân dụng",
+        "Báo cáo cất, hạ cánh tại các sân bay toàn quốc",
+    ]),
+    ("V", "PHÂN HỆ AI HỖ TRỢ THỐNG KÊ, TÌM KIẾM VÀ TỔNG HỢP", [
+        "Xử lý ngôn ngữ tự nhiên cho truy vấn hàng không",
+        "Truy vấn và tổng hợp dữ liệu tự động theo yêu cầu",
+        "Tích hợp Trợ lý ảo (Chatbot) vào giao diện HTSLB",
+        "Báo cáo và giám sát hiệu năng của Trợ lý ảo",
+    ]),
+]
+
+
+def font(style, size, bold=False):
+    style.font.name = "Times New Roman"
+    style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
+    style.font.size = Pt(size)
+    style.font.bold = bold
+
+
+def shade(cell, fill):
+    props = cell._tc.get_or_add_tcPr()
+    item = OxmlElement("w:shd")
+    item.set(qn("w:fill"), fill)
+    props.append(item)
+
+
+def repeat_header(row):
+    props = row._tr.get_or_add_trPr()
+    item = OxmlElement("w:tblHeader")
+    item.set(qn("w:val"), "true")
+    props.append(item)
+
+
+def table(doc, headers, rows):
+    result = doc.add_table(rows=1, cols=len(headers))
+    result.style = "Table Grid"
+    result.alignment = WD_TABLE_ALIGNMENT.CENTER
+    repeat_header(result.rows[0])
+    for index, value in enumerate(headers):
+        cell = result.rows[0].cells[index]
+        cell.text = value
+        shade(cell, "D9EAF7")
+        for run in cell.paragraphs[0].runs:
+            run.bold = True
+    for values in rows:
+        cells = result.add_row().cells
+        for index, value in enumerate(values):
+            cells[index].text = str(value)
+            cells[index].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+    doc.add_paragraph()
+    return result
+
+
+def placeholder(doc, text="[Sẽ đặc tả tại bước tiếp theo]"):
+    paragraph = doc.add_paragraph(text)
+    paragraph.runs[0].italic = True
+    paragraph.runs[0].font.color.rgb = None
+
+
+def source_rows(source, table_index):
+    source_table = source.tables[table_index - 1]
+    return [[cell.text.strip() for cell in row.cells] for row in source_table.rows]
+
+
+def source_table(doc, source, table_index):
+    rows = source_rows(source, table_index)
+    table(doc, rows[0], rows[1:])
+
+
+def iter_blocks(document):
+    parent = document.element.body
+    for child in parent.iterchildren():
+        if child.tag == qn("w:p"):
+            yield Paragraph(child, document)
+        elif child.tag == qn("w:tbl"):
+            yield Table(child, document)
+
+
+def fold_text(value):
+    normalized = unicodedata.normalize("NFD", value.lower())
+    return "".join(
+        character for character in normalized
+        if unicodedata.category(character) != "Mn"
+    ).replace("đ", "d")
+
+
+def heading_level(paragraph):
+    style = paragraph.style.name if paragraph.style else ""
+    match = re.fullmatch(r"Heading (\d+)", style)
+    return int(match.group(1)) if match else None
+
+
+def remove_table_column(source_table, column_index):
+    for row in source_table.rows:
+        cells = row.cells
+        if column_index < len(cells):
+            row._tr.remove(cells[column_index]._tc)
+    grid_columns = source_table._tbl.tblGrid.gridCol_lst
+    if column_index < len(grid_columns):
+        source_table._tbl.tblGrid.remove(grid_columns[column_index])
+
+
+def replace_paragraph_text(paragraph, replacements):
+    original = paragraph.text
+    updated = original
+    for pattern, replacement in replacements:
+        updated = re.sub(pattern, replacement, updated, flags=re.IGNORECASE)
+    if updated == original:
+        return
+    was_bold = any(run.bold for run in paragraph.runs)
+    was_italic = any(run.italic for run in paragraph.runs)
+    paragraph.text = updated
+    if paragraph.runs:
+        paragraph.runs[0].bold = was_bold
+        paragraph.runs[0].italic = was_italic
+
+
+def remove_inspection_content(doc):
+    """Create the business/technical SRS variant without inspection-only material."""
+    body = doc.element.body
+    remove_until_level = None
+
+    for child in list(body.iterchildren()):
+        if child.tag != qn("w:p"):
+            if remove_until_level is not None:
+                body.remove(child)
+            continue
+
+        paragraph = Paragraph(child, doc)
+        level = heading_level(paragraph)
+        folded = fold_text(paragraph.text.strip())
+
+        if remove_until_level is not None:
+            if level is not None and level <= remove_until_level:
+                remove_until_level = None
+            else:
+                body.remove(child)
+                continue
+
+        remove_section = any([
+            level == 1 and re.match(r"^13\.\s*kiem thu va nghiem thu", folded),
+            level == 1 and re.match(r"^14\.\s*ma tran truy vet", folded),
+            level == 2 and re.match(r"^15\.6\.\s*bieu mau bang chung kiem thu", folded),
+            "lien ket kiem thu va truy vet" in folded,
+            "tieu chi kiem thu" in folded,
+            "tieu chi nghiem thu" in folded,
+            "ca kiem thu nghiem thu" in folded,
+            bool(re.search(r"(?:^|\.\s*)ma tran truy vet", folded)),
+            bool(re.search(r"(?:^|\.\s*)truy vet fr-", folded)),
+        ])
+        if remove_section and level is not None:
+            body.remove(child)
+            remove_until_level = level
+
+    inspection_table_terms = (
+        "bang chung",
+        "ma kiem thu",
+        "pham vi kiem thu",
+    )
+    for source_table in list(doc.tables):
+        if not source_table.rows:
+            continue
+        header = " | ".join(cell.text.strip() for cell in source_table.rows[0].cells)
+        folded_header = fold_text(header)
+        if any(term in folded_header for term in inspection_table_terms):
+            source_table._element.getparent().remove(source_table._element)
+            continue
+
+        headers = [fold_text(cell.text.strip()) for cell in source_table.rows[0].cells]
+        if "tieu chi nghiem thu" in headers:
+            remove_table_column(source_table, headers.index("tieu chi nghiem thu"))
+
+        for row in list(source_table.rows):
+            row_text = fold_text(" | ".join(cell.text for cell in row.cells))
+            if "nhom kiem thu/kiem dinh" in row_text:
+                source_table._tbl.remove(row._tr)
+
+    replacements = [
+        (r"BẢN ĐẶC TẢ TỔNG HỢP PHỤC VỤ KIỂM ĐỊNH", "BẢN ĐẶC TẢ YÊU CẦU PHẦN MỀM TỔNG HỢP"),
+        (r"Quy tắc chung và truy vết kiểm định", "Quy tắc chung"),
+        (r"Yêu cầu chung và truy vết FR-[^\r\n]+", "Yêu cầu chung"),
+        (r"Yêu cầu phi chức năng và nghiệm thu", "Yêu cầu phi chức năng"),
+        (r"Kiểm định, nhận dạng và chuẩn hóa", "Kiểm tra, nhận dạng và chuẩn hóa"),
+        (r"Kiểm định, parse, chuẩn hóa", "Kiểm tra, parse, chuẩn hóa"),
+        (r"không thuộc phạm vi kiểm định chính của tài liệu này", "không thuộc phạm vi chức năng chính được mô tả tại mục này"),
+        (r"kiểm tra/kiểm định", "kiểm tra và đối soát"),
+        (r"người kiểm định", "người sử dụng"),
+        (r"Yêu cầu kiểm định", "Yêu cầu chung"),
+        (r"kiểm định", "kiểm tra"),
+    ]
+    for paragraph in doc.paragraphs:
+        replace_paragraph_text(paragraph, replacements)
+    for source_table in doc.tables:
+        for row in source_table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    replace_paragraph_text(paragraph, replacements)
+
+    for paragraph in doc.paragraphs:
+        if paragraph.text.startswith("Mã tài liệu: SRS-ATFM-WEB"):
+            paragraph.text = paragraph.text.replace(
+                "Phiên bản: 1.0 – Dự thảo hoàn thiện",
+                "Phiên bản: 1.1 – Bản nghiệp vụ và kỹ thuật",
+            ).replace("Ngày cập nhật: 17/08/2026", "Ngày cập nhật: 18/08/2026")
+            break
+
+    for source_table in doc.tables:
+        if not source_table.rows:
+            continue
+        first_cell = source_table.rows[0].cells[0].text.strip()
+        if first_cell == "Thuộc tính":
+            for row in source_table.rows[1:]:
+                key = row.cells[0].text.strip()
+                if key == "Phiên bản":
+                    row.cells[1].text = "1.1"
+                elif key == "Trạng thái":
+                    row.cells[1].text = "Bản nghiệp vụ và kỹ thuật – chờ kiểm tra và phê duyệt"
+            break
+
+    for source_table in doc.tables:
+        if not source_table.rows:
+            continue
+        headers = [cell.text.strip() for cell in source_table.rows[0].cells]
+        if headers == ["Phiên bản", "Ngày", "Nội dung", "Người thực hiện"]:
+            row = source_table.add_row().cells
+            row[0].text = "1.1"
+            row[1].text = "18/08/2026"
+            row[2].text = "Tạo bản nghiệp vụ và kỹ thuật từ bản đặc tả tổng hợp"
+            row[3].text = "Codex"
+            break
+
+
+def clean_source_heading(text):
+    return re.sub(r"^\d+(?:\.\d+)*\.\s*", "", text.strip())
+
+
+def add_integration_source(doc, section_number, requirement_id, title, filename):
+    path = ROOT / "TaiLieu" / filename
+    if not path.exists():
+        raise FileNotFoundError(f"Thiếu tài liệu nguồn {requirement_id}: {path}")
+    source = Document(path)
+    doc.add_heading(f"{section_number}. Đặc tả chi tiết {requirement_id} – {title}", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mã yêu cầu tổng thể", requirement_id),
+        ("Tên yêu cầu", title),
+        ("Tài liệu nguồn", filename),
+        ("Trạng thái", "Đã tích hợp đặc tả hiện trạng"),
+    ])
+
+    skipped_cover_lines = 0
+    source_heading_seen = False
+    for block in iter_blocks(source):
+        if isinstance(block, Paragraph):
+            text = block.text.strip()
+            if not text:
+                continue
+            style = block.style.name if block.style else "Normal"
+            if not source_heading_seen and not style.startswith("Heading"):
+                skipped_cover_lines += 1
+                if skipped_cover_lines <= 3:
+                    continue
+            if style.startswith("Heading"):
+                source_heading_seen = True
+                level_match = re.search(r"(\d+)$", style)
+                source_level = int(level_match.group(1)) if level_match else 1
+                target_level = 3 if source_level == 1 else 3
+                doc.add_heading(clean_source_heading(text), level=target_level)
+            elif style.startswith("List Bullet"):
+                doc.add_paragraph(text, style="List Bullet")
+            elif style.startswith("List Number"):
+                doc.add_paragraph(text, style="List Number")
+            elif style == "Caption":
+                paragraph = doc.add_paragraph(text)
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if paragraph.runs:
+                    paragraph.runs[0].italic = True
+            else:
+                doc.add_paragraph(text)
+        else:
+            rows = [[cell.text.strip() for cell in row.cells] for row in block.rows]
+            if rows:
+                table(doc, rows[0], rows[1:])
+
+    doc.add_heading(f"{section_number}.1. Liên kết kiểm thử và truy vết", level=3)
+    table(doc, ["Yêu cầu tổng thể", "Yêu cầu chi tiết", "Nguồn bằng chứng"], [
+        (requirement_id, "Các FR/BR/NFR trong đặc tả nguồn", "Test case, log, ảnh màn hình, API/DB và biên bản nghiệm thu"),
+    ])
+
+
+def add_ai_nl2sql_specification(doc):
+    doc.add_heading("9.3. Ánh xạ yêu cầu Trợ lý AI NL2SQL/Vanna Oracle", level=2)
+    doc.add_paragraph(
+        "Đặc tả hiện trạng của Hệ thống Trợ lý AI ATFM được tích hợp vào phân hệ AI. "
+        "Các yêu cầu chi tiết FR-NL, BR-NL và NFR-NL trong tài liệu nguồn là cơ sở "
+        "thiết kế test case, thu thập bằng chứng và nghiệm thu cho các yêu cầu tổng thể dưới đây."
+    )
+    table(doc, ["Mã tổng thể", "Phạm vi ánh xạ", "Nhóm yêu cầu nguồn"], [
+        ("FR-AI-001", "Tiếp nhận tiếng Việt/giọng nói, nhận biết ý định, bổ sung ngữ cảnh schema và sinh Oracle SQL", "FR-NL-01…17; BR-NL-01…12"),
+        ("FR-AI-002", "Thực thi truy vấn đọc an toàn, chuẩn hóa dữ liệu, tổng hợp và trình bày bảng/biểu đồ", "FR-NL-09…23; BR-NL-03…15"),
+        ("FR-AI-003", "Tích hợp giao diện chat, API thời gian thực, phiên hội thoại, phản hồi và huấn luyện có kiểm duyệt", "FR-NL-01…08; FR-NL-24…39"),
+        ("FR-AI-004", "Báo cáo hoạt động, audit, giám sát hiệu năng, sức khỏe dịch vụ và vận hành", "FR-NL-40…44; NFR-NL-01…16"),
+    ])
+    add_integration_source(
+        doc,
+        "9.4",
+        "FR-AI-001…FR-AI-004",
+        "Trợ lý AI chuyển câu hỏi tiếng Việt thành Oracle SQL, thực thi và trình bày kết quả",
+        AI_NL2SQL_SOURCE,
+    )
+
+
+def add_opt001_003_specification(doc):
+    doc.add_heading("7.3. Đặc tả nhóm sửa đổi, bổ sung chức năng hiện hữu", level=2)
+    doc.add_paragraph(
+        "FR-OPT-001, FR-OPT-002 và FR-OPT-003 là yêu cầu nâng cấp trên luồng INBOX/FPL hiện hữu, "
+        "không tạo phân hệ nghiệp vụ độc lập. Việc triển khai phải bảo toàn dữ liệu, URL, phân quyền "
+        "và các thao tác đang sử dụng; thay đổi cơ sở dữ liệu phải có phương án sao lưu và rollback."
+    )
+    table(doc, ["Mã", "Loại thay đổi", "Chức năng hiện hữu bị tác động", "Kết quả mong đợi"], [
+        ("FR-OPT-001", "Mở rộng chính sách lưu giữ", "Tiếp nhận, lưu trữ và khai thác điện văn INBOX", "Điện văn được giữ đủ thời hạn cấu hình và vẫn truy xuất được"),
+        ("FR-OPT-002", "Bổ sung cảnh báo nghiệp vụ", "Phân tích/đối chiếu điện văn FPL với KHB ngày", "Nhận diện và cảnh báo NOPERM có giải thích"),
+        ("FR-OPT-003", "Sửa quy tắc thời gian", "Ghép nối và hiển thị FPL", "Xử lý đúng cửa sổ 120 giờ, kể cả khác ngày"),
+    ])
+
+    doc.add_heading("7.4. FR-OPT-001 – Mở rộng thời gian lưu trữ điện văn INBOX", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Ngăn điện văn bị loại bỏ sớm và bảo đảm tra cứu, đối soát, kiểm tra sau khai thác."),
+        ("Phạm vi sửa đổi", "Dữ liệu điện văn, tệp/log nguồn và bản ghi liên kết cần cho việc tái hiện nội dung INBOX."),
+        ("Không bao gồm", "Không đồng nghĩa tự động mở toàn bộ khoảng ngày trên giao diện; phạm vi tìm kiếm được quản lý bởi yêu cầu tra cứu riêng."),
+        ("Tham số cần phê duyệt", "INBOX_RETENTION_DAYS – số ngày lưu tối thiểu; giá trị production do đơn vị nghiệp vụ phê duyệt."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-001.01", "Hệ thống phải lưu điện văn INBOX và dữ liệu liên quan tối thiểu bằng INBOX_RETENTION_DAYS tính từ thời điểm nhận."),
+        ("FR-OPT-001.02", "Thời hạn lưu phải cấu hình được mà không sửa mã nguồn và chỉ người có quyền quản trị mới được thay đổi."),
+        ("FR-OPT-001.03", "Tác vụ dọn dữ liệu không được xóa bản ghi còn trong thời hạn lưu hoặc làm mất liên kết giữa điện văn, nội dung và log nguồn."),
+        ("FR-OPT-001.04", "Điện văn còn thời hạn phải xem được nội dung và thông tin nhận bằng chức năng INBOX hiện hữu theo đúng phân quyền."),
+        ("FR-OPT-001.05", "Khi dọn dữ liệu hết hạn, hệ thống phải ghi nhật ký số lượng, khoảng thời gian, người/tác vụ thực hiện và kết quả."),
+        ("FR-OPT-001.06", "Nâng cấp không được xóa dữ liệu lịch sử hiện có; trước thay đổi cấu trúc/chính sách phải có sao lưu và phương án rollback."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-001-01", "Điện văn có tuổi nhỏ hơn hoặc bằng thời hạn cấu hình", "Không bị dọn và xem được tại INBOX"),
+        ("TC-OPT-001-02", "Điện văn quá hạn và chạy tác vụ dọn", "Được xử lý theo chính sách, có log đầy đủ, không tạo bản ghi mồ côi"),
+        ("TC-OPT-001-03", "Thay đổi thời hạn bởi tài khoản không có quyền", "Bị từ chối và có dấu vết an toàn"),
+        ("TC-OPT-001-04", "Nâng cấp trên dữ liệu lịch sử", "Không mất dữ liệu; có thể rollback theo phương án đã duyệt"),
+    ])
+
+    doc.add_heading("7.5. FR-OPT-002 – Cảnh báo NOPERM cho điện văn không có trong KHB ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Cảnh báo người khai thác khi điện văn chuyến bay không tìm thấy KHB ngày/phép bay phù hợp."),
+        ("Nguồn vào", "Điện văn đã phân tích và dữ liệu KHB ngày/phép bay có hiệu lực."),
+        ("Kết quả", "Trạng thái NOPERM hiển thị nổi bật nhưng không tự thay thế quyết định nghiệp vụ của người khai thác."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-002.01", "Sau khi phân tích điện văn, hệ thống phải đối chiếu chuyến bay với KHB ngày/phép bay theo số hiệu, ngày bay, sân bay đi/đến và điều kiện hiệu lực áp dụng."),
+        ("FR-OPT-002.02", "Chỉ gắn NOPERM khi không có bản ghi phù hợp sau khi đã chuẩn hóa số hiệu, ngày giờ và mã sân bay."),
+        ("FR-OPT-002.03", "Cảnh báo phải hiển thị rõ tại danh sách/chi tiết liên quan và cung cấp lý do không khớp để người dùng kiểm tra."),
+        ("FR-OPT-002.04", "Hệ thống phải tính lại trạng thái khi điện văn, KHB ngày hoặc phép bay liên quan được thêm/sửa/duyệt."),
+        ("FR-OPT-002.05", "Không được cảnh báo NOPERM nếu tồn tại ít nhất một bản ghi phù hợp và còn hiệu lực; không dùng dữ liệu nháp/chưa duyệt nếu quy trình không cho phép."),
+        ("FR-OPT-002.06", "Việc xác nhận hoặc xử lý cảnh báo phải tuân theo phân quyền và được ghi nhật ký người dùng, thời gian, trạng thái trước/sau."),
+        ("FR-OPT-002.07", "Lỗi dịch vụ đối chiếu hoặc thiếu dữ liệu bắt buộc phải hiển thị là 'Chưa xác định', không được kết luận NOPERM sai."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-002-01", "Điện văn khớp KHB ngày còn hiệu lực", "Không có cảnh báo NOPERM"),
+        ("TC-OPT-002-02", "Không có KHB ngày/phép bay phù hợp", "Hiển thị NOPERM và lý do đối chiếu"),
+        ("TC-OPT-002-03", "Bổ sung/duyệt KHB phù hợp sau khi đã cảnh báo", "Trạng thái được tính lại và bỏ cảnh báo"),
+        ("TC-OPT-002-04", "Dịch vụ/dữ liệu đối chiếu lỗi", "Hiển thị Chưa xác định, không gắn NOPERM"),
+    ])
+
+    doc.add_heading("7.6. FR-OPT-003 – Áp dụng quy tắc 120 giờ ICAO cho hiển thị FPL", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Ghép nối và hiển thị FPL theo mốc thời gian khai thác thay vì chỉ theo ngày lịch, hỗ trợ FPL được nộp trước tối đa 120 giờ."),
+        ("Mốc so sánh", "Thời điểm nhận/nộp FPL và EOBT hoặc thời điểm dự kiến khởi hành tương đương sau khi chuẩn hóa múi giờ."),
+        ("Cửa sổ", "120 giờ; nên quản lý bằng tham số cấu hình nhưng giá trị nghiệp vụ mặc định là 120."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-003.01", "Hệ thống phải cho phép ghép nối và hiển thị FPL khi EOBT nằm trong cửa sổ từ thời điểm nộp/nhận đến không quá 120 giờ sau đó."),
+        ("FR-OPT-003.02", "Việc đối chiếu không được giới hạn bằng điều kiện cùng ngày; phải xử lý đúng trường hợp FPL và chuyến bay cách nhau nhiều ngày trong cửa sổ."),
+        ("FR-OPT-003.03", "Các mốc thời gian phải được chuẩn hóa về cùng múi giờ trước khi tính chênh lệch và phải xử lý chính xác qua thời điểm đổi ngày/tháng/năm."),
+        ("FR-OPT-003.04", "FPL vượt quá cửa sổ 120 giờ không được tự động gắn với chuyến bay; hệ thống phải ghi/hiển thị nguyên nhân loại trừ khi cần kiểm tra."),
+        ("FR-OPT-003.05", "Tại đúng biên 120 giờ, FPL được coi là hợp lệ; lớn hơn 120 giờ là không hợp lệ theo quy tắc này."),
+        ("FR-OPT-003.06", "Nếu thiếu hoặc sai định dạng mốc thời gian bắt buộc, hệ thống phải đưa về trạng thái Chưa xác định để xử lý thủ công, không tự suy đoán."),
+        ("FR-OPT-003.07", "Thay đổi phải tương thích với các loại điện văn cập nhật/hủy liên quan và không làm nhân đôi bản ghi FPL đang hiển thị."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-003-01", "EOBT cách thời điểm nhận 119 giờ 59 phút", "FPL được ghép nối/hiển thị"),
+        ("TC-OPT-003-02", "EOBT cách đúng 120 giờ", "FPL được ghép nối/hiển thị"),
+        ("TC-OPT-003-03", "EOBT cách 120 giờ 01 phút", "Không tự động ghép; có lý do loại trừ"),
+        ("TC-OPT-003-04", "Khoảng thời gian đi qua ngày/tháng/năm", "Chênh lệch được tính đúng sau chuẩn hóa"),
+        ("TC-OPT-003-05", "Thiếu EOBT hoặc thời điểm nhận", "Trạng thái Chưa xác định, không ghép sai"),
+    ])
+
+    doc.add_heading("7.7. Quy tắc chung và truy vết kiểm định", level=2)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-001", "Mọi giá trị thời hạn/cửa sổ phải dùng thời gian máy chủ hoặc thời gian nghiệp vụ đã chuẩn hóa, không phụ thuộc đồng hồ trình duyệt."),
+        ("BR-OPT-002", "Trạng thái cảnh báo là kết quả hỗ trợ khai thác; thao tác xác nhận/sửa dữ liệu phải theo quyền hiện hành."),
+        ("BR-OPT-003", "Không được làm thay đổi nội dung điện văn gốc; dữ liệu chuẩn hóa và kết quả đối chiếu phải truy vết được về nguồn."),
+        ("BR-OPT-004", "Các thay đổi phải có log, giám sát lỗi và kịch bản rollback trước khi triển khai production."),
+    ])
+    table(doc, ["Yêu cầu", "Thiết kế/thành phần", "Bằng chứng nghiệm thu"], [
+        ("FR-OPT-001", "Kho điện văn, tác vụ retention, INBOX", "Cấu hình, log dọn dữ liệu, truy vấn DB, ảnh màn hình và TC-OPT-001-*"),
+        ("FR-OPT-002", "Bộ phân tích/đối chiếu KHB ngày, giao diện cảnh báo", "Dữ liệu mẫu khớp/không khớp, log tính lại, ảnh và TC-OPT-002-*"),
+        ("FR-OPT-003", "Bộ ghép FPL và xử lý thời gian", "Bộ dữ liệu biên 120 giờ, log đối chiếu, ảnh và TC-OPT-003-*"),
+    ])
+
+
+def add_opt006_010_specification(doc):
+    doc.add_heading("7.8. FR-OPT-005 – Tìm kiếm nâng cao phục vụ báo cáo", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình triển khai", "Permission/SearchPermissionAdv.aspx?Menu_ID=988 – Search Permission Adv."),
+        ("Loại thay đổi", "Bổ sung màn hình tra cứu hợp nhất dữ liệu phép SC và NO, xem chi tiết chuyến bay và export phục vụ báo cáo."),
+        ("Nguồn dữ liệu", "T_PERMMASTER_SC/T_PERMDETAIL_SC và T_PERMMASTER_NO/T_PERMDETAIL_NO cùng các danh mục tác giả, loại tàu bay liên quan."),
+        ("Phạm vi", "Tra cứu chỉ đọc theo ngày cấp phép PERMDATE; không thay đổi dữ liệu phép bay tại màn hình này."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-005.01", "Hệ thống phải bắt buộc nhập Từ ngày cấp phép và Đến ngày cấp phép; Từ ngày không được lớn hơn Đến ngày."),
+        ("FR-OPT-005.02", "Kết quả phải hợp nhất phép SC và NO có PERMDATE trong khoảng chọn, bao gồm trọn ngày kết thúc, đồng thời giữ SOURCE_TYPE để phân biệt nguồn."),
+        ("FR-OPT-005.03", "Người dùng được lọc tùy chọn theo khoảng giờ ETD/ETA định dạng HH:mm, FROM, TO và VIA; khi dùng nhiều điều kiện, chi tiết chuyến bay phải thỏa đồng thời các điều kiện tương ứng."),
+        ("FR-OPT-005.04", "Điều kiện giờ phải nhận bản ghi khi ETD hoặc ETA nằm trong khoảng; giờ bắt đầu không được lớn hơn giờ kết thúc."),
+        ("FR-OPT-005.05", "Danh sách phép phải hiển thị PERMNBR, AUTHOR, PTYPE, FTYPE, NUMBER, VERSION, DATE, OPER và tổng số chi tiết phù hợp; mặc định sắp xếp theo PERMNBR và loại nguồn."),
+        ("FR-OPT-005.06", "Hệ thống phải hỗ trợ lọc nhanh không phân biệt hoa thường trên các cột PERMNBR, AUTHOR, PTYPE, FTYPE, NUMBER, VERSION, DATE và OPER; tổng số phép/chuyến bay phải cập nhật theo kết quả lọc."),
+        ("FR-OPT-005.07", "Danh sách phải phân trang 100 phép/trang và hiển thị Tổng số phép, Tổng số chuyến bay; bộ lọc cột không làm mất tập kết quả tìm kiếm gốc."),
+        ("FR-OPT-005.08", "Người dùng phải xem được chi tiết phép bằng popup hoặc mở rộng ngay dưới dòng; SC hiển thị BEGIN/END DATE, NO không bắt buộc hai cột này."),
+        ("FR-OPT-005.09", "Chi tiết phải gồm CALLSIGN, REGISTRATION, FROM, TO, ETD, ETA, ngày/thứ khai thác, CRAFT, PURPOSE, MTOW, VIA, REMARK, STATUS và LAST USER/LAST MODIFY."),
+        ("FR-OPT-005.10", "Nút Export Excel chỉ được bật sau khi Search có dữ liệu; file phải áp dụng cả bộ lọc tìm kiếm và bộ lọc cột đang có, xuất đầy đủ chi tiết SC/NO chứ không chỉ trang hiện tại."),
+        ("FR-OPT-005.11", "File export phải chứa tiêu chí báo cáo, phân biệt LOẠI PHÉP SC/NO, dùng tên có khoảng ngày và bảo toàn định dạng text của số phép, giờ, mã sân bay."),
+        ("FR-OPT-005.12", "Truy vấn phải bind tham số, không ghép trực tiếp dữ liệu người dùng vào SQL; lỗi tìm kiếm/export phải trả thông báo rõ và không lộ chuỗi kết nối/thông tin nhạy cảm."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-005-01", "Tìm một khoảng PERMDATE có cả SC và NO", "Trả đủ hai nguồn, tổng phép/chuyến bay chính xác"),
+        ("TC-OPT-005-02", "Lọc ETD/ETA, FROM, TO, VIA", "Chỉ phép có ít nhất một chi tiết phù hợp được hiển thị"),
+        ("TC-OPT-005-03", "Lọc nhanh nhiều cột và chuyển trang", "Kết quả/tổng/phân trang nhất quán"),
+        ("TC-OPT-005-04", "Mở chi tiết SC và NO", "Đúng cấu trúc cột và đúng dữ liệu của PERM_ID/SOURCE_TYPE"),
+        ("TC-OPT-005-05", "Export sau khi áp dụng bộ lọc", "Excel chứa toàn bộ dòng phù hợp, đúng tiêu chí và không chỉ 100 dòng trang hiện tại"),
+        ("TC-OPT-005-06", "Ngày/giờ không hợp lệ hoặc không có dữ liệu", "Chặn yêu cầu hoặc thông báo phù hợp; không cho export sai"),
+    ])
+
+    doc.add_heading("7.9. FR-OPT-006 – Phân loại chuyến bay Quốc nội/Quốc tế tự động", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình triển khai", "Mở rộng SearchPermissionAdv.aspx?Menu_ID=988 và SearchPermissionAdvExport.ashx."),
+        ("Loại thay đổi", "Bổ sung phân loại ở cấp chi tiết chuyến bay trong phép SC/NO và đưa kết quả vào tìm kiếm, tổng hợp, chi tiết và Excel."),
+        ("Mục tiêu", "Báo cáo số chuyến Quốc nội/Quốc tế thống nhất từ chính dữ liệu FROM/TO của phép bay."),
+        ("Nguyên tắc", "Phân loại theo quốc gia của sân bay đi/đến sau chuẩn hóa mã; FTYPE và SOURCE_TYPE SC/NO không được dùng thay cho loại Quốc nội/Quốc tế."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-006.01", "Hệ thống phải xác định Quốc nội khi cả sân bay đi và sân bay đến thuộc Việt Nam; xác định Quốc tế khi ít nhất một đầu thuộc quốc gia khác."),
+        ("FR-OPT-006.02", "Việc phân loại phải dùng danh mục sân bay/quốc gia dùng chung, hỗ trợ mã ICAO/IATA sau chuẩn hóa và áp dụng cùng một quy tắc cho chi tiết SC và NO."),
+        ("FR-OPT-006.03", "Thiếu hoặc không nhận diện được một đầu sân bay phải trả trạng thái Chưa xác định, không mặc định Quốc nội hoặc Quốc tế."),
+        ("FR-OPT-006.04", "Search Permission Adv phải bổ sung tiêu chí Loại chuyến bay gồm Tất cả, Quốc nội, Quốc tế, Chưa xác định; tiêu chí phải lọc ở cấp chi tiết trước khi tính số chuyến của mỗi phép."),
+        ("FR-OPT-006.05", "Popup/dòng chi tiết phải hiển thị cột LOẠI CHUYẾN BAY cho từng chuyến; phần tổng hợp phải hiển thị số Quốc nội, Quốc tế và Chưa xác định trong tập kết quả."),
+        ("FR-OPT-006.06", "Excel phải bổ sung cột FLIGHT SCOPE/LOẠI CHUYẾN BAY và áp dụng đúng tiêu chí loại chuyến đang chọn; dữ liệu Excel phải khớp chi tiết trên màn hình."),
+        ("FR-OPT-006.07", "Trạng thái phải được tính lại khi FROM, TO hoặc danh mục sân bay thay đổi; nếu lưu trường dẫn xuất thì phải có tác vụ phân loại lại dữ liệu lịch sử và log kết quả."),
+        ("FR-OPT-006.08", "Việc bổ sung phân loại không được làm thay đổi SOURCE_TYPE, FTYPE, dữ liệu gốc FROM/TO hoặc phá vỡ tìm kiếm/export SC và NO hiện hữu."),
+    ])
+    table(doc, ["Mã kiểm thử", "Dữ liệu", "Kết quả"], [
+        ("TC-OPT-006-01", "VVNB–VVTS", "Quốc nội"),
+        ("TC-OPT-006-02", "VVNB–WSSS", "Quốc tế"),
+        ("TC-OPT-006-03", "Sân bay không có trong danh mục", "Chưa xác định, có lý do"),
+        ("TC-OPT-006-04", "Lọc Quốc tế trên tập SC và NO", "Chỉ chi tiết Quốc tế được tính/hiển thị; tổng số khớp"),
+        ("TC-OPT-006-05", "Export theo từng loại", "Cột loại và số dòng Excel khớp màn hình"),
+    ])
+
+    doc.add_heading("7.10. FR-OPT-007 – Export dữ liệu tách ba loại file ALL, LD, OF", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Mở rộng chức năng export hiện hữu để tạo bộ ba đầu ra độc lập."),
+        ("Quy ước", "ALL: toàn bộ dữ liệu hợp lệ; LD: chuyến bay hạ cánh/đến; OF: chuyến bay bay qua."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-007.01", "Người dùng có quyền export phải chọn được ngày/khoảng dữ liệu và tạo ba file ALL, LD, OF trong một lần thao tác."),
+        ("FR-OPT-007.02", "ALL phải chứa hợp của các nhóm dữ liệu thuộc phạm vi export và không nhân đôi cùng một bản ghi nghiệp vụ."),
+        ("FR-OPT-007.03", "LD và OF phải được tách theo quy tắc loại hình bay đã phê duyệt; một bản ghi không được xuất sai nhóm."),
+        ("FR-OPT-007.04", "Ba file phải dùng cùng phiên bản dữ liệu, cùng thời điểm chốt, cấu trúc cột/định dạng ngày giờ thống nhất và tên file nhận diện được loại, ngày, lần tạo."),
+        ("FR-OPT-007.05", "Hệ thống phải hiển thị số bản ghi từng file, cảnh báo file rỗng và chỉ thông báo thành công khi các file bắt buộc được tạo đầy đủ."),
+        ("FR-OPT-007.06", "Mỗi lần export phải ghi người thực hiện, tham số, thời gian, số dòng, tên/checksum file và lỗi nếu có; việc tải file tuân theo phân quyền."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-007-01", "Dữ liệu có cả LD và OF", "Sinh đủ ALL, LD, OF; số liệu đối soát đúng"),
+        ("TC-OPT-007-02", "Một nhóm không có dữ liệu", "Cảnh báo rõ file rỗng, không làm sai hai file còn lại"),
+        ("TC-OPT-007-03", "Lỗi khi tạo một file bắt buộc", "Không báo hoàn tất toàn bộ; log chỉ rõ file lỗi"),
+    ])
+
+    doc.add_heading("7.11. FR-OPT-008 – Chức năng Edit info chuyến bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Bổ sung/sửa màn hình cập nhật thông tin trên bản ghi chuyến bay hiện hữu."),
+        ("Mục tiêu", "Cho phép hiệu chỉnh dữ liệu sai hoặc thiếu mà vẫn kiểm soát quyền, tính hợp lệ và truy vết."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-008.01", "Chỉ người có quyền Edit mới được mở chế độ sửa và lưu; trường chỉ đọc/khóa theo trạng thái nghiệp vụ không được thay đổi."),
+        ("FR-OPT-008.02", "Hệ thống phải hiển thị dữ liệu mới nhất và kiểm tra bản ghi chưa bị người khác thay đổi trước khi lưu."),
+        ("FR-OPT-008.03", "Các trường số hiệu, ngày bay, sân bay, giờ, loại tàu bay, đăng ký và trường nghiệp vụ liên quan phải được kiểm tra bắt buộc, định dạng, danh mục và quan hệ logic."),
+        ("FR-OPT-008.04", "Khi thay đổi trường khóa đối chiếu, hệ thống phải yêu cầu xác nhận và tính lại các dữ liệu dẫn xuất như phân loại, cảnh báo, ghép điện văn."),
+        ("FR-OPT-008.05", "Lưu phải có tính nguyên tử; nếu một bước kiểm tra/cập nhật thất bại thì không được lưu một phần."),
+        ("FR-OPT-008.06", "Mỗi thay đổi phải ghi giá trị trước/sau, người sửa, thời gian và lý do; nội dung điện văn nguồn không bị sửa trực tiếp."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-008-01", "Sửa hợp lệ bởi người có quyền", "Lưu thành công và có lịch sử trước/sau"),
+        ("TC-OPT-008-02", "Dữ liệu sai định dạng hoặc tài khoản không có quyền", "Từ chối, không thay đổi dữ liệu"),
+        ("TC-OPT-008-03", "Bản ghi đã được người khác cập nhật", "Cảnh báo xung đột, yêu cầu tải lại"),
+    ])
+
+    doc.add_heading("7.12. FR-OPT-009 – Hiển thị lịch sử thao tác chuyến bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Bổ sung giao diện khai thác nhật ký T_ACTIONHISTORY/lịch sử chuyên biệt theo chuyến bay."),
+        ("Mục tiêu", "Truy vết đầy đủ ai đã làm gì, khi nào và dữ liệu thay đổi ra sao."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-009.01", "Từ danh sách/chi tiết chuyến bay, người có quyền phải mở được lịch sử đúng bản ghi bằng định danh ổn định, không chỉ dựa vào số hiệu."),
+        ("FR-OPT-009.02", "Lịch sử phải hiển thị thời gian, người dùng, thao tác, nguồn/màn hình, trạng thái kết quả, giá trị trước/sau hoặc mô tả thay đổi."),
+        ("FR-OPT-009.03", "Các thao tác thêm, sửa, đổi ngày, duyệt, hủy, export/finish và xử lý liên quan phải được ghi nhận theo phạm vi áp dụng."),
+        ("FR-OPT-009.04", "Danh sách phải sắp xếp mới nhất trước, hỗ trợ phân trang/lọc và dùng thời gian máy chủ thống nhất."),
+        ("FR-OPT-009.05", "Nhật ký là dữ liệu chỉ đọc đối với người khai thác, không cho sửa/xóa qua giao diện và phải bảo vệ thông tin nhạy cảm."),
+        ("FR-OPT-009.06", "Lỗi ghi lịch sử phải được giám sát; thao tác nghiệp vụ quan trọng không được báo hoàn tất nếu chính sách bắt buộc audit chưa được đáp ứng."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-009-01", "Thêm, sửa và đổi ngày chuyến bay", "Có đủ sự kiện đúng thứ tự và giá trị trước/sau"),
+        ("TC-OPT-009-02", "Hai chuyến cùng số hiệu khác ngày", "Lịch sử không bị trộn"),
+        ("TC-OPT-009-03", "Người dùng khai thác thử sửa/xóa log", "Không được phép"),
+    ])
+
+    doc.add_heading("7.13. FR-OPT-010 – Đồng bộ dữ liệu điện văn liên ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Loại thay đổi", "Sửa cơ chế liên kết điện văn và chuyến bay khi ngày điện văn khác ngày khai thác thực tế."),
+        ("Mục tiêu", "Không bỏ sót hoặc nhân đôi FPL/CHG/DLA/CNL và các điện văn liên quan tại thời điểm qua ngày."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-010.01", "Hệ thống phải xác định chuyến bay mục tiêu bằng số hiệu, sân bay, thời gian và quan hệ điện văn trong cửa sổ liên ngày được cấu hình."),
+        ("FR-OPT-010.02", "Điện văn nhận trước/sau thời điểm đổi ngày phải được liên kết với đúng ngày bay thực tế sau khi chuẩn hóa UTC/giờ nghiệp vụ."),
+        ("FR-OPT-010.03", "Điện văn cập nhật/hủy phải áp dụng đúng bản FPL gốc và đúng thứ tự thời gian; không cập nhật nhầm chuyến cùng số hiệu ở ngày liền kề."),
+        ("FR-OPT-010.04", "Đồng bộ phải idempotent: xử lý lại cùng điện văn không tạo bản ghi hoặc hiệu ứng trùng; phải dùng định danh/hash nguồn để chống trùng."),
+        ("FR-OPT-010.05", "Khi dữ liệu bị chuyển ngày, hệ thống phải cập nhật nhất quán bản ghi liên quan, giữ ngày cũ để truy vết và tính lại cảnh báo/phân loại cần thiết."),
+        ("FR-OPT-010.06", "Trường hợp có nhiều ứng viên hoặc thiếu dữ liệu phải đưa vào Chưa xác định/xử lý thủ công, không tự ghép có rủi ro."),
+        ("FR-OPT-010.07", "Mỗi lượt đồng bộ phải ghi điện văn nguồn, bản ghi đích, trạng thái trước/sau, quy tắc ghép, thời gian và lỗi; hỗ trợ chạy bù có kiểm soát."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-010-01", "FPL nhận ngày D, chuyến bay ngày D+1 trong cửa sổ", "Liên kết đúng D+1, không nhân đôi"),
+        ("TC-OPT-010-02", "CHG/DLA/CNL qua ngày", "Áp dụng đúng FPL gốc theo thứ tự"),
+        ("TC-OPT-010-03", "Xử lý lại cùng điện văn", "Kết quả không đổi, không sinh bản ghi trùng"),
+        ("TC-OPT-010-04", "Hai ứng viên cùng số hiệu ở ngày liền kề", "Không tự ghép; chuyển xử lý thủ công"),
+    ])
+
+    doc.add_heading("7.14. FR-OPT-011 – Thống kê theo khung giờ, chặng và đường bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình triển khai", "Permission/SearchPermissionAdv.aspx?Menu_ID=988 – mở rộng chức năng Search Permission Adv hiện hữu."),
+        ("Loại thay đổi", "Bổ sung chế độ thống kê/báo cáo trên cùng tập chi tiết phép SC và NO đã thỏa điều kiện tìm kiếm."),
+        ("Mục tiêu", "Tổng hợp số chuyến theo khung giờ, chặng FROM–TO và đường bay có VIA để phục vụ phân tích, báo cáo và đối soát."),
+        ("Nguyên tắc dữ liệu", "Thống kê ở cấp chi tiết chuyến bay, không đếm số phép thay cho số chuyến; kết quả phải truy ngược được về danh sách chi tiết."),
+    ])
+    table(doc, ["Khái niệm", "Quy ước đề xuất"], [
+        ("Khung giờ", "Khoảng thời gian do người dùng chọn hoặc nhóm giờ cấu hình; phải chỉ rõ sử dụng ETD, ETA hoặc cả hai."),
+        ("Chặng", "Cặp sân bay có hướng FROM_AIRP → TO_AIRP sau khi chuẩn hóa mã sân bay."),
+        ("Đường bay", "Chặng FROM–TO kết hợp chuỗi VIA đã chuẩn hóa; VIA rỗng được ghi nhận là bay thẳng."),
+        ("Đơn vị thống kê", "Một dòng chi tiết chuyến bay trong phép SC/NO; SOURCE_TYPE và định danh chi tiết phải được giữ để chống đếm trùng."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-011.01", "Sau khi Search thành công, người dùng phải chuyển được giữa chế độ Danh sách và Thống kê mà không nhập lại tiêu chí."),
+        ("FR-OPT-011.02", "Chế độ Thống kê phải sử dụng đúng khoảng PERMDATE, bộ lọc ETD/ETA, FROM, TO, VIA, bộ lọc cột và loại chuyến bay đang áp dụng trên Menu 988."),
+        ("FR-OPT-011.03", "Người dùng phải chọn cơ sở thời gian ETD hoặc ETA và khung giờ báo cáo; hệ thống phải kiểm tra định dạng HH:mm và hỗ trợ đầy đủ biên đầu/cuối theo quy ước đã công bố."),
+        ("FR-OPT-011.04", "Hệ thống phải tổng hợp số chuyến theo từng khung giờ và hiển thị tổng cộng; một chuyến chỉ được tính một lần trong một nhóm của cơ sở thời gian đã chọn."),
+        ("FR-OPT-011.05", "Hệ thống phải tổng hợp số chuyến theo chặng có hướng FROM→TO; chiều ngược lại là một chặng khác, trừ khi người dùng chọn chế độ gộp hai chiều."),
+        ("FR-OPT-011.06", "Hệ thống phải tổng hợp số chuyến theo đường bay FROM–VIA–TO; chuỗi VIA phải được chuẩn hóa khoảng trắng/chữ hoa nhưng không làm thay đổi thứ tự các điểm bay."),
+        ("FR-OPT-011.07", "Mỗi dòng thống kê phải cho phép drill-down về đúng các chi tiết chuyến bay cấu thành, giữ SOURCE_TYPE SC/NO, PERM_ID và DETAIL_ID/FLIGHT_PK để truy vết."),
+        ("FR-OPT-011.08", "Kết quả phải hỗ trợ tách hoặc đối chiếu theo SC/NO và Quốc nội/Quốc tế/Chưa xác định khi các tiêu chí này được chọn."),
+        ("FR-OPT-011.09", "Tổng số chuyến của các nhóm không giao nhau phải bằng tổng số chi tiết phù hợp; bản ghi trùng kỹ thuật hoặc được trả lại do hợp nhất không được đếm hai lần."),
+        ("FR-OPT-011.10", "Các bản ghi thiếu/sai ETD, ETA, FROM, TO hoặc VIA phải được đưa vào nhóm Không xác định tương ứng, không được âm thầm loại khỏi tổng chung."),
+        ("FR-OPT-011.11", "Người dùng phải export được bảng thống kê đang xem và danh sách chi tiết đối soát; file phải ghi tiêu chí, thời điểm tạo, đơn vị thống kê và tổng cộng."),
+        ("FR-OPT-011.12", "Truy vấn thống kê phải thực hiện tại máy chủ/Oracle bằng tham số bind, có giới hạn thời gian và không tải toàn bộ dữ liệu không cần thiết về trình duyệt để cộng thủ công."),
+        ("FR-OPT-011.13", "Giao diện phải thông báo rõ khi không có dữ liệu, khi một nhóm Không xác định có số liệu hoặc khi kết quả bị lỗi; không hiển thị số 0 như một kết quả thành công giả."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-011-01", "Thống kê ETD theo các khung giờ liên tiếp", "Mỗi chuyến thuộc đúng một khung; tổng nhóm bằng tổng chi tiết hợp lệ"),
+        ("TC-OPT-011-02", "Hai chiều VVNB→VVTS và VVTS→VVNB", "Tách hai chặng khi có hướng; gộp đúng khi chọn hai chiều"),
+        ("TC-OPT-011-03", "Cùng FROM/TO nhưng VIA khác nhau", "Tạo các nhóm đường bay riêng, giữ đúng thứ tự VIA"),
+        ("TC-OPT-011-04", "Tập dữ liệu có cả SC/NO và Quốc nội/Quốc tế", "Số liệu theo nhóm và tổng chung đối soát đúng"),
+        ("TC-OPT-011-05", "Thiếu ETD hoặc sân bay/VIA không chuẩn hóa được", "Đưa vào nhóm Không xác định và vẫn tính trong tổng chung"),
+        ("TC-OPT-011-06", "Drill-down một dòng thống kê", "Danh sách chi tiết đúng bằng tập bản ghi tạo nên số liệu"),
+        ("TC-OPT-011-07", "Export thống kê sau khi dùng nhiều bộ lọc", "Excel giữ đúng tiêu chí, số nhóm, tổng và chi tiết đối soát"),
+    ])
+
+    doc.add_heading("7.15. Ma trận truy vết FR-OPT-005…FR-OPT-011", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-005", "SearchPermissionAdv.aspx/.js/.cs, Export.ashx và Oracle SC/NO", "Ảnh màn hình, kết quả DB/Excel và TC-OPT-005-*"),
+        ("FR-OPT-006", "Search Permission Adv, danh mục sân bay và dữ liệu chi tiết SC/NO", "Bộ dữ liệu Quốc nội/Quốc tế/Chưa xác định và TC-OPT-006-*"),
+        ("FR-OPT-007", "Luồng export và kho tệp", "Ba file mẫu, đối soát số dòng/checksum, log và TC-OPT-007-*"),
+        ("FR-OPT-008", "Màn hình/DAL/API cập nhật chuyến bay", "Ảnh màn hình, DB trước/sau, phân quyền và TC-OPT-008-*"),
+        ("FR-OPT-009", "T_ACTIONHISTORY và giao diện lịch sử", "Log theo định danh chuyến bay, phân quyền và TC-OPT-009-*"),
+        ("FR-OPT-010", "Bộ phân tích/đồng bộ điện văn và dữ liệu chuyến bay", "Dữ liệu liên ngày, log ghép/chống trùng và TC-OPT-010-*"),
+        ("FR-OPT-011", "Search Permission Adv, truy vấn thống kê, drill-down và Excel", "Đối soát tổng hợp–chi tiết, file báo cáo và TC-OPT-011-*"),
+    ])
+
+    doc.add_heading("7.16. FR-OPT-012 – Cảnh báo chuyến bay không có trong phép bay/KHB ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Vị trí hiển thị", "Biểu tượng chuông tại header của các trang sử dụng ATFM_New.Master; danh sách đầy đủ tại trang Notifications."),
+        ("Loại thay đổi", "Bổ sung nguồn cảnh báo nghiệp vụ vào hạ tầng thông báo runtime hiện hữu."),
+        ("Đối tượng cảnh báo", "Chuyến bay khai thác/ngày bay không tìm thấy phép bay hoặc KHB ngày phù hợp sau đối chiếu."),
+        ("Chu kỳ cập nhật giao diện", "Header tải lại nền định kỳ 30 giây, không hiện loading toàn trang và tạm ngừng polling khi tab không hoạt động theo cơ chế hiện hữu."),
+        ("Quan hệ yêu cầu", "Kế thừa cơ chế thông báo FR-ALT-001; khác FR-OPT-002 ở chỗ FR-OPT-012 cảnh báo chuyến bay vận hành trên KHB ngày và phân phối runtime tại header."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-012.01", "Hệ thống phải chạy tác vụ đối chiếu tự động khi chuyến bay/KHB ngày được tạo, cập nhật, nhận điện văn hoặc theo lịch cấu hình để phát hiện bản ghi không có phép bay/KHB ngày phù hợp."),
+        ("FR-OPT-012.02", "Đối chiếu phải tối thiểu sử dụng số hiệu chuyến bay, ngày bay, sân bay đi/đến, thời gian và trạng thái hiệu lực/duyệt; dữ liệu phải được chuẩn hóa trước khi kết luận."),
+        ("FR-OPT-012.03", "Khi không có bản ghi phù hợp, hệ thống phải tạo thông báo nghiệp vụ có mã nguồn duy nhất, tiêu đề cảnh báo, CALLSIGN, ngày bay, FROM–TO, thời gian và lý do không khớp."),
+        ("FR-OPT-012.04", "Thông báo phải xuất hiện tại chuông header trong chu kỳ cập nhật runtime tiếp theo; badge hiển thị tổng chưa đọc, giới hạn 99+ theo giao diện hiện hữu."),
+        ("FR-OPT-012.05", "Việc tải cảnh báo phải chạy nền, không khóa thao tác nghiệp vụ, không kích hoạt overlay loading toàn trang và không tạo nhiều request đồng thời khi lượt trước chưa hoàn tất."),
+        ("FR-OPT-012.06", "Mỗi cảnh báo phải được phân phối đúng nhóm người dùng/đơn vị/sân bay có trách nhiệm và lưu trạng thái đọc độc lập theo người dùng; không dùng một STATUS chung làm mất cảnh báo của người khác."),
+        ("FR-OPT-012.07", "Một tình huống cảnh báo chỉ được tạo một bản đang hoạt động theo khóa nghiệp vụ chuyến bay–ngày–loại cảnh báo; các lượt đối chiếu lại không được làm tăng badge do bản ghi trùng."),
+        ("FR-OPT-012.08", "Người dùng phải đánh dấu đã đọc từng cảnh báo hoặc tất cả cảnh báo; thao tác chỉ thay đổi trạng thái đọc, không được coi là đã xử lý nguyên nhân nghiệp vụ."),
+        ("FR-OPT-012.09", "Nội dung cảnh báo phải cung cấp liên kết/tham số mở đúng màn hình và bản ghi chuyến bay cần kiểm tra, sau khi hệ thống xác minh người dùng có quyền truy cập."),
+        ("FR-OPT-012.10", "Khi phép bay/KHB ngày phù hợp được bổ sung, duyệt hoặc sửa, hệ thống phải đối chiếu lại và chuyển cảnh báo sang Đã xử lý; không tiếp tục phát sinh cảnh báo mới cho cùng tình huống."),
+        ("FR-OPT-012.11", "Nếu thiếu dữ liệu bắt buộc hoặc dịch vụ đối chiếu lỗi, hệ thống phải ghi nhận Chưa xác định/lỗi xử lý và không kết luận sai rằng chuyến bay không có phép bay/KHB ngày."),
+        ("FR-OPT-012.12", "Danh sách thông báo đầy đủ phải hỗ trợ trạng thái đã đọc/chưa đọc, phân trang và hiển thị thời điểm phát sinh; cảnh báo phải còn truy vết được sau khi được đánh dấu đọc hoặc xử lý."),
+        ("FR-OPT-012.13", "Hệ thống phải ghi audit cho lần phát hiện, quy tắc đối chiếu, dữ liệu nguồn, đối tượng nhận, thời điểm đọc, thời điểm xử lý và lỗi phát sinh; không ghi thông tin nhạy cảm vào nội dung header."),
+        ("FR-OPT-012.14", "Khi có thay đổi cảnh báo trong phiên hiện tại, giao diện phải hỗ trợ sự kiện làm mới ngay; polling 30 giây là cơ chế dự phòng bảo đảm hội tụ trạng thái giữa các trang."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-012-01", "Chuyến bay không có phép bay và KHB ngày phù hợp", "Tạo một cảnh báo; chuông/badge cập nhật chậm nhất trong chu kỳ runtime tiếp theo"),
+        ("TC-OPT-012-02", "Chuyến bay có phép/KHB hợp lệ", "Không phát sinh cảnh báo"),
+        ("TC-OPT-012-03", "Tác vụ đối chiếu chạy lại nhiều lần", "Không tạo thông báo trùng hoặc tăng sai badge"),
+        ("TC-OPT-012-04", "Hai người dùng thuộc phạm vi nhận", "Trạng thái đọc và badge độc lập cho từng người"),
+        ("TC-OPT-012-05", "Đánh dấu đã đọc một/tất cả", "Badge giảm đúng; trạng thái xử lý nghiệp vụ không bị thay đổi"),
+        ("TC-OPT-012-06", "Bổ sung/duyệt phép hoặc KHB phù hợp", "Cảnh báo chuyển Đã xử lý và không tái phát sai"),
+        ("TC-OPT-012-07", "Thiếu dữ liệu hoặc dịch vụ đối chiếu lỗi", "Không kết luận sai; có trạng thái/log lỗi"),
+        ("TC-OPT-012-08", "Nhấn cảnh báo bởi người có/không có quyền", "Người có quyền mở đúng bản ghi; người không có quyền bị từ chối an toàn"),
+        ("TC-OPT-012-09", "Polling khi đang thao tác hoặc tab ẩn", "Không hiện overlay; không request chồng; tab ẩn không polling không cần thiết"),
+    ])
+    doc.add_heading("7.17. Truy vết FR-OPT-012", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-012", "Bộ đối chiếu phép/KHB ngày; T_NOTIFICATION/NOTIFICATION_PKG; Notification.ashx; ATFM_New.Master; trang Notifications", "Dữ liệu mẫu khớp/không khớp, ảnh chuông và badge, trạng thái theo user, audit, log polling và TC-OPT-012-*"),
+    ])
+
+    doc.add_heading("7.18. FR-OPT-013 – Hỗ trợ hủy phép bay quốc tế/quốc nội", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Tool/ImportsPermSC_LD_V2.aspx?Menu_ID=991 – HỦY CHUYẾN."),
+        ("Loại nghiệp vụ", "Nhập danh sách chuyến cần hủy, đối chiếu phép bay SC và xác nhận áp dụng hủy có kiểm soát."),
+        ("Phạm vi", "Hỗ trợ chuyến quốc tế/quốc nội theo dữ liệu phép SC và quy tắc Callsign–FROM–TO–ngày–thứ khai thác; không sửa luồng import T_PERMSC_IMP/PERM_IMP_PKG cũ."),
+        ("Kho staging", "T_PERMSC_CANCEL_V2 riêng biệt, định danh theo IMPORT_BATCH_ID và CREATED_BY."),
+        ("Package", "PERM_IMP_V2_PKG: INSERT_CANCELLATION, SEARCH_PENDING, kiểm tra/đối chiếu, xóa mềm và APPLY_CANCELLATION."),
+        ("Trạng thái", "PENDING, ERROR, PROCESSING, DONE, CANCELLED."),
+    ])
+
+    doc.add_heading("7.18.1. Tiếp nhận và chuẩn hóa danh sách hủy", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-013.01", "Màn hình phải hỗ trợ dán bảng từ Word/Excel hoặc nhập nội dung theo các mẫu: tự nhận diện, có loại tàu bay, không có loại tàu bay và dữ liệu đã chuẩn hóa."),
+        ("FR-OPT-013.02", "Hệ thống phải nhận diện tiêu đề nhiều hàng/ô gộp, bỏ qua dòng tiêu đề rời và ánh xạ các trường Number, thời hạn, Daily, Callsign, FROM, TO, ETD, ETA, Craft, Remark, Purpose."),
+        ("FR-OPT-013.03", "Trước khi staging, dữ liệu phải chuẩn hóa Callsign, mã IATA sang ICAO, ngày, thứ khai thác, giờ HHMM và ký hiệu ngày hôm sau '+'; OPER được xác định từ Callsign bằng quy tắc GetOper."),
+        ("FR-OPT-013.04", "Các trường bắt buộc, định dạng ngày/giờ, sân bay, Callsign và thời hạn phải được kiểm tra ở cả trình duyệt và máy chủ; dòng lỗi không được chọn để đưa vào staging."),
+        ("FR-OPT-013.05", "Người dùng phải xem trước, chọn/bỏ chọn từng dòng hoặc tất cả dòng hợp lệ; chỉ dòng được chọn mới được đưa vào danh sách hủy."),
+        ("FR-OPT-013.06", "Nếu số phép đã tồn tại, hệ thống phải hiển thị PERMNBR_ID liên quan và yêu cầu người dùng xác nhận trước khi tiếp tục; xác nhận phía client không thay thế kiểm tra máy chủ."),
+    ])
+
+    doc.add_heading("7.18.2. Staging, tìm lại và kiểm tra phép", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-013.07", "Mỗi lượt nhập phải tạo IMPORT_BATCH_ID duy nhất và lưu dòng vào T_PERMSC_CANCEL_V2 với CREATED_BY, CREATED_AT và PROCESS_STATUS=PENDING."),
+        ("FR-OPT-013.08", "Staging hủy V2 không được đọc/ghi T_PERMSC_IMP; dữ liệu của người dùng khác hoặc batch khác không được hiển thị/xử lý trái quyền."),
+        ("FR-OPT-013.09", "Sau khi insert, hệ thống phải đối chiếu từng dòng với phép SC theo Callsign, FROM/TO đã chuẩn hóa, khoảng ngày giao nhau, từng thứ khai thác và các giai đoạn chi tiết của phép."),
+        ("FR-OPT-013.10", "Dòng tìm thấy phép phù hợp giữ PENDING; dòng không tìm thấy hoặc dữ liệu không hợp lệ chuyển ERROR kèm thông báo cụ thể, không được phép xác nhận hủy."),
+        ("FR-OPT-013.11", "Người dùng phải tìm lại danh sách PENDING/ERROR của chính mình, chọn dòng để Kiểm tra lại, tiếp tục phiên xử lý sau khi tải lại hoặc đăng nhập lại."),
+        ("FR-OPT-013.12", "Chức năng Xóa dòng đã chọn/Xóa chuyến hủy phải chuyển PENDING/ERROR sang CANCELLED theo người dùng, không xóa vật lý dấu vết staging đã phát sinh."),
+    ])
+
+    doc.add_heading("7.18.3. Xác nhận và áp dụng hủy chuyến", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-013.13", "Nút XÁC NHẬN HỦY CHUYẾN chỉ được bật khi danh sách đã kiểm tra có dòng PENDING; người dùng phải xác nhận cảnh báo trước khi thực hiện."),
+        ("FR-OPT-013.14", "Máy chủ phải kiểm tra lại quyền, chủ sở hữu staging, trạng thái và sự tồn tại của phép ngay trước khi áp dụng; không tin dữ liệu định danh phép do trình duyệt gửi."),
+        ("FR-OPT-013.15", "Khi bắt đầu, dòng phải chuyển nguyên tử từ PENDING sang PROCESSING để chống hai request xử lý cùng bản ghi."),
+        ("FR-OPT-013.16", "Hệ thống phải áp dụng hủy đúng chuyến/đoạn ngày/thứ khai thác của phép được đối chiếu, không hủy nhầm chuyến cùng Callsign ở giai đoạn khác."),
+        ("FR-OPT-013.17", "Sau khi hủy thành công, dòng chuyển DONE, lưu PROCESSED_AT, người xử lý và liên kết bản ghi phép; giao diện hiển thị danh sách chuyến đã hủy."),
+        ("FR-OPT-013.18", "Nếu một dòng lỗi, trạng thái phải trở về ERROR/PENDING theo chính sách với ERROR_MESSAGE; không được để PROCESSING vô thời hạn hoặc báo thành công sai."),
+        ("FR-OPT-013.19", "Thao tác phải idempotent: gửi lại cùng staging DONE không hủy lần hai; batch trùng nghiệp vụ phải được phát hiện/cảnh báo."),
+        ("FR-OPT-013.20", "Kết quả phải nêu tổng dòng yêu cầu, thành công, lỗi, bị bỏ qua; sau thành công giao diện có thể tải lại về trạng thái nhập mới, còn lỗi phải giữ dữ liệu để kiểm tra."),
+    ])
+
+    doc.add_heading("7.18.4. Quy tắc, bảo mật và vận hành", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("BR-OPT-013.01", "Quốc tế/quốc nội được xác định từ hành trình/danh mục sân bay, không làm thay đổi quy tắc tìm phép SC cốt lõi."),
+        ("BR-OPT-013.02", "ETA để trống chỉ được chấp nhận khi quy tắc phép cho phép; ETA sai định dạng như giá trị hai chữ số phải bị từ chối."),
+        ("BR-OPT-013.03", "Khoảng ngày và DAILY của dòng hủy phải giao với ít nhất một chi tiết phép; hủy chỉ áp dụng phần giao hợp lệ."),
+        ("NFR-OPT-013.01", "Mọi API/PageMethod phải yêu cầu phiên hợp lệ, resolve người dùng từ session/forms authentication và không nhận CREATED_BY từ client."),
+        ("NFR-OPT-013.02", "Phải có index theo user–status, batch và khóa đối chiếu; tìm danh sách chờ và xác nhận không được quét toàn bảng ở tải thực tế."),
+        ("NFR-OPT-013.03", "Mọi thay đổi phép và trạng thái staging phải được audit; script triển khai/rollback phải kiểm tra đúng schema ATFM và dependency."),
+    ])
+
+    doc.add_heading("7.18.5. Tiêu chí kiểm thử và truy vết", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-013-01", "Dán bảng Word/Excel có tiêu đề nhiều hàng, có/không Craft", "Nhận diện đúng cột và dòng dữ liệu"),
+        ("TC-OPT-013-02", "IATA, Callsign chưa chuẩn hóa và ETA có +1", "Chuyển đúng ICAO/Callsign và dấu '+'"),
+        ("TC-OPT-013-03", "ETA hoặc ngày/DAILY không hợp lệ", "Dòng ERROR, không staging/xác nhận sai"),
+        ("TC-OPT-013-04", "Phép chia nhiều giai đoạn và khoảng ngày giao nhau", "Tìm/hủy đúng chi tiết phép"),
+        ("TC-OPT-013-05", "Không tìm thấy phép phù hợp", "ERROR có lý do, không cho Apply"),
+        ("TC-OPT-013-06", "Tải lại trang/tìm danh sách chờ", "Khôi phục đúng PENDING/ERROR của người dùng"),
+        ("TC-OPT-013-07", "Hai người dùng/batch", "Không xem hoặc xử lý dữ liệu của nhau"),
+        ("TC-OPT-013-08", "Hai request Apply đồng thời", "Mỗi staging chỉ xử lý một lần"),
+        ("TC-OPT-013-09", "Apply thành công rồi gửi lại", "Không hủy lần hai; trạng thái vẫn DONE"),
+        ("TC-OPT-013-10", "Xóa dòng PENDING/ERROR", "Chuyển CANCELLED, không còn trong danh sách chờ"),
+        ("TC-OPT-013-11", "Lỗi giữa quá trình Apply", "Không để PROCESSING treo; có ERROR_MESSAGE/audit"),
+        ("TC-OPT-013-12", "Chuyến quốc nội và quốc tế hợp lệ", "Cả hai được hủy đúng phép, đúng giai đoạn"),
+    ])
+    table(doc, ["Yêu cầu", "Thành phần", "Bằng chứng"], [
+        ("FR-OPT-013", "ImportsPermSC_LD_V2.aspx/.js/.cs; T_PERMSC_CANCEL_V2; PERM_IMP_V2_PKG", "Ảnh ba bước, dữ liệu staging/trạng thái, phép trước–sau, audit và TC-OPT-013-*"),
+    ])
+
+    doc.add_heading("7.19. FR-OPT-014 – Tối ưu hiệu năng ExportBravo dưới 3 phút", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Chức năng hiện hữu", "ExportBravo tại CalendarFlight/CanlendarFlights.aspx; dữ liệu đích T_DAY_FLIGHTS_BRAVO."),
+        ("Mục tiêu SLA", "Hoàn thành dưới 180 giây cho một ngày khai thác ở tải nghiệm thu; mục tiêu nội bộ nên ≤150 giây để có biên an toàn."),
+        ("Hướng tối ưu", "Xử lý theo tập qua BRAVO_EXPORT_PKG.COPY_BRAVO_FLIGHT, tránh gọi sao chép/message/billing theo từng dòng và sử dụng index FLIGHTDATE."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-014.01", "Người có quyền phải khởi chạy ExportBravo theo ngày bay và nhận trạng thái đang chạy, thành công hoặc thất bại mà không phải thao tác lại nhiều lần."),
+        ("FR-OPT-014.02", "Luồng export phải xóa/thay dữ liệu đích đúng ngày rồi chèn theo tập trong một giao dịch được kiểm soát; không thực hiện truy vấn phụ lặp cho từng chuyến."),
+        ("FR-OPT-014.03", "Chỉ xuất dữ liệu hợp lệ thuộc ngày chọn, loại trừ NoPerm/NOPERM và bản hủy theo quy tắc hiện hành; số dòng nguồn–đích phải đối soát được."),
+        ("FR-OPT-014.04", "Trong bộ dữ liệu nghiệm thu đại diện mức tải cao điểm, thời gian từ lúc xác nhận đến khi dữ liệu Bravo sẵn sàng phải nhỏ hơn 180 giây ở ít nhất 3 lần chạy liên tiếp."),
+        ("FR-OPT-014.05", "Hệ thống phải chống chạy đồng thời cùng ngày; chạy lại sau thành công phải idempotent, không nhân đôi dữ liệu."),
+        ("FR-OPT-014.06", "Nếu lỗi, giao dịch phải rollback hoặc để dữ liệu ở trạng thái nhất quán; không báo thành công một phần."),
+        ("FR-OPT-014.07", "Phải ghi ngày export, người dùng, thời gian bắt đầu/kết thúc, số dòng, kết quả và lỗi; truy vấn phải có execution plan/index phù hợp."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-014-01", "Ba lần export ngày tải cao điểm", "Mỗi lần <180 giây, số dòng đúng"),
+        ("TC-OPT-014-02", "Chạy lại cùng ngày", "Không trùng; dữ liệu đích nhất quán"),
+        ("TC-OPT-014-03", "Lỗi giữa quá trình", "Rollback/không có dữ liệu nửa chừng; log rõ lỗi"),
+        ("TC-OPT-014-04", "Hai yêu cầu đồng thời cùng ngày", "Một yêu cầu được xử lý, yêu cầu còn lại bị chặn/thông báo"),
+    ])
+
+    doc.add_heading("7.20. FR-OPT-015 – Chức năng F8 ép dòng trong Calendar Accepted", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Chức năng hiện hữu", "Calendar/Calendar Accepted; hành vi F8 trong CanlendarFlights.aspx dùng dòng và ô đang chọn."),
+        ("Mục tiêu", "Cho phép sao chép/ép nhanh giá trị hoặc dòng kế hoạch đã Accepted để hiệu chỉnh có kiểm soát, không làm mất bản gốc."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-015.01", "Hệ thống phải nhận phím F8 bằng key/code/keyCode 119 và chặn hành vi mặc định của trình duyệt khi con trỏ đang ở bảng Calendar Accepted."),
+        ("FR-OPT-015.02", "F8 chỉ tác động trên dòng/ô đang được chọn; nếu không có lựa chọn hợp lệ phải thông báo và không thay đổi dữ liệu."),
+        ("FR-OPT-015.03", "Dòng được ép/sao chép phải kế thừa các trường được phép từ dòng nguồn, có định danh tạm mới và được đánh dấu là thêm mới/cần lưu; không sao chép khóa DB, trạng thái duyệt hoặc audit."),
+        ("FR-OPT-015.04", "Các trường ngày bay, STT và trường phụ thuộc phải được tính/nhập lại theo quy tắc; dữ liệu bắt buộc phải validate trước khi lưu."),
+        ("FR-OPT-015.05", "F8 không được tự động ghi DB; người dùng phải xác nhận lưu và có quyền chỉnh sửa Calendar Accepted."),
+        ("FR-OPT-015.06", "Lưu phải chống trùng chuyến bay và ghi lịch sử dòng nguồn, dòng mới, người dùng, thời gian và giá trị thay đổi."),
+        ("FR-OPT-015.07", "Hủy hoặc tải lại trước khi lưu phải loại bỏ dòng tạm mà không ảnh hưởng dòng Accepted nguồn."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-015-01", "F8 tại dòng hợp lệ", "Tạo dòng tạm đúng trường cho phép, focus chuyển hợp lý"),
+        ("TC-OPT-015-02", "F8 không chọn dòng/ngoài bảng", "Không thay đổi dữ liệu"),
+        ("TC-OPT-015-03", "Lưu dòng trùng hoặc thiếu trường", "Bị chặn và nêu rõ lỗi"),
+        ("TC-OPT-015-04", "Hủy dòng tạm", "Dòng nguồn giữ nguyên; không có bản ghi DB mới"),
+    ])
+
+    doc.add_heading("7.21. FR-OPT-016 – Tối ưu Gen KHB ngày hôm sau ra AFTN dưới 3 phút", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu SLA", "Sinh đầy đủ KHB ngày D+1 thành điện văn/đầu ra AFTN dưới 180 giây ở tải nghiệm thu."),
+        ("Phạm vi", "Chọn dữ liệu KHB đã đủ điều kiện, phân nhóm/đánh part, dựng nội dung và lưu hàng chờ gửi; không đồng nhất thời gian chờ mạng AMHS/AFTN bên ngoài với thời gian sinh."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-016.01", "Hệ thống phải tự xác định ngày D+1 theo ngày nghiệp vụ/múi giờ cấu hình và chỉ lấy KHB đã duyệt, còn hiệu lực."),
+        ("FR-OPT-016.02", "Việc lấy dữ liệu, phân nhóm HVN/LD/OF hoặc nhóm cấu hình và dựng message phải xử lý theo tập, tránh truy vấn/call lặp từng dòng."),
+        ("FR-OPT-016.03", "Nội dung, địa chỉ nhận, header, part number, thứ tự chuyến và giới hạn kích thước điện văn phải tuân theo mẫu AFTN hiện hành."),
+        ("FR-OPT-016.04", "Với bộ dữ liệu ngày cao điểm, từ lúc xác nhận đến khi toàn bộ message sẵn sàng trong hàng chờ gửi phải <180 giây qua 3 lần chạy liên tiếp."),
+        ("FR-OPT-016.05", "Chạy lại cùng ngày phải có lựa chọn thay thế bản chưa gửi hoặc giữ phiên bản; không tạo message trùng ngoài ý muốn."),
+        ("FR-OPT-016.06", "Nếu phát hiện dữ liệu thiếu/sai, hệ thống phải chỉ rõ chuyến lỗi; chính sách dừng toàn bộ hay bỏ qua phải cấu hình và thể hiện trong kết quả."),
+        ("FR-OPT-016.07", "Phải ghi thời gian, ngày KHB, số chuyến, số part/message, người tạo, checksum/phiên bản và lỗi; hỗ trợ rollback bản sinh chưa phát."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-016-01", "Ba lần sinh ngày D+1 tải cao điểm", "Mỗi lần <180 giây, đủ chuyến/part"),
+        ("TC-OPT-016-02", "Chạy lại khi message chưa gửi", "Không trùng; phiên bản/thay thế đúng chính sách"),
+        ("TC-OPT-016-03", "Một chuyến thiếu dữ liệu bắt buộc", "Nêu đúng lỗi và xử lý đúng chính sách"),
+        ("TC-OPT-016-04", "Đối soát message với KHB duyệt", "Số chuyến, nhóm, thứ tự và nội dung khớp"),
+    ])
+
+    doc.add_heading("7.22. FR-OPT-017 – Mở rộng phạm vi tra cứu INBOX trên 7 ngày", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Receive_LogFile/Inbox.aspx?Menu_ID=47; MESSAGE_PKG.GetInboxBySearchLogFile."),
+        ("Mục tiêu", "Cho phép người dùng chủ động tra cứu khoảng ngày lớn hơn 7 ngày mà vẫn phân trang, ổn định và an toàn."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-017.01", "Hệ thống phải cho nhập Từ ngày/Đến ngày, bao gồm trọn ngày kết thúc và cho phép khoảng lớn hơn 7 ngày trong giới hạn cấu hình INBOX_SEARCH_MAX_DAYS."),
+        ("FR-OPT-017.02", "Từ ngày không được lớn hơn Đến ngày; vượt giới hạn cấu hình phải bị chặn với thông báo rõ, không tự cắt khoảng ngày."),
+        ("FR-OPT-017.03", "Tra cứu phải kết hợp được số điện văn, origin và content; dùng bind parameter và điều kiện ngày dạng >= from, < to+1 để tận dụng index."),
+        ("FR-OPT-017.04", "Kết quả phải phân trang ổn định, trả tổng bản ghi và không tải toàn bộ dữ liệu dài ngày về trình duyệt."),
+        ("FR-OPT-017.05", "Hệ thống phải chống gửi request trùng khi lượt trước đang chạy và hiển thị trạng thái tải/lỗi phù hợp."),
+        ("FR-OPT-017.06", "Điện văn trong thời hạn lưu phải xem được nội dung/chi tiết theo quyền; yêu cầu này không tự thay đổi chính sách retention của FR-OPT-001."),
+        ("FR-OPT-017.07", "Phải kiểm thử hiệu năng với khoảng 8, 30 và giới hạn tối đa ngày; log thời gian, số dòng quét/trả về và timeout."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-017-01", "Tra cứu 8 và 30 ngày", "Trả đúng dữ liệu/tổng/phân trang"),
+        ("TC-OPT-017-02", "Khoảng vượt giới hạn", "Bị chặn rõ ràng"),
+        ("TC-OPT-017-03", "Ngày kết thúc có điện văn 23:59", "Điện văn được trả về"),
+        ("TC-OPT-017-04", "Nhấn Search liên tục", "Chỉ một request hoạt động, không trùng kết quả"),
+    ])
+
+    doc.add_heading("7.23. FR-OPT-018 – Tự động cập nhật khi sửa KHB đã build", level=2)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-018.01", "Khi KHB đã build bị sửa trường ảnh hưởng đầu ra, hệ thống phải phát hiện thay đổi và đánh dấu bản build hiện tại là cần cập nhật."),
+        ("FR-OPT-018.02", "Các trường ảnh hưởng tối thiểu gồm CALLSIGN, ngày, FROM/TO, ETD/ETA, craft, purpose, VIA, remark và trạng thái hủy/duyệt."),
+        ("FR-OPT-018.03", "Nếu đầu ra chưa phát, hệ thống phải tự build lại/thay thế theo cấu hình; nếu đã phát, phải tạo phiên bản sửa đổi và yêu cầu quyền/xác nhận phù hợp."),
+        ("FR-OPT-018.04", "Cập nhật phải theo tập thay đổi, idempotent và không làm mất KHB gốc hoặc bản build trước; mọi phiên bản phải truy vết được."),
+        ("FR-OPT-018.05", "Nếu build lại lỗi, dữ liệu sửa vẫn được lưu theo giao dịch nghiệp vụ nhưng trạng thái đồng bộ phải là Lỗi/Chờ xử lý, không báo đầu ra đã cập nhật."),
+        ("FR-OPT-018.06", "Giao diện phải hiển thị trạng thái Đồng bộ/Chờ build/Lỗi/Đã cập nhật và thời điểm phiên bản mới nhất."),
+        ("FR-OPT-018.07", "Phải ghi người sửa, dữ liệu trước/sau, build bị ảnh hưởng, phiên bản mới và kết quả phát."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-018-01", "Sửa KHB đã build nhưng chưa phát", "Tự thay bản build, không trùng"),
+        ("TC-OPT-018-02", "Sửa bản đã phát", "Tạo phiên bản sửa đổi đúng quy trình"),
+        ("TC-OPT-018-03", "Build lại lỗi", "Hiển thị Lỗi/Chờ xử lý; không báo đồng bộ"),
+        ("TC-OPT-018-04", "Sửa trường không ảnh hưởng", "Không build lại không cần thiết"),
+    ])
+
+    doc.add_heading("7.24. FR-OPT-019 – Cảnh báo chuyến bay cấp sai ngày bay so với thực tế", level=2)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-019.01", "Hệ thống phải so sánh ngày được cấp trong phép/KHB với ngày bay thực tế xác định từ điện văn, FPL và mốc thời gian khai thác đã chuẩn hóa."),
+        ("FR-OPT-019.02", "Quy tắc phải xử lý chuyến qua đêm, ETA có dấu +, cửa sổ 120 giờ và đổi ngày/tháng/năm trước khi kết luận sai ngày."),
+        ("FR-OPT-019.03", "Khi chênh ngày ngoài quy tắc cho phép, hệ thống phải tạo cảnh báo nêu CALLSIGN, ngày cấp, ngày thực tế, FROM–TO và nguồn xác định."),
+        ("FR-OPT-019.04", "Cảnh báo phải hiển thị tại dòng chuyến bay và/hoặc chuông runtime theo phạm vi người nhận, chống trùng theo chuyến–ngày–loại cảnh báo."),
+        ("FR-OPT-019.05", "Thiếu hoặc mâu thuẫn nguồn thời gian phải trả Chưa xác định, không tự sửa ngày hoặc kết luận sai."),
+        ("FR-OPT-019.06", "Người có quyền được xác nhận ngoại lệ hoặc sửa dữ liệu; hệ thống phải tính lại và đóng cảnh báo khi hai ngày phù hợp."),
+        ("FR-OPT-019.07", "Phải lưu nguồn bằng chứng, quy tắc, ngày trước/sau, người xử lý và thời điểm."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-019-01", "Ngày cấp trùng ngày thực tế", "Không cảnh báo"),
+        ("TC-OPT-019-02", "Sai một ngày không thuộc trường hợp qua đêm", "Cảnh báo đúng nội dung"),
+        ("TC-OPT-019-03", "Chuyến qua đêm/ETA+ hợp lệ", "Không cảnh báo sai"),
+        ("TC-OPT-019-04", "Sửa ngày về phù hợp", "Đóng cảnh báo và có audit"),
+    ])
+
+    doc.add_heading("7.25. FR-OPT-020 – Bổ sung trường Mục đích chuyến bay trong KHB ngày", level=2)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-020.01", "KHB ngày phải có trường PURPOSE/Mục đích chuyến bay tại màn hình thêm, sửa, xem, duyệt và danh sách phù hợp."),
+        ("FR-OPT-020.02", "Giá trị phải chọn/đối chiếu từ danh mục M_FLY_PURPOSE theo PURPOSE_CODE; không lưu tên tự do khi quy trình yêu cầu mã chuẩn."),
+        ("FR-OPT-020.03", "Quy định bắt buộc/tùy chọn phải theo loại chuyến bay; giá trị không hợp lệ phải bị chặn trước khi lưu/duyệt."),
+        ("FR-OPT-020.04", "PURPOSE phải được truyền nhất quán qua API/package, lưu vào KHB ngày và giữ khi Accepted, finish, đổi ngày hoặc đồng bộ."),
+        ("FR-OPT-020.05", "Trường phải có trong tìm kiếm/lọc, lịch sử trước–sau, export Bravo, báo cáo và điện văn/đầu ra nơi mẫu nghiệp vụ yêu cầu."),
+        ("FR-OPT-020.06", "Dữ liệu cũ chưa có PURPOSE phải hiển thị Chưa xác định/để trống theo chính sách; không tự gán sai. Backfill nếu có phải có mapping và báo cáo đối soát."),
+        ("FR-OPT-020.07", "Thay đổi PURPOSE trên KHB đã build phải kích hoạt cơ chế FR-OPT-018 và được audit đầy đủ."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-OPT-020-01", "Tạo/sửa với PURPOSE hợp lệ", "Lưu, hiển thị và truy xuất đúng mã"),
+        ("TC-OPT-020-02", "PURPOSE không có trong danh mục", "Bị chặn"),
+        ("TC-OPT-020-03", "KHB đi qua Accepted/finish/export", "PURPOSE không bị mất hoặc đổi"),
+        ("TC-OPT-020-04", "Sửa PURPOSE của KHB đã build", "Build được đánh dấu/cập nhật theo FR-OPT-018"),
+    ])
+
+    doc.add_heading("7.26. Truy vết FR-OPT-014…FR-OPT-020", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-014", "CanlendarFlights, BRAVO_EXPORT_PKG, T_DAY_FLIGHTS_BRAVO", "Log 3 lượt <180 giây, execution plan, đối soát nguồn–đích"),
+        ("FR-OPT-015", "Calendar Accepted và xử lý phím F8", "Video/ảnh thao tác, DB trước–sau, audit và TC-OPT-015-*"),
+        ("FR-OPT-016", "P_FLY/MESSAGE_PKG, T_PLAN_MESSAGE, hàng chờ AFTN", "Log 3 lượt <180 giây, đối soát KHB–message"),
+        ("FR-OPT-017", "Inbox.aspx, GetInboxBySearchLogFile", "Kết quả 8/30/max ngày, plan/index và phân trang"),
+        ("FR-OPT-018", "KHB ngày, build/version/message", "Lịch sử sửa, trạng thái build và phiên bản trước/sau"),
+        ("FR-OPT-019", "Bộ đối chiếu ngày và Notification", "Dữ liệu ngày đúng/sai/qua đêm, cảnh báo và audit"),
+        ("FR-OPT-020", "M_FLY_PURPOSE, KHB ngày, API/package/export", "Danh mục, DB, màn hình, file/điện văn và lịch sử"),
+    ])
+
+
+def add_opt024_specification(doc):
+    doc.add_heading("7.27. FR-OPT-024 – Theo dõi kế hoạch bay hằng ngày với cập nhật liên tục", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "FinishFlights/ListFlightOnMess.aspx?Menu_ID=948 – Danh sách chuyến bay trong điện văn."),
+        ("Mục tiêu", "Theo dõi KHB ngày theo từng nhóm điện văn, lọc ra danh sách chuyến bay được điện văn tham chiếu và nhận biết tập chuyến thay đổi/bổ sung so với kế hoạch đã khai thác."),
+        ("Nguồn dữ liệu", "T_PLAN_MESSAGE theo FLIGHTDATE, MESS_TYPE, CONTENT và LISTFLIGHTID; đối chiếu chi tiết chuyến bay tại T_DAY_FLIGHTS theo FLIGHT_ID; danh mục loại tàu bay M_CRAFT_TYPE."),
+        ("Đối tượng sử dụng", "Người khai thác, cán bộ trực và người lập/kiểm tra KHB ngày có quyền truy cập Menu_ID=948."),
+        ("Tính chất", "Màn hình chỉ đọc; dữ liệu được lấy lại từ nguồn mới nhất khi tra cứu/chuyển trang. Phiên bản hiện tại không tự polling theo chu kỳ."),
+    ])
+
+    doc.add_heading("7.27.1. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-024.01", "Hệ thống phải cho phép chọn Ngày điện văn theo định dạng DD-MM-YYYY; ngày không hợp lệ phải bị từ chối trước khi gửi yêu cầu."),
+        ("FR-OPT-024.02", "Người dùng phải chọn được loại điện văn HVN MESSAGE, LANDING FLIGHTS, OVER FLIGHTS, QS MESSAGE hoặc AIRSPACE MESSAGE."),
+        ("FR-OPT-024.03", "Hệ thống phải hỗ trợ ba chế độ nội dung: Kế hoạch 15H – điện văn không chứa chuỗi THONG BAO; Bổ sung – điện văn có chứa chuỗi THONG BAO; Tất cả – không lọc theo nội dung này."),
+        ("FR-OPT-024.04", "Hệ thống phải cho phép lọc bổ sung theo sân bay đi, sân bay đến và hãng khai thác; so sánh không phân biệt chữ hoa/thường sau khi loại bỏ khoảng trắng đầu/cuối."),
+        ("FR-OPT-024.05", "Với mỗi điện văn phù hợp, hệ thống phải tách danh sách FLIGHT_ID từ T_PLAN_MESSAGE.LISTFLIGHTID theo dấu phẩy; chỉ chấp nhận token số hợp lệ."),
+        ("FR-OPT-024.06", "Các FLIGHT_ID lặp lại giữa nhiều điện văn/part phải được hợp nhất để mỗi chuyến bay chỉ xuất hiện một lần trong kết quả."),
+        ("FR-OPT-024.07", "Hệ thống phải đối chiếu FLIGHT_ID với T_DAY_FLIGHTS và chỉ hiển thị chuyến bay tồn tại trong KHB ngày; token không hợp lệ hoặc không đối chiếu được không được làm hỏng toàn bộ truy vấn."),
+        ("FR-OPT-024.08", "Danh sách phải hiển thị tối thiểu STT, hãng khai thác, Callsign, đăng ký, loại tàu bay, mục đích, loại phép, sân bay đi/đến, ngày bay, ETD, ETA, đường bay và ghi chú."),
+        ("FR-OPT-024.09", "Kết quả phải thể hiện tổng số chuyến bay và tiêu chí đang áp dụng; danh sách được sắp xếp ổn định theo part, Callsign, FROM, TO và FLIGHT_ID."),
+        ("FR-OPT-024.10", "Người dùng phải chọn được 50, 100, 200 hoặc 500 dòng/trang và chuyển trang Trước/Sau; tổng bản ghi phải giữ nguyên theo cùng bộ lọc."),
+        ("FR-OPT-024.11", "Mỗi lần nhấn Search, đổi số dòng hoặc chuyển trang, hệ thống phải truy vấn lại dữ liệu hiện hành để phản ánh điện văn/KHB vừa được cập nhật; không dùng kết quả cache như dữ liệu mới."),
+        ("FR-OPT-024.12", "Chức năng Export Excel phải xuất toàn bộ tập kết quả theo bộ lọc, không chỉ trang đang xem; file phải gắn loại điện văn và ngày trong tên file."),
+        ("FR-OPT-024.13", "Trong thời gian tải, các nút Search/Export phải được vô hiệu hóa để tránh request chồng; khi không có dữ liệu phải hiển thị trạng thái rỗng rõ ràng."),
+        ("FR-OPT-024.14", "Khi API/package trả mã khác 00 hoặc lỗi kết nối, hệ thống phải báo lỗi, đặt tổng số về 0 và không hiển thị kết quả cũ như dữ liệu mới."),
+        ("FR-OPT-024.15", "Màn hình phải nhận tham số ngày, loại điện văn và chế độ nội dung từ URL để mở đúng ngữ cảnh; khi có ngày/loại hợp lệ hệ thống tự thực hiện tra cứu."),
+    ])
+
+    doc.add_heading("7.27.2. Quy tắc nghiệp vụ và giới hạn", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-024.01", "Danh sách chuyến bay thay đổi được suy ra từ tập FLIGHT_ID do điện văn tham chiếu; chế độ Bổ sung dùng dấu hiệu nội dung THONG BAO theo quy tắc hiện hành."),
+        ("BR-OPT-024.02", "Chức năng không tự so sánh giá trị trước–sau của từng trường chuyến bay; nếu cần nêu chi tiết trường thay đổi phải có nguồn phiên bản/lịch sử riêng."),
+        ("BR-OPT-024.03", "PART được tổng hợp tất cả trong truy vấn hiện tại; trường hợp một chuyến xuất hiện ở nhiều part chỉ hiển thị một dòng."),
+        ("BR-OPT-024.04", "Cập nhật liên tục trong phạm vi hiện tại là lấy dữ liệu mới nhất theo thao tác tra cứu; tự động polling/đẩy sự kiện chỉ được coi là đã đáp ứng khi được triển khai và có chỉ tiêu chu kỳ riêng."),
+    ])
+
+    doc.add_heading("7.27.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-024.01", "Màn hình và API phải yêu cầu phiên đăng nhập/quyền menu hợp lệ; truy vấn phải dùng tham số, không ghép chuỗi dữ liệu người dùng."),
+        ("NFR-OPT-024.02", "Phân trang phải thực hiện tại Oracle; kích thước trang bị giới hạn từ 1 đến 100.000, trong đó giao diện tra cứu tối đa 500 dòng/trang."),
+        ("NFR-OPT-024.03", "Truy vấn phải có kế hoạch thực thi/index phù hợp cho FLIGHTDATE, MESS_TYPE và FLIGHT_ID; thời gian phản hồi cần được đo trên bộ dữ liệu cao điểm và chốt ngưỡng khi nghiệm thu."),
+        ("NFR-OPT-024.04", "Dữ liệu hiển thị và xuất file phải được encode an toàn; lỗi kỹ thuật chi tiết được ghi log nhưng không để lộ thông tin nhạy cảm trên giao diện."),
+    ])
+
+    doc.add_heading("7.27.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-024-01", "Tra HVN MESSAGE/Kế hoạch 15H theo ngày có dữ liệu", "Chỉ hiển thị chuyến trong điện văn không chứa THONG BAO và đối chiếu được KHB ngày."),
+        ("TC-OPT-024-02", "Chọn Bổ sung", "Chỉ hiển thị tập chuyến được tham chiếu bởi điện văn có THONG BAO."),
+        ("TC-OPT-024-03", "Chọn Tất cả", "Kết quả là hợp của hai nhóm nội dung, không lặp FLIGHT_ID."),
+        ("TC-OPT-024-04", "Một FLIGHT_ID xuất hiện trong nhiều điện văn/part", "Danh sách chỉ có một dòng cho chuyến bay."),
+        ("TC-OPT-024-05", "LISTFLIGHTID có token rỗng, phi số hoặc ID không tồn tại", "Bỏ qua token không hợp lệ; các chuyến hợp lệ vẫn hiển thị."),
+        ("TC-OPT-024-06", "Lọc FROM, TO và OPER", "Mọi dòng thỏa đồng thời các điều kiện đã nhập."),
+        ("TC-OPT-024-07", "Điện văn/KHB được cập nhật sau lần tra đầu", "Nhấn Search lại hiển thị tập dữ liệu mới nhất và tổng số tương ứng."),
+        ("TC-OPT-024-08", "Chuyển trang và đổi kích thước trang", "Không lặp/thiếu bản ghi, STT và tổng số đúng."),
+        ("TC-OPT-024-09", "Export khi kết quả nhiều hơn một trang", "File chứa đủ toàn bộ bản ghi theo bộ lọc và tên file đúng quy ước."),
+        ("TC-OPT-024-10", "Ngày sai định dạng/API lỗi/kết quả rỗng", "Hệ thống hiển thị đúng thông báo, không giữ dữ liệu cũ như kết quả mới."),
+    ])
+
+    doc.add_heading("7.28. Truy vết FR-OPT-024", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-024", "ListFlightOnMess.aspx; MESSAGE_FLIGHT_PKG.GET_FLIGHTS_ON_MESSAGE; T_PLAN_MESSAGE; T_DAY_FLIGHTS; M_CRAFT_TYPE", "Ảnh bộ lọc/kết quả, điện văn và LISTFLIGHTID nguồn, bản ghi KHB đối chiếu, file Excel, log API/package và TC-OPT-024-*"),
+    ])
+
+
+def add_opt030_specification(doc):
+    doc.add_heading("7.29. FR-OPT-030 – Mở rộng tìm kiếm trên giao diện Daily Military Report", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "FinishFlights/ListFinishedFlightsMilitaryReport.aspx?Menu_ID=863 – Daily Military Report."),
+        ("Mục tiêu", "Cho phép người khai thác tra cứu linh hoạt danh sách KHB quân sự đã được duyệt theo khoảng ngày, khung giờ và nhiều thuộc tính nghiệp vụ; phục vụ xem, đối soát và trích xuất báo cáo."),
+        ("Nguồn dữ liệu", "T_FINISHFLIGHTS_MILITARY thông qua A_TEST_SEARCH.GET_FINISHED_FLIGHTS_MINITARY."),
+        ("Phạm vi dữ liệu", "Chỉ hiển thị bản ghi đã Accepted với ISACCEPTED = 1; chức năng báo cáo không thay đổi dữ liệu nguồn."),
+        ("Đối tượng sử dụng", "Người khai thác và cán bộ lập/kiểm tra báo cáo có quyền truy cập Menu_ID=863."),
+    ])
+
+    doc.add_heading("7.29.1. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-030.01", "Hệ thống phải cho phép chọn Từ ngày và Đến ngày bằng bộ chọn ngày; mặc định theo khoảng ngày nghiệp vụ được cấu hình trên màn hình."),
+        ("FR-OPT-030.02", "Cả hai ngày là bắt buộc và Từ ngày không được lớn hơn Đến ngày; dữ liệu phải được truy vấn theo FLIGHTDATE từ đầu Từ ngày đến hết Đến ngày."),
+        ("FR-OPT-030.03", "Hệ thống phải cho phép chọn loại giờ Tất cả, ETD, ETA, ATD hoặc ATA. Khi chọn một loại giờ, người dùng được nhập khung từ HHMM đến HHMM; khi chọn Tất cả, khung giờ trở về 0000–2359 và bị khóa."),
+        ("FR-OPT-030.04", "Khung giờ phải chỉ gồm bốn chữ số hợp lệ và giờ bắt đầu không lớn hơn giờ kết thúc trong cùng ngày; dữ liệu được lọc trên đúng trường giờ đã chọn."),
+        ("FR-OPT-030.05", "Hệ thống phải cung cấp bộ lọc tại từng cột gồm OPER, FLIGHTDATE, CALLSIGN, REGIS, R_CRAFT, F_CRAFT, PURPOSE, P_TYPE, FROM, TO, ATD, ATA, VIA, FPL_VIA, REMARK, ETD và ETA."),
+        ("FR-OPT-030.06", "Các điều kiện cột được kết hợp theo phép AND. CALLSIGN, FROM, TO, ETD, ETA, ATD, ATA, VIA, FPL_VIA, REMARK, OPER và REGIS hỗ trợ tìm chứa; P_TYPE, PURPOSE, R_CRAFT và F_CRAFT so khớp giá trị chuẩn theo quy tắc package."),
+        ("FR-OPT-030.07", "So khớp chuỗi phải bỏ khoảng trắng đầu/cuối và không phân biệt chữ hoa/thường; điều kiện để trống không được giới hạn kết quả."),
+        ("FR-OPT-030.08", "Mọi truy vấn từ màn hình báo cáo phải cố định P_ISACCEPTED = 1, không cho phép tham số phía trình duyệt mở rộng sang dữ liệu chưa duyệt hoặc đã hủy."),
+        ("FR-OPT-030.09", "Danh sách phải hiển thị STT, OPER, FLIGHTDATE, CALLSIGN, REGIS, R_CRAFT, F_CRAFT, PURPOSE, P_TYPE, FROM, TO, ATD, ATA, VIA, FPL_VIA, REMARK, ETD, ETA và người tạo/cập nhật cuối nếu nguồn có dữ liệu."),
+        ("FR-OPT-030.10", "Kết quả phải hiển thị tổng số bản ghi thỏa điều kiện và hỗ trợ kích thước trang 100, 500, 1.000, 2.000, 4.000, 6.000 hoặc 8.000 dòng; chuyển trang phải giữ nguyên toàn bộ tiêu chí tìm kiếm."),
+        ("FR-OPT-030.11", "Phân trang phải thực hiện tại Oracle bằng PAGEINDEX/PAGESIZE; STT trên giao diện phải liên tục theo vị trí bản ghi trong toàn bộ tập kết quả."),
+        ("FR-OPT-030.12", "Người dùng phải có thể sắp xếp tăng/giảm trên các cột hiển thị; thao tác sắp xếp không được làm thay đổi dữ liệu nguồn hoặc tổng số kết quả."),
+        ("FR-OPT-030.13", "Nút Search phải xóa kết quả cũ, hiển thị trạng thái đang tải và chỉ hiển thị dữ liệu của request thành công mới nhất; kết quả rỗng phải thể hiện tổng số 0."),
+        ("FR-OPT-030.14", "Export Excel phải sử dụng cùng bộ lọc, lấy toàn bộ tập kết quả từ trang đầu với kích thước export, không chỉ các dòng đang hiển thị trên trang hiện tại."),
+        ("FR-OPT-030.15", "File Excel phải giữ các cột nghiệp vụ của danh sách, định dạng ngày dễ đọc và tên file có dấu thời gian để phân biệt các lượt xuất."),
+        ("FR-OPT-030.16", "Khi API/package lỗi, hệ thống phải đặt tổng số về 0, dừng trạng thái tải và thông báo không tải được báo cáo; khi export không có dữ liệu phải thông báo và không tạo file rỗng."),
+    ])
+
+    doc.add_heading("7.29.2. Quy tắc nghiệp vụ", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-030.01", "Daily Military Report là nguồn chỉ xem cho người khai thác; bản ghi chỉ xuất hiện sau khi hoàn tất bước Accepted trong quy trình quản lý KHB quân sự."),
+        ("BR-OPT-030.02", "Khoảng ngày được áp dụng theo FLIGHTDATE với điều kiện >= ngày bắt đầu và < ngày kết thúc + 1 để bao phủ toàn bộ ngày cuối."),
+        ("BR-OPT-030.03", "CAT_HA = 0 không lọc giờ; 1 lọc ETD; 2 lọc ETA; 3 lọc ATD; 4 lọc ATA. Giá trị giờ được so sánh trên bốn ký tự HHMM đã chuẩn hóa."),
+        ("BR-OPT-030.04", "Thứ tự mặc định của package là CALLSIGN, FROM_AIRP, TO_AIRP và FLIGHT_ID để kết quả phân trang ổn định."),
+        ("BR-OPT-030.05", "Bộ lọc mở rộng không được làm thay đổi trạng thái duyệt, dữ liệu KHB quân sự hoặc lịch sử nguồn."),
+    ])
+
+    doc.add_heading("7.29.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-030.01", "Màn hình/API phải yêu cầu phiên đăng nhập và quyền menu hợp lệ; điều kiện truy vấn phải được bind qua tham số package."),
+        ("NFR-OPT-030.02", "Truy vấn phải dùng phân trang và index/kế hoạch thực thi phù hợp cho ISACCEPTED, FLIGHTDATE cùng các khóa tìm kiếm thường dùng; ngưỡng phản hồi phải được đo và phê duyệt trên dữ liệu cao điểm."),
+        ("NFR-OPT-030.03", "Trong thời gian export, nút Export phải bị vô hiệu hóa để tránh gửi lặp; giới hạn số dòng/kích thước file phải được cấu hình phù hợp năng lực máy chủ và trình duyệt."),
+        ("NFR-OPT-030.04", "Dữ liệu đưa vào HTML và Excel phải được encode để ngăn thực thi nội dung ngoài ý muốn; chi tiết lỗi kỹ thuật chỉ ghi log, không hiển thị thông tin nhạy cảm."),
+    ])
+
+    doc.add_heading("7.29.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-030-01", "Tra cứu một ngày và khoảng nhiều ngày", "Chỉ trả bản ghi có FLIGHTDATE trong khoảng bao gồm cả hai ngày."),
+        ("TC-OPT-030-02", "Từ ngày lớn hơn Đến ngày hoặc thiếu một ngày", "Chặn request và thông báo dữ liệu ngày không hợp lệ."),
+        ("TC-OPT-030-03", "Lọc lần lượt ETD/ETA/ATD/ATA theo 0600–1200", "Mỗi lượt chỉ đánh giá đúng trường giờ được chọn."),
+        ("TC-OPT-030-04", "Kết hợp CALLSIGN, FROM, TO, PURPOSE và P_TYPE", "Mọi dòng đồng thời thỏa tất cả điều kiện; so khớp đúng chứa/chính xác theo quy tắc."),
+        ("TC-OPT-030-05", "Nhập chữ thường và khoảng trắng thừa", "Kết quả giống giá trị đã chuẩn hóa chữ hoa và trim."),
+        ("TC-OPT-030-06", "Nguồn có bản chưa duyệt và bản đã duyệt cùng tiêu chí", "Chỉ bản ISACCEPTED = 1 xuất hiện."),
+        ("TC-OPT-030-07", "Kết quả lớn hơn một trang và đổi kích thước trang", "Tổng số đúng, STT liên tục, không lặp hoặc thiếu bản ghi."),
+        ("TC-OPT-030-08", "Sắp xếp tăng rồi giảm theo cột", "Thứ tự hiển thị thay đổi đúng, tổng số và dữ liệu nguồn không đổi."),
+        ("TC-OPT-030-09", "Export tập kết quả nhiều trang", "File chứa toàn bộ bản ghi theo đúng bộ lọc và đủ các cột quy định."),
+        ("TC-OPT-030-10", "Kết quả rỗng, API lỗi hoặc export lỗi", "Hiển thị trạng thái/thông báo phù hợp, không giữ dữ liệu cũ và không tạo file sai."),
+    ])
+
+    doc.add_heading("7.30. Truy vết FR-OPT-030", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-030", "ListFinishedFlightsMilitaryReport.aspx; A_TEST_SEARCH.GET_FINISHED_FLIGHTS_MINITARY; T_FINISHFLIGHTS_MILITARY", "Ảnh bộ lọc/kết quả, tham số request, dữ liệu nguồn Accepted/chưa Accepted, file Excel, execution plan/log lỗi và TC-OPT-030-*"),
+    ])
+
+
+def add_opt004_specification(doc):
+    doc.add_heading("7.31. FR-OPT-004 – Tìm kiếm chuyến bay đa trường và theo từ khóa", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Permission/SearchExtension.aspx?Menu_ID=381 – Search Extension."),
+        ("Mục tiêu", "Tra cứu nhanh chuyến bay trong phép bay SC theo nhiều thuộc tính kết hợp và từ khóa chung; cho phép mở đúng hồ sơ phép để xem chi tiết."),
+        ("Nguồn dữ liệu", "T_PERMMASTER_SC, T_PERMDETAIL_SC và M_CRAFT_TYPE; truy vấn qua WebMethod SearchExtension.aspx/SearchPermissions."),
+        ("Trạng thái", "Đang triển khai: tìm kiếm đa trường, phân trang và mở chi tiết phép SC đã có; ô từ khóa chung tìm trên nhiều trường và chức năng export chưa được triển khai trong phiên bản mã nguồn được rà soát."),
+        ("Đối tượng sử dụng", "Người khai thác và cán bộ quản lý phép bay có quyền truy cập Menu_ID=381."),
+    ])
+
+    doc.add_heading("7.31.1. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu", "Trạng thái"], [
+        ("FR-OPT-004.01", "Hệ thống phải cung cấp các trường tìm kiếm: Callsign, FROM, TO, Craft, VIA, Flight date, Permission number, OPER, Flight type, Permission type, ETD, Purpose và Remark.", "Đã có"),
+        ("FR-OPT-004.02", "Người dùng được nhập một hoặc nhiều tiêu chí; các tiêu chí khác nhau phải kết hợp theo phép AND, tiêu chí để trống không hạn chế kết quả.", "Đã có"),
+        ("FR-OPT-004.03", "Giá trị đầu vào phải được trim, chuyển về chữ hoa và so khớp không phân biệt chữ hoa/thường.", "Đã có"),
+        ("FR-OPT-004.04", "Callsign phải so khớp chính xác sau chuẩn hóa; FROM, TO, Craft, VIA, Permission number, OPER, ETD và Remark hỗ trợ tìm chứa; Flight type, Permission type và Purpose so khớp chính xác.", "Đã có"),
+        ("FR-OPT-004.05", "Permission number phải tìm trên cả PERMNBR_ID và PERMNBR để hỗ trợ số hiển thị mới và dữ liệu số phép cũ.", "Đã có"),
+        ("FR-OPT-004.06", "Flight date phải chấp nhận DD-MM-YYYY, DD/MM/YYYY hoặc YYYY-MM-DD; dữ liệu sai định dạng phải bị từ chối với thông báo định dạng yêu cầu.", "Đã có"),
+        ("FR-OPT-004.07", "Khi có Flight date, hệ thống chỉ trả chi tiết phép có ngày tìm kiếm nằm trong BEGINDATE–ENDDATE và ngày thứ tương ứng DAY1…DAY7 đang được phép khai thác.", "Đã có"),
+        ("FR-OPT-004.08", "Kết quả phải hiển thị STT, số/ngày phép, lịch bay theo thứ, giờ/ngày hiệu lực, Callsign, FROM, TO, ETD, loại phép, loại chuyến bay, OPER, Purpose, Craft, VIA và Remark.", "Đã có"),
+        ("FR-OPT-004.09", "Kết quả mặc định phải sắp xếp theo ngày phép giảm dần, PERM_ID giảm dần và ID chi tiết giảm dần để ưu tiên hồ sơ mới và bảo đảm phân trang ổn định.", "Đã có"),
+        ("FR-OPT-004.10", "Hệ thống phải phân trang tại máy chủ, trả tổng số bản ghi và STT liên tục; kích thước mặc định 500 dòng, giới hạn máy chủ tối đa 1.000 dòng mỗi trang.", "Đã có"),
+        ("FR-OPT-004.11", "Nhấn Search phải đưa về trang đầu, xóa dữ liệu cũ, hiển thị trạng thái đang tải và giữ nguyên bộ lọc khi chuyển trang.", "Đã có"),
+        ("FR-OPT-004.12", "Nút Clear phải xóa toàn bộ 13 tiêu chí đã nhập để người dùng bắt đầu lượt tra cứu mới.", "Đã có"),
+        ("FR-OPT-004.13", "Nhấn số phép phải mở View_PermSC.aspx bằng PERM_ID của phép SC và truyền Callsign; không được dùng FLIGHTTYPE để suy đoán nguồn SC/NO.", "Đã có"),
+        ("FR-OPT-004.14", "Hệ thống phải bổ sung một ô Từ khóa chung để tìm đồng thời trên tối thiểu số phép, Callsign, FROM, TO, OPER, VIA và Remark; từ khóa chung kết hợp AND với các trường lọc riêng.", "Đang làm"),
+        ("FR-OPT-004.15", "Kết quả phải chỉ rõ phạm vi nguồn đang tra cứu là phép SC. Nếu mở rộng sang phép NO, hệ thống phải hợp nhất schema kết quả, gắn loại nguồn và mở đúng màn hình chi tiết tương ứng.", "Đang làm"),
+        ("FR-OPT-004.16", "Khi không có kết quả hoặc request lỗi, hệ thống phải đặt tổng số về 0, xóa kết quả cũ và hiển thị thông báo phù hợp; lỗi kỹ thuật không được làm treo trạng thái tải.", "Đã có"),
+        ("FR-OPT-004.17", "Hệ thống nên hỗ trợ Export Excel toàn bộ tập kết quả theo từ khóa và bộ lọc hiện hành; file phải giữ thứ tự/cột hiển thị và tiêu chí tra cứu để đối soát.", "Dự kiến"),
+    ])
+
+    doc.add_heading("7.31.2. Quy tắc nghiệp vụ và giới hạn", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-004.01", "Một dòng kết quả đại diện cho một chi tiết hành trình/giai đoạn của phép SC, vì vậy cùng một PERM_ID có thể xuất hiện nhiều dòng với Callsign hoặc thời hạn chi tiết khác nhau."),
+        ("BR-OPT-004.02", "Lịch DAY1…DAY7 được trình bày thành chuỗi 1–7, ngày không khai thác hiển thị dấu chấm; Flight date chỉ hợp lệ khi đồng thời thuộc thời hạn chi tiết và đúng ngày thứ được bật."),
+        ("BR-OPT-004.03", "Craft hiển thị theo mã MA từ M_CRAFT_TYPE; bản ghi không ánh xạ được danh mục vẫn phải có thể tra cứu theo các tiêu chí khác."),
+        ("BR-OPT-004.04", "FTYPE là loại chuyến bay nghiệp vụ, không phải dấu hiệu xác định bảng phép. Trong phạm vi hiện tại, mọi liên kết chi tiết phải mở View_PermSC theo PERM_ID."),
+        ("BR-OPT-004.05", "Từ khóa chung không thay thế các trường chuyên biệt; khi cùng nhập, bản ghi phải thỏa cả từ khóa chung và tất cả bộ lọc riêng."),
+    ])
+
+    doc.add_heading("7.31.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-004.01", "Màn hình và WebMethod phải yêu cầu phiên đăng nhập/quyền menu hợp lệ; không được dựa riêng vào việc ẩn liên kết trên giao diện để kiểm soát truy cập."),
+        ("NFR-OPT-004.02", "Toàn bộ truy vấn phải bind tham số, giới hạn PageSize, có timeout và không ghép trực tiếp dữ liệu người dùng vào SQL."),
+        ("NFR-OPT-004.03", "Các cột lọc chính và quan hệ PERM_ID phải có index/kế hoạch thực thi phù hợp; hiệu năng từ khóa chứa trên nhiều cột phải được đo trước khi nghiệm thu và cân nhắc chỉ mục tìm kiếm chuyên dụng."),
+        ("NFR-OPT-004.04", "Bảng kết quả rộng phải hỗ trợ cuộn ngang, nút cuộn trái/phải, giữ tiêu đề/cột đọc được và không làm mất khả năng thao tác trên màn hình nhỏ."),
+        ("NFR-OPT-004.05", "Dữ liệu kết quả khi chèn vào HTML hoặc xuất file phải được encode an toàn; thông báo giao diện không để lộ connection string, SQL hoặc stack trace."),
+    ])
+
+    doc.add_heading("7.31.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-004-01", "Tìm riêng Callsign", "Chỉ trả Callsign khớp chính xác, không trả chuỗi chỉ chứa một phần."),
+        ("TC-OPT-004-02", "Kết hợp FROM, TO, OPER, loại phép và Purpose", "Mọi dòng thỏa đồng thời các điều kiện và đúng kiểu so khớp."),
+        ("TC-OPT-004-03", "Tìm Permission number tồn tại ở PERMNBR_ID hoặc PERMNBR", "Đều tìm thấy đúng hồ sơ phép."),
+        ("TC-OPT-004-04", "Flight date nằm trong thời hạn nhưng ngày thứ bị tắt", "Không trả chi tiết phép đó."),
+        ("TC-OPT-004-05", "Flight date đúng thời hạn và ngày thứ được bật", "Trả đúng chi tiết phép; ngày sai định dạng bị chặn."),
+        ("TC-OPT-004-06", "Kết quả vượt 500 dòng và chuyển trang", "Tổng số, STT, thứ tự ổn định; không lặp hoặc thiếu dòng."),
+        ("TC-OPT-004-07", "Nhấn số phép của bản ghi có FTYPE bất kỳ", "Luôn mở đúng View_PermSC theo PERM_ID và Callsign."),
+        ("TC-OPT-004-08", "Nhập từ khóa chung xuất hiện ở VIA/Remark rồi kết hợp FROM", "Trả hợp các cột từ khóa nhưng đồng thời thỏa FROM; thực hiện sau khi FR-OPT-004.14 hoàn thành."),
+        ("TC-OPT-004-09", "Không có kết quả, popup bị chặn hoặc WebMethod lỗi", "Thông báo đúng, tổng số 0, không hiển thị kết quả cũ và hướng dẫn cho phép popup khi cần."),
+        ("TC-OPT-004-10", "Bảng rộng trên màn hình nhỏ", "Cuộn ngang và nút trái/phải hoạt động, không che mất dữ liệu hoặc liên kết chi tiết."),
+    ])
+
+    doc.add_heading("7.32. Truy vết FR-OPT-004", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-004", "SearchExtension.aspx/.cs; SearchPermissions WebMethod; T_PERMMASTER_SC; T_PERMDETAIL_SC; M_CRAFT_TYPE; View_PermSC.aspx", "Ảnh bộ lọc/kết quả, request/response, SQL bind và execution plan, dữ liệu ngày-thứ, cửa sổ chi tiết, trạng thái mục đang làm và TC-OPT-004-*"),
+    ])
+
+
+def add_opt004_specification_current(doc):
+    doc.add_heading("7.31. FR-OPT-004 – Tìm kiếm chuyến bay đa trường và theo từ khóa", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Permission/SearchExtension.aspx?Menu_ID=381 – Search Extension, phiên bản cập nhật ngày 14/08/2026."),
+        ("Mục tiêu", "Tra cứu chi tiết chuyến bay thuộc phép bay SC bằng các từ khóa nhập tại nhiều trường nghiệp vụ, ngày bay thực tế và khoảng giờ ETD; cho phép mở hồ sơ phép để xem chi tiết."),
+        ("Nguồn dữ liệu", "T_PERMMASTER_SC, T_PERMDETAIL_SC và M_CRAFT_TYPE; xử lý trực tiếp qua WebMethod SearchExtension.aspx/SearchPermissions."),
+        ("Phạm vi hiện tại", "Tìm kiếm trên phép SC. Giao diện không có một ô từ khóa chung; thuật ngữ theo từ khóa được hiểu là giá trị tìm kiếm nhập trong từng trường lọc."),
+        ("Trạng thái", "Đã cập nhật theo phiên bản mới: rút gọn bộ lọc, bổ sung khoảng giờ ETD và giữ phân trang/mở chi tiết phép SC."),
+    ])
+
+    doc.add_heading("7.31.1. Bộ lọc và yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-004.01", "Màn hình phải cung cấp đúng 11 tiêu chí: Callsign, FROM, TO, Craft, VIA, Flight date, Từ giờ ETD, Đến giờ ETD, Flight type, Permission type và Purpose."),
+        ("FR-OPT-004.02", "Người dùng được nhập một hoặc nhiều tiêu chí; các tiêu chí khác nhau kết hợp theo phép AND, tiêu chí để trống không giới hạn kết quả."),
+        ("FR-OPT-004.03", "Giá trị chuỗi phải được trim, chuyển chữ hoa và so khớp không phân biệt chữ hoa/thường."),
+        ("FR-OPT-004.04", "Callsign phải so khớp chính xác; FROM, TO, Craft và VIA tìm chứa; Flight type, Permission type và Purpose so khớp chính xác theo mã nghiệp vụ."),
+        ("FR-OPT-004.05", "Flight date phải chấp nhận DD-MM-YYYY, DD/MM/YYYY hoặc YYYY-MM-DD; dữ liệu sai định dạng phải bị từ chối với thông báo rõ định dạng yêu cầu."),
+        ("FR-OPT-004.06", "Khi có Flight date, hệ thống chỉ trả chi tiết có ngày tìm kiếm nằm trong BEGINDATE–ENDDATE và cờ DAY1…DAY7 tương ứng đang được phép khai thác."),
+        ("FR-OPT-004.07", "Từ giờ ETD và Đến giờ ETD là tùy chọn, nhập theo HH:mm 24 giờ từ 00:00 đến 23:59; giao diện phải tự định dạng tối đa bốn chữ số thành HH:mm."),
+        ("FR-OPT-004.08", "Có thể chỉ nhập một đầu khoảng ETD: thiếu Từ giờ mặc định 00:00, thiếu Đến giờ mặc định 23:59; nếu cả hai để trống thì không lọc ETD."),
+        ("FR-OPT-004.09", "Từ giờ ETD không được lớn hơn Đến giờ ETD. Máy chủ phải kiểm tra lại quy tắc này, không chỉ dựa vào JavaScript."),
+        ("FR-OPT-004.10", "ETD nguồn phải được chuẩn hóa thành bốn ký tự HHMM trước khi so sánh BETWEEN với khoảng giờ đã chọn."),
+        ("FR-OPT-004.11", "Kết quả phải hiển thị STT, số/ngày phép, Daily, ValidHours, ValidDate, Callsign, FROM, TO, ETD, Permission type, Flight type, OPER, Purpose, Craft, VIA và Remark."),
+        ("FR-OPT-004.12", "Kết quả mặc định phải sắp xếp theo PERMDATE giảm dần, PERM_ID giảm dần và ID chi tiết giảm dần để ưu tiên hồ sơ mới và giữ phân trang ổn định."),
+        ("FR-OPT-004.13", "Hệ thống phải phân trang tại máy chủ, trả tổng số bản ghi và STT toàn tập; PageSize mặc định 500 và bị giới hạn tối đa 1.000 dòng/trang."),
+        ("FR-OPT-004.14", "Nhấn Search phải kiểm tra khoảng ETD, đưa về trang đầu, xóa kết quả cũ, hiển thị trạng thái đang tải và thực hiện WebMethod bằng request JSON."),
+        ("FR-OPT-004.15", "Nút Clear phải xóa đầy đủ 11 tiêu chí của giao diện mới, bao gồm cả hai đầu khoảng giờ ETD."),
+        ("FR-OPT-004.16", "Nhấn Permission number trong kết quả phải mở View_PermSC.aspx theo PERM_ID và truyền Callsign; FLIGHTTYPE không được dùng để suy đoán nguồn SC/NO."),
+        ("FR-OPT-004.17", "Bảng rộng phải hỗ trợ cuộn ngang và nút cuộn trái/phải, kể cả thao tác bấm giữ; trạng thái nút phải phản ánh vị trí cuộn hiện tại."),
+        ("FR-OPT-004.18", "Khi kết quả rỗng hoặc WebMethod lỗi, hệ thống phải đặt tổng số về 0, xóa dữ liệu cũ, kết thúc trạng thái tải và hiển thị thông báo phù hợp."),
+    ])
+
+    doc.add_heading("7.31.2. Quy tắc nghiệp vụ và giới hạn", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-004.01", "Một dòng kết quả đại diện cho một chi tiết hành trình/giai đoạn của phép SC; cùng một PERM_ID có thể xuất hiện nhiều dòng."),
+        ("BR-OPT-004.02", "Daily được tạo từ DAY1…DAY7: ngày khai thác hiển thị số thứ tương ứng, ngày không khai thác hiển thị dấu chấm."),
+        ("BR-OPT-004.03", "Flight date chỉ hợp lệ với chi tiết phép khi đồng thời thuộc thời hạn BEGINDATE–ENDDATE và đúng ngày thứ có cờ khác 0."),
+        ("BR-OPT-004.04", "FTYPE là loại chuyến bay nghiệp vụ, không phải dấu hiệu xác định bảng phép; màn hình hiện tại luôn mở View_PermSC theo PERM_ID."),
+        ("BR-OPT-004.05", "Bản cập nhật đã loại khỏi vùng nhập các bộ lọc Permission number, OPER và Remark; các trường này vẫn được hiển thị trong kết quả khi nguồn có dữ liệu."),
+        ("BR-OPT-004.06", "Khoảng ETD hiện tại chỉ hỗ trợ trong cùng ngày từ 00:00 đến 23:59, không diễn giải khoảng bắt qua nửa đêm."),
+    ])
+
+    doc.add_heading("7.31.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-004.01", "Màn hình và WebMethod phải yêu cầu phiên đăng nhập/quyền menu hợp lệ; kiểm soát truy cập phải thực hiện phía máy chủ."),
+        ("NFR-OPT-004.02", "Truy vấn phải bind theo tên, giới hạn PageSize, dùng timeout 60 giây và không ghép trực tiếp dữ liệu người dùng vào SQL."),
+        ("NFR-OPT-004.03", "Quan hệ PERM_ID, ngày hiệu lực và các trường lọc thường dùng phải có index/kế hoạch thực thi phù hợp; kiểm thử hiệu năng phải dùng tập dữ liệu cao điểm."),
+        ("NFR-OPT-004.04", "Giao diện phải sử dụng được trên vùng hiển thị hẹp thông qua cuộn ngang, không làm mất liên kết xem chi tiết hoặc nhầm cột dữ liệu."),
+        ("NFR-OPT-004.05", "Dữ liệu chèn vào HTML phải được encode an toàn; lỗi chi tiết ghi log nhưng không để lộ connection string, SQL hoặc stack trace cho người dùng."),
+    ])
+
+    doc.add_heading("7.31.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-004-01", "Tìm riêng Callsign", "Chỉ trả Callsign khớp chính xác sau chuẩn hóa."),
+        ("TC-OPT-004-02", "Kết hợp FROM, TO, Craft, VIA, Flight type và Purpose", "Mọi dòng thỏa đồng thời các điều kiện và đúng kiểu tìm chứa/chính xác."),
+        ("TC-OPT-004-03", "Flight date thuộc thời hạn nhưng DAY tương ứng bằng 0", "Không trả chi tiết phép đó."),
+        ("TC-OPT-004-04", "Flight date đúng thời hạn và DAY tương ứng được bật", "Trả đúng chi tiết; ngày sai định dạng bị chặn."),
+        ("TC-OPT-004-05", "Chỉ nhập Từ giờ ETD 08:00", "Trả ETD từ 0800 đến 2359."),
+        ("TC-OPT-004-06", "Chỉ nhập Đến giờ ETD 12:00", "Trả ETD từ 0000 đến 1200."),
+        ("TC-OPT-004-07", "Nhập 12:00–08:00 hoặc giờ ngoài 00:00–23:59", "Bị chặn ở giao diện và máy chủ với thông báo phù hợp."),
+        ("TC-OPT-004-08", "Kết quả vượt 500 dòng và chuyển trang", "Tổng số, STT và thứ tự ổn định; không lặp hoặc thiếu dòng."),
+        ("TC-OPT-004-09", "Nhấn số phép có FTYPE bất kỳ", "Luôn mở đúng View_PermSC theo PERM_ID và Callsign; popup bị chặn có hướng dẫn."),
+        ("TC-OPT-004-10", "Nhấn Clear sau khi điền đủ bộ lọc", "Cả 11 tiêu chí, gồm Từ/Đến giờ ETD, được xóa."),
+        ("TC-OPT-004-11", "Kết quả rỗng hoặc WebMethod lỗi", "Tổng số 0, không giữ kết quả cũ, trạng thái tải kết thúc và có thông báo."),
+        ("TC-OPT-004-12", "Bảng rộng trên màn hình nhỏ", "Cuộn ngang và bấm/giữ nút trái-phải hoạt động, liên kết chi tiết vẫn truy cập được."),
+    ])
+
+    doc.add_heading("7.32. Truy vết FR-OPT-004", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-004", "SearchExtension.aspx/.cs; SearchPermissions WebMethod; T_PERMMASTER_SC; T_PERMDETAIL_SC; M_CRAFT_TYPE; View_PermSC.aspx", "Ảnh 11 bộ lọc và khoảng ETD, request/response, SQL bind/execution plan, dữ liệu ngày-thứ, cửa sổ chi tiết và TC-OPT-004-*"),
+    ])
+
+
+def add_opt021_specification(doc):
+    doc.add_heading("7.33. FR-OPT-021 – Logic cảnh báo đỏ chính xác cho chuyến bay hết hiệu lực", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mục tiêu", "Hiển thị màu đỏ nhất quán cho phép bay hoặc dòng chuyến bay đã hết hiệu lực, giúp người khai thác nhận biết nhanh nhưng không cảnh báo sai bản ghi còn hiệu lực trong ngày hiện tại."),
+        ("Màn hình danh sách", "Permission/ListPermissionNo.aspx và Permission/ListPermissionSC.aspx."),
+        ("Màn hình chỉnh sửa", "Permission/EditPermNo.aspx hoặc biến thể đang sử dụng Edit_PermNo.aspx; Permission/Edit_PermSC.aspx."),
+        ("Nguồn thời hạn NO", "Cấp phép: PERMDATE + VALIDHOURS; chi tiết chuyến: danh sách DAYSFLIGHT."),
+        ("Nguồn thời hạn SC", "Cấp phép/chi tiết chuyến: ENDDATE."),
+        ("Nguyên tắc chung", "Chỉ đánh dấu hết hiệu lực khi ngày hết hạn nhỏ hơn ngày hiện tại của máy chủ/ứng dụng; ngày hết hạn bằng hôm nay vẫn được coi là còn hiệu lực trong ngày."),
+    ])
+
+    doc.add_heading("7.33.1. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-OPT-021.01", "ListPermissionNo.aspx phải tô chữ đỏ cho toàn bộ dòng phép NO khi ngày hết hiệu lực tính từ PERMDATE cộng VALIDHOURS nhỏ hơn ngày hiện tại."),
+        ("FR-OPT-021.02", "Khi tính hạn phép NO, VALIDHOURS rỗng, không hợp lệ hoặc âm phải được chuẩn hóa về 0; phép có hiệu lực đến ngày hiện tại không bị tô đỏ."),
+        ("FR-OPT-021.03", "ListPermissionSC.aspx phải tô chữ đỏ cho toàn bộ dòng phép SC khi ENDDATE sau khi bỏ phần giờ nhỏ hơn ngày hiện tại."),
+        ("FR-OPT-021.04", "Trên EditPermNo.aspx/Edit_PermNo.aspx, mỗi dòng chi tiết NO phải được tô lớp cssHetHan khi tất cả ngày bay hợp lệ trong DAYSFLIGHT đều nhỏ hơn ngày hiện tại."),
+        ("FR-OPT-021.05", "Nếu DAYSFLIGHT có ít nhất một ngày hợp lệ bằng hoặc lớn hơn ngày hiện tại, dòng chi tiết NO không được tô đỏ."),
+        ("FR-OPT-021.06", "Bộ phân tích DAYSFLIGHT phải hỗ trợ các định dạng ngày đang được màn hình chấp nhận, tách nhiều ngày theo dấu phẩy và chuẩn hóa về ngày không kèm thời gian trước khi so sánh."),
+        ("FR-OPT-021.07", "Trên Edit_PermSC.aspx, mỗi dòng chi tiết SC phải được gắn cssHetHan khi ENDDATE của dòng nhỏ hơn ngày hiện tại; ENDDATE bằng hôm nay không bị tô đỏ."),
+        ("FR-OPT-021.08", "Logic cảnh báo ở danh sách và màn hình sửa phải sử dụng cùng mốc ngày hiện tại và cùng quy tắc loại bỏ phần giờ để tránh một phép hiển thị khác trạng thái giữa hai màn hình."),
+        ("FR-OPT-021.09", "Dữ liệu ngày rỗng, NULL, ngoài phạm vi hoặc không phân tích được không được tự động kết luận hết hạn; hệ thống phải giữ màu bình thường và ghi nhận dữ liệu bất thường để kiểm tra."),
+        ("FR-OPT-021.10", "Màu cảnh báo phải áp dụng cho cả nội dung chữ và các ô nhập trong dòng chi tiết, bảo đảm người dùng nhận biết được dù bảng đang ở chế độ xem hay sửa."),
+        ("FR-OPT-021.11", "Cảnh báo đỏ chỉ là trạng thái trình bày; không tự khóa, xóa hoặc thay đổi dữ liệu phép/chuyến bay và không thay thế kiểm tra hiệu lực khi thực hiện nghiệp vụ."),
+        ("FR-OPT-021.12", "Sau khi người dùng sửa PERMDATE, VALIDHOURS, DAYSFLIGHT hoặc ENDDATE và dữ liệu được tải lại/lưu thành công, trạng thái màu đỏ phải được tính lại theo giá trị mới."),
+        ("FR-OPT-021.13", "Nếu một dòng đồng thời có màu trạng thái nghiệp vụ khác, hệ thống phải có thứ tự ưu tiên CSS rõ ràng để cảnh báo hết hiệu lực vẫn dễ nhận biết và không bị ghi đè ngoài ý muốn."),
+        ("FR-OPT-021.14", "Danh sách phân trang, tìm kiếm hoặc sắp xếp lại phải giữ đúng trạng thái hết hiệu lực của từng bản ghi; không dựa vào vị trí dòng hoặc số thứ tự trên giao diện."),
+        ("FR-OPT-021.15", "Mốc ngày hiện tại dùng ở phía máy chủ phải là ngày nghiệp vụ của hệ thống; phía trình duyệt phải được đồng bộ cùng múi giờ cấu hình để tránh sai khác quanh 00:00."),
+        ("FR-OPT-021.16", "Hệ thống phải cung cấp chú giải hoặc tooltip cho biết màu đỏ nghĩa là Hết hiệu lực và nêu ngày hết hiệu lực khi người dùng cần đối chiếu."),
+    ])
+
+    doc.add_heading("7.33.2. Quy tắc nghiệp vụ", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-OPT-021.01", "NO cấp phép: ExpiryDate = Date(PERMDATE + max(VALIDHOURS, 0)); hết hiệu lực khi ExpiryDate < Today."),
+        ("BR-OPT-021.02", "NO chi tiết: còn hiệu lực khi tồn tại ít nhất một ngày hợp lệ trong DAYSFLIGHT có Date >= Today; hết hiệu lực khi có ngày hợp lệ nhưng không còn ngày nào đạt điều kiện này."),
+        ("BR-OPT-021.03", "SC cấp phép và chi tiết: hết hiệu lực khi Date(ENDDATE) < Today."),
+        ("BR-OPT-021.04", "Ngày bằng Today thuộc trường hợp biên còn hiệu lực; trạng thái chỉ chuyển đỏ từ ngày kế tiếp."),
+        ("BR-OPT-021.05", "Không có ngày hợp lệ đồng nghĩa Chưa xác định, không đồng nghĩa Hết hiệu lực; nguyên tắc này ngăn dữ liệu lỗi bị tô đỏ sai."),
+        ("BR-OPT-021.06", "Màu đỏ không làm thay đổi quyền sửa/xóa. Quyền thao tác tiếp tục tuân theo phân quyền và trạng thái nghiệp vụ hiện hành."),
+    ])
+
+    doc.add_heading("7.33.3. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-OPT-021.01", "Việc xác định hết hiệu lực trên danh sách máy chủ phải thực hiện trong quá trình bind dữ liệu, không phát sinh một truy vấn riêng cho từng dòng."),
+        ("NFR-OPT-021.02", "Hàm phân tích ngày phải dùng danh sách định dạng xác định, xử lý an toàn NULL/lỗi chuyển đổi và không làm hỏng toàn bộ trang."),
+        ("NFR-OPT-021.03", "Màu cảnh báo phải có độ tương phản đủ rõ; không chỉ dựa duy nhất vào màu mà cần có chú giải/tooltip phục vụ khả năng tiếp cận."),
+        ("NFR-OPT-021.04", "Múi giờ/ngày nghiệp vụ phải được cấu hình thống nhất giữa IIS, máy chủ API, Oracle và trình duyệt; kiểm thử biên phải thực hiện quanh 00:00."),
+        ("NFR-OPT-021.05", "Các trường hợp dữ liệu không xác định phải có khả năng ghi log/đối soát mà không để lộ thông tin kỹ thuật nhạy cảm trên giao diện."),
+    ])
+
+    doc.add_heading("7.33.4. Ca kiểm thử nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-OPT-021-01", "NO có PERMDATE + VALIDHOURS kết thúc hôm qua", "Dòng ListPermissionNo hiển thị đỏ."),
+        ("TC-OPT-021-02", "NO hết hạn đúng hôm nay", "Không đỏ trong hôm nay; chuyển đỏ vào ngày kế tiếp."),
+        ("TC-OPT-021-03", "NO có VALIDHOURS rỗng, âm hoặc không phải số", "Chuẩn hóa theo quy tắc, không phát sinh lỗi trang và không cảnh báo sai."),
+        ("TC-OPT-021-04", "DAYSFLIGHT gồm hôm qua và ngày mai", "Chi tiết NO không đỏ vì vẫn còn một ngày hiệu lực."),
+        ("TC-OPT-021-05", "DAYSFLIGHT chỉ gồm các ngày trước hôm nay", "Chi tiết NO gắn cssHetHan."),
+        ("TC-OPT-021-06", "DAYSFLIGHT rỗng hoặc toàn token sai định dạng", "Không tự tô đỏ; được coi là chưa xác định."),
+        ("TC-OPT-021-07", "SC có ENDDATE hôm qua/hôm nay/ngày mai", "Chỉ trường hợp hôm qua hiển thị đỏ ở cả danh sách và màn hình sửa."),
+        ("TC-OPT-021-08", "Cùng một phép mở từ danh sách sang màn hình sửa", "Trạng thái hết hiệu lực nhất quán theo loại NO/SC và cấp phép/chi tiết."),
+        ("TC-OPT-021-09", "Sửa ngày hết hạn từ quá khứ sang tương lai rồi tải lại", "Màu đỏ được gỡ sau khi dữ liệu mới lưu thành công."),
+        ("TC-OPT-021-10", "Sửa ngày tương lai thành quá khứ rồi tải lại", "Dòng chuyển đỏ đúng, không cần xóa cache trình duyệt."),
+        ("TC-OPT-021-11", "Phân trang, lọc và sắp xếp danh sách", "Màu đỏ theo đúng bản ghi, không lệch dòng."),
+        ("TC-OPT-021-12", "Kiểm thử trước/sau 00:00 theo múi giờ cấu hình", "Không có chênh lệch trạng thái giữa server-rendered và JavaScript."),
+        ("TC-OPT-021-13", "Dòng SC có STATUS tạo màu nền khác và đã hết hạn", "Cảnh báo hết hiệu lực vẫn nhận biết được theo thứ tự ưu tiên CSS."),
+        ("TC-OPT-021-14", "Người dùng không phân biệt màu", "Chú giải/tooltip vẫn truyền đạt được trạng thái Hết hiệu lực."),
+    ])
+
+    doc.add_heading("7.34. Truy vết FR-OPT-021", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chịu tác động", "Bằng chứng kiểm định"], [
+        ("FR-OPT-021", "ListPermissionNo.aspx/.cs; ListPermissionSC.aspx/.cs; EditPermNo.aspx/Edit_PermNo.aspx; Edit_PermSC.aspx; cssHetHan", "Ảnh bốn màn hình, dữ liệu PERMDATE/VALIDHOURS/DAYSFLIGHT/ENDDATE, kết quả biên hôm qua-hôm nay-ngày mai, kiểm thử múi giờ và TC-OPT-021-*"),
+    ])
+
+
+def add_opt022_023_025_029_031_032_specifications(doc):
+    def feature(number, section, title, objective, source, requirements, tests):
+        code = f"FR-OPT-{number:03d}"
+        doc.add_heading(f"7.{section}. {code} – {title}", level=2)
+        table(doc, ["Thuộc tính", "Nội dung"], [
+            ("Mục tiêu", objective),
+            ("Nguồn yêu cầu", source),
+            ("Trạng thái thành phần", "Tên màn hình, bảng, package/API cụ thể phải được chốt trong thiết kế chi tiết nếu chưa có trong mã nguồn hiện hành."),
+        ])
+        table(doc, ["Mã chi tiết", "Yêu cầu"], [
+            (f"{code}.{index:02d}", value) for index, value in enumerate(requirements, 1)
+        ])
+        table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+            (f"TC-OPT-{number:03d}-{index:02d}", situation, expected)
+            for index, (situation, expected) in enumerate(tests, 1)
+        ])
+
+    feature(22, 35, "Tự động cập nhật đường bay theo đoạn từ FPL thực tế",
+        "Cập nhật đường bay chi tiết của chuyến bay theo FPL thực tế đã nộp/được TBHĐB chuyển đến, thay cho đường bay kế hoạch không còn phù hợp.",
+        "Chương V mục 3.3.22 và Bảng 1 dòng 50–51.", [
+            "Khi nhận chuyến bay hoặc FPL thực tế từ Trung tâm TBHĐB, hệ thống phải nhận diện đúng chuyến theo khóa đã phê duyệt trước khi cập nhật đường bay.",
+            "Hệ thống phải phân tích route string thành danh sách đoạn có thứ tự, chuẩn hóa điểm đường bay/đường hàng không và lưu được cả chuỗi gốc lẫn cấu trúc segment.",
+            "Đường bay mới chỉ được áp dụng khi FPL hợp lệ, khớp chuyến và mới hơn phiên bản đang hiệu lực; request trùng không tạo thêm phiên bản.",
+            "Khi cập nhật thành công, giao diện danh sách chuyến bay theo phép/KHB phải hiển thị route mới nhất và cho phép xem route trước–sau.",
+            "Route string không chuẩn, thiếu điểm hoặc không thể đối chiếu phải gắn ROUTE_UNCERTAIN, giữ dữ liệu hiện hành và đưa vào danh sách kiểm tra thủ công.",
+            "Không được tự ghi đè route đã được người có quyền xác nhận thủ công nếu chính sách ưu tiên chưa được cấu hình; xung đột phải được cảnh báo.",
+            "Mỗi lần xử lý phải lưu flight ID, FPL/message ID, nguồn, thời điểm nhận, phiên bản, route cũ–mới, kết quả và người xử lý/xác nhận.",
+            "Việc cập nhật route phải kích hoạt tính toán/báo cáo phụ thuộc nhưng không sinh trùng chuyến bay hoặc làm mất liên kết điện văn/KHB.",
+        ], [
+            ("FPL hợp lệ có route khác kế hoạch", "Tạo phiên bản route mới, hiển thị đúng các segment và có audit trước–sau."),
+            ("Nhận lại cùng FPL", "Không nhân đôi phiên bản hoặc cập nhật lại ngoài ý muốn."),
+            ("Route sai chuẩn/không khớp chuyến", "Gắn ROUTE_UNCERTAIN, không ghi đè và có danh sách review."),
+            ("Có route thủ công đã xác nhận", "Áp dụng đúng chính sách ưu tiên hoặc chuyển xung đột để duyệt."),
+        ])
+
+    feature(23, 36, "Tự động nhận diện và chuyển ngày cho chuyến bay quốc tế hạ cánh hôm sau",
+        "Xác định đúng ngày nghiệp vụ của chuyến quốc tế hạ cánh sau 00:00 để giao diện, điện văn liên quan và báo cáo không bị lệch ngày.",
+        "Chương V mục 3.3.23; Bảng 1 dòng 27–28 và 52.", [
+            "Hệ thống phải dùng scheduled_date, estimated_arrival_utc/ETA/STA, event timestamp và múi giờ địa phương được cấu hình để xác định ngày hạ cánh.",
+            "Nếu giờ đến quy đổi sang địa phương thuộc ngày kế tiếp so với scheduled_date, chuyến phải được đánh dấu cross_midnight=true và hiển thị ngày đến thực tế.",
+            "Điện văn DEP/ARR và dữ liệu liên quan phải được liên kết theo flight ID/khóa chuyến, không chỉ theo ngày, để giữ quan hệ khi chuyển ngày.",
+            "Báo cáo và export sau khai thác phải tính chuyến theo ngày nghiệp vụ thực tế đã xác định và thể hiện dấu hiệu chuyển ngày.",
+            "Nếu thiếu ngày/giờ thực tế, hệ thống dùng scheduled_date làm fallback, gắn date_uncertain và đưa vào danh sách cần rà soát; không tự kết luận chắc chắn.",
+            "Quy tắc phải xử lý đổi ngày/tháng/năm, ETA có dấu ngày kế tiếp và dữ liệu UTC/local; không cộng ngày hai lần.",
+            "Khi ARR/ADS-B thực tế đến sau, hệ thống phải tính lại, đóng cờ date_uncertain nếu đủ bằng chứng và cập nhật các báo cáo liên quan.",
+            "Mọi thay đổi ngày phải lưu nguồn thời gian, múi giờ, ngày trước–sau, quy tắc áp dụng và correlation ID để truy vết.",
+        ], [
+            ("Chuyến 23:30 đến 00:45 hôm sau", "Đánh dấu cross_midnight và chuyển đúng sang ngày kế tiếp."),
+            ("Chuyến qua cuối tháng/cuối năm", "Ngày đến chính xác, không lỗi tháng/năm."),
+            ("Thiếu thời gian thực tế", "Dùng scheduled_date, gắn date_uncertain và không báo sai."),
+            ("Nhận ARR sau fallback", "Tính lại ngày, cập nhật báo cáo và lưu lịch sử."),
+        ])
+
+    feature(25, 37, "Thông báo thời điểm nhận số liệu bay Đi/Đến từ Trung tâm TBHĐB",
+        "Thông báo kịp thời thời điểm và số lượng dữ liệu DEP/ARR nhận từ Trung tâm TBHĐB, cho phép người dùng truy xuống danh sách chuyến vừa cập nhật.",
+        "Chương V mục 3.3.25 và Bảng 1 dòng 54.", [
+            "Mỗi batch dữ liệu Đi/Đến nhận từ TBHĐB phải ghi loại dữ liệu, source timestamp, received timestamp, batch ID, số bản ghi và kết quả xử lý.",
+            "Sau khi xử lý thành công, hệ thống phải hiển thị thông báo dạng 'Nhận dữ liệu ARR/DEP lúc HH:mm – X chuyến' tại Dashboard/header theo phạm vi người nhận.",
+            "Nhấn thông báo phải mở danh sách đúng batch, loại DEP/ARR và các chuyến vừa thêm/cập nhật; số lượng chi tiết phải đối soát với thông báo.",
+            "Thông báo trùng batch không được tạo nhiều lần; batch bổ sung phải có định danh và số lượng riêng.",
+            "Thông báo phải có trạng thái chưa đọc/đã đọc, thời điểm tạo và thời điểm người dùng mở; quyền xem chi tiết tuân theo phân quyền dữ liệu.",
+            "Batch lỗi hoặc xử lý một phần phải hiển thị trạng thái cảnh báo riêng, số thành công/lỗi và liên kết đến chi tiết xử lý, không báo thành công toàn bộ.",
+            "Hệ thống phải hiển thị thời điểm nhận gần nhất theo từng loại dữ liệu và cảnh báo vận hành khi quá ngưỡng chưa nhận được batch dự kiến.",
+        ], [
+            ("Nhận batch ARR 25 chuyến", "Thông báo đúng giờ, đúng 25 chuyến và drill-down khớp danh sách."),
+            ("Gửi lại cùng batch", "Không tạo thông báo hoặc dữ liệu trùng."),
+            ("Batch có 2 dòng lỗi", "Thông báo xử lý một phần và xem được 23 thành công/2 lỗi."),
+            ("Người dùng không có quyền", "Không xem được chi tiết ngoài phạm vi dù có URL."),
+        ])
+
+    feature(26, 38, "Cập nhật số liệu bay từ HTSLB sang Bravo",
+        "Đồng bộ dữ liệu chuyến bay sang Bravo 10 qua API, bảo toàn thời gian thực tế và mục đích bay, có đối soát và xử lý xung đột.",
+        "Chương V mục 2.2.2, 2.3.4, 3.3.26 và Bảng 1 dòng 55–56.", [
+            "Tích hợp Bravo 10 phải thực hiện qua API được xác thực/mã hóa, không kết nối ghi trực tiếp cơ sở dữ liệu Bravo.",
+            "Hệ thống phải chọn phạm vi đồng bộ theo ngày/batch và xây payload từ dữ liệu HTSLB đã được duyệt, kèm khóa idempotency/correlation ID.",
+            "Với mỗi chuyến, nếu chưa tồn tại ở Bravo thì INSERT; nếu đã tồn tại thì chỉ UPDATE các trường được phép thay đổi theo mapping đã phê duyệt.",
+            "actual_time và purpose hiện có ở Bravo phải được KEEP ORIGINAL khi chính sách yêu cầu; không ghi đè giá trị sửa thủ công ngoài ý muốn.",
+            "Xung đột với dữ liệu Bravo sửa thủ công phải áp dụng manual_override_wins hoặc chuyển conflict queue để review; chính sách phải cấu hình và audit được.",
+            "Kết quả batch phải nêu tổng gửi, insert, update, không đổi, xung đột, lỗi và thời gian; người dùng được drill-down từng chuyến.",
+            "Request lỗi tạm thời phải retry có giới hạn; gửi lại cùng khóa không tạo chuyến trùng. Lỗi vĩnh viễn phải vào hàng chờ xử lý.",
+            "Sau đồng bộ phải đối soát khóa chuyến, actual time, purpose, kiểu bay và các trường tài chính liên quan; chỉ báo hoàn thành khi kết quả nhất quán.",
+            "Dataset lớn phải chạy nền và thông báo khi hoàn thành; mục tiêu hiệu năng áp dụng theo NFR/FR-OPT-014 đã được phê duyệt.",
+        ], [
+            ("Chuyến chưa có ở Bravo", "INSERT một lần và đối soát đúng."),
+            ("Chuyến đã có, thay đổi trường cho phép", "UPDATE đúng trường, giữ actual_time/purpose theo policy."),
+            ("Bravo đã sửa manual", "Không ghi đè; áp dụng manual_override_wins hoặc tạo conflict."),
+            ("Timeout rồi gửi lại", "Idempotent, không tạo bản ghi trùng và log đủ retry."),
+        ])
+
+    feature(27, 39, "Khắc phục lỗi nhầm ngày so với thực tế",
+        "Ngăn chặn, phát hiện và sửa có kiểm soát trường hợp ngày kế hoạch không khớp ngày khai thác thực tế.",
+        "Chương V mục 3.3.27; Bảng 1 dòng 27–28, 46, 52 và 57.", [
+            "Khi nhận dữ liệu TBHĐB, DEP/ARR, ADS-B hoặc cập nhật khai thác, hệ thống phải xác định ngày thực tế từ event timestamp và múi giờ nguồn.",
+            "Ngày thực tế phải được so sánh với scheduled/flight date sau khi áp dụng quy tắc chuyến qua đêm và chuyển múi giờ; chênh lệch hợp lệ không bị coi là lỗi.",
+            "Sai lệch không giải thích được phải gắn DATE_MISMATCH, hiển thị ngày kế hoạch/ngày thực tế/nguồn và không tự sửa khi bằng chứng chưa đủ.",
+            "Khi nguồn có độ tin cậy đã phê duyệt và quy tắc xác định duy nhất, hệ thống được cập nhật đúng ngày thực tế, đồng bộ liên kết điện văn và tính lại báo cáo.",
+            "Thiếu thông tin phải gắn DATE_UNCERTAIN và chuyển review; giá trị tương lai bất thường hoặc chênh quá ngưỡng phải bị chặn/cảnh báo.",
+            "Người có quyền phải xem trước và xác nhận sửa thủ công; hệ thống lưu ngày cũ–mới, lý do, nguồn bằng chứng, người và thời gian.",
+            "Cập nhật ngày phải idempotent, không sinh trùng chuyến, không mất lịch sử và không làm đứt liên kết KHB–FPL–DEP/ARR–ADS-B–Bravo.",
+        ], [
+            ("TBHĐB cung cấp ngày thực tế khác do qua đêm", "Áp dụng quy tắc hợp lệ, cập nhật đúng ngày và không cảnh báo sai."),
+            ("Sai ngày không có bằng chứng", "Gắn DATE_MISMATCH/UNCERTAIN, không tự ghi đè."),
+            ("Xác nhận sửa ngày", "Cập nhật liên kết/báo cáo và có audit trước–sau."),
+            ("Nhận lại sự kiện", "Không đổi ngày lần hai hoặc sinh trùng chuyến."),
+        ])
+
+    feature(28, 40, "Sửa nhiều chuyến bay cùng nội dung trong một thao tác",
+        "Cho phép cập nhật hàng loạt một trường/nội dung cho nhiều chuyến với preview, phân quyền, transaction và audit chi tiết.",
+        "Chương V mục 3.3.28 và Bảng 1 dòng 58–59.", [
+            "Người dùng phải chọn được nhiều dòng trong cùng phạm vi nghiệp vụ, chọn trường cho phép sửa và nhập giá trị mới một lần.",
+            "Danh sách trường sửa hàng loạt phải là whitelist theo vai trò/trạng thái chuyến; không cho sửa khóa, dữ liệu đã khóa hoặc trường nhạy cảm trái quyền.",
+            "Trước khi xác nhận, hệ thống phải validate giá trị và hiển thị preview từng chuyến gồm giá trị cũ–mới, dòng hợp lệ, không đủ quyền và lỗi.",
+            "Các dòng không đủ quyền/không hợp lệ phải bị loại trước khi commit và báo lý do; người dùng xác nhận rõ phạm vi thực sự được cập nhật.",
+            "Tập dòng hợp lệ phải cập nhật trong transaction theo chính sách đã phê duyệt; lỗi giữa transaction phải rollback tập tương ứng, không báo thành công sai.",
+            "Hệ thống phải chống lost update bằng version/timestamp hoặc kiểm tra giá trị đã thay đổi sau preview; xung đột phải yêu cầu tải lại.",
+            "Kết quả phải nêu tổng chọn, thành công, bỏ qua, lỗi; ghi audit cho từng chuyến và một batch ID liên kết toàn thao tác.",
+            "Thao tác gửi lặp cùng batch không được cập nhật hai lần; sau thành công danh sách phải làm mới và phản ánh giá trị mới.",
+        ], [
+            ("10 chuyến hợp lệ cùng trường", "Preview đúng, cập nhật đủ 10 trong một batch và có audit từng dòng."),
+            ("2/10 chuyến không đủ quyền", "Loại 2 dòng trước xác nhận, cập nhật 8 và báo chi tiết."),
+            ("Một dòng đổi sau preview", "Phát hiện conflict, không ghi đè âm thầm."),
+            ("Lỗi DB giữa transaction", "Rollback đúng phạm vi và không báo thành công toàn bộ."),
+        ])
+
+    feature(29, 41, "Đối chiếu số liệu bay giữa HTSLB và Bravo",
+        "So sánh số liệu hãng bay quốc nội/quốc tế giữa HTSLB và Bravo theo phạm vi, kiểu bay và trường dữ liệu để phát hiện sai lệch/orphan.",
+        "Chương V mục 3.3.29 và Bảng 1 dòng 60–61.", [
+            "Người dùng phải chọn phạm vi đối chiếu theo ngày/khoảng ngày, hãng, quốc nội/quốc tế, kiểu bay và trạng thái phù hợp.",
+            "Hệ thống phải lấy snapshot có timestamp từ cả HTSLB và Bravo, lưu batch/correlation ID và không so dữ liệu ở hai thời điểm không kiểm soát.",
+            "Bản ghi phải match theo khóa đối chiếu được phê duyệt; chuẩn hóa callsign, ngày, FROM/TO và các mã trước khi so sánh.",
+            "Hệ thống phải so sánh từng trường cấu hình như actual time, purpose, loại/kiểu bay, sân bay, hãng và trường phục vụ thu phí; nêu giá trị hai phía.",
+            "Sai lệch phải được highlight, phân loại MISMATCH/MISSING_IN_HTSLB/MISSING_IN_BRAVO/CONFLICT; không tìm thấy khóa phải đánh dấu ORPHAN đúng phía.",
+            "Kết quả phải có tổng hai nguồn, số match, khớp hoàn toàn, sai lệch và orphan; tổng chi tiết phải đối soát được với KPI.",
+            "Người dùng phải drill-down, ghi nhận kết quả xử lý/giải trình và export discrepancy list với bộ lọc, snapshot time và batch ID.",
+            "Chức năng đối chiếu chỉ đọc; việc sửa/đồng bộ lại phải đi qua FR-OPT-026 hoặc quy trình nguồn có phân quyền/audit.",
+        ], [
+            ("Hai nguồn khớp hoàn toàn", "KPI khớp, không có discrepancy."),
+            ("Khác actual time/purpose", "Hiển thị MISMATCH và hai giá trị rõ ràng."),
+            ("Chỉ tồn tại một nguồn", "Đánh dấu đúng MISSING/ORPHAN và đưa vào export."),
+            ("Khóa có khác biệt định dạng", "Chuẩn hóa và match đúng, không tạo orphan giả."),
+        ])
+
+    feature(31, 42, "Thêm lựa chọn theo tất cả tiêu chí thống kê trong báo cáo",
+        "Chuẩn hóa panel bộ lọc đầy đủ cho mọi báo cáo, hỗ trợ kết hợp tiêu chí, tùy chọn cột, lưu preset và export đúng ngữ cảnh.",
+        "Chương V mục 3.3.31 và Bảng 1 dòng 63.", [
+            "Mỗi báo cáo phải khai báo metadata về toàn bộ tiêu chí được hỗ trợ, kiểu dữ liệu, toán tử, danh mục, mặc định và phụ thuộc giữa các tiêu chí.",
+            "Khi mở báo cáo, hệ thống phải hiển thị panel gồm tất cả tiêu chí đã khai báo; người dùng được kết hợp nhiều tiêu chí theo logic xác định.",
+            "Truy vấn động phải dùng whitelist trường/toán tử và bind parameter; không ghép tên/câu lệnh tùy ý từ đầu vào người dùng.",
+            "Kết quả bảng, KPI, biểu đồ và drill-down phải dùng cùng một ngữ cảnh bộ lọc và hiển thị tiêu chí đang áp dụng.",
+            "Người dùng phải tùy chọn ẩn/hiện cột trong phạm vi được phép; cột bắt buộc/nhạy cảm tuân theo vai trò.",
+            "Hệ thống phải cho phép lưu, đặt tên, tải, cập nhật và xóa preset cá nhân; preset dùng chung cần quyền quản trị/phê duyệt.",
+            "Export phải phản ánh toàn bộ bộ lọc, thứ tự và cột đang chọn, kèm thời gian sinh/nguồn; không chỉ xuất trang hiện tại.",
+            "Dữ liệu không đủ phải hiển thị thông báo và gợi ý mở rộng phạm vi; không dựng KPI/biểu đồ gây hiểu nhầm.",
+        ], [
+            ("Kết hợp nhiều tiêu chí", "Bảng/KPI/biểu đồ/drill-down cùng trả đúng giao của bộ lọc."),
+            ("Ẩn/hiện cột và export", "File giữ đúng cột được phép và toàn bộ tập lọc."),
+            ("Lưu rồi mở preset", "Khôi phục đúng tiêu chí/cột, không lộ preset người khác."),
+            ("Đầu vào trường/toán tử không whitelist", "Bị từ chối, không phát sinh SQL động nguy hiểm."),
+        ])
+
+    feature(32, 43, "Đánh giá, so sánh số liệu của KHBHĐBN",
+        "So sánh KHBHĐBN ngày đánh giá với cùng ngày tuần trước để nhận diện tăng/giảm, chuyến bổ sung, trùng số hiệu/chặng và các yếu tố bất thường.",
+        "Chương V mục 3.3.32.", [
+            "Người dùng phải chọn ngày đánh giá; hệ thống mặc định lấy ngày đối chứng là cùng thứ của tuần trước và cho phép xem rõ hai kỳ.",
+            "Hệ thống phải chuẩn hóa phạm vi, phiên bản KHBHĐBN và trạng thái phê duyệt trước khi so sánh; không trộn bản nháp với bản đã duyệt ngoài ý muốn.",
+            "Phải tính tổng chuyến và mức tăng/giảm tuyệt đối, phần trăm theo các chiều tối thiểu: hãng/đơn vị, sân bay, chặng, loại chuyến và khung giờ khi dữ liệu hỗ trợ.",
+            "Hệ thống phải nhận diện chuyến mới/mất, bổ sung theo mùa, bổ sung đột xuất và thay đổi lịch dựa trên nguồn/phiên bản/quy tắc phân loại được phê duyệt.",
+            "Phải phát hiện số hiệu trùng, trùng số hiệu–chặng, dữ liệu bất thường về ngày/giờ/route và nêu danh sách chi tiết thay vì chỉ số tổng.",
+            "Ngưỡng bất thường phải cấu hình theo chỉ số/nhóm; vượt ngưỡng tạo cảnh báo cho nhân viên lập KHHĐBN với mức độ và lý do.",
+            "Người dùng phải drill-down từ chỉ số/cảnh báo tới chuyến, xác nhận hợp lệ, ghi giải trình hoặc yêu cầu điều chỉnh; trạng thái xử lý được audit.",
+            "Cảnh báo đã xác nhận hợp lệ không được lặp vô hạn cho cùng phiên bản; khi dữ liệu thay đổi phải tính lại và mở cảnh báo mới nếu còn vi phạm.",
+            "Báo cáo so sánh phải export được, ghi hai kỳ, bộ lọc, phiên bản nguồn, công thức và thời điểm sinh để phục vụ kiểm tra.",
+        ], [
+            ("Ngày đánh giá có tổng tăng", "Hiển thị đúng tăng tuyệt đối/phần trăm và drill-down chuyến mới."),
+            ("Có chuyến mùa/đột xuất", "Phân loại đúng theo quy tắc và nêu nguồn bằng chứng."),
+            ("Trùng callsign và chặng", "Tạo cảnh báo, hiển thị đầy đủ các dòng liên quan."),
+            ("Xác nhận bất thường hợp lệ", "Lưu giải trình, không cảnh báo lặp cùng phiên bản; dữ liệu đổi được tính lại."),
+        ])
+
+    doc.add_heading("7.44. Yêu cầu chung và truy vết FR-OPT-022…023, 025…029, 031…032", level=2)
+    table(doc, ["Mã", "Yêu cầu chung"], [
+        ("NFR-OPT-REM-01", "Mọi job/tích hợp phải có batch/correlation ID, trạng thái, retry có giới hạn, idempotency và log không chứa bí mật."),
+        ("NFR-OPT-REM-02", "Ngày/giờ phải lưu nguồn và múi giờ; giao diện hiển thị múi giờ nghiệp vụ; kiểm thử biên qua ngày/tháng/năm."),
+        ("NFR-OPT-REM-03", "Truy vấn/báo cáo lớn phải phân trang hoặc chạy nền; dữ liệu, biểu đồ và export phải đối soát cùng bộ lọc."),
+        ("NFR-OPT-REM-04", "Mọi thao tác ghi, xác nhận xung đột, batch edit và đồng bộ phải kiểm tra quyền phía máy chủ và lưu audit trước–sau."),
+    ])
+    table(doc, ["Yêu cầu", "Thành phần cần chốt trong thiết kế", "Bằng chứng nghiệm thu"], [
+        ("FR-OPT-022/023/027", "FPL/TBHĐB, flight matching, route segment, time/date service", "Dữ liệu nguồn, phiên bản trước–sau, cờ uncertainty/cross-midnight và test biên."),
+        ("FR-OPT-025", "Receiver batch, Notification/Dashboard, trang drill-down", "Log nhận, thông báo, danh sách chi tiết và quyền."),
+        ("FR-OPT-026/029", "Bravo API, mapping/match key, conflict queue, reconciliation", "Payload/response đã che bí mật, snapshot, KPI và discrepancy export."),
+        ("FR-OPT-028", "Danh sách chuyến, batch-edit service, audit", "Preview, phân quyền, transaction/rollback và log từng dòng."),
+        ("FR-OPT-031/032", "Report metadata/query builder, preset, KHBHĐBN compare/alert", "Bộ lọc, công thức, drill-down, preset, cảnh báo/giải trình và file export."),
+    ])
+
+
+def add_rpt001_specification(doc):
+    doc.add_heading("8.3. FR-RPT-001 – Biểu đồ thông tin tổng quan khai thác bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/FlightOperationOverview.aspx?Menu_ID=908 – Thông tin tổng quan khai thác bay."),
+        ("Mục tiêu", "Tổng hợp trực quan chuyến hoàn thành và chuyến delay theo thời gian, sân bay và trạng thái; cho phép truy xuống danh sách chi tiết."),
+        ("Nguồn hiện tại", "Ngày hiện tại dùng T_DAY_FLIGHTS_GOINGON; khoảng lịch sử dùng T_FINISHED_FLIGHTS, thông qua quy tắc SQL dùng chung với FlightStatusRate."),
+        ("Đối tượng sử dụng", "Người khai thác, cán bộ trực và người lập/kiểm tra báo cáo có quyền truy cập Menu_ID=908."),
+        ("Tính chất", "Báo cáo chỉ đọc; tương tác biểu đồ không sửa dữ liệu khai thác nguồn."),
+    ])
+
+    doc.add_heading("8.3.1. Bộ lọc và quy tắc nguồn dữ liệu", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.01", "Màn hình phải cung cấp bộ lọc Từ ngày, Đến ngày và Sân bay; mặc định từ ngày đầu tháng hiện tại đến ngày hiện tại và Tất cả sân bay."),
+        ("FR-RPT-001.02", "Ngày nhập phải theo định dạng hợp lệ, Từ ngày không lớn hơn Đến ngày và Đến ngày không vượt quá ngày hiện tại."),
+        ("FR-RPT-001.03", "Nếu cả Từ ngày và Đến ngày đều là ngày hiện tại, hệ thống phải lấy nguồn T_DAY_FLIGHTS_GOINGON; các khoảng còn lại phải dùng T_FINISHED_FLIGHTS theo quy tắc lịch sử."),
+        ("FR-RPT-001.04", "Bộ lọc sân bay phải có Tất cả sân bay và danh mục mã/tên sân bay; khi chọn một sân bay, dữ liệu phải gồm chuyến có sân bay đó ở FROM hoặc TO."),
+        ("FR-RPT-001.05", "Truy vấn phải dùng tham số bind, điều kiện ngày từ >= from và < to+1, timeout tối đa 120 giây; lỗi tải phải được thông báo mà không hiển thị dữ liệu cũ như kết quả mới."),
+    ])
+
+    doc.add_heading("8.3.2. Chỉ số tổng quan và quy tắc trạng thái", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.06", "Hệ thống phải hiển thị bốn KPI: Tổng chuyến bay, Chuyến hoàn thành, Chuyến Delay và Số sân bay khai thác."),
+        ("FR-RPT-001.07", "Tổng chuyến bay phải bằng số Hoàn thành cộng số Delay trong tập dữ liệu phù hợp bộ lọc; các trạng thái khác không được âm thầm cộng vào tổng này."),
+        ("FR-RPT-001.08", "FINISHED được tính là Hoàn thành; mọi trạng thái bắt đầu bằng DELAY được tính là Delay và phải giữ nhãn khoảng delay khi hiển thị chi tiết."),
+        ("FR-RPT-001.09", "KPI Hoàn thành và Delay phải hiển thị số lượng và tỷ lệ phần trăm trên Tổng chuyến, làm tròn một chữ số thập phân; tổng bằng 0 phải hiển thị 0%, không phát sinh lỗi chia."),
+        ("FR-RPT-001.10", "Số sân bay khai thác phải đếm số sân bay Việt Nam có ít nhất một lượt cất hoặc hạ cánh trong tập dữ liệu; mã sân bay Việt Nam hiện được nhận diện bằng tiền tố VV."),
+        ("FR-RPT-001.11", "Giao diện phải chỉ rõ nguồn dữ liệu đang sử dụng để người kiểm định phân biệt báo cáo ngày hiện tại và lịch sử."),
+    ])
+
+    doc.add_heading("8.3.3. Biểu đồ và tương tác drill-down", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.12", "Biểu đồ tròn phải thể hiện cơ cấu Hoàn thành/Delay bằng số lượng và tỷ lệ, có màu/nhãn phân biệt và tổng ở tâm."),
+        ("FR-RPT-001.13", "Biểu đồ cột phải thể hiện số lượt cất cánh và hạ cánh theo từng sân bay Việt Nam, sắp xếp theo tổng lượt giảm dần rồi theo mã sân bay."),
+        ("FR-RPT-001.14", "Nhấn một cột cất cánh/hạ cánh phải cập nhật biểu đồ trạng thái và danh sách chi tiết theo đúng sân bay và chiều chuyển động; nhấn lại phải bỏ lựa chọn."),
+        ("FR-RPT-001.15", "Nhấn phân đoạn/thẻ Hoàn thành hoặc Delay phải lọc danh sách chi tiết theo trạng thái; nhấn lại trạng thái đang chọn phải bỏ lọc."),
+        ("FR-RPT-001.16", "Khi kết hợp sân bay/chiều chuyển động và trạng thái, danh sách phải thỏa đồng thời các lựa chọn; số ở biểu đồ và tiêu đề danh sách phải đối soát được."),
+        ("FR-RPT-001.17", "Biểu đồ phải có trạng thái Không có dữ liệu rõ ràng, không vẽ cột hoặc tỷ lệ gây hiểu nhầm khi tập kết quả rỗng."),
+    ])
+
+    doc.add_heading("8.3.4. Danh sách chi tiết và export", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-001.18", "Danh sách chi tiết phải gồm STT, CALLSIGN, OPER, REGISTRATION, PERMTYPE, FROM_AIRP, TO_AIRP, ATDDAY, ATADAY, EOBTDAY và TRẠNG THÁI."),
+        ("FR-RPT-001.19", "Danh sách phải hỗ trợ chọn 25, 50, 100, 200, 500 hoặc 1000 dòng/trang, nút Trước/Sau và hiển thị trang hiện tại, tổng trang, tổng dòng sau drill-down."),
+        ("FR-RPT-001.20", "Export Excel phải xuất toàn bộ tập chi tiết đang được lọc bởi ngày, sân bay, cột cất/hạ cánh và trạng thái, không chỉ trang đang xem."),
+        ("FR-RPT-001.21", "Tên file phải chứa FlightOperationOverview và khoảng ngày; file phải giữ cùng cột, nhãn trạng thái và số dòng như tập chi tiết trên màn hình."),
+        ("FR-RPT-001.22", "Khi không có dữ liệu, nút export phải từ chối thao tác với thông báo rõ; nội dung xuất phải được encode an toàn để không thực thi công thức ngoài ý muốn."),
+    ])
+
+    doc.add_heading("8.3.5. Yêu cầu phi chức năng và ngoại lệ", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-RPT-001.01", "Báo cáo phải hiển thị trạng thái đang tải và vô hiệu hóa nút Áp dụng trong thời gian request, tránh gửi chồng."),
+        ("NFR-RPT-001.02", "KPI, biểu đồ và danh sách phải được dựng từ cùng một snapshot/kết quả request để tránh lệch số liệu trong một lần xem."),
+        ("NFR-RPT-001.03", "Mọi nội dung dữ liệu đưa vào HTML phải được encode; người dùng không có quyền Menu_ID=908 không được truy cập dữ liệu báo cáo."),
+        ("NFR-RPT-001.04", "Báo cáo phải hoạt động trên độ phân giải desktop khai thác và hỗ trợ cuộn ngang biểu đồ/danh sách khi số sân bay hoặc cột vượt vùng hiển thị."),
+        ("NFR-RPT-001.05", "Phải ghi log lỗi truy vấn gồm thời điểm, bộ lọc và mã lỗi nhưng không ghi chuỗi kết nối hoặc thông tin bí mật."),
+    ])
+
+    doc.add_heading("8.3.6. Tiêu chí kiểm thử và nghiệm thu", level=3)
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-RPT-001-01", "Ngày hiện tại, tất cả sân bay", "Dùng T_DAY_FLIGHTS_GOINGON; KPI tổng = Finished + Delay"),
+        ("TC-RPT-001-02", "Khoảng ngày lịch sử", "Dùng T_FINISHED_FLIGHTS và gồm trọn ngày kết thúc"),
+        ("TC-RPT-001-03", "Chọn một sân bay", "Chỉ chuyến có FROM hoặc TO là sân bay chọn; KPI/biểu đồ/danh sách khớp"),
+        ("TC-RPT-001-04", "Nhấn cột cất cánh và trạng thái Delay", "Drill-down chỉ chứa chuyến đi từ sân bay chọn và có trạng thái DELAY*"),
+        ("TC-RPT-001-05", "Nhấn cột hạ cánh và Hoàn thành", "Drill-down chỉ chứa chuyến đến sân bay chọn và FINISHED"),
+        ("TC-RPT-001-06", "Đổi số dòng/trang và chuyển trang", "STT, tổng dòng, trang và dữ liệu nhất quán"),
+        ("TC-RPT-001-07", "Export sau drill-down", "Excel chứa toàn bộ tập đang lọc, không chỉ trang hiện tại"),
+        ("TC-RPT-001-08", "Không có dữ liệu", "KPI bằng 0, biểu đồ/danh sách có thông báo và không export"),
+        ("TC-RPT-001-09", "Ngày sai, từ ngày > đến ngày hoặc đến ngày tương lai", "Yêu cầu bị từ chối với thông báo phù hợp"),
+        ("TC-RPT-001-10", "Đối soát trực tiếp Oracle", "Số Finished, Delay, cất/hạ cánh và chi tiết khớp truy vấn nguồn"),
+    ])
+
+    doc.add_heading("8.3.7. Ma trận truy vết FR-RPT-001", level=3)
+    table(doc, ["Yêu cầu", "Thành phần", "Nguồn dữ liệu/bằng chứng"], [
+        ("FR-RPT-001", "FlightOperationOverview.aspx/.js/.aspx.cs; ReportControls; FlightStatusRate SQL", "T_DAY_FLIGHTS_GOINGON, T_FINISHED_FLIGHTS; ảnh KPI/biểu đồ; Excel; log; TC-RPT-001-*"),
+    ])
+
+
+def add_rpt002_010_specification(doc):
+    doc.add_heading("8.4. FR-RPT-002 – Phân tích xu hướng khai thác theo thời gian", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/FlightTrendAnalysis.aspx?Menu_ID=909."),
+        ("Mục tiêu", "So sánh chuyến Hoàn thành và Delay của kỳ hiện tại với đúng cùng kỳ năm trước theo ngày hoặc tháng."),
+        ("Nguồn", "T_DAY_FLIGHTS_GOINGON cho đúng ngày hiện tại; T_FINISHED_FLIGHTS cho lịch sử; danh mục hãng tổng hợp thêm từ T_KHH."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-002.01", "Bộ lọc phải gồm Từ ngày, Đến ngày, Sân bay, Hãng bay và kỳ nhóm Ngày/Tháng; khoảng ngày phải hợp lệ, không vượt ngày hiện tại."),
+        ("FR-RPT-002.02", "Hệ thống phải tính kỳ so sánh bằng cùng khoảng ngày lùi đúng một năm và trả rõ previousFrom/previousTo."),
+        ("FR-RPT-002.03", "Chỉ FINISHED và DELAY* được đưa vào xu hướng; mọi điểm hiện tại và cùng kỳ phải dùng cùng quy tắc trạng thái, sân bay và hãng."),
+        ("FR-RPT-002.04", "Phải hiển thị bốn KPI: tổng kỳ hiện tại, tổng cùng kỳ, chênh lệch tuyệt đối và tỷ lệ thay đổi; trường hợp mẫu bằng 0 phải có quy ước rõ."),
+        ("FR-RPT-002.05", "Biểu đồ phải có hai chuỗi Kỳ hiện tại/Cùng kỳ năm trước, nhóm theo ngày hoặc tháng, sắp xếp thời gian tăng dần và hiển thị tooltip số chuyến."),
+        ("FR-RPT-002.06", "Các khoảng không có dữ liệu phải hiển thị điểm 0 để hai chuỗi có cùng trục, không được dịch sai mốc so sánh."),
+        ("FR-RPT-002.07", "Danh sách hãng phải được nạp theo khoảng ngày, chuẩn hóa mã VNA thành HVN theo quy tắc hiện hành và giữ lựa chọn khi tải lại."),
+        ("FR-RPT-002.08", "KPI, biểu đồ và nguồn dữ liệu phải thuộc cùng một kết quả request; lỗi tải không được giữ biểu đồ cũ dưới tiêu chí mới."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-002-01", "Nhóm theo ngày", "Điểm hiện tại/cùng kỳ đúng ngày và tổng bằng KPI"),
+        ("TC-RPT-002-02", "Nhóm theo tháng qua nhiều tháng", "Tổng hợp đúng tháng, đúng thứ tự"),
+        ("TC-RPT-002-03", "Lọc sân bay và hãng", "Hai kỳ áp dụng cùng bộ lọc"),
+        ("TC-RPT-002-04", "Cùng kỳ bằng 0", "Chênh lệch đúng, tỷ lệ không lỗi chia"),
+        ("TC-RPT-002-05", "Đối soát Oracle", "Tổng Finished+Delay từng kỳ khớp nguồn"),
+    ])
+
+    doc.add_heading("8.5. FR-RPT-003 – Phát hiện và cảnh báo dữ liệu bất thường", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/AnomalyWarning.aspx?Menu_ID=910 – hiện triển khai cảnh báo chuyến bay delay ngày hiện tại."),
+        ("Nguồn", "T_DAY_FLIGHTS_GOINGON; so sánh ETD và ATD sau chuẩn hóa."),
+        ("Ngưỡng", "Mức 1: 15–29 phút; Mức 2: 30–59 phút; Mức 3: từ 60 phút."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-003.01", "Hệ thống phải lấy chuyến ngày hiện tại có đủ ETD/ATD và tính số phút chậm theo thời gian nghiệp vụ, xử lý đúng qua ngày."),
+        ("FR-RPT-003.02", "Chỉ tạo cảnh báo khi delay từ 15 phút; phân mức chính xác tại các biên 15, 30 và 60 phút."),
+        ("FR-RPT-003.03", "Phải hiển thị KPI Tổng cảnh báo và số lượng Mức 1/2/3; tổng ba mức phải bằng Tổng cảnh báo."),
+        ("FR-RPT-003.04", "Nút Xem cảnh báo delay phải mở hộp thoại danh sách và cho lọc Tất cả hoặc từng mức mà không tải lại trang."),
+        ("FR-RPT-003.05", "Danh sách phải gồm mức, CALLSIGN, hãng, đăng ký, PERMTYPE, FROM, TO, ETD bốn số, ATD sáu số và thời lượng chậm."),
+        ("FR-RPT-003.06", "Cảnh báo phải sắp xếp ưu tiên mức cao/thời lượng lớn trước và không nhân đôi cùng chuyến trong một lần tính."),
+        ("FR-RPT-003.07", "Thiếu/sai ETD hoặc ATD phải được ghi lỗi dữ liệu, không suy đoán và không tạo cảnh báo delay sai."),
+        ("FR-RPT-003.08", "Giao diện phải hiển thị thời điểm cập nhật/nguồn và trạng thái không có cảnh báo; dữ liệu đưa vào HTML phải encode."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-003-01", "Delay 14/15/29/30/59/60 phút", "Phân loại đúng các biên"),
+        ("TC-RPT-003-02", "Lọc từng mức", "Số dòng và KPI mức khớp"),
+        ("TC-RPT-003-03", "Chuyến qua ngày", "Số phút delay đúng, không âm"),
+        ("TC-RPT-003-04", "Thiếu ETD/ATD", "Không cảnh báo sai; có dấu vết lỗi"),
+        ("TC-RPT-003-05", "Không có cảnh báo", "KPI 0 và thông báo rõ"),
+    ])
+
+    doc.add_heading("8.6. FR-RPT-004 – Tích hợp ADS-B cho báo cáo khai thác thực tế", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Quan hệ kế thừa", "Áp dụng cùng nguồn, hợp đồng dữ liệu, quy tắc chuẩn hóa và kiểm soát chất lượng của FR-INT-002 – Thu thập và xử lý dữ liệu ADS-B cho khai thác O/F."),
+        ("Phạm vi FR-INT-002", "Tiếp nhận/đồng bộ ADS-B, chuẩn hóa bản tin/vệt bay, chống trùng, lưu T_TRACKS_LOG và giám sát luồng tích hợp."),
+        ("Phạm vi FR-RPT-004", "Khai thác dữ liệu ADS-B đã chuẩn hóa để lập báo cáo thực tế, đối soát KHB/FPL và cung cấp bằng chứng vệt bay; không định nghĩa lại cơ chế thu thập."),
+        ("Màn hình liên quan", "ReportNew/AdsBPerformanceReport.aspx, các báo cáo khai thác thực tế và màn hình bản đồ/vệt bay được phân quyền."),
+        ("Nguồn chính", "T_TRACKS_LOG và dữ liệu ADS-B chuẩn hóa; dữ liệu KHB/FPL/T_DAY_FLIGHTS/T_FINISHED_FLIGHTS dùng để đối chiếu."),
+    ])
+    doc.add_heading("8.6.1. Hợp đồng dữ liệu kế thừa từ FR-INT-002", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-004.01", "Báo cáo chỉ được sử dụng bản ghi ADS-B đã qua chuẩn hóa và đạt trạng thái chất lượng cho phép theo FR-INT-002; bản ghi lỗi/cách ly không được đưa vào KPI chính."),
+        ("FR-RPT-004.02", "Mỗi bản ghi/vệt bay phải giữ định danh nguồn như TRLOG_ID, CALLSIGN, thời gian UTC, vị trí, FROM/TO, PERMTYPE và trạng thái để truy vết ngược."),
+        ("FR-RPT-004.03", "Báo cáo phải dùng cùng quy tắc chống trùng, chuẩn hóa CALLSIGN, mã sân bay, múi giờ và phân loại LD/O/F của FR-INT-002."),
+        ("FR-RPT-004.04", "Khi dữ liệu ADS-B đến muộn hoặc được hiệu chỉnh, báo cáo phải thể hiện thời điểm cập nhật và cho phép tính lại mà không nhân đôi chuyến/vệt bay."),
+        ("FR-RPT-004.05", "Nếu luồng ADS-B gián đoạn hoặc độ trễ vượt ngưỡng, báo cáo phải cảnh báo tình trạng nguồn, không hiển thị số liệu cũ như dữ liệu thời gian thực."),
+    ])
+    doc.add_heading("8.6.2. Báo cáo khai thác thực tế và đối soát", level=3)
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-004.06", "Người dùng phải lọc được khoảng ngày, PERMTYPE LD/O/F, hãng, CALLSIGN, sân bay/FIR hoặc tiêu chí ADS-B được cấp quyền."),
+        ("FR-RPT-004.07", "Hệ thống phải ghép dữ liệu ADS-B với KHB/FPL/chuyến bay bằng khóa nghiệp vụ có thứ tự ưu tiên; trường hợp nhiều ứng viên phải đưa vào Chưa xác định, không tự ghép rủi ro."),
+        ("FR-RPT-004.08", "Báo cáo phải cung cấp tối thiểu tổng chuyến có ADS-B, số/tỷ lệ LD, O/F, Không xác định, trạng thái vùng/FIR và xu hướng theo ngày."),
+        ("FR-RPT-004.09", "Danh sách chi tiết phải hiển thị CALLSIGN, OPER, PERMTYPE, FROM/TO, ETD/ETA, trạng thái, ngày, thời gian cập nhật UTC và liên kết đến vệt bay/bản ghi ADS-B nguồn."),
+        ("FR-RPT-004.10", "Khi có dữ liệu tọa độ, người dùng có quyền phải xem được vệt bay trên bản đồ theo trình tự thời gian; điểm bất hợp lệ phải bị đánh dấu/loại theo quy tắc chất lượng."),
+        ("FR-RPT-004.11", "Báo cáo phải nhận diện các trường hợp có KHB/FPL nhưng không có ADS-B, có ADS-B nhưng không ghép được KHB/FPL và sai khác thời gian/hành trình để phục vụ kiểm tra."),
+        ("FR-RPT-004.12", "Drill-down và export phải giữ tiêu chí lọc, định danh nguồn, thời gian UTC và trạng thái chất lượng; dữ liệu nhạy cảm chỉ xuất cho người có quyền."),
+        ("FR-RPT-004.13", "KPI, biểu đồ, bảng và export trong một lần xem phải dùng cùng snapshot/phiên bản dữ liệu ADS-B."),
+        ("FR-RPT-004.14", "Mọi kết quả phải truy vết hai chiều tới FR-INT-002, batch/lần nhận, bản ghi T_TRACKS_LOG và test case tích hợp tương ứng."),
+    ])
+    doc.add_heading("8.6.3. Yêu cầu phi chức năng và nghiệm thu", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-RPT-004.01", "Thời gian tải báo cáo phải được đo trên tập dữ liệu ADS-B ngày cao điểm; truy vấn phải phân trang và dùng index theo thời gian/khóa ghép."),
+        ("NFR-RPT-004.02", "Thời gian UTC phải được lưu/đối soát nhất quán; khi hiển thị giờ địa phương phải ghi rõ múi giờ."),
+        ("NFR-RPT-004.03", "Dữ liệu bản đồ/vị trí và export phải tuân thủ phân quyền, audit truy cập và chính sách lưu giữ ADS-B."),
+        ("NFR-RPT-004.04", "Mất kết nối nguồn báo cáo không được ảnh hưởng luồng thu thập FR-INT-002; lỗi hiển thị phải được cô lập và log."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả mong đợi"], [
+        ("TC-RPT-004-01", "Bản ghi ADS-B hợp lệ đã chuẩn hóa", "Xuất hiện đúng một lần trong KPI, xu hướng và chi tiết"),
+        ("TC-RPT-004-02", "Bản ghi lỗi/cách ly từ FR-INT-002", "Không vào KPI chính; hiển thị riêng nếu có quyền"),
+        ("TC-RPT-004-03", "ADS-B ghép đúng KHB/FPL", "Hiển thị đầy đủ chuyến và liên kết hai chiều"),
+        ("TC-RPT-004-04", "Nhiều ứng viên hoặc không có KHB/FPL", "Chưa xác định/cảnh báo, không ghép sai"),
+        ("TC-RPT-004-05", "Dữ liệu đến muộn và chạy lại", "Kết quả cập nhật, không trùng"),
+        ("TC-RPT-004-06", "Mất/độ trễ luồng ADS-B", "Cảnh báo tình trạng nguồn và thời điểm dữ liệu cuối"),
+        ("TC-RPT-004-07", "Drill-down vệt bay", "Đúng TRLOG_ID, thứ tự UTC và tọa độ hợp lệ"),
+        ("TC-RPT-004-08", "Export theo LD/O/F và hãng", "Số dòng/snapshot khớp báo cáo, có định danh nguồn"),
+        ("TC-RPT-004-09", "Người dùng không có quyền vị trí/export", "Bị từ chối và có audit"),
+    ])
+
+    doc.add_heading("8.7. FR-RPT-005 – Tổng hợp chỉ số hiệu suất bay từ ADS-B O/F", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/AdsBPerformanceReport.aspx?Menu_ID=923."),
+        ("Nguồn", "API AdsBPerformance và T_TRACKS_LOG; bổ sung OPER từ T_DAY_FLIGHTS_GOINGON khi cần."),
+        ("Phạm vi", "PERMTYPE Tất cả/LD/O/F, hãng khai thác, khoảng ngày; có báo cáo end-of-day."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-005.01", "Bộ lọc phải gồm Từ ngày, Đến ngày, PERMTYPE ALL/LD/O/F và OPER; danh sách OPER phải phụ thuộc khoảng ngày và loại phép."),
+        ("FR-RPT-005.02", "Phải hiển thị KPI Tổng bản ghi, LD, O/F và tỷ lệ LD/O/F; tổng các nhóm đã xác định cộng nhóm khác phải bằng tổng."),
+        ("FR-RPT-005.03", "Biểu đồ xu hướng phải tổng hợp theo ngày, tối thiểu tách LD, O/F và Other, sắp xếp theo ngày tăng dần."),
+        ("FR-RPT-005.04", "Bảng chi tiết phải gồm CALLSIGN, OPER, PERMTYPE, FROM/TO, ETD/ETA, STATUS, DATE và UPDATED_AT_UTC; hỗ trợ 50/100/200/500 dòng."),
+        ("FR-RPT-005.05", "Trạng thái ADS-B phải hiển thị nhãn VVHN, VVHM hoặc Không xác định theo mã trạng thái hiện hành."),
+        ("FR-RPT-005.06", "Báo cáo end-of-day phải trả TIME_IN/TIME_OUT và đúng cùng bộ lọc; số liệu phải truy vết về TRLOG_ID."),
+        ("FR-RPT-005.07", "API lỗi hoặc dữ liệu không đầy đủ phải hiển thị thông báo, không trộn kết quả cũ; mốc UTC phải được ghi nhãn rõ."),
+        ("FR-RPT-005.08", "KPI, xu hướng, bảng và end-of-day phải đối soát được với T_TRACKS_LOG và không đếm trùng TRLOG_ID."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-005-01", "Lọc LD và O/F", "KPI/bảng/xu hướng chỉ gồm loại chọn"),
+        ("TC-RPT-005-02", "Lọc OPER", "Danh sách và tổng khớp hãng"),
+        ("TC-RPT-005-03", "Có trạng thái khác", "Đưa vào Other/Không xác định, không mất tổng"),
+        ("TC-RPT-005-04", "End-of-day", "TIME_IN/TIME_OUT và số dòng khớp nguồn"),
+        ("TC-RPT-005-05", "Đối soát TRLOG_ID", "Không trùng và tổng đúng"),
+    ])
+
+    doc.add_heading("8.8. FR-RPT-006 – Biểu đồ thống kê trạng thái chuyến bay theo tỷ lệ phần trăm", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/FlightStatusRate.aspx?Menu_ID=907."),
+        ("Nhóm trạng thái", "Hoàn thành, Hủy, Delay và Chờ."),
+        ("Nguồn", "Ngày hiện tại: T_DAY_FLIGHTS_GOINGON và T_DAY_FLIGHTS_CANCEL; lịch sử: T_FINISHED_FLIGHTS cùng dữ liệu ghép FPL/KHH."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-006.01", "Bộ lọc phải gồm ngày/khoảng ngày, sân bay và hãng; chế độ ngày hiện tại phải dùng đúng nguồn currentDay."),
+        ("FR-RPT-006.02", "Tổng chuyến phải bằng Finished + Cancel + Delay + Wait; mỗi chuyến chỉ thuộc một nhóm trạng thái ưu tiên."),
+        ("FR-RPT-006.03", "Delay phải phân loại theo quy tắc DELAY_15_29, DELAY_30_59, DELAY_60_PLUS nhưng biểu đồ tỷ lệ được gộp vào nhóm Delay."),
+        ("FR-RPT-006.04", "KPI và biểu đồ donut phải hiển thị số lượng, tỷ lệ một chữ số thập phân và màu/nhãn nhất quán cho bốn nhóm."),
+        ("FR-RPT-006.05", "Nhấn KPI hoặc phân đoạn donut phải lọc/bỏ lọc danh sách chi tiết và cập nhật số dòng/trang."),
+        ("FR-RPT-006.06", "Danh sách phải gồm CALLSIGN, OPER, REGISTRATION, PERMTYPE, FROM/TO, ATDDAY, ATADAY, EOBTDAY, trạng thái và hỗ trợ 25–1000 dòng/trang."),
+        ("FR-RPT-006.07", "Export Excel phải xuất toàn bộ tập trạng thái đang chọn, không chỉ trang hiện tại."),
+        ("FR-RPT-006.08", "Logic ghép dữ liệu nhiều nguồn phải chống trùng bằng độ ưu tiên/ROWID hoặc khóa nghiệp vụ và truy vết được nguồn."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-006-01", "Tập có đủ bốn trạng thái", "Tỷ lệ/tổng bằng 100% trong sai số làm tròn"),
+        ("TC-RPT-006-02", "Drill-down từng trạng thái", "Danh sách đúng nhóm và tổng"),
+        ("TC-RPT-006-03", "Ngày hiện tại/lịch sử", "Chọn đúng nguồn, không trùng"),
+        ("TC-RPT-006-04", "Export sau chọn Delay", "Chỉ toàn bộ DELAY*, đúng số dòng"),
+        ("TC-RPT-006-05", "Tổng bằng 0", "Tỷ lệ 0%, không lỗi"),
+    ])
+
+    doc.add_heading("8.9. FR-RPT-007 – Biểu đồ so sánh hoạt động bay giữa các sân bay", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "Common/ChartReportAirport.aspx?Menu_ID=906."),
+        ("Mục tiêu", "So sánh lưu lượng chuyến bay của từ một đến năm sân bay trong khoảng ngày."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-007.01", "Người dùng phải chọn số lượng 1–5 sân bay, các sân bay tương ứng và Từ ngày/Đến ngày; không cho chọn trùng sân bay."),
+        ("FR-RPT-007.02", "Biểu đồ phải hiển thị hai chuỗi so sánh theo quy ước giao diện, dùng cùng nguồn/quy tắc trạng thái cho mọi sân bay."),
+        ("FR-RPT-007.03", "Số liệu cất/đến hoặc hai nhóm so sánh phải tính theo FROM_AIRP/TO_AIRP sau chuẩn hóa và chỉ gồm trạng thái hợp lệ đã công bố."),
+        ("FR-RPT-007.04", "Biểu đồ cột phải có số trên cột, nhãn sân bay, legend, trục tỷ lệ dùng chung và co giãn theo giá trị lớn nhất."),
+        ("FR-RPT-007.05", "Thay đổi số sân bay phải hiện/ẩn đúng các ô chọn, giữ các lựa chọn còn hợp lệ và tải lại khi người dùng xác nhận."),
+        ("FR-RPT-007.06", "Ngày hiện tại và lịch sử phải áp dụng cùng quy tắc nguồn với FlightStatusRate; dữ liệu hủy phải được tính đúng nhóm nếu biểu đồ yêu cầu."),
+        ("FR-RPT-007.07", "Không có dữ liệu hoặc lỗi phải hiển thị trạng thái rõ, không giữ cột của lần trước."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-007-01", "So sánh 1 và 5 sân bay", "Đủ cột/nhãn, không lệch trục"),
+        ("TC-RPT-007-02", "Chọn trùng sân bay", "Bị chặn"),
+        ("TC-RPT-007-03", "Sân bay có lưu lượng chênh lệch lớn", "Tỷ lệ cột chính xác"),
+        ("TC-RPT-007-04", "Đối soát FROM/TO", "Số liệu từng sân bay khớp Oracle"),
+    ])
+
+    doc.add_heading("8.10. FR-RPT-008 – Báo cáo chuyến bay quân sự theo tiêu chí mở rộng", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/MilitaryFlightReport.aspx?Menu_ID=911."),
+        ("Nguồn/API", "api/MilitaryFlightReport/GetData; dữ liệu chuyến bay quân sự đã được phép khai thác theo phân quyền."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-008.01", "Bộ lọc phải gồm Sân bay, Mục đích, Từ ngày và Đến ngày; danh mục sân bay/mục đích phải được trả từ dữ liệu/danh mục hợp lệ."),
+        ("FR-RPT-008.02", "Lọc sân bay phải nhận chuyến có FROM hoặc TO là sân bay chọn; lọc mục đích phải khớp PURPOSE sau chuẩn hóa."),
+        ("FR-RPT-008.03", "Báo cáo phải hiển thị các KPI/tổng hợp do API trả và danh sách chi tiết cùng một tập dữ liệu."),
+        ("FR-RPT-008.04", "Danh sách phải gồm P_TYPE, FROM/TO, ETD/ETA, ATD/ATA, PURPOSE và FLIGHTDATE; hỗ trợ 25/50/100/200/500 dòng."),
+        ("FR-RPT-008.05", "Export Excel chỉ bật khi có dữ liệu và phải xuất toàn bộ kết quả lọc, kèm tiêu chí ngày/sân bay/mục đích."),
+        ("FR-RPT-008.06", "Báo cáo chỉ đọc; người không có quyền dữ liệu quân sự không được gọi API hoặc xem/export kết quả."),
+        ("FR-RPT-008.07", "Dữ liệu nhạy cảm phải được encode, log truy cập/export và không lộ ngoài phạm vi người dùng được cấp quyền."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-008-01", "Lọc sân bay/mục đích", "Danh sách và KPI khớp"),
+        ("TC-RPT-008-02", "Phân trang", "Tổng/STT/trang nhất quán"),
+        ("TC-RPT-008-03", "Export", "Đủ toàn bộ dòng lọc"),
+        ("TC-RPT-008-04", "Người không có quyền", "Bị từ chối và có audit"),
+    ])
+
+    doc.add_heading("8.11. FR-RPT-009 – Báo cáo tổng hợp hoạt động bay tại tất cả sân bay dân dụng", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/CivilFlightSummary.aspx?Menu_ID=912."),
+        ("Mục tiêu", "Tổng hợp hoạt động bay dân dụng và lưu lượng đi/đến tại các sân bay."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-009.01", "Bộ lọc phải gồm Sân bay, Từ ngày, Đến ngày; mặc định khoảng 30 ngày đến hiện tại."),
+        ("FR-RPT-009.02", "Báo cáo phải loại trừ chuyến quân sự theo quy tắc nghiệp vụ được phê duyệt và chỉ tính các sân bay dân dụng hợp lệ."),
+        ("FR-RPT-009.03", "KPI phải tối thiểu tổng chuyến, chuyến hoàn thành/delay hoặc các chỉ số API công bố; tổng hợp phải khớp danh sách chi tiết."),
+        ("FR-RPT-009.04", "Bảng lưu lượng sân bay phải gồm Sân bay, Đi, Đến và Tổng; Tổng = Đi + Đến, sắp xếp lưu lượng giảm dần."),
+        ("FR-RPT-009.05", "Danh sách chi tiết phải gồm Ngày bay, Chuyến bay, Hãng, FROM, TO và Trạng thái; lọc sân bay áp dụng cho FROM hoặc TO."),
+        ("FR-RPT-009.06", "Một chuyến nội địa có thể tạo một lượt đi và một lượt đến ở hai sân bay nhưng chỉ được tính một chuyến trong KPI tổng."),
+        ("FR-RPT-009.07", "Không có dữ liệu/lỗi phải hiển thị rõ; số liệu phải truy vết được về nguồn và tiêu chí."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-009-01", "Tất cả sân bay 30 ngày", "KPI, lưu lượng và chi tiết khớp"),
+        ("TC-RPT-009-02", "Lọc một sân bay", "Đi/Đến/Tổng đúng"),
+        ("TC-RPT-009-03", "Chuyến nội địa A→B", "KPI đếm một; A đi một; B đến một"),
+        ("TC-RPT-009-04", "Dữ liệu quân sự", "Bị loại đúng quy tắc"),
+    ])
+
+    doc.add_heading("8.12. FR-RPT-010 – Báo cáo cất, hạ cánh tại các sân bay toàn quốc", level=2)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Màn hình", "ReportNew/AirportTakeoffLanding.aspx?Menu_ID=913."),
+        ("Nguồn", "T_FINISHED_FLIGHTS, chỉ trạng thái FINISHED hoặc DELAY*."),
+    ])
+    table(doc, ["Mã chi tiết", "Yêu cầu"], [
+        ("FR-RPT-010.01", "Bộ lọc phải gồm Từ ngày, Đến ngày, Sân bay/Tất cả; ngày phải hợp lệ và gồm trọn ngày kết thúc."),
+        ("FR-RPT-010.02", "Phải hiển thị KPI Tổng cất cánh, Tổng hạ cánh, Số sân bay khai thác và Sân bay lưu lượng cao nhất."),
+        ("FR-RPT-010.03", "Cất cánh được tính theo FROM_AIRP, hạ cánh theo TO_AIRP; chỉ mã sân bay Việt Nam hợp lệ được đưa vào tổng hợp toàn quốc."),
+        ("FR-RPT-010.04", "Biểu đồ phải có cặp cột cất/hạ cánh theo sân bay, số trên cột và sắp xếp theo tổng lưu lượng giảm dần."),
+        ("FR-RPT-010.05", "Nhấn một cột phải tải danh sách chi tiết phía máy chủ theo sân bay và movement departure/arrival, không lọc toàn bộ dữ liệu ở client."),
+        ("FR-RPT-010.06", "Chi tiết phải gồm CALLSIGN, OPER, REGISTRATION, PERMTYPE, FROM/TO, ATDDAY, ATADAY, EOBTDAY, trạng thái và hỗ trợ 25–500 dòng/trang."),
+        ("FR-RPT-010.07", "Tổng chi tiết drill-down phải bằng giá trị cột; phân trang phải trả total/totalPages ổn định."),
+        ("FR-RPT-010.08", "Sân bay lưu lượng cao nhất phải là sân bay có Departures + Arrivals lớn nhất; hòa phải áp dụng thứ tự mã ổn định."),
+    ])
+    table(doc, ["Mã kiểm thử", "Tình huống", "Kết quả"], [
+        ("TC-RPT-010-01", "Tất cả sân bay", "KPI và cặp cột khớp nguồn"),
+        ("TC-RPT-010-02", "Lọc một sân bay", "Chỉ sân bay chọn, tổng đúng"),
+        ("TC-RPT-010-03", "Drill-down cất/hạ cánh", "Chi tiết và giá trị cột khớp"),
+        ("TC-RPT-010-04", "Phân trang 25/500", "Tổng và trang ổn định"),
+        ("TC-RPT-010-05", "Không có dữ liệu", "KPI 0 và thông báo rõ"),
+    ])
+
+    doc.add_heading("8.13. Ma trận truy vết FR-RPT-002…FR-RPT-010", level=2)
+    table(doc, ["Yêu cầu", "Thành phần chính", "Bằng chứng kiểm định"], [
+        ("FR-RPT-002", "FlightTrendAnalysis.aspx/.js/.cs", "KPI, hai chuỗi xu hướng, Oracle và TC-RPT-002-*"),
+        ("FR-RPT-003", "AnomalyWarning.aspx/.js/.cs", "Dữ liệu biên delay, popup cảnh báo và TC-RPT-003-*"),
+        ("FR-RPT-004", "FR-INT-002, T_TRACKS_LOG, báo cáo/bản đồ ADS-B", "Batch nguồn, KPI, vệt bay, export và TC-RPT-004-*"),
+        ("FR-RPT-005", "AdsBPerformanceReport, API AdsBPerformance, T_TRACKS_LOG", "KPI/xu hướng/end-of-day và TC-RPT-005-*"),
+        ("FR-RPT-006", "FlightStatusRate.aspx/.js/.cs", "Donut, drill-down, Excel, Oracle và TC-RPT-006-*"),
+        ("FR-RPT-007", "ChartReportAirport.aspx/.cs", "Biểu đồ 1–5 sân bay, Oracle và TC-RPT-007-*"),
+        ("FR-RPT-008", "MilitaryFlightReport.js/API", "Phân quyền, danh sách, Excel và TC-RPT-008-*"),
+        ("FR-RPT-009", "CivilFlightSummary/FlightSummaryReports.js/API", "KPI, bảng lưu lượng, chi tiết và TC-RPT-009-*"),
+        ("FR-RPT-010", "AirportTakeoffLanding.aspx/.js/.cs", "KPI, cột, drill-down, Oracle và TC-RPT-010-*"),
+    ])
+
+
+def add_alt002_specification(doc):
+    if not ALT002_SOURCE.exists():
+        raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-ALT-002: {ALT002_SOURCE}")
+    source = Document(ALT002_SOURCE)
+    doc.add_heading(
+        "6.4. Đặc tả chi tiết FR-ALT-002 – Quản lý thông tin KHB quân sự và sử dụng vùng trời",
+        level=2,
+    )
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mã yêu cầu tổng thể", "FR-ALT-002"),
+        ("Tên yêu cầu", "Quản lý thông tin KHB quân sự và sử dụng vùng trời"),
+        ("Tài liệu nguồn", "SRS_Live_Fire_Message.docx"),
+        ("Phạm vi quy trình", "Live Fire Message; Daily Statistic; KHB quân sự; QS Message; báo cáo khai thác"),
+        ("Trạng thái", "Đã tích hợp đặc tả hiện trạng"),
+    ])
+    doc.add_paragraph(
+        "Đặc tả này hợp nhất các quy trình nghiệp vụ có liên quan đến hoạt động bay quân sự "
+        "và sử dụng vùng trời: lập/phê duyệt điện văn bắn đạn thật, thống kê chuyến bay hoàn "
+        "thành, quản lý KHB quân sự, tạo QS Message, phát điện văn và cung cấp dữ liệu chỉ xem "
+        "cho người khai thác."
+    )
+
+    skipped_cover_lines = 0
+    source_heading_seen = False
+    for block in iter_blocks(source):
+        if isinstance(block, Paragraph):
+            text = block.text.strip()
+            if not text:
+                continue
+            style = block.style.name if block.style else "Normal"
+            if not source_heading_seen and not style.startswith("Heading"):
+                skipped_cover_lines += 1
+                if skipped_cover_lines <= 3:
+                    continue
+            if style.startswith("Heading"):
+                source_heading_seen = True
+                doc.add_heading(clean_source_heading(text), level=3)
+            elif style.startswith("List Bullet"):
+                doc.add_paragraph(text, style="List Bullet")
+            elif style.startswith("List Number"):
+                doc.add_paragraph(text, style="List Number")
+            else:
+                doc.add_paragraph(text)
+        else:
+            rows = [[cell.text.strip() for cell in row.cells] for row in block.rows]
+            if rows:
+                table(doc, rows[0], rows[1:])
+
+    doc.add_heading("6.4.1. Liên kết kiểm thử và truy vết FR-ALT-002", level=3)
+    table(doc, ["Nhóm nghiệp vụ", "Yêu cầu/test case nguồn", "Bằng chứng dự kiến"], [
+        ("Live Fire Message", "FR-LF, BR-LF, NFR-LF, TC-LF", "Ảnh màn hình, API/package log, dữ liệu trạng thái"),
+        ("Daily Statistic", "FR-DS, BR-DS, NFR-DS, TC-DS", "Danh sách trước/sau Accepted, export và audit"),
+        ("KHB quân sự", "FR-MIL, BR-MIL, NFR-MIL, TC-MIL", "KHB nguồn, QS Message, trạng thái phát và Military Report"),
+    ])
+
+
+def add_alt001_specification(doc):
+    doc.add_heading(
+        "6.3. Đặc tả chi tiết FR-ALT-001 – Hệ thống cảnh báo thông minh đa kịch bản",
+        level=2,
+    )
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Mã yêu cầu", "FR-ALT-001"),
+        ("Tên chức năng", "Hệ thống cảnh báo/thông báo cập nhật liên tục"),
+        ("Điểm truy cập chính", "/Common/ChartReport.aspx"),
+        ("Thành phần giao diện", "Ô thông báo trên ATFM_New.Master; trang /SLOTS/Notifications.aspx"),
+        ("API nội bộ", "/Handlers/Notification.ashx"),
+        ("Dữ liệu", "T_NOTIFICATION; T_NOTIFICATION_TARGET; T_NOTIFICATION_READ"),
+        ("Gói Oracle", "NOTIFICATION_PKG"),
+        ("Chu kỳ cập nhật giao diện", "30 giây và cập nhật theo sự kiện"),
+    ])
+    doc.add_paragraph(
+        "Chức năng cung cấp thông báo gần thời gian thực cho người dùng đã đăng nhập. Ô "
+        "thông báo nằm trên master page nên xuất hiện tại ChartReport và các trang dùng "
+        "ATFM_New.Master. Hệ thống hợp nhất thông báo nội bộ và thông báo đồng bộ từ báo cáo "
+        "email, phân phối theo toàn hệ thống hoặc từng người dùng, đồng thời quản lý trạng thái "
+        "đã đọc độc lập cho mỗi tài khoản."
+    )
+
+    doc.add_heading("6.3.1. Tác nhân và thành phần", level=3)
+    table(doc, ["Tác nhân/thành phần", "Trách nhiệm"], [
+        ("Người dùng ATFM", "Xem badge, mở danh sách, đánh dấu đã đọc và xem toàn bộ thông báo."),
+        ("Hệ thống nghiệp vụ", "Tạo thông báo chung hoặc chỉ định danh sách người nhận."),
+        ("API Email", "Cung cấp email và trạng thái attachment để chuyển thành thông báo."),
+        ("ATFM_New.Master", "Tải/cập nhật danh sách, badge và xử lý thao tác đọc."),
+        ("Notification.ashx", "Xác thực phiên, đồng bộ email, gọi package và trả JSON."),
+        ("NOTIFICATION_PKG", "Lọc theo người dùng, phân trang, ghi trạng thái đọc và tạo thông báo."),
+        ("Oracle", "Lưu nội dung, đối tượng nhận và trạng thái đọc theo người dùng."),
+    ])
+
+    doc.add_heading("6.3.2. Luồng xử lý", level=3)
+    table(doc, ["Bước", "Xử lý"], [
+        ("1", "Người dùng đăng nhập và mở ChartReport hoặc trang dùng ATFM_New.Master."),
+        ("2", "Giao diện gọi GET Notification.ashx để lấy thông báo chưa đọc và tổng số chưa đọc."),
+        ("3", "Handler thử đồng bộ thông báo email nếu lần thử gần nhất đã cách ít nhất 15 giây."),
+        ("4", "NOTIFICATION_PKG.GET_STATE lọc thông báo chung/cá nhân và loại thông báo người dùng đã đọc."),
+        ("5", "Giao diện hiển thị tối đa 50 thông báo gần nhất và badge tổng số chưa đọc."),
+        ("6", "Mỗi 30 giây hệ thống tải lại nếu trang đang hiển thị; request chồng được xếp chờ một lượt."),
+        ("7", "Người dùng có thể đánh dấu một thông báo hoặc toàn bộ thông báo là đã đọc."),
+        ("8", "Trang Xem tất cả cung cấp bộ lọc trạng thái, phân trang 100 dòng và tải lại thủ công."),
+    ])
+
+    doc.add_heading("6.3.3. Trạng thái và dữ liệu", level=3)
+    table(doc, ["Đối tượng", "Trạng thái/thuộc tính", "Ý nghĩa"], [
+        ("Thông báo", "TARGET_TYPE = 0", "Thông báo chung cho mọi người dùng."),
+        ("Thông báo", "TARGET_TYPE = 1", "Chỉ hiển thị cho người dùng có trong T_NOTIFICATION_TARGET."),
+        ("Người dùng/thông báo", "Chưa có T_NOTIFICATION_READ", "Thông báo chưa đọc."),
+        ("Người dùng/thông báo", "Có T_NOTIFICATION_READ", "Thông báo đã đọc bởi người dùng đó."),
+        ("Nguồn email", "SOURCE_TYPE = EMAIL_API", "Thông báo được đồng bộ từ API Email."),
+        ("Khóa nguồn email", "SOURCE_KEY SHA-256", "Chống tạo trùng theo Message-ID hoặc ID báo cáo."),
+    ])
+    table(doc, ["Trường", "Yêu cầu"], [
+        ("TITLE", "Bắt buộc, NVARCHAR2, tối đa 250 ký tự."),
+        ("CONTENT", "Bắt buộc, NVARCHAR2, tối đa 2.000 ký tự."),
+        ("DATETIME", "Thời điểm phát sinh/nhận thông báo; dùng sắp xếp mới nhất trước."),
+        ("TARGET_TYPE", "Chỉ nhận 0 hoặc 1."),
+        ("SOURCE_TYPE/SOURCE_KEY", "Nhận diện nguồn và bảo đảm idempotency khi đồng bộ ngoài."),
+        ("NOTIFICATION_ID/USER_ID", "Khóa phân phối cá nhân và trạng thái đọc."),
+    ])
+
+    doc.add_heading("6.3.4. Yêu cầu chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("FR-NOTI-01", "Chỉ người dùng có identity và ATFM_CURRENT_USER hợp lệ, khớp tên đăng nhập, mới được gọi API thông báo."),
+        ("FR-NOTI-02", "Khi tải trang, hệ thống phải tự động lấy trạng thái thông báo mà không cần người dùng thao tác."),
+        ("FR-NOTI-03", "Hệ thống phải tự cập nhật thông báo mỗi 30 giây và khi nhận sự kiện atfm:notifications-changed."),
+        ("FR-NOTI-04", "Không khởi tạo request cập nhật mới khi request trước đang chạy; phải thực hiện một lượt chờ sau khi request hiện tại kết thúc."),
+        ("FR-NOTI-05", "Khi tab/trang bị ẩn, lượt cập nhật định kỳ không bắt buộc tải dữ liệu; thao tác mở popup phải tải cưỡng bức."),
+        ("FR-NOTI-06", "Badge phải hiển thị tổng số chưa đọc, hiển thị 99+ khi tổng lớn hơn 99 và ẩn trạng thái nhấn mạnh khi bằng 0."),
+        ("FR-NOTI-07", "Popup phải hiển thị tối đa 50 thông báo chưa đọc gần nhất gồm tiêu đề, nội dung và thời điểm."),
+        ("FR-NOTI-08", "Nội dung động phải được gán bằng textContent để không thực thi HTML/script từ dữ liệu."),
+        ("FR-NOTI-09", "Người dùng được đánh dấu từng thông báo là đã đọc; thông báo phải được loại khỏi popup và giảm badge."),
+        ("FR-NOTI-10", "Người dùng được đánh dấu tất cả thông báo của mình là đã đọc; không ảnh hưởng trạng thái của người dùng khác."),
+        ("FR-NOTI-11", "Trang Xem tất cả phải lọc Tất cả/Chưa đọc/Đã đọc, phân trang 100 dòng và hiển thị tổng số."),
+        ("FR-NOTI-12", "Hệ thống phải hỗ trợ tạo thông báo chung hoặc thông báo cho danh sách user ID hợp lệ."),
+        ("FR-NOTI-13", "Thông báo cá nhân chỉ được trả cho người dùng thuộc danh sách đích."),
+        ("FR-NOTI-14", "Khi GET state/list, handler phải thử đồng bộ nguồn Email API với thời gian tối thiểu 15 giây giữa hai lần thử trong cùng tiến trình."),
+        ("FR-NOTI-15", "Các dòng attachment của cùng email phải được gộp theo Message-ID và chọn dòng có thông tin xử lý hữu ích nhất."),
+        ("FR-NOTI-16", "Đồng bộ email phải MERGE theo SOURCE_TYPE/SOURCE_KEY để cập nhật nội dung mà không tạo bản ghi trùng."),
+        ("FR-NOTI-17", "Thông báo email phải gồm người gửi, attachment, thời gian, trạng thái xử lý, trạng thái xác nhận và lỗi."),
+        ("FR-NOTI-18", "Lỗi Email API không được làm gián đoạn việc trả các thông báo nội bộ đang có."),
+        ("FR-NOTI-19", "API phải trả lỗi 401 cho phiên không hợp lệ, 403 cho POST không phải XMLHttpRequest, 405 cho phương thức sai và 400 cho tham số/thao tác sai."),
+        ("FR-NOTI-20", "Khi tải lần đầu thất bại, giao diện phải báo Không thể tải thông báo; lỗi các lần sau không được xóa dữ liệu đã hiển thị thành công."),
+    ])
+
+    doc.add_heading("6.3.5. Quy tắc nghiệp vụ", level=3)
+    table(doc, ["Mã", "Quy tắc"], [
+        ("BR-NOTI-01", "Trạng thái đọc được quản lý riêng theo cặp thông báo–người dùng."),
+        ("BR-NOTI-02", "Thông báo chung áp dụng cho mọi người; thông báo cá nhân phải có ít nhất một user ID hợp lệ."),
+        ("BR-NOTI-03", "Người dùng không được đánh dấu đọc thông báo không thuộc phạm vi nhận của mình."),
+        ("BR-NOTI-04", "TITLE và CONTENT là bắt buộc khi tạo thông báo."),
+        ("BR-NOTI-05", "Danh sách và popup sắp xếp thông báo mới nhất trước theo DATETIME và ID."),
+        ("BR-NOTI-06", "Một email chỉ sinh một thông báo logic; Message-ID được ưu tiên làm identity nguồn."),
+        ("BR-NOTI-07", "Nếu email không có Message-ID, dùng ID báo cáo để tạo identity ổn định."),
+        ("BR-NOTI-08", "Đánh dấu đã đọc không xóa thông báo gốc và không làm mất lịch sử của người dùng khác."),
+    ])
+
+    doc.add_heading("6.3.6. Yêu cầu phi chức năng", level=3)
+    table(doc, ["Mã", "Yêu cầu"], [
+        ("NFR-NOTI-01", "Chu kỳ polling mặc định 30 giây; đồng bộ Email API không thường xuyên hơn 15 giây mỗi tiến trình."),
+        ("NFR-NOTI-02", "Email API timeout đọc/kết nối 5 giây; Oracle command timeout 10–15 giây tùy thao tác."),
+        ("NFR-NOTI-03", "Request nền không được kích hoạt lớp loading toàn trang hoặc làm gián đoạn thao tác dashboard."),
+        ("NFR-NOTI-04", "API phải đặt NoCache/NoStore để tránh trả trạng thái thông báo cũ."),
+        ("NFR-NOTI-05", "Tất cả câu lệnh Oracle phải bind parameter; đồng bộ email phải dùng transaction và rollback khi lỗi."),
+        ("NFR-NOTI-06", "Nội dung hiển thị phải chống XSS; lỗi máy chủ không được trả chi tiết nhạy cảm cho trình duyệt."),
+        ("NFR-NOTI-07", "Chỉ hoạt động trong phiên đã xác thực; POST thay đổi trạng thái phải có header X-Requested-With."),
+        ("NFR-NOTI-08", "Giao diện popup phải hỗ trợ bàn phím/Escape, aria-label và trạng thái disabled rõ ràng."),
+        ("NFR-NOTI-09", "Lỗi đồng bộ nguồn ngoài phải được Trace Warning; lỗi xử lý chính phải Trace Error để giám sát."),
+        ("NFR-NOTI-10", "Index phải hỗ trợ truy vấn theo thời gian, target và user để polling không làm suy giảm hiệu năng."),
+    ])
+
+    doc.add_heading("6.3.7. Tiêu chí nghiệm thu và truy vết", level=3)
+    tests = [
+        ("TC-NOTI-01", "Mở ChartReport bằng phiên hợp lệ", "Badge và danh sách được tải tự động"),
+        ("TC-NOTI-02", "Chờ trên 30 giây sau khi tạo thông báo", "Thông báo mới xuất hiện không cần reload trang"),
+        ("TC-NOTI-03", "Polling khi request trước chưa xong", "Không chạy chồng; chỉ tải lại một lượt chờ"),
+        ("TC-NOTI-04", "Có trên 99 thông báo chưa đọc", "Badge hiển thị 99+ và aria-label chứa số thực"),
+        ("TC-NOTI-05", "Đánh dấu một thông báo đã đọc", "Dòng biến mất, badge giảm một và DB ghi theo user"),
+        ("TC-NOTI-06", "Đánh dấu tất cả đã đọc", "Badge về 0, popup rỗng; user khác không bị ảnh hưởng"),
+        ("TC-NOTI-07", "Thông báo cá nhân", "Chỉ người nhận được chỉ định nhìn thấy"),
+        ("TC-NOTI-08", "Nội dung chứa thẻ script/HTML", "Chỉ hiển thị dạng văn bản, không thực thi"),
+        ("TC-NOTI-09", "Email API trả nhiều attachment cùng Message-ID", "Chỉ tạo một thông báo email"),
+        ("TC-NOTI-10", "Đồng bộ lại cùng email", "Không tạo trùng; nội dung được MERGE khi thay đổi"),
+        ("TC-NOTI-11", "Email API lỗi/timeout", "Thông báo nội bộ vẫn tải được"),
+        ("TC-NOTI-12", "Phiên không hợp lệ gọi handler", "HTTP 401"),
+        ("TC-NOTI-13", "POST không có X-Requested-With", "HTTP 403"),
+        ("TC-NOTI-14", "Trang Xem tất cả lọc và phân trang", "Đúng trạng thái, tổng số và 100 dòng/trang"),
+        ("TC-NOTI-15", "Oracle lỗi khi đồng bộ email", "Transaction rollback, không có dữ liệu dở dang"),
+    ]
+    table(doc, ["Mã kiểm thử", "Nội dung", "Kết quả mong đợi"], tests)
+    table(doc, ["Nhóm yêu cầu", "Kiểm thử"], [
+        ("FR-NOTI-01…FR-NOTI-08", "TC-NOTI-01…TC-NOTI-04, TC-NOTI-08, TC-NOTI-12"),
+        ("FR-NOTI-09…FR-NOTI-13", "TC-NOTI-05…TC-NOTI-07, TC-NOTI-13…TC-NOTI-14"),
+        ("FR-NOTI-14…FR-NOTI-20", "TC-NOTI-09…TC-NOTI-11, TC-NOTI-15"),
+        ("NFR-NOTI-01…NFR-NOTI-10", "TC-NOTI-02…TC-NOTI-04, TC-NOTI-08, TC-NOTI-11…TC-NOTI-15"),
+    ])
+
+
+def add_aerosync_specification(doc):
+    if not AEROSYNC_SOURCE.exists():
+        raise FileNotFoundError(f"Thiếu tài liệu nguồn FR-INT-001: {AEROSYNC_SOURCE}")
+    source = Document(AEROSYNC_SOURCE)
+
+    doc.add_heading("5.3. Đặc tả chi tiết FR-INT-001 – VATM AeroSync", level=2)
+    doc.add_paragraph(
+        "VATM AeroSync tự động phát hiện tệp từ email hoặc thư mục Incoming, kiểm tra và "
+        "chuẩn hóa dữ liệu, đồng bộ giấy phép bay phù hợp vào Oracle ATFM, lưu dấu vết "
+        "xử lý và cung cấp giao diện giám sát cho người vận hành. Nội dung dưới đây được "
+        "chuẩn hóa từ tài liệu SRS_VATM_AeroSync_Hien_Tai.docx."
+    )
+
+    doc.add_heading("5.3.1. Thông tin đặc tả", level=3)
+    source_table(doc, source, 1)
+    doc.add_heading("5.3.2. Phạm vi", level=3)
+    doc.add_paragraph("Trong phạm vi:")
+    for item in [
+        "Quét định kỳ hộp thư IMAP và thư mục Incoming; giới hạn số lượng tệp mỗi chu kỳ.",
+        "Kiểm tra trùng nội dung bằng SHA-256, tạo công việc và phân phối qua RabbitMQ.",
+        "Nhận dạng giấy phép Word theo profile YAML; trích xuất, chuẩn hóa và kiểm tra dữ liệu.",
+        "Ghi giấy phép vào Oracle ATFM bằng giao dịch master/detail và cơ chế chống ghi trùng.",
+        "Lưu trữ tệp theo kết quả, ghi audit, cảnh báo và giám sát qua REST API/WinUI.",
+        "Tra cứu báo cáo email, resend attachment và retry/replay theo các chốt an toàn.",
+    ]:
+        doc.add_paragraph(item, style="List Bullet")
+    doc.add_paragraph("Ngoài phạm vi/giới hạn hiện tại:")
+    source_table(doc, source, 2)
+
+    doc.add_heading("5.3.3. Tác nhân và trách nhiệm", level=3)
+    source_table(doc, source, 3)
+    doc.add_paragraph(
+        "Các vai trò trên là vai trò nghiệp vụ. Phiên bản hiện tại chưa áp đặt RBAC theo "
+        "từng người dùng; môi trường triển khai phải kiểm soát quyền mở UI và truy cập API."
+    )
+
+    doc.add_heading("5.3.4. Kiến trúc và luồng xử lý", level=3)
+    doc.add_paragraph("Thành phần hệ thống:")
+    source_table(doc, source, 4)
+    doc.add_paragraph("Luồng xử lý chính:")
+    source_table(doc, source, 5)
+    doc.add_paragraph("Giao diện REST chính:")
+    source_table(doc, source, 6)
+
+    doc.add_heading("5.3.5. Trạng thái xử lý", level=3)
+    doc.add_paragraph("Trạng thái công việc đồng bộ:")
+    source_table(doc, source, 7)
+    doc.add_paragraph("Trạng thái import giấy phép:")
+    source_table(doc, source, 8)
+    doc.add_paragraph("Trạng thái email, file, archive và acknowledgement:")
+    source_table(doc, source, 9)
+
+    doc.add_heading("5.3.6. Yêu cầu chức năng chi tiết", level=3)
+    groups = [
+        (10, "Tiếp nhận và tạo công việc"),
+        (11, "Kiểm định, nhận dạng và chuẩn hóa"),
+        (12, "Đồng bộ Oracle ATFM"),
+        (13, "Lưu trữ, audit và phản hồi email"),
+        (14, "Giám sát, cấu hình và báo cáo"),
+        (15, "Retry, resend và test replay"),
+    ]
+    for index, title in groups:
+        doc.add_paragraph(title).runs[0].bold = True
+        source_table(doc, source, index)
+
+    doc.add_heading("5.3.7. Yêu cầu dữ liệu", level=3)
+    doc.add_paragraph("Dữ liệu theo dõi và dữ liệu mục tiêu:")
+    source_table(doc, source, 16)
+    doc.add_paragraph("Dữ liệu giấy phép Word:")
+    source_table(doc, source, 17)
+    doc.add_paragraph(
+        "Danh mục hiện trạng có 127 profile YAML. Đây không phải giới hạn thiết kế; profile "
+        "mới phải có regression test và mapping tham chiếu cần thiết."
+    )
+
+    doc.add_heading("5.3.8. Quy tắc nghiệp vụ", level=3)
+    source_table(doc, source, 18)
+    doc.add_heading("5.3.9. Yêu cầu phi chức năng", level=3)
+    source_table(doc, source, 19)
+
+    doc.add_heading("5.3.10. Tiêu chí kiểm thử và truy vết", level=3)
+    table(doc, ["Nhóm yêu cầu", "Phạm vi kiểm thử", "Bằng chứng dự kiến"], [
+        ("FR-AS-01…FR-AS-09", "Quét nguồn, checkpoint, SHA-256, tạo job và publish queue", "Job/File/Email metadata; log RabbitMQ"),
+        ("FR-AS-10…FR-AS-19", "Validate, profile recognition, parse, normalize và quarantine", "Chi tiết job; lỗi theo dòng; file archive"),
+        ("FR-AS-20…FR-AS-27", "Redis lock, dry-run, giao dịch Oracle, duplicate và revision", "PermitImport; audit; dữ liệu master/detail"),
+        ("FR-AS-28…FR-AS-32", "Archive, audit, acknowledgement và retention", "Cây thư mục; audit; trạng thái email"),
+        ("FR-AS-33…FR-AS-39", "REST API, cấu hình, dashboard, báo cáo và OpenAPI", "Response API; ảnh UI; OpenAPI"),
+        ("FR-AS-40…FR-AS-45", "Retry, resend cleanup và test replay", "Audit; trạng thái reset; kết quả replay"),
+        ("NFR-AS-01…NFR-AS-16", "Hiệu năng, an toàn, idempotency, bảo mật và quan sát", "Kết quả đo; cấu hình; log; biên bản"),
+    ])
+
+
+def add_completed_introduction(doc):
+    doc.add_heading("1. Giới thiệu", level=1)
+    doc.add_heading("1.1. Mục đích", level=2)
+    doc.add_paragraph("Tài liệu xác định yêu cầu chức năng, dữ liệu, tích hợp, phi chức năng, triển khai và nghiệm thu cho dự án Cập nhật, hiệu chỉnh cơ sở dữ liệu, phần mềm Hệ thống số liệu điều hành bay. Tài liệu là cơ sở thống nhất phạm vi giữa chủ đầu tư, đơn vị nghiệp vụ, đơn vị triển khai, kiểm thử và nghiệm thu.")
+    doc.add_heading("1.2. Phạm vi", level=2)
+    table(doc, ["Trong phạm vi", "Ngoài phạm vi/điều kiện"], [
+        ("Nâng cấp ATFM_WEB theo 5 phân hệ; dữ liệu Oracle; tích hợp Email, ADS-B, SLOT, AMHS/AFTN, Bravo và API; báo cáo, cảnh báo, AI; bảo mật, vận hành và chuyển giao.", "Không thay đổi nghiệp vụ/hệ thống bên ngoài nếu không có đặc tả giao tiếp được phê duyệt; mua sắm phần cứng và license được quản lý theo hồ sơ dự án, SRS chỉ nêu ràng buộc phần mềm."),
+    ])
+    doc.add_heading("1.3. Đối tượng sử dụng tài liệu", level=2)
+    table(doc, ["Đối tượng", "Mục đích sử dụng"], [
+        ("Chủ đầu tư/Người quyết định đầu tư", "Phê duyệt phạm vi, tiêu chí nghiệm thu và thay đổi."),
+        ("Đơn vị nghiệp vụ, khai thác viên", "Xác nhận quy trình, dữ liệu, giao diện và UAT."),
+        ("Đơn vị triển khai/phát triển", "Thiết kế, lập trình, tích hợp, chuyển đổi và triển khai."),
+        ("Nhóm kiểm thử/kiểm định", "Xây dựng test case, truy vết và bằng chứng."),
+        ("Quản trị hệ thống, ATTT và vận hành", "Đánh giá kiến trúc, bảo mật, giám sát, sao lưu và xử lý sự cố."),
+    ])
+    doc.add_heading("1.4. Thuật ngữ và từ viết tắt", level=2)
+    table(doc, ["Thuật ngữ", "Diễn giải"], [
+        ("ATFM/HTSLB", "Quản lý luồng không lưu/Hệ thống số liệu điều hành bay."),
+        ("KHB/KHBN/KHHĐBN", "Kế hoạch bay/Kế hoạch bay ngày/Kế hoạch hoạt động bay ngày."),
+        ("FPL, DEP, ARR, DLA", "Các loại điện văn kế hoạch, khởi hành, đến và chậm chuyến."),
+        ("AFTN/AMHS", "Mạng/dịch vụ xử lý điện văn hàng không."),
+        ("ADS-B; O/F", "Giám sát phụ thuộc tự động–quảng bá; chuyến bay quá cảnh."),
+        ("SLOT", "Giờ cất/hạ cánh được phân bổ."),
+        ("FIR", "Vùng thông báo bay."),
+        ("API; REST; JSON; JWT; OAuth", "Giao diện lập trình; kiểu API; định dạng dữ liệu; cơ chế token/xác thực."),
+        ("DMZ", "Vùng mạng trung gian tiếp nhận kết nối bên ngoài."),
+        ("FR/BR/NFR/TC", "Yêu cầu chức năng/Quy tắc nghiệp vụ/Yêu cầu phi chức năng/Ca kiểm thử."),
+        ("RTO/RPO", "Thời gian phục hồi/Mức mất dữ liệu tối đa chấp nhận."),
+        ("UAT", "Kiểm thử chấp nhận người dùng."),
+    ])
+    doc.add_heading("1.5. Tài liệu tham chiếu", level=2)
+    table(doc, ["Mã", "Tài liệu", "Mục đích"], [
+        ("REF-01", "CHƯƠNG V; YÊU CẦU KỸ THUẬT 21.5.2026.pdf", "Nguồn yêu cầu dự án, kiến trúc, NFR, ATTT cấp độ 2, đào tạo và danh mục chức năng."),
+        ("REF-02", "Plan_20-25.7.2026.docx", "Kế hoạch/phạm vi triển khai."),
+        ("REF-03", "Mã nguồn, cấu hình và script Oracle của ATFM_WEB", "Xác minh hiện trạng và truy vết kỹ thuật."),
+        ("REF-04", "Các SRS thành phần AeroSync, ADS-B, SLOT, AMHS, API Gateway, Live Fire và NL2SQL", "Đặc tả chi tiết các phân hệ tích hợp."),
+        ("REF-05", "Quy định ATTT cấp độ 2 hiện hành và quy chế nội bộ VATM", "Cơ sở kiểm tra tuân thủ; phiên bản áp dụng phải được xác nhận khi nghiệm thu."),
+    ])
+
+
+def add_completed_overview(doc):
+    doc.add_heading("2. Tổng quan hệ thống", level=1)
+    doc.add_heading("2.1. Bối cảnh nghiệp vụ", level=2)
+    doc.add_paragraph("ATFM_WEB phục vụ quản lý phép bay, KHB, hiệp đồng thông báo bay, thống kê số liệu và chia sẻ dữ liệu. Hệ thống hiện hữu vận hành trên web từ năm 2020/2021, sử dụng Oracle, các máy chủ ứng dụng/web và gateway AFTN/AMHS. Dự án là nâng cấp mở rộng tại Trung tâm Quản lý luồng không lưu, dự kiến thực hiện trong năm 2026.")
+    doc.add_heading("2.2. Mục tiêu nâng cấp", level=2)
+    table(doc, ["Mã", "Mục tiêu"], [
+        ("OBJ-01", "Tự động hóa tiếp nhận, chuẩn hóa và đồng bộ dữ liệu; giảm nhập và đối chiếu thủ công."),
+        ("OBJ-02", "Bổ sung dữ liệu ADS-B O/F, SLOT, AMHS/AFTN và API Bravo 10/chia sẻ dữ liệu."),
+        ("OBJ-03", "Tối ưu truy vấn, ExportBravo và Gen KHB; nâng cao tìm kiếm, báo cáo và cảnh báo chủ động."),
+        ("OBJ-04", "Tăng cường bảo mật, giám sát, sao lưu và khả năng truy vết theo ATTT cấp độ 2."),
+        ("OBJ-05", "Hỗ trợ tra cứu ngôn ngữ tự nhiên và phân tích số liệu nhưng bảo đảm kiểm soát quyền/dữ liệu."),
+    ])
+    doc.add_heading("2.3. Các bên liên quan", level=2)
+    table(doc, ["Bên liên quan", "Trách nhiệm"], [
+        ("Trung tâm Quản lý luồng không lưu", "Chủ đầu tư, quản lý dự án, xác nhận nghiệp vụ và nghiệm thu."),
+        ("Đơn vị thông báo hiệp đồng/điều phối/khai thác", "Cung cấp quy trình, dữ liệu mẫu, UAT và khai thác."),
+        ("Đơn vị CNTT/CNS/ATTT", "Hạ tầng, mạng, tài khoản, giám sát, sao lưu và an toàn hệ thống."),
+        ("Hệ thống/đơn vị bên ngoài", "ADS-B, SLOT, AMHS/AFTN, Bravo 10, email và bên tiêu thụ API."),
+        ("Nhà thầu", "Thiết kế, phát triển, kiểm thử, triển khai, tài liệu và đào tạo chuyển giao."),
+    ])
+    doc.add_heading("2.4. Nhóm người dùng", level=2)
+    table(doc, ["Nhóm", "Phạm vi"], [
+        ("Khai thác viên", "Nhập, tra cứu, xử lý dữ liệu theo nhiệm vụ và đơn vị."),
+        ("Người duyệt", "Kiểm tra, phê duyệt KHB/điện văn/báo cáo theo phân quyền."),
+        ("Quản lý/báo cáo", "Dashboard, thống kê, đối soát và xuất báo cáo."),
+        ("Quản trị ứng dụng", "Người dùng, vai trò, menu, danh mục và tham số."),
+        ("Quản trị kỹ thuật/ATTT", "Dịch vụ, log, giám sát, backup, phục hồi và sự cố."),
+        ("Hệ thống tích hợp", "Truy cập API bằng định danh máy/client và phạm vi quyền."),
+    ])
+    doc.add_heading("2.5. Kiến trúc và sơ đồ ngữ cảnh", level=2)
+    table(doc, ["Lớp/vùng", "Thành phần và luồng cho phép"], [
+        ("DMZ", "Reverse Proxy/API Gateway; tiếp nhận người dùng/hệ thống ngoài; không truy cập trực tiếp Data Zone."),
+        ("Presentation", "ATFM_WEB trên Web Server; giao diện, kiểm tra cơ bản và trình bày dữ liệu."),
+        ("Business/Application", "Application/API Server; quy tắc nghiệp vụ, điều phối, job nền và tích hợp."),
+        ("Integration", "Email/file, ADS-B, SLOT, AMHS/AFTN, Bravo và API; xác thực, chuẩn hóa, retry và log."),
+        ("Data", "Oracle và kho hiện thời/lịch sử; chỉ nhận kết nối từ Application Zone qua luồng firewall cho phép."),
+        ("Operations", "Giám sát CPU/RAM/đĩa/dịch vụ/mạng, log tập trung, antivirus, backup NAS/DAS."),
+    ])
+    doc.add_paragraph("Ngữ cảnh: Người dùng → DMZ/Web → Application/API → Oracle; các nguồn ngoài → Gateway/Integration → chuẩn hóa/đối soát → Oracle; kết quả → giao diện/báo cáo/API/điện văn. Mọi luồng qua ranh giới vùng phải được firewall cho phép và ghi log phù hợp.")
+    doc.add_heading("2.6. Giả định và phụ thuộc", level=2)
+    table(doc, ["Mã", "Giả định/phụ thuộc"], [
+        ("DEP-01", "Hạ tầng Primary/Secondary, mạng nội bộ, firewall, DNS/NTP và lưu trữ được cung cấp ổn định."),
+        ("DEP-02", "Oracle, Windows Server/RHEL và antivirus có license/phiên bản được phê duyệt; PDF nêu Oracle Database Standard Edition 2, Windows Server 2025 và RHEL subscription."),
+        ("DEP-03", "Đơn vị sở hữu ADS-B, SLOT, AMHS/AFTN và Bravo cung cấp endpoint, tài khoản, schema, mẫu dữ liệu và môi trường kiểm thử."),
+        ("DEP-04", "Múi giờ nghiệp vụ, mã sân bay/FIR, danh mục và quy tắc đối soát được chủ đầu tư xác nhận."),
+        ("DEP-05", "Các ngưỡng đề xuất trong SRS phải được phê duyệt trước kiểm thử hiệu năng/DR."),
+    ])
+
+
+def add_completed_common_requirements(doc):
+    doc.add_heading("4. Yêu cầu chung", level=1)
+    table(doc, ["Mã", "Nhóm", "Yêu cầu kiểm định"], [
+        ("COM-AUTH-01", "Đăng nhập/phiên", "Mọi màn hình và API bảo vệ phải yêu cầu xác thực; phiên hết hạn buộc đăng nhập lại, không tiếp tục request bằng phiên cũ."),
+        ("COM-AUTH-02", "Đăng nhập/phiên", "Cookie/token phải dùng thuộc tính bảo vệ phù hợp; đăng xuất hủy phiên phía máy chủ; chống cố định phiên và request giả mạo."),
+        ("COM-RBAC-01", "Phân quyền", "Quyền được kiểm tra phía máy chủ theo người dùng–vai trò–menu–thao tác Xem/Thêm/Sửa/Xóa/Duyệt/Export."),
+        ("COM-RBAC-02", "Phân quyền", "API tích hợp dùng OAuth/JWT hoặc cơ chế được phê duyệt, giới hạn scope/client và ghi log truy cập."),
+        ("COM-SEARCH-01", "Tra cứu", "Bộ lọc được trim/chuẩn hóa, bind tham số; điều kiện rỗng không giới hạn; ngày/giờ dùng định dạng thống nhất."),
+        ("COM-SEARCH-02", "Phân trang", "Danh sách lớn phân trang phía DB/service, có tổng số, thứ tự ổn định và giữ bộ lọc khi chuyển trang."),
+        ("COM-INPUT-01", "Nhập liệu", "Kiểm tra bắt buộc, kiểu, độ dài, danh mục, ngày giờ và quy tắc chéo ở cả client và server; lỗi nêu rõ trường/nguyên nhân."),
+        ("COM-INPUT-02", "An toàn dữ liệu", "Encode đầu ra; chống SQL injection, XSS, upload sai loại và công thức nguy hiểm trong file export."),
+        ("COM-AUDIT-01", "Nhật ký", "Ghi người dùng/client, thời gian, hành động, đối tượng, khóa nghiệp vụ, trước–sau, kết quả và correlation ID cho thao tác quan trọng."),
+        ("COM-AUDIT-02", "Truy vết", "Log không chứa mật khẩu/token/dữ liệu bí mật; quyền xem/xóa log bị giới hạn và thời hạn lưu theo chính sách."),
+        ("COM-OUT-01", "Báo cáo", "Export phản ánh toàn bộ tập lọc, có tiêu chí, thời gian sinh và định dạng Excel/PDF/Word khi chức năng yêu cầu."),
+        ("COM-OUT-02", "Điện văn", "Điện văn phải kiểm tra mẫu/cú pháp, chống gửi trùng, lưu nội dung/phiên bản/trạng thái gửi và lỗi phản hồi."),
+    ])
+
+
+def add_completed_data_integration(doc):
+    doc.add_heading("10. Yêu cầu dữ liệu và tích hợp", level=1)
+    table(doc, ["Mã", "Phạm vi", "Yêu cầu"], [
+        ("DATA-01", "Mô hình dữ liệu", "Phân tách dữ liệu tác nghiệp hiện thời, lịch sử, staging, danh mục, audit và cấu hình; mọi bảng có khóa chính, kiểu/độ dài, NULL, mặc định và quan hệ được mô tả."),
+        ("DATA-02", "Từ điển dữ liệu", "Mỗi trường phải có tên vật lý/nghiệp vụ, mô tả, đơn vị, miền giá trị, nguồn, quy tắc chuẩn hóa, dữ liệu nhạy cảm và thời hạn lưu."),
+        ("DATA-03", "Oracle", "Dùng bind parameter, transaction, index theo thời gian/chuyến bay/sân bay/FIR/trạng thái; phân trang tại DB và execution plan cho truy vấn trọng yếu."),
+        ("DATA-04", "Lưu trữ", "INBOX lưu/tra cứu tối thiểu 60 ngày; dữ liệu hiện thời và archive phải tra cứu thống nhất theo quyền."),
+        ("INT-ADS-01", "ADS-B", "Tiếp nhận dữ liệu được cấu hình, kiểm tra schema/thời gian/tọa độ, match KHB/FPL, lưu nguồn và trạng thái chất lượng; hỗ trợ O/F và báo cáo thực tế."),
+        ("INT-MAIL-01", "Email/file", "Quét theo lịch, phát hiện file mới, kiểm tra định dạng, chống trùng; file lỗi chuyển error và cảnh báo; file thành công lưu archive/audit."),
+        ("INT-AMHS-01", "AMHS/AFTN", "Gửi/nhận điện văn qua giao tiếp được phê duyệt, phân tích loại/khóa chuyến, lưu nội dung gốc, trạng thái, retry có giới hạn và log."),
+        ("INT-BRV-01", "Bravo 10", "Trao đổi qua API thay kết nối DB trực tiếp; xác thực, mã hóa kênh truyền, idempotency, đối soát số dòng/tổng tiền và conflict policy."),
+        ("INT-API-01", "API chia sẻ", "REST/JSON qua API Gateway, OAuth/JWT, versioning, scope, rate limit, mã lỗi chuẩn, correlation ID, OpenAPI và log truy cập."),
+        ("INT-REC-01", "Đối soát", "Mọi job nhập/đồng bộ lưu batch, nguồn, số nhận–hợp lệ–lỗi–chèn–cập nhật–bỏ qua; cho phép chạy lại không nhân đôi."),
+        ("INT-ERR-01", "Ngoại lệ", "Lỗi một bản ghi không làm mất dấu toàn batch; có retry/backoff, dead-letter/error queue hoặc danh sách chờ xử lý thủ công."),
+        ("INT-TIME-01", "Thời gian", "Lưu dấu thời gian và múi giờ nguồn; chuẩn hóa múi giờ nghiệp vụ trước so sánh/chuyển ngày; không suy đoán khi thiếu thông tin."),
+    ])
+
+
+def add_completed_nfr(doc):
+    doc.add_heading("11. Yêu cầu phi chức năng", level=1)
+    doc.add_paragraph("Các ngưỡng có nhãn Đề xuất là baseline SRS để kiểm thử và phải được chủ đầu tư phê duyệt; các yêu cầu còn lại được chuẩn hóa từ Chương V – Yêu cầu kỹ thuật.")
+    table(doc, ["Mã", "Nhóm", "Chỉ tiêu/tiêu chí"], [
+        ("NFR-PERF-01", "Hiệu năng", "ExportBravo và Gen KHB ngày hôm sau ra AFTN hoàn thành <180 giây trên bộ dữ liệu cao điểm, tối thiểu 3 lượt liên tiếp."),
+        ("NFR-PERF-02", "Hiệu năng", "Đề xuất: 95% tra cứu/phân trang thông thường ≤5 giây; 95% thao tác ghi thông thường ≤3 giây, không tính hệ thống ngoài."),
+        ("NFR-PERF-03", "Tải lớn", "Tác vụ nặng/đối soát/báo cáo lớn chạy nền, có tiến độ và thông báo; dữ liệu >50.000 bản ghi không khóa request tương tác."),
+        ("NFR-AVAIL-01", "Sẵn sàng", "Khai thác Primary/Secondary 1+1; lỗi một node không làm mất dữ liệu đã commit. Đề xuất availability ứng dụng ≥99,5%/tháng, loại trừ bảo trì được duyệt."),
+        ("NFR-SEC-01", "ATTT", "Đáp ứng yêu cầu hệ thống thông tin cấp độ 2: phòng thủ nhiều lớp, quyền tối thiểu, phân vùng DMZ/Application/Data và kiểm soát firewall."),
+        ("NFR-SEC-02", "Bảo mật", "Mã hóa kênh truyền, bảo vệ dữ liệu lưu trữ phù hợp, quản lý bí mật ngoài mã nguồn, antivirus và vá lỗ hổng trước nghiệm thu."),
+        ("NFR-AUD-01", "Audit", "100% đăng nhập thất bại, thay đổi quyền/cấu hình/dữ liệu, duyệt, export, gửi điện văn và tích hợp trọng yếu có log truy vết."),
+        ("NFR-MON-01", "Giám sát", "Thu thập CPU, RAM, đĩa, dịch vụ, lỗi ứng dụng/DB/tích hợp và lưu lượng mạng; cảnh báo khi vượt ngưỡng cấu hình."),
+        ("NFR-BKP-01", "Sao lưu", "Backup Oracle/cấu hình/tệp nghiệp vụ theo chính sách; mã hóa và kiểm tra khả năng khôi phục. Đề xuất RPO ≤24 giờ, RTO ≤4 giờ cho sự cố mức hệ thống."),
+        ("NFR-RET-01", "Lưu trữ", "INBOX tối thiểu 60 ngày; thời hạn log/audit và dữ liệu lịch sử theo chính sách được phê duyệt, có archive/purge kiểm soát."),
+        ("NFR-USE-01", "Sử dụng", "Giao diện nhất quán, thông tin quan trọng dễ quan sát, bộ lọc/tìm kiếm rõ ràng, cảnh báo không chỉ dựa vào màu và hoạt động trên độ phân giải khai thác phổ biến."),
+        ("NFR-HELP-01", "Trợ giúp", "Có trợ giúp theo ngữ cảnh, tài liệu điện tử/FAQ và đầu mối hỗ trợ cho chức năng mới."),
+        ("NFR-COMP-01", "Tương thích", "Tương thích hạ tầng được phê duyệt gồm Oracle Database Standard Edition 2, Windows Server 2025/RHEL và trình duyệt doanh nghiệp còn hỗ trợ."),
+        ("NFR-MNT-01", "Bảo trì", "Cấu hình theo môi trường; triển khai/rollback có script, version và kiểm tra; không lưu endpoint/tài khoản/bí mật cố định trong mã."),
+    ])
+
+
+def add_completed_operations(doc):
+    doc.add_heading("12. Yêu cầu triển khai và vận hành", level=1)
+    table(doc, ["Mã", "Chủ đề", "Yêu cầu"], [
+        ("OPS-ENV-01", "Môi trường", "Tách DEV/TEST-UAT/PROD; dữ liệu PROD không sao chép sang môi trường thấp nếu chưa ẩn danh và phê duyệt."),
+        ("OPS-NET-01", "Mạng", "Triển khai theo DMZ–Application–Data; firewall chỉ mở cổng/nguồn/đích cần thiết; DB không nhận kết nối trực tiếp bên ngoài."),
+        ("OPS-DEP-01", "Cài đặt", "Gói phát hành có checksum, version, release note, dependency, script DB idempotent, thứ tự chạy, precheck/postcheck và phê duyệt thay đổi."),
+        ("OPS-CFG-01", "Cấu hình", "Endpoint, timeout, lịch job, ngưỡng cảnh báo và bí mật tách theo môi trường; bí mật lưu trong cơ chế được phê duyệt."),
+        ("OPS-MON-01", "Giám sát", "Dashboard/cảnh báo cho CPU, RAM, đĩa, dịch vụ, API, Oracle, job và tích hợp; cảnh báo có mức độ, người nhận, xác nhận và đóng sự cố."),
+        ("OPS-BKP-01", "Sao lưu", "Có lịch full/incremental phù hợp, backup ngoài máy chủ chính, kiểm tra log backup và diễn tập restore trước nghiệm thu."),
+        ("OPS-RBK-01", "Rollback", "Mỗi release có rollback ứng dụng/DB; thay đổi dữ liệu không đảo ngược phải có backup, phương án bù và quyết định Go/No-Go."),
+        ("OPS-RUN-01", "Vận hành", "Runbook gồm start/stop, kiểm tra sức khỏe, xử lý job treo, đầy đĩa, lỗi DB/API/điện văn, chuyển Primary/Secondary và liên hệ escalation."),
+        ("OPS-TRN-01", "Đào tạo", "Nhà thầu đào tạo trực tiếp 2 buổi, 2 chuyên gia, 15 học viên; nội dung kiến trúc, khai thác, phân quyền, quản trị, sự cố, backup/restore và ATTT."),
+        ("OPS-HO-01", "Bàn giao", "Bàn giao mã nguồn, gói cài đặt, script DB, cấu hình mẫu, tài liệu SRS/thiết kế/test/vận hành/đào tạo và biên bản phiên bản."),
+    ])
+
+
+def add_completed_test_acceptance(doc):
+    doc.add_heading("13. Kiểm thử và nghiệm thu", level=1)
+    table(doc, ["Mã", "Nhóm", "Tiêu chí đạt và bằng chứng"], [
+        ("TST-FR-01", "Chức năng", "Mỗi FR/BR có test luồng chính, biên và ngoại lệ; 100% test mức Critical/High đạt; không còn lỗi blocker/critical."),
+        ("TST-INT-01", "Tích hợp", "Kiểm thử contract, xác thực, timeout, retry, trùng, sai schema và mất kết nối cho Email, ADS-B, SLOT, AMHS/AFTN, Bravo, API; đối soát nguồn–đích."),
+        ("TST-DATA-01", "Dữ liệu", "Kiểm tra mapping, NULL, danh mục, ngày/múi giờ, duplicate, batch và archive; tổng số và mẫu dữ liệu khớp biên bản đối soát."),
+        ("TST-PERF-01", "Hiệu năng", "Đo tải đại diện/cao điểm; ExportBravo và Gen KHB <180 giây ba lượt; các baseline NFR đã phê duyệt đạt."),
+        ("TST-SEC-01", "ATTT", "Kiểm tra xác thực, RBAC, injection/XSS/CSRF, upload/export, secret, TLS, log; quét lỗ hổng không còn mức nghiêm trọng/cao chưa có chấp thuận rủi ro."),
+        ("TST-DR-01", "Sao lưu/DR", "Backup và restore thành công; đo RPO/RTO; diễn tập node/service/DB lỗi và lưu biên bản."),
+        ("TST-UAT-01", "UAT", "Đại diện nghiệp vụ thực hiện các quy trình end-to-end, ký biên bản; tồn tại còn lại có mức độ, phương án và thời hạn được chấp thuận."),
+        ("TST-DOC-01", "Tài liệu/chuyển giao", "Đủ tài liệu bàn giao, đào tạo 2 buổi/15 học viên, danh sách tham dự và đánh giá kết quả."),
+    ])
+    doc.add_paragraph("Điều kiện nghiệm thu tổng thể: phạm vi phát hành được phê duyệt; test/bằng chứng truy vết đầy đủ; không còn lỗi ngăn khai thác; dữ liệu đối soát đạt; ATTT, hiệu năng, backup/restore và UAT có biên bản; có phương án rollback và vận hành.")
+
+
+def add_completed_traceability(doc):
+    doc.add_heading("14. Ma trận truy vết", level=1)
+    table(doc, ["Nhóm yêu cầu", "Thiết kế/thành phần", "Kiểm thử", "Bằng chứng bắt buộc", "Trạng thái"], [
+        ("FR-INT-*", "Email/ADS-B/SLOT/AMHS/API Gateway", "TC-INT-* và test contract", "Request/response, batch/log, đối soát", "Theo từng FR"),
+        ("FR-ALT-*", "Notification, Live Fire/Daily/Military", "TC-ALT-*", "Ảnh, DB, điện văn và audit", "Theo từng FR"),
+        ("FR-OPT-*", "Các màn hình/package nâng cấp", "TC-OPT-*", "Ảnh, SQL/API, log hiệu năng và DB trước–sau", "Theo từng FR"),
+        ("FR-RPT-*", "ReportNew/Common và nguồn báo cáo", "TC-RPT-*", "Bộ lọc, KPI, drill-down, file export", "Theo từng FR"),
+        ("FR-AI-*", "NL2SQL/Chatbot/API Oracle", "TC-NL/AI-*", "Câu hỏi, SQL kiểm soát, kết quả và audit", "Theo từng FR"),
+        ("COM/DATA/INT-*", "Master page, API, Oracle, tích hợp", "TST-INT/DATA/SEC", "Cấu hình, log, mapping, đối soát", "Nghiệm thu chung"),
+        ("NFR/OPS-*", "Hạ tầng, giám sát, backup, deployment", "TST-PERF/SEC/DR/DOC", "Báo cáo đo, scan, restore, runbook/đào tạo", "Nghiệm thu chung"),
+    ])
+    doc.add_paragraph("Mỗi dòng chi tiết trong ma trận bàn giao phải có: mã yêu cầu duy nhất, phiên bản thiết kế/mã nguồn/script, mã test, môi trường, dữ liệu kiểm thử, người thực hiện, ngày, kết quả, liên kết bằng chứng và lỗi liên quan.")
+
+
+def add_completed_appendices(doc):
+    doc.add_heading("15. Phụ lục", level=1)
+    doc.add_heading("15.1. Danh mục màn hình và URL", level=2)
+    table(doc, ["Nhóm", "Màn hình đại diện"], [
+        ("Phép bay", "Permission/ListPermissionSC.aspx; ListPermissionNo.aspx; SearchExtension.aspx; SearchPermissionAdv.aspx; View/Edit Perm SC/NO."),
+        ("KHB/điện văn", "Day_Flights/DaylyFlight.aspx; Receive_LogFile/Inbox.aspx; MessManagement/LiveFireMessage*.aspx."),
+        ("Hoàn thành/quân sự", "FinishFlights/ListFinishedFlights*.aspx; ListFlightOnMess.aspx; MilitaryReport.aspx."),
+        ("Báo cáo", "ReportNew/FlightOperationOverview, FlightTrendAnalysis, AnomalyWarning, ADS-B, Military/Civil/Airport reports; Common/ChartReport*.aspx."),
+        ("Công cụ", "Tool/ImportsPermSC_LD_V2.aspx; công cụ phân tích điện văn; AI/Chatbot theo cấu hình."),
+    ])
+    doc.add_heading("15.2. Danh mục API/Package", level=2)
+    table(doc, ["Loại", "Thành phần đại diện"], [
+        ("API dùng chung", "ApiExtension/ExcuteTable, ExcuteReturnInt; API Gateway REST/JSON; OAuth/JWT."),
+        ("Package", "A_TEST_SEARCH, MESSAGE_FLIGHT_PKG, PERM_IMP_V2_PKG, BRAVO_EXPORT_PKG, MESSAGE_PKG/P_FLY và package theo từng FR."),
+        ("Tích hợp", "Email/File ingest, ADS-B/TracksSync, AMHS/AFTN, SLOT, Bravo 10 API."),
+    ])
+    doc.add_heading("15.3. Danh mục bảng dữ liệu", level=2)
+    table(doc, ["Nhóm", "Bảng/kho đại diện"], [
+        ("Phép bay", "T_PERMMASTER_SC/NO, T_PERMDETAIL_SC/NO, staging/import/cancel và danh mục liên quan."),
+        ("KHB/chuyến bay", "T_DAY_FLIGHTS, T_DAY_FLIGHTS_GOINGON, T_FINISHED_FLIGHTS, T_FINISHFLIGHTS_MILITARY."),
+        ("Điện văn", "T_PLAN_MESSAGE, INBOX current/archive và log nhận/gửi."),
+        ("ADS-B/Báo cáo", "T_TRACKS_LOG, kho báo cáo/Bravo và bảng tổng hợp theo thiết kế."),
+        ("Quản trị", "T_MENUS, người dùng/vai trò/quyền, cấu hình, audit/error log."),
+    ])
+    doc.add_heading("15.4. Ma trận phân quyền tối thiểu", level=2)
+    table(doc, ["Vai trò", "Xem", "Nhập/Sửa", "Duyệt", "Export", "Quản trị"], [
+        ("Khai thác", "Theo đơn vị/menu", "Theo nhiệm vụ", "Không mặc định", "Theo quyền", "Không"),
+        ("Người duyệt", "Theo phạm vi", "Điều chỉnh được phép", "Có", "Theo quyền", "Không"),
+        ("Quản lý/báo cáo", "Báo cáo được cấp", "Không mặc định", "Theo nghiệp vụ", "Có", "Không"),
+        ("Quản trị ứng dụng", "Có kiểm soát", "Danh mục/cấu hình", "Không thay nghiệp vụ", "Theo quyền", "User/role/menu"),
+        ("Quản trị kỹ thuật/ATTT", "Log/monitor", "Cấu hình kỹ thuật", "Không", "Log theo quyền", "Hạ tầng/bảo mật"),
+        ("API client", "Theo scope", "Theo endpoint", "Không", "Không mặc định", "Không"),
+    ])
+    doc.add_heading("15.5. Danh mục báo cáo/điện văn", level=2)
+    doc.add_paragraph("Gồm FR-RPT-001…010; Daily Statistic/Military Report; các file ALL/LD/OF/Bravo; KHB ngày; điện văn FPL/DEP/ARR/DLA, Live Fire/QS/Airspace và đầu ra AFTN/AMHS. Mỗi đầu ra phải có mẫu, trường, bộ lọc, nguồn và quyền được phê duyệt.")
+    doc.add_heading("15.6. Biểu mẫu bằng chứng kiểm thử", level=2)
+    table(doc, ["Trường", "Nội dung bắt buộc"], [
+        ("Định danh", "Mã TC, mã FR/NFR, phiên bản build/DB, môi trường, người/ngày thực hiện."),
+        ("Điều kiện", "Tiền điều kiện, dữ liệu đầu vào, tài khoản/vai trò, bước thực hiện."),
+        ("Kết quả", "Mong đợi, thực tế, Pass/Fail/Blocked, thời gian đo."),
+        ("Bằng chứng", "Ảnh/video, request/response, SQL đối soát, log, file output, execution plan/scan report."),
+        ("Lỗi", "Mã lỗi, mức độ, liên kết sửa, phiên bản retest và phê duyệt ngoại lệ nếu có."),
+    ])
+
+
+def add_automatic_toc(doc):
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.space_after = Pt(12)
+    run = title.add_run("MỤC LỤC")
+    run.bold = True
+    run.font.name = "Times New Roman"
+    run._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
+    run.font.size = Pt(15)
+
+    paragraph = doc.add_paragraph()
+    begin_run = OxmlElement("w:r")
+    field_begin = OxmlElement("w:fldChar")
+    field_begin.set(qn("w:fldCharType"), "begin")
+    field_begin.set(qn("w:dirty"), "true")
+    begin_run.append(field_begin)
+    instruction_run = OxmlElement("w:r")
+    instruction = OxmlElement("w:instrText")
+    instruction.set(qn("xml:space"), "preserve")
+    instruction.text = ' TOC \\o "1-3" \\h \\z \\u '
+    instruction_run.append(instruction)
+    separate_run = OxmlElement("w:r")
+    field_separate = OxmlElement("w:fldChar")
+    field_separate.set(qn("w:fldCharType"), "separate")
+    separate_run.append(field_separate)
+    placeholder_run = OxmlElement("w:r")
+    placeholder_text = OxmlElement("w:t")
+    placeholder_text.text = "Mở tài liệu bằng Microsoft Word và cập nhật trường để hiển thị mục lục."
+    placeholder_run.append(placeholder_text)
+    end_run = OxmlElement("w:r")
+    field_end = OxmlElement("w:fldChar")
+    field_end.set(qn("w:fldCharType"), "end")
+    end_run.append(field_end)
+    paragraph._p.extend([begin_run, instruction_run, separate_run, placeholder_run, end_run])
+
+    settings = doc.settings._element
+    update_fields = settings.find(qn("w:updateFields"))
+    if update_fields is None:
+        update_fields = OxmlElement("w:updateFields")
+        settings.append(update_fields)
+    update_fields.set(qn("w:val"), "true")
+
+
+def build():
+    doc = Document()
+    section = doc.sections[0]
+    section.top_margin = Cm(2)
+    section.bottom_margin = Cm(2)
+    section.left_margin = Cm(2.5)
+    section.right_margin = Cm(2)
+    font(doc.styles["Normal"], 12)
+    font(doc.styles["Title"], 20, True)
+    font(doc.styles["Heading 1"], 15, True)
+    font(doc.styles["Heading 2"], 13, True)
+    font(doc.styles["Heading 3"], 12, True)
+
+    cover = doc.add_paragraph()
+    cover.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    cover.paragraph_format.space_before = Pt(55)
+    run = cover.add_run("TÀI LIỆU ĐẶC TẢ YÊU CẦU PHẦN MỀM")
+    run.bold = True
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(20)
+    sub = doc.add_paragraph()
+    sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = sub.add_run("HỆ THỐNG QUẢN LÝ, ĐIỀU HÀNH BAY – ATFM_WEB")
+    run.bold = True
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(17)
+    line = doc.add_paragraph()
+    line.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    line.paragraph_format.space_before = Pt(30)
+    line.add_run("BẢN ĐẶC TẢ TỔNG HỢP PHỤC VỤ KIỂM ĐỊNH").bold = True
+    info = doc.add_paragraph()
+    info.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    info.paragraph_format.space_before = Pt(50)
+    info.add_run(
+        "Mã tài liệu: SRS-ATFM-WEB\n"
+        "Phiên bản: 1.0 – Dự thảo hoàn thiện\n"
+        "Ngày cập nhật: 17/08/2026\n"
+        "Đơn vị lập: .....................................................\n"
+        "Người lập: ......................................................\n"
+        "Người kiểm tra: .................................................\n"
+        "Người phê duyệt: ................................................"
+    )
+    doc.add_page_break()
+
+    doc.add_heading("KIỂM SOÁT TÀI LIỆU", level=1)
+    table(doc, ["Thuộc tính", "Nội dung"], [
+        ("Tên tài liệu", "Đặc tả yêu cầu phần mềm ATFM_WEB"),
+        ("Mã tài liệu", "SRS-ATFM-WEB"),
+        ("Phiên bản", "1.0"),
+        ("Trạng thái", "Dự thảo hoàn thiện – chờ kiểm tra và phê duyệt"),
+        ("Tài liệu đầu vào", "CHƯƠNG V; YÊU CẦU KỸ THUẬT 21.5.2026.pdf; Plan_20-25.7.2026.docx; các SRS thành phần; NHAT_KY_THAY_DOI.txt; mã nguồn ATFM_WEB"),
+    ])
+    doc.add_heading("Lịch sử thay đổi", level=2)
+    table(doc, ["Phiên bản", "Ngày", "Nội dung", "Người thực hiện"], [
+        ("0.1", "12/08/2026", "Tạo bìa và khung sườn SRS", "Codex"),
+        ("1.0", "17/08/2026", "Hoàn thiện các chương dùng chung theo Chương V – Yêu cầu kỹ thuật", "Codex"),
+    ])
+    doc.add_heading("Phê duyệt tài liệu", level=2)
+    table(doc, ["Vai trò", "Họ tên", "Chữ ký", "Ngày"], [
+        ("Người lập", "", "", ""),
+        ("Người kiểm tra", "", "", ""),
+        ("Người phê duyệt", "", "", ""),
+    ])
+
+    add_automatic_toc(doc)
+    doc.add_page_break()
+
+    add_completed_introduction(doc)
+    add_completed_overview(doc)
+
+    doc.add_heading("3. Phạm vi và danh mục chức năng", level=1)
+    rows = []
+    for roman, name, items in SECTIONS:
+        for index, item in enumerate(items, 1):
+            prefix_by_roman = {"I": "INT", "II": "ALT", "III": "OPT", "IV": "RPT", "V": "AI"}
+            detailed = True
+            rows.append((f"{roman}.{index:02d}", name, item, "Đã đặc tả" if detailed else "Chờ đặc tả"))
+    table(doc, ["Mã", "Phân hệ", "Chức năng/hạng mục", "Trạng thái SRS"], rows)
+
+    add_completed_common_requirements(doc)
+
+    chapter = 5
+    subsystem_scope = {
+        5: "Tự động tiếp nhận, chuẩn hóa và đồng bộ dữ liệu Email/File, ADS-B, SLOT, AMHS/AFTN và API; bảo đảm nguồn, trạng thái, lỗi và đối soát được truy vết.",
+        6: "Phát hiện, phân phối và theo dõi cảnh báo theo quy tắc; quản lý KHB quân sự/vùng trời qua quy trình nhập–duyệt–phát điện văn–khai thác báo cáo.",
+        7: "Nâng cấp các chức năng HTSLB hiện hữu về lưu trữ, tìm kiếm, cảnh báo, đồng bộ, hiệu năng, phép bay, KHB và đối soát nhưng không làm gián đoạn nghiệp vụ đang vận hành.",
+        8: "Cung cấp dashboard, biểu đồ và báo cáo có bộ lọc, drill-down, dữ liệu lịch sử/thực tế, export và đối soát phục vụ điều hành, thống kê và thu phí.",
+        9: "Hỗ trợ truy vấn ngôn ngữ tự nhiên, sinh truy vấn có kiểm soát, tổng hợp kết quả và tích hợp Chatbot; không vượt quyền dữ liệu của người dùng.",
+    }
+    for roman, name, items in SECTIONS:
+        doc.add_heading(f"{chapter}. {name.title()}", level=1)
+        doc.add_heading(f"{chapter}.1. Mục tiêu và phạm vi phân hệ", level=2)
+        doc.add_paragraph(subsystem_scope[chapter])
+        doc.add_heading(f"{chapter}.2. Danh mục yêu cầu chức năng", level=2)
+        function_rows = []
+        prefix = ["INT", "ALT", "OPT", "RPT", "AI"][chapter - 5]
+        for index, item in enumerate(items, 1):
+            if chapter in (5, 6, 8, 9):
+                source_note = "Đã tích hợp đặc tả chi tiết"
+                acceptance_note = "Theo FR/BR/NFR và ca kiểm thử của phân hệ"
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, source_note, acceptance_note))
+            elif chapter == 7:
+                source_pages = {
+                    4: "SearchExtension.aspx (phiên bản cập nhật)",
+                    21: "Danh sách/chỉnh sửa phép NO và SC",
+                    24: "ListFlightOnMess.aspx",
+                    30: "ListFinishedFlightsMilitaryReport.aspx",
+                }
+                source_note = f"Đã đặc tả theo {source_pages[index]}" if index in source_pages else "Đã đặc tả chi tiết"
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, source_note, f"Theo FR/BR/NFR và TC-OPT-{index:03d}-*"))
+            else:
+                function_rows.append((f"FR-{prefix}-{index:03d}", item, "Chờ đặc tả", "Chờ xây dựng"))
+        table(doc, ["Mã yêu cầu", "Tên yêu cầu", "Nội dung", "Tiêu chí nghiệm thu"], function_rows)
+        if chapter == 5:
+            add_aerosync_specification(doc)
+            for args in INTEGRATION_SOURCES:
+                add_integration_source(doc, *args)
+            next_section = 8
+        elif chapter == 6:
+            add_alt001_specification(doc)
+            add_alt002_specification(doc)
+            next_section = 5
+        elif chapter == 9:
+            add_ai_nl2sql_specification(doc)
+            next_section = 5
+        elif chapter == 7:
+            add_opt001_003_specification(doc)
+            add_opt006_010_specification(doc)
+            add_opt024_specification(doc)
+            add_opt030_specification(doc)
+            add_opt004_specification_current(doc)
+            add_opt021_specification(doc)
+            add_opt022_023_025_029_031_032_specifications(doc)
+            next_section = 45
+        elif chapter == 8:
+            add_rpt001_specification(doc)
+            add_rpt002_010_specification(doc)
+            next_section = 14
+        else:
+            next_section = 3
+        doc.add_heading(f"{chapter}.{next_section}. Quy tắc nghiệp vụ chung của phân hệ", level=2)
+        table(doc, ["Mã", "Quy tắc chung"], [
+            (f"BR-{prefix}-GEN-01", "Mọi dữ liệu phải xác định nguồn, thời gian nghiệp vụ, trạng thái và khóa chống trùng trước khi xử lý."),
+            (f"BR-{prefix}-GEN-02", "Thao tác ghi/duyệt/gửi/export phải kiểm tra quyền phía máy chủ và lưu audit theo người dùng hoặc API client."),
+            (f"BR-{prefix}-GEN-03", "Kết quả tổng hợp phải truy ngược được dữ liệu chi tiết; không báo thành công khi xử lý một phần chưa được công bố rõ."),
+        ])
+        doc.add_heading(f"{chapter}.{next_section + 1}. Luồng xử lý và ngoại lệ chung", level=2)
+        doc.add_paragraph("Luồng chuẩn: tiếp nhận yêu cầu/dữ liệu → xác thực và phân quyền → kiểm tra/chuẩn hóa → áp dụng quy tắc nghiệp vụ → lưu hoặc truy vấn → đối soát → trả kết quả/thông báo → ghi audit và chỉ số giám sát. Ngoại lệ phải trả mã/thông báo rõ, không giữ dữ liệu cũ như kết quả mới, retry có giới hạn đối với lỗi tạm thời và chuyển hàng chờ/xử lý thủ công khi vượt ngưỡng.")
+        chapter += 1
+
+    add_completed_data_integration(doc)
+    add_completed_nfr(doc)
+    add_completed_operations(doc)
+    add_completed_test_acceptance(doc)
+    add_completed_traceability(doc)
+    add_completed_appendices(doc)
+
+    if not INCLUDE_INSPECTION_CONTENT:
+        remove_inspection_content(doc)
+
+    for item in doc.sections:
+        footer = item.footer.paragraphs[0]
+        footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = footer.add_run("Trang ")
+        begin = OxmlElement("w:fldChar")
+        begin.set(qn("w:fldCharType"), "begin")
+        instruction = OxmlElement("w:instrText")
+        instruction.set(qn("xml:space"), "preserve")
+        instruction.text = "PAGE"
+        end = OxmlElement("w:fldChar")
+        end.set(qn("w:fldCharType"), "end")
+        run._r.extend([begin, instruction, end])
+
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(OUTPUT)
+    print(OUTPUT)
+
+
+if __name__ == "__main__":
+    build()

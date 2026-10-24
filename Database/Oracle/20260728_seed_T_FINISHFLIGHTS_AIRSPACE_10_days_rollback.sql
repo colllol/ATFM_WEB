@@ -1,0 +1,20 @@
+-- Chỉ xóa dữ liệu được tạo bởi script seed 10 ngày Airspace.
+
+DELETE FROM T_FINISHFLIGHTS_AIRSPACE
+ WHERE USERCREATE = 'SEED_AIRSPACE_10D_20260728';
+
+COMMIT;
+
+BEGIN
+    DBMS_STATS.GATHER_TABLE_STATS(
+        ownname          => USER,
+        tabname          => 'T_FINISHFLIGHTS_AIRSPACE',
+        cascade          => TRUE,
+        estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE
+    );
+END;
+/
+
+SELECT COUNT(*) AS REMAINING_SEED_ROWS
+  FROM T_FINISHFLIGHTS_AIRSPACE
+ WHERE USERCREATE = 'SEED_AIRSPACE_10D_20260728';

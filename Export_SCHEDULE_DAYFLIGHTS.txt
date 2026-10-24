@@ -1,0 +1,746 @@
+HUONG DAN EXPORT/IMPORT T_SCHEDULE_DAYFLIGHTS THANG 07/2026
+================================================================
+
+Muc tieu
+--------
+
+Chuyen cac dong T_SCHEDULE_DAYFLIGHTS co FLIGHTDATE trong thang 07/2026
+tu Oracle nguon sang T_SCHEDULE_DAYFLIGHTS tren Oracle dich qua schema tam
+ATFM_STAGE. Quy trinh khong xoa du lieu dang co tren schema ATFM.
+
+T_SCHEDULE_DAYFLIGHTS la bang lich lon (co the hang trieu dong). Vi vay
+chi export pham vi ngay can chuyen, kiem tra xung dot khoa, sau do APPEND
+vao bang dich khi cac dieu kien an toan deu dat.
+
+Phan pham vi mac dinh:
+
+    FLIGHTDATE >= DATE '2026-07-01'
+    FLIGHTDATE <  DATE '2026-08-01'
+
+Neu can thang khac, thay dong loc ngay trong tat ca parfile va cau lenh
+kiem tra truoc khi bat dau. Khong dung TO_CHAR(FLIGHTDATE) trong dieu kien
+loc vi co the lam mat kha nang su dung index ngay.
+
+
+THONG TIN MOI TRUONG MAU
+------------------------
+
+Nguon:
+
+    Host    : 192.168.61.11
+    Port    : 1521
+    Service : qllkl
+    Schema  : ATFM
+    OS path : /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607
+
+Dich:
+
+    Host    : 192.168.131.15
+    Port    : 1521
+    Service : db19
+    Schema  : ATFM
+    Staging : ATFM_STAGE
+    OS path : /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607
+
+Dieu chinh host, service va duong dan neu moi truong thuc te khac.
+
+
+CAC NGUYEN TAC BAT BUOC
+----------------------
+
+1. Lenh expdp/impdp chay tai terminal Red Hat, khong chay trong SQL*Plus,
+   SQL Editor cua DBeaver hoac trong mot block PL/SQL.
+2. CREATE DIRECTORY va GRANT chay bang SYSTEM/SYS trong dung PDB/service.
+3. Khong DROP, TRUNCATE, REPLACE T_SCHEDULE_DAYFLIGHTS tren schema ATFM.
+   TABLE_EXISTS_ACTION=REPLACE chi duoc phep ap dung cho bang cung ten trong
+   schema staging ATFM_STAGE, khong phai bang dang hoat dong ATFM.
+4. Bang lich co the rat lon; dat cua so bao tri khi import cuoi va tam dung
+   cac job ghi vao lich.
+5. Chi APPEND khi TARGET_JULY_COUNT = 0 va ID_CONFLICT_COUNT = 0.
+6. Neu dich da co du lieu thang 07, dung quy trinh va lap phuong an MERGE,
+   anti-join hoac backup/replace rieng. Khong APPEND mu quang.
+7. Khong de mat khau trong parfile; nhap khi expdp/impdp hoi.
+8. Giu dump, checksum, log va ATFM_STAGE it nhat 3-7 ngay sau nghiem thu.
+
+
+BUOC 1 - KIEM TRA CAU TRUC VA DU LIEU TAI NGUON
+------------------------------------------------
+
+Ket noi dung database nguon:
+
+    sqlplus ATFM@//192.168.61.11:1521/qllkl
+
+1.1. Xac nhan bang va cac cot quan trong:
+
+SELECT table_name,
+       column_id,
+       column_name,
+       data_type,
+       data_length,
+       nullable
+FROM user_tab_columns
+WHERE table_name = 'T_SCHEDULE_DAYFLIGHTS'
+ORDER BY column_id;
+
+SELECT COUNT(*) AS table_count
+FROM user_tables
+WHERE table_name = 'T_SCHEDULE_DAYFLIGHTS';
+
+Phai co cac cot toi thieu: ID, FLIGHT_ID, FLIGHT_PK, PERM_ID, PERMNBR,
+FLIGHTDATE, DATE_OLD, FLIGHTNBR, FROM_AIRP, TO_AIRP, ETD, ETA, ISRENDER.
+Neu ten cot khac voi thuc te, dung lai va dieu chinh parfile/lenh kiem tra.
+
+1.2. Dem tap du lieu se export:
+
+SELECT COUNT(*) AS source_july_count,
+       MIN(FLIGHTDATE) AS min_flightdate,
+       MAX(FLIGHTDATE) AS max_flightdate
+FROM T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01';
+
+Ghi lai SOURCE_JULY_COUNT = ____________________
+
+Kiem tra phan bo theo ngay de phat hien ngay bat thuong:
+
+SELECT TRUNC(FLIGHTDATE) AS flight_day,
+       COUNT(*) AS row_count
+FROM T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01'
+GROUP BY TRUNC(FLIGHTDATE)
+ORDER BY flight_day;
+
+1.3. Kiem tra dong thieu ngay va khoa:
+
+SELECT COUNT(*) AS null_flightdate_count
+FROM T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE IS NULL;
+
+SELECT ID, COUNT(*) AS duplicate_count
+FROM T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01'
+GROUP BY ID
+HAVING COUNT(*) > 1;
+
+Neu ID khong phai khoa duy nhat, xem khoa chinh va unique index thay vi tu
+doan theo FLIGHT_ID/FLIGHT_PK:
+
+SELECT c.constraint_name,
+       c.constraint_type,
+       c.status,
+       cc.position,
+       cc.column_name
+FROM user_constraints c
+JOIN user_cons_columns cc
+  ON cc.constraint_name = c.constraint_name
+ AND cc.table_name = c.table_name
+WHERE c.table_name = 'T_SCHEDULE_DAYFLIGHTS'
+  AND c.constraint_type IN ('P', 'U')
+ORDER BY c.constraint_name, cc.position;
+
+SELECT uic.index_name,
+       ui.uniqueness,
+       ui.status,
+       uic.column_name,
+       uic.column_position
+FROM user_ind_columns uic
+JOIN user_indexes ui
+  ON ui.index_name = uic.index_name
+ AND ui.table_name = uic.table_name
+WHERE uic.table_name = 'T_SCHEDULE_DAYFLIGHTS'
+ORDER BY uic.index_name, uic.column_position;
+
+1.4. Kiem tra index cho dieu kien FLIGHTDATE:
+
+SELECT index_name,
+       column_position,
+       column_name,
+       descend
+FROM user_ind_columns
+WHERE table_name = 'T_SCHEDULE_DAYFLIGHTS'
+  AND column_name = 'FLIGHTDATE'
+ORDER BY index_name, column_position;
+
+Neu chua co index bat dau bang FLIGHTDATE, loc ngay van co the quet toan
+bang. Khong tu y tao index tren bang lon dang online; DBA can danh gia redo,
+CPU, I/O va thoi gian bao tri truoc khi chay, vi du:
+
+-- Chi la phuong an tham khao, chi chay sau khi DBA phe duyet:
+-- CREATE INDEX IX_TSDF_FLIGHTDATE
+--     ON T_SCHEDULE_DAYFLIGHTS (FLIGHTDATE, ISRENDER)
+--     ONLINE;
+
+1.5. Chup thong tin phien va job ghi vao bang truoc khi export. Neu co job
+render/update dang chay, chon FLASHBACK_TIME va ghi lai thoi diem export.
+
+
+BUOC 2 - CHUAN BI DIRECTORY TAI NGUON
+-------------------------------------
+
+Tai terminal Red Hat cua may database nguon:
+
+    mkdir -p /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607
+    chmod 750 /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607
+    ls -ld /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607
+
+Ket noi bang SYSTEM hoac SYS trong service qllkl:
+
+CREATE OR REPLACE DIRECTORY DP_SCHEDULE_DAYFLIGHTS_202607
+AS '/home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607';
+
+GRANT READ, WRITE ON DIRECTORY DP_SCHEDULE_DAYFLIGHTS_202607 TO ATFM;
+
+Kiem tra:
+
+SELECT directory_name, directory_path
+FROM dba_directories
+WHERE directory_name = 'DP_SCHEDULE_DAYFLIGHTS_202607';
+
+SELECT grantee, privilege
+FROM dba_tab_privs
+WHERE table_name = 'DP_SCHEDULE_DAYFLIGHTS_202607'
+  AND grantee = 'ATFM'
+ORDER BY privilege;
+
+Neu dang dang nhap bang ATFM thi khong tu GRANT quyen cho chinh ATFM; Oracle
+se tra ORA-01749. Hay dang nhap SYSTEM/SYS trong dung service qllkl.
+
+
+BUOC 3 - EXPORT TAP JULY TAI NGUON
+----------------------------------
+
+3.1. Tao parfile tai may nguon:
+
+    vi /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607/schedule_source_exp.par
+
+Noi dung:
+
+DIRECTORY=DP_SCHEDULE_DAYFLIGHTS_202607
+DUMPFILE=SCHEDULE_DAYFLIGHTS_202607_SOURCE_%U.DMP
+LOGFILE=SCHEDULE_DAYFLIGHTS_202607_SOURCE_export.log
+TABLES=ATFM.T_SCHEDULE_DAYFLIGHTS
+QUERY=ATFM.T_SCHEDULE_DAYFLIGHTS:"WHERE FLIGHTDATE >= DATE '2026-07-01' AND FLIGHTDATE < DATE '2026-08-01'"
+FLASHBACK_TIME=SYSTIMESTAMP
+PARALLEL=2
+FILESIZE=4G
+LOGTIME=ALL
+METRICS=YES
+
+Giai thich:
+
+- QUERY chi loc bang T_SCHEDULE_DAYFLIGHTS theo FLIGHTDATE, khong dung
+  TO_CHAR(FLIGHTDATE), giup Oracle co co hoi dung index ngay.
+- FLASHBACK_TIME giup cac bang dump nhat quan tai mot thoi diem. Neu he
+  thong khong cho phep flashback hoac undo khong du, dung lai va danh gia
+  cua so backup truoc khi bo tuy chon nay.
+- FILESIZE=4G tao nhieu file nho hon gioi han he thong; DUMPFILE %U bat buoc
+  phai giu nguyen o cac lan impdp sau.
+
+3.2. Neu parfile duoc tao tren Windows, chuan hoa line ending:
+
+    dos2unix /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607/schedule_source_exp.par
+
+3.3. Xem lai parfile, chu y khong co dau gach cheo nguoc cuoi dong:
+
+    nl -ba /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607/schedule_source_exp.par
+
+3.4. Chay export tai terminal, khong chay trong SQL*Plus:
+
+    expdp ATFM@//192.168.61.11:1521/qllkl \
+      PARFILE=/home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607/schedule_source_exp.par
+
+3.5. Kiem tra log:
+
+    grep -E "ORA-|successfully completed|completed with" \
+      /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607/SCHEDULE_DAYFLIGHTS_202607_SOURCE_export.log
+
+Chi tiep tuc khi job successfully completed va khong co loi ORA nghiem trong.
+Neu QUERY bi tu choi, khong bo qua loi; giu log de dieu tra va dung phuong an
+export full vao staging roi loc bang SQL tai Buoc 7.
+
+3.6. Tao checksum:
+
+    cd /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607
+    sha256sum SCHEDULE_DAYFLIGHTS_202607_SOURCE_*.DMP > SCHEDULE_DAYFLIGHTS_202607_SOURCE.sha256
+    cat SCHEDULE_DAYFLIGHTS_202607_SOURCE.sha256
+
+
+BUOC 4 - COPY DUMP SANG MAY DICH
+-------------------------------
+
+4.1. Tao thu muc tai may dich:
+
+    ssh oracle@192.168.131.15
+    mkdir -p /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607
+    chmod 750 /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607
+    exit
+
+4.2. Copy dump va checksum:
+
+    scp /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607/SCHEDULE_DAYFLIGHTS_202607_SOURCE_*.DMP \
+      oracle@192.168.131.15:/home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/
+
+    scp /home/oracle/backup/SCHEDULE_DAYFLIGHTS_202607/SCHEDULE_DAYFLIGHTS_202607_SOURCE.sha256 \
+      oracle@192.168.131.15:/home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/
+
+4.3. Kiem tra checksum tai may dich:
+
+    cd /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607
+    sha256sum -c SCHEDULE_DAYFLIGHTS_202607_SOURCE.sha256
+
+Tat ca file phai bao OK. Neu khong khop, khong chay impdp.
+
+
+BUOC 5 - TAO/CHUAN BI ATFM_STAGE TAI DATABASE DICH
+--------------------------------------------------
+
+5.1. Ket noi database dich bang SYSTEM:
+
+    sqlplus system@//192.168.131.15:1521/db19
+
+5.2. Tao Oracle directory va cap quyen cho tai khoan chay impdp:
+
+CREATE OR REPLACE DIRECTORY DP_SCHEDULE_DAYFLIGHTS_RESTORE
+AS '/home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607';
+
+GRANT READ, WRITE ON DIRECTORY DP_SCHEDULE_DAYFLIGHTS_RESTORE TO SYSTEM;
+
+5.3. Kiem tra schema staging:
+
+SELECT username, account_status, default_tablespace
+FROM dba_users
+WHERE username = 'ATFM_STAGE';
+
+Neu chua co ATFM_STAGE, tao tai khoan rieng (thay mat khau bang gia tri an
+toan, khong ghi mat khau that vao tai lieu):
+
+CREATE USER ATFM_STAGE
+IDENTIFIED BY "THAY_BANG_MAT_KHAU_TAM_AN_TOAN"
+DEFAULT TABLESPACE USERS
+TEMPORARY TABLESPACE TEMP
+QUOTA UNLIMITED ON USERS;
+
+GRANT CREATE SESSION, CREATE TABLE TO ATFM_STAGE;
+
+Neu ATFM_STAGE da co bang T_SCHEDULE_DAYFLIGHTS tu lan test truoc, khong can
+drop ca schema. Buoc import staging dung TABLE_EXISTS_ACTION=REPLACE chi cho
+bang nay. Chi DROP USER ATFM_STAGE CASCADE khi DBA da xac nhan schema khong
+con du lieu staging SC/NO hay nghiep vu khac:
+
+-- DROP USER ATFM_STAGE CASCADE;
+
+
+BUOC 6 - IMPORT DUMP VAO ATFM_STAGE
+-----------------------------------
+
+6.1. Tao parfile tai may dich:
+
+    vi /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/schedule_stage_imp.par
+
+Noi dung:
+
+DIRECTORY=DP_SCHEDULE_DAYFLIGHTS_RESTORE
+DUMPFILE=SCHEDULE_DAYFLIGHTS_202607_SOURCE_%U.DMP
+LOGFILE=SCHEDULE_DAYFLIGHTS_202607_STAGE_import.log
+TABLES=ATFM.T_SCHEDULE_DAYFLIGHTS
+REMAP_SCHEMA=ATFM:ATFM_STAGE
+TABLE_EXISTS_ACTION=REPLACE
+EXCLUDE=INDEX
+EXCLUDE=TRIGGER
+EXCLUDE=GRANT
+EXCLUDE=STATISTICS
+EXCLUDE=CONSTRAINT
+EXCLUDE=REF_CONSTRAINT
+TRANSFORM=OID:N
+PARALLEL=2
+LOGTIME=ALL
+METRICS=YES
+
+TABLE_EXISTS_ACTION=REPLACE o day chi ap dung voi bang staging. Neu import
+bao khong the drop/replace do bang dang duoc su dung, dung job, kiem tra
+ATFM_STAGE va khong sua lenh sang schema ATFM.
+
+6.2. Chay import tai terminal:
+
+    impdp system@//192.168.131.15:1521/db19 \
+      PARFILE=/home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/schedule_stage_imp.par
+
+6.3. Kiem tra log:
+
+    grep -E "ORA-|successfully completed|completed with" \
+      /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/SCHEDULE_DAYFLIGHTS_202607_STAGE_import.log
+
+6.4. Kiem tra row count staging bang thong ke chinh xac:
+
+SELECT COUNT(*) AS stage_july_count,
+       MIN(FLIGHTDATE) AS min_flightdate,
+       MAX(FLIGHTDATE) AS max_flightdate
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS;
+
+STAGE_JULY_COUNT phai bang SOURCE_JULY_COUNT.
+
+
+BUOC 7 - KIEM TRA TAP STAGING
+-----------------------------
+
+7.1. Xac nhan staging khong co ngoai pham vi:
+
+SELECT COUNT(*) AS out_of_range_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE IS NULL
+   OR FLIGHTDATE < DATE '2026-07-01'
+   OR FLIGHTDATE >= DATE '2026-08-01';
+
+Ket qua bat buoc bang 0.
+
+7.2. Kiem tra ID trung trong staging:
+
+SELECT ID, COUNT(*) AS duplicate_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS
+GROUP BY ID
+HAVING COUNT(*) > 1;
+
+Khong duoc co dong nao. Neu ID khong phai unique key, thay bang truy van
+theo khoa P/U da xem tai Buoc 1.3.
+
+7.3. Kiem tra gia tri trang thai va lien ket:
+
+SELECT ISRENDER, COUNT(*) AS row_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS
+GROUP BY ISRENDER
+ORDER BY ISRENDER;
+
+SELECT COUNT(*) AS null_perm_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS
+WHERE PERM_ID IS NULL;
+
+NULL_PERM_COUNT khong tu dong coi la loi neu mo hinh lich cho phep chuyen
+khong co phep; doi chieu voi quy tac nghiep vu truoc khi tiep tuc.
+
+7.4. Neu can doi chieu voi cac bang master/detail dang co tren dich:
+
+SELECT COUNT(*) AS orphan_perm_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS s
+WHERE s.PERM_ID IS NOT NULL
+  AND NOT EXISTS
+      (
+          SELECT 1
+          FROM ATFM.T_PERMMASTER_SC m
+          WHERE m.PERM_ID = s.PERM_ID
+      )
+  AND NOT EXISTS
+      (
+          SELECT 1
+          FROM ATFM.T_PERMMASTER_NO m
+          WHERE m.PERM_ID = s.PERM_ID
+      );
+
+Neu he thong co loai master khac, bo sung bang tuong ung. Orphan khong nhat
+thiet la loi ky thuat, nhung phai co xac nhan nghiep vu truoc khi nhap.
+
+
+BUOC 8 - KIEM TRA XUNG DOT VOI T_SCHEDULE_DAYFLIGHTS DICH
+----------------------------------------------------------
+
+8.1. Dem du lieu thang 07 dang co tren dich:
+
+SELECT COUNT(*) AS target_july_count,
+       MIN(FLIGHTDATE) AS min_flightdate,
+       MAX(FLIGHTDATE) AS max_flightdate
+FROM ATFM.T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01';
+
+Ghi lai TARGET_JULY_COUNT = ____________________
+
+8.2. Kiem tra xung dot ID:
+
+SELECT COUNT(*) AS id_conflict_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS s
+JOIN ATFM.T_SCHEDULE_DAYFLIGHTS t
+  ON t.ID = s.ID;
+
+8.3. Liet ke mau xung dot:
+
+SELECT *
+FROM
+(
+    SELECT s.ID,
+           s.FLIGHT_ID AS source_flight_id,
+           s.FLIGHT_PK AS source_flight_pk,
+           s.PERM_ID AS source_perm_id,
+           s.FLIGHTDATE AS source_flightdate,
+           t.FLIGHT_ID AS target_flight_id,
+           t.FLIGHT_PK AS target_flight_pk,
+           t.PERM_ID AS target_perm_id,
+           t.FLIGHTDATE AS target_flightdate
+    FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS s
+    JOIN ATFM.T_SCHEDULE_DAYFLIGHTS t
+      ON t.ID = s.ID
+    ORDER BY s.ID
+)
+WHERE ROWNUM <= 50;
+
+8.4. Neu khoa chinh/unique cua bang khong phai ID, lap lai 8.2 theo day du
+cac cot khoa. Khong duoc chi kiem tra FLIGHT_ID mot cach phong doan vi lich
+co the co nhieu ban ghi cho cung chuyen bay o cac ngay/trang thai khac nhau.
+
+Dieu kien duoc phep tiep tuc:
+
+    TARGET_JULY_COUNT = 0
+    ID_CONFLICT_COUNT  = 0
+    OUT_OF_RANGE_COUNT  = 0
+    STAGE_JULY_COUNT    = SOURCE_JULY_COUNT
+
+Neu bat ky gia tri nao khac dieu kien tren: DUNG. Khong chay Buoc 9-11.
+Can lap phuong an MERGE/anti-join co kiem soat va backup rieng cho du lieu
+tren server.
+
+
+BUOC 9 - EXPORT LAI TAP STAGING DA KIEM TRA
+--------------------------------------------
+
+Buoc nay tao dump chi co DATA_ONLY tu ATFM_STAGE. Khong dung QUERY o day vi
+tap staging da duoc loc va da kiem tra.
+
+9.1. Tao parfile:
+
+    vi /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/schedule_ready_exp.par
+
+Noi dung:
+
+DIRECTORY=DP_SCHEDULE_DAYFLIGHTS_RESTORE
+DUMPFILE=SCHEDULE_DAYFLIGHTS_202607_READY_%U.DMP
+LOGFILE=SCHEDULE_DAYFLIGHTS_202607_READY_export.log
+TABLES=ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS
+CONTENT=DATA_ONLY
+FLASHBACK_TIME=SYSTIMESTAMP
+PARALLEL=2
+FILESIZE=4G
+LOGTIME=ALL
+METRICS=YES
+
+9.2. Chay export:
+
+    expdp system@//192.168.131.15:1521/db19 \
+      PARFILE=/home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/schedule_ready_exp.par
+
+9.3. Kiem tra log:
+
+    grep -E "ORA-|successfully completed|completed with" \
+      /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/SCHEDULE_DAYFLIGHTS_202607_READY_export.log
+
+Chi tiep tuc khi job thanh cong.
+
+9.4. Tao checksum cho dump ready:
+
+    cd /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607
+    sha256sum SCHEDULE_DAYFLIGHTS_202607_READY_*.DMP > SCHEDULE_DAYFLIGHTS_202607_READY.sha256
+    cat SCHEDULE_DAYFLIGHTS_202607_READY.sha256
+
+
+BUOC 10 - IMPORT VAO ATFM BANG APPEND
+-------------------------------------
+
+Truoc khi import:
+
+- Dat he thong vao cua so bao tri va tam dung job ghi T_SCHEDULE_DAYFLIGHTS.
+- Chup lai TARGET_JULY_COUNT, ID_CONFLICT_COUNT va cac count tai staging.
+- Kiem tra trigger va foreign key tren bang dich; khong tu y disable trigger.
+
+SELECT trigger_name, status
+FROM user_triggers
+WHERE table_name = 'T_SCHEDULE_DAYFLIGHTS'
+ORDER BY trigger_name;
+
+SELECT c.constraint_name, c.constraint_type, c.status
+FROM user_constraints c
+WHERE c.table_name = 'T_SCHEDULE_DAYFLIGHTS'
+ORDER BY c.constraint_name;
+
+10.1. Tao parfile import cuoi:
+
+    vi /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/schedule_final_imp.par
+
+Noi dung:
+
+DIRECTORY=DP_SCHEDULE_DAYFLIGHTS_RESTORE
+DUMPFILE=SCHEDULE_DAYFLIGHTS_202607_READY_%U.DMP
+LOGFILE=SCHEDULE_DAYFLIGHTS_202607_FINAL_import.log
+TABLES=ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS
+REMAP_SCHEMA=ATFM_STAGE:ATFM
+CONTENT=DATA_ONLY
+TABLE_EXISTS_ACTION=APPEND
+PARALLEL=1
+LOGTIME=ALL
+METRICS=YES
+
+10.2. Chay import:
+
+    impdp system@//192.168.131.15:1521/db19 \
+      PARFILE=/home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/schedule_final_imp.par
+
+10.3. Kiem tra log ngay sau import:
+
+    grep -E "ORA-|successfully completed|completed with" \
+      /home/oracle/Downloads/SCHEDULE_DAYFLIGHTS_202607/SCHEDULE_DAYFLIGHTS_202607_FINAL_import.log
+
+Neu co loi, khong chay lai APPEND. Giu job log va chuyen sang Buoc 12.
+
+
+BUOC 11 - XAC MINH SAU IMPORT
+-----------------------------
+
+11.1. So luong theo ngay:
+
+SELECT COUNT(*) AS target_july_count,
+       MIN(FLIGHTDATE) AS min_flightdate,
+       MAX(FLIGHTDATE) AS max_flightdate
+FROM ATFM.T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01';
+
+Neu target truoc import khong co du lieu thang 07, count sau import phai bang
+SOURCE_JULY_COUNT. Neu target co du lieu truoc do, phai doi chieu theo tap
+ID da xac dinh va khong dung cong thuc count don gian.
+
+11.2. Kiem tra moi dong staging da co tren dich:
+
+SELECT COUNT(*) AS missing_after_import
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS s
+WHERE NOT EXISTS
+      (
+          SELECT 1
+          FROM ATFM.T_SCHEDULE_DAYFLIGHTS t
+          WHERE t.ID = s.ID
+      );
+
+Ket qua phai bang 0.
+
+11.3. Kiem tra duplicate khoa tren dich:
+
+SELECT ID, COUNT(*) AS duplicate_count
+FROM ATFM.T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01'
+GROUP BY ID
+HAVING COUNT(*) > 1;
+
+Khong duoc co dong nao. Neu ID khong phai khoa duy nhat, dung khoa P/U da
+xac dinh tai Buoc 1.3.
+
+11.4. Doi chieu mau du lieu:
+
+SELECT s.ID,
+       s.FLIGHT_ID,
+       s.FLIGHT_PK,
+       s.PERM_ID,
+       s.FLIGHTDATE,
+       s.FLIGHTNBR,
+       s.FROM_AIRP,
+       s.TO_AIRP,
+       s.ETD,
+       s.ETA,
+       s.ISRENDER
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS s
+WHERE ROWNUM <= 20
+ORDER BY s.FLIGHTDATE, s.ID;
+
+Chon mot so ID tren va truy van lai ATFM.T_SCHEDULE_DAYFLIGHTS, bao dam
+FLIGHTDATE/FLIGHTNBR/FROM_AIRP/TO_AIRP/ETD/ETA/ISRENDER khop.
+
+11.5. Kiem tra object invalid sau import:
+
+SELECT object_name, object_type, status
+FROM dba_objects
+WHERE owner = 'ATFM'
+  AND status <> 'VALID'
+  AND object_name LIKE '%SCHEDULE%'
+ORDER BY object_type, object_name;
+
+
+BUOC 12 - DUNG KHAN CAP, ROLLBACK VA DON DEP
+---------------------------------------------
+
+Dung ngay quy trinh neu:
+
+- Checksum khong khop hoac export/import log co ORA nghiem trong.
+- Stage count khong bang source count, co row ngoai pham vi hoac ID trung.
+- TARGET_JULY_COUNT khac 0 ma chua co phuong an merge duoc phe duyet.
+- Import APPEND loi, missing_after_import khac 0 hoac phat sinh duplicate.
+- Trigger/constraint bi invalid hoac ung dung hien thi sai lich.
+
+Khong tu dong xoa du lieu de rollback khi co job khac da ghi vao bang sau
+import. Bao toan dump/log va phoi hop DBA xac dinh tap ID can xu ly. Chi khi
+co xac nhan rang tap import la duy nhat va khong co ghi chen, DBA moi xem
+xet lenh rollback theo ID staging, vi du:
+
+-- CHI LA MAU; KHONG CHAY NEU CHUA CO PHE DUYET:
+-- DELETE FROM ATFM.T_SCHEDULE_DAYFLIGHTS t
+-- WHERE EXISTS
+--       (SELECT 1 FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS s
+--        WHERE s.ID = t.ID);
+-- COMMIT;
+
+Giu toi thieu cac file:
+
+    SCHEDULE_DAYFLIGHTS_202607_SOURCE_*.DMP
+    SCHEDULE_DAYFLIGHTS_202607_SOURCE_export.log
+    SCHEDULE_DAYFLIGHTS_202607_SOURCE.sha256
+    SCHEDULE_DAYFLIGHTS_202607_STAGE_import.log
+    SCHEDULE_DAYFLIGHTS_202607_READY_*.DMP
+    SCHEDULE_DAYFLIGHTS_202607_READY_export.log
+    SCHEDULE_DAYFLIGHTS_202607_READY.sha256
+    SCHEDULE_DAYFLIGHTS_202607_FINAL_import.log
+
+Sau nghiem thu va duoc phep don dep:
+
+SELECT COUNT(*) FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS;
+
+Khong drop ca ATFM_STAGE neu schema nay dang dung cho SC/NO. Neu chi xoa
+bang schedule va DBA da xac nhan, co the dung:
+
+-- DROP TABLE ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS PURGE;
+
+Khong xoa dump/log rollback khi chua co phe duyet.
+
+
+PHU LUC A - CAC CAU LENH KIEM TRA NHANH
+----------------------------------------
+
+Nguon:
+
+SELECT COUNT(*) AS source_count
+FROM T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01';
+
+Staging:
+
+SELECT COUNT(*) AS stage_count,
+       SUM(CASE WHEN FLIGHTDATE IS NULL THEN 1 ELSE 0 END) AS null_date_count,
+       SUM(CASE WHEN FLIGHTDATE < DATE '2026-07-01'
+                  OR FLIGHTDATE >= DATE '2026-08-01' THEN 1 ELSE 0 END)
+           AS out_of_range_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS;
+
+Dich:
+
+SELECT COUNT(*) AS target_count,
+       SUM(CASE WHEN ID IS NULL THEN 1 ELSE 0 END) AS null_id_count
+FROM ATFM.T_SCHEDULE_DAYFLIGHTS
+WHERE FLIGHTDATE >= DATE '2026-07-01'
+  AND FLIGHTDATE <  DATE '2026-08-01';
+
+Kiem tra xung dot ID truoc APPEND:
+
+SELECT COUNT(*) AS conflict_count
+FROM ATFM_STAGE.T_SCHEDULE_DAYFLIGHTS s
+JOIN ATFM.T_SCHEDULE_DAYFLIGHTS t
+  ON t.ID = s.ID;
+
+================================================================
+Ket thuc tai lieu. Khong chay Buoc 10 neu bat ky dieu kien an toan nao
+khong dat; giu staging va log de dieu tra.

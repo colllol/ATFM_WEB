@@ -1,0 +1,84 @@
+﻿.DIVC0verFrame{position: absolute; z-index: 99999; background-color: Transparent; margin: 0;}
+.DIVjFrame{z-index: 100000; margin: 0 2px; position: fixed; width: auto;}
+.DIVjFrame .jFrame
+{
+	padding: 2px 3px;
+	
+}
+.DIVjFrame .jFrame .jFrameContainer
+{
+	border: solid 2px #006699;
+    border-width: 2px 0px;
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerHeader
+{
+	background: url(sprite.png) repeat-x 0px 0px;
+    border-color: #006699;
+    border-style: solid;
+    border-width: 0px 2px 2px;
+    padding: 0px 10px;
+    color: #000000;
+    font-size: 9pt;
+    font-weight: bold;
+    line-height: 1.9;  
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerHeader .jFrameContainerHeaderClose
+{
+	margin: 0px; right: 0px; width: 40px; top: 3px; height: 24px; position: absolute;
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerHeader .jFrameContainerHeaderClose input[type=button]
+{
+	border: 0;
+	padding: 0;
+	margin: 0px;
+	width: 40px;
+	height: 24px;
+	cursor: pointer;
+	background: url('BoxClose.png') center no-repeat;
+}
+
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerBody
+{
+	background-color: #f2f2f2;
+    border-color: #006699;
+    border-style: solid;
+    border-width: 0px 2px;
+    padding: 10px;
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerBody img.loading
+{
+	vertical-align: middle;
+    text-align: center;
+    display: block;
+    visibility: visible;
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerBody img.loaded
+{
+	vertical-align: middle;
+    text-align: center;
+    display: none;
+    visibility: hidden;
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerBody iframe
+{
+	display: none;
+	visibility: hidden;
+    background-color: White;
+	margin: 0;
+	border: 0;
+	height: 0; width: 0;
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerFooter
+{
+	background-color: #f2f2f2;
+    border-color: #808080;
+    border-style: solid;
+    border-width: 1px 1px 0px 1px;
+    padding: 5px;
+}
+.DIVjFrame .jFrame .jFrameContainer .jFrameContainerFooter div
+{
+	padding: 3px 0;
+	text-align: center;
+}
+#DIVPlaceHolder{display: none; width: auto;}

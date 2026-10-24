@@ -1,0 +1,2 @@
+<%@ Page Title="Tổng hợp hoạt động sân bay" Language="C#" MasterPageFile="~/Masters/ATFM_New.Master" AutoEventWireup="true" Inherits="prjApplication.ReportNew.ReportPageBase" %>
+<asp:Content ID="Main" ContentPlaceHolderID="MainContent" runat="server"><link rel="stylesheet" href="<%= ResolveUrl("~/ReportNew/ReportNew.css") %>" /><section class="rn-app" data-report-view="airport"></section><script src="<%= ResolveUrl("~/ReportNew/ReportNew.js") %>"></script></asp:Content>

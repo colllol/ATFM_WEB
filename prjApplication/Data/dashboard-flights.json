@@ -1,0 +1,24 @@
+{
+  "flights": [
+    { "flightNo": "HVN101", "registration": "VN-A871", "from": "VVNB", "to": "VVTS", "flightDate": "16/07/2026", "scheduledTime": "06:30", "status": "finished" },
+    { "flightNo": "HVN205", "registration": "VN-A612", "from": "VVDN", "to": "VVTS", "flightDate": "16/07/2026", "scheduledTime": "07:10", "status": "finished" },
+    { "flightNo": "VJC121", "registration": "VN-A650", "from": "VVTS", "to": "VVNB", "flightDate": "16/07/2026", "scheduledTime": "07:35", "status": "finished" },
+    { "flightNo": "BAV315", "registration": "VN-A588", "from": "VVNB", "to": "VVDN", "flightDate": "16/07/2026", "scheduledTime": "08:00", "status": "finished" },
+    { "flightNo": "HVN231", "registration": "VN-A893", "from": "VVCR", "to": "VVTS", "flightDate": "16/07/2026", "scheduledTime": "08:25", "status": "finished" },
+    { "flightNo": "VJC403", "registration": "VN-A677", "from": "VVTS", "to": "VVPQ", "flightDate": "16/07/2026", "scheduledTime": "09:05", "status": "finished" },
+    { "flightNo": "HVN155", "registration": "VN-A861", "from": "VVNB", "to": "VVCR", "flightDate": "16/07/2026", "scheduledTime": "09:40", "status": "finished" },
+    { "flightNo": "VJC502", "registration": "VN-A626", "from": "VVDN", "to": "VVNB", "flightDate": "16/07/2026", "scheduledTime": "10:15", "status": "finished" },
+    { "flightNo": "HVN331", "registration": "VN-A889", "from": "VVTS", "to": "VVDN", "flightDate": "16/07/2026", "scheduledTime": "11:00", "status": "finished" },
+    { "flightNo": "VJC218", "registration": "VN-A639", "from": "VVNB", "to": "VVTS", "flightDate": "16/07/2026", "scheduledTime": "11:30", "status": "cancel" },
+    { "flightNo": "HVN427", "registration": "VN-A607", "from": "VVPQ", "to": "VVTS", "flightDate": "16/07/2026", "scheduledTime": "12:05", "status": "cancel" },
+    { "flightNo": "BAV612", "registration": "VN-A591", "from": "VVCR", "to": "VVNB", "flightDate": "16/07/2026", "scheduledTime": "12:40", "status": "cancel" },
+    { "flightNo": "HVN551", "registration": "VN-A898", "from": "VVTS", "to": "VVNB", "flightDate": "16/07/2026", "scheduledTime": "13:15", "status": "delay" },
+    { "flightNo": "VJC309", "registration": "VN-A645", "from": "VVDN", "to": "VVTS", "flightDate": "16/07/2026", "scheduledTime": "13:50", "status": "delay" },
+    { "flightNo": "HVN725", "registration": "VN-A876", "from": "VVNB", "to": "VVPQ", "flightDate": "16/07/2026", "scheduledTime": "14:20", "status": "delay" },
+    { "flightNo": "VJC711", "registration": "VN-A633", "from": "VVTS", "to": "VVCR", "flightDate": "16/07/2026", "scheduledTime": "15:00", "status": "delay" },
+    { "flightNo": "HVN809", "registration": "VN-A891", "from": "VVNB", "to": "VVDN", "flightDate": "16/07/2026", "scheduledTime": "15:35", "status": "delay" },
+    { "flightNo": "VJC825", "registration": "VN-A655", "from": "VVTS", "to": "VVNB", "flightDate": "16/07/2026", "scheduledTime": "16:10", "status": "wait" },
+    { "flightNo": "HVN903", "registration": "VN-A883", "from": "VVPQ", "to": "VVTS", "flightDate": "16/07/2026", "scheduledTime": "16:45", "status": "wait" },
+    { "flightNo": "BAV921", "registration": "VN-A596", "from": "VVDN", "to": "VVNB", "flightDate": "16/07/2026", "scheduledTime": "17:20", "status": "wait" }
+  ]
+}

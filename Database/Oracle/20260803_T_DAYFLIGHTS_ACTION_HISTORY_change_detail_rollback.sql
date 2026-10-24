@@ -1,0 +1,99 @@
+-- Roll back field-level details while preserving existing history rows.
+
+CREATE OR REPLACE TRIGGER TRG_TDF_GOINGON_ACTION_HIS
+AFTER INSERT OR UPDATE OF LASTUSER ON T_DAY_FLIGHTS_GOINGON
+FOR EACH ROW
+DECLARE
+    l_action_type T_DAYFLIGHTS_ACTION_HISTORY.ACTION_TYPE%TYPE;
+    l_action_user T_DAYFLIGHTS_ACTION_HISTORY.ACTION_USER%TYPE;
+BEGIN
+    IF INSERTING THEN
+        l_action_type := 'INSERT';
+    ELSE
+        l_action_type := 'UPDATE';
+    END IF;
+
+    l_action_user := NVL(
+        TRIM(:NEW.LASTUSER),
+        NVL(TRIM(:OLD.LASTUSER), 'SYSTEM')
+    );
+
+    INSERT INTO T_DAYFLIGHTS_ACTION_HISTORY
+    (
+        HISTORY_ID,
+        SOURCE_ROW_ID,
+        FLIGHT_ID,
+        ACTION_TYPE,
+        CALLSIGN,
+        FLIGHTDATE,
+        ACTION_USER,
+        ACTION_DATE
+    )
+    VALUES
+    (
+        SEQ_T_DAYFLIGHTS_ACTION_HIS.NEXTVAL,
+        :NEW.ID,
+        :NEW.FLIGHT_ID,
+        l_action_type,
+        :NEW.FLIGHTNBR,
+        :NEW.FLIGHTDATE,
+        l_action_user,
+        SYSTIMESTAMP
+    );
+END;
+/
+
+ALTER TRIGGER TRG_TDF_GOINGON_ACTION_HIS ENABLE;
+
+CREATE OR REPLACE PACKAGE BODY DAYFLIGHT_HISTORY_PKG AS
+    PROCEDURE GET_BY_FLIGHT_ID
+    (
+        P_FLIGHT_ID IN T_DAYFLIGHTS_ACTION_HISTORY.FLIGHT_ID%TYPE,
+        P_OUT_CURSOR OUT T_CURSOR
+    )
+    IS
+    BEGIN
+        OPEN P_OUT_CURSOR FOR
+            SELECT HISTORY_ID,
+                   SOURCE_ROW_ID,
+                   FLIGHT_ID,
+                   ACTION_TYPE,
+                   CALLSIGN,
+                   TO_CHAR(FLIGHTDATE, 'DD-MM-YYYY') AS FLIGHTDATE,
+                   ACTION_USER,
+                   TO_CHAR(
+                       ACTION_DATE,
+                       'DD-MM-YYYY HH24:MI:SS'
+                   ) AS ACTION_DATE
+              FROM T_DAYFLIGHTS_ACTION_HISTORY
+             WHERE FLIGHT_ID = P_FLIGHT_ID
+             ORDER BY HISTORY_ID DESC;
+    END GET_BY_FLIGHT_ID;
+END DAYFLIGHT_HISTORY_PKG;
+/
+
+DECLARE
+    l_count PLS_INTEGER;
+BEGIN
+    SELECT COUNT(*)
+      INTO l_count
+      FROM USER_TAB_COLUMNS
+     WHERE TABLE_NAME = 'T_DAYFLIGHTS_ACTION_HISTORY'
+       AND COLUMN_NAME = 'CHANGE_DETAIL';
+
+    IF l_count > 0 THEN
+        EXECUTE IMMEDIATE
+            'ALTER TABLE T_DAYFLIGHTS_ACTION_HISTORY ' ||
+            'DROP COLUMN CHANGE_DETAIL';
+    END IF;
+END;
+/
+
+SELECT OBJECT_TYPE, OBJECT_NAME, STATUS
+  FROM USER_OBJECTS
+ WHERE OBJECT_NAME IN
+       (
+           'TRG_TDF_GOINGON_ACTION_HIS',
+           'DAYFLIGHT_HISTORY_PKG'
+       )
+ ORDER BY OBJECT_TYPE, OBJECT_NAME;

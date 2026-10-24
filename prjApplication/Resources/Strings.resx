@@ -1,0 +1,944 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddNewsTittlePanelMenu" xml:space="preserve">
+    <value>Thêm mới chức năng hệ thống</value>
+  </data>
+  <data name="AIG_City_Name" xml:space="preserve">
+    <value>Chọn thành phố</value>
+  </data>
+  <data name="AIG_Languages_Name" xml:space="preserve">
+    <value>Chuyên trang</value>
+  </data>
+  <data name="AIG_ResultOld_EDIT_MAQG" xml:space="preserve">
+    <value>Nhập mã nước</value>
+  </data>
+  <data name="AIG_Sport_Cat_Name" xml:space="preserve">
+    <value>Tên của loại thi đấu</value>
+  </data>
+  <data name="ALERT_NHANBAN_DANHMUCCHUYENDE" xml:space="preserve">
+    <value>Chuyên đề đã được dịch ngữ !</value>
+  </data>
+  <data name="BA_LEHOI_BUTTON_THEMMOI" xml:space="preserve">
+    <value>Thêm mới</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_DANGBAI" xml:space="preserve">
+    <value>Đăng</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_DIENGIAI" xml:space="preserve">
+    <value>Diễn giải</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_DUYET" xml:space="preserve">
+    <value>Duyệt</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_EDIT_GROUPTEXT" xml:space="preserve">
+    <value>Sửa danh mục</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_HIENTHI" xml:space="preserve">
+    <value>Hiển thị</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_HUYDANG" xml:space="preserve">
+    <value>Hủy</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_MOTA" xml:space="preserve">
+    <value>Mô tả</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_NAN" xml:space="preserve">
+    <value>Năm</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_NEW_GROUPTEXT" xml:space="preserve">
+    <value>Thêm mới danh mục</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_NGONNGU" xml:space="preserve">
+    <value>Chuyên trang</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_NGUOITAO" xml:space="preserve">
+    <value>Người tạo</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_SOBAO" xml:space="preserve">
+    <value>Số báo</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_SOXB" xml:space="preserve">
+    <value>Số báo</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_SUA" xml:space="preserve">
+    <value>Sửa</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_TEN" xml:space="preserve">
+    <value>Tên</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_TENDANHMUC" xml:space="preserve">
+    <value>Tên danh mục</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_THEMMOI" xml:space="preserve">
+    <value>Thêm mới</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_TIMKIEM" xml:space="preserve">
+    <value>Tìm kiếm</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_TIMKIEM_DANHMUC" xml:space="preserve">
+    <value>Danh mục :</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_TIMKIEM_NN" xml:space="preserve">
+    <value>Chuyên trang : </value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_TIMKIEM_TIEUDE" xml:space="preserve">
+    <value>Tiêu đề : </value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_TITLE" xml:space="preserve">
+    <value>Danh sách các danh mục lễ hội</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_USER" xml:space="preserve">
+    <value>Người tạo</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_VITRI" xml:space="preserve">
+    <value>Vị trí</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_LEHOI_XOA" xml:space="preserve">
+    <value>Xóa</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_CHECKER_SEND" xml:space="preserve">
+    <value>Gửi hiệu đính</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_COMP" xml:space="preserve">
+    <value>Hoàn chỉnh</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_DATE" xml:space="preserve">
+    <value>Ngày gửi</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_DOWNLOAD_TOOLTIP" xml:space="preserve">
+    <value>Download nội dung bài viết</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_EVENT" xml:space="preserve">
+    <value>Danh  mục</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_GUI_EMAIL" xml:space="preserve">
+    <value>Gửi E-Mail cho hiệu đính</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_LANG" xml:space="preserve">
+    <value>Chuyên trang</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_NEWS_NAME" xml:space="preserve">
+    <value>Tên bài</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_PUB_SEND" xml:space="preserve">
+    <value>Gửi duyệt</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_PUB_SEND_ED" xml:space="preserve">
+    <value>Gửi duyệt xuất bản</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_TRANS" xml:space="preserve">
+    <value>Dịch bài</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_USER_SEND" xml:space="preserve">
+    <value>Người gửi</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QLND_VIEW_PRINT" xml:space="preserve">
+    <value>Xem/In</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BA_QNND_TRANS_EMAIL" xml:space="preserve">
+    <value>Gửi E-Mail</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="BUTTON_ACCEPT" xml:space="preserve">
+    <value>Đăng nhập</value>
+  </data>
+  <data name="BUTTON_ACCEPTEXIT" xml:space="preserve">
+    <value>Thoát</value>
+  </data>
+  <data name="BUTTON_ACCEPTNEWS" xml:space="preserve">
+    <value>Thêm mới</value>
+  </data>
+  <data name="BUTTON_ADD" xml:space="preserve">
+    <value>&lt;img border='0' width='15px' height='15px' class='icon' src='images/new.gif' /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Thêm mới</value>
+  </data>
+  <data name="BUTTON_ChangesPass" xml:space="preserve">
+    <value>Thay đổi</value>
+  </data>
+  <data name="BUTTON_EXIT" xml:space="preserve">
+    <value>&lt;img border='0' width='15px' height='15px' class='icon' src='images/hsi_ni06.gif' /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Hủy bỏ</value>
+  </data>
+  <data name="BUTTON_FEEDBACK" xml:space="preserve">
+    <value>&lt;img border='0' width='15px' height='15px' class='icon' src='images/document_new.png' /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Phản hồi</value>
+  </data>
+  <data name="BUTTON_FORGOT_PASSWORD" xml:space="preserve">
+    <value>&lt;img border='0' class='icon' src='Images/Icons/ForgotPassword.gif' /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Quên mật khẩu</value>
+  </data>
+  <data name="BUTTON_GUI_HIEUDINH" xml:space="preserve">
+    <value>Gửi hiệu đính</value>
+  </data>
+  <data name="BUTTON_GUIBAI" xml:space="preserve">
+    <value>Gửi duyệt</value>
+  </data>
+  <data name="BUTTON_LOAD" xml:space="preserve">
+    <value>Load file word</value>
+  </data>
+  <data name="BUTTON_LUU" xml:space="preserve">
+    <value>Lưu tin</value>
+  </data>
+  <data name="BUTTON_MESSAGE" xml:space="preserve">
+    <value>&lt;img border='0' width='15px' height='15px' class='icon' src='images/document_new.png' /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Thông báo</value>
+  </data>
+  <data name="BUTTON_SAVE" xml:space="preserve">
+    <value>&lt;img border='0' width='15px' height='15px' class='icon' src='images/save.gif' /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Cập nhật</value>
+  </data>
+  <data name="BUTTON_SAVES" xml:space="preserve">
+    <value>Lưu giữ</value>
+  </data>
+  <data name="BUTTON_SEARCH" xml:space="preserve">
+    <value>&lt;img id="imgTimkiem" runat="server" align="absMiddle" alt="" height="16" src="Images/find.gif" width="16" border="0" /&gt;&amp;nbsp;Tìm kiếm</value>
+  </data>
+  <data name="BUTTON_SEND" xml:space="preserve">
+    <value>&lt;img border='0' width='15px' height='15px' class='icon' src='images/save.gif' /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Gửi</value>
+  </data>
+  <data name="BUTTON_SIGNIN" xml:space="preserve">
+    <value>Đăng nhập</value>
+  </data>
+  <data name="BUTTON_SIGOUT" xml:space="preserve">
+    <value>Thoát</value>
+  </data>
+  <data name="BUTTON_STOP" xml:space="preserve">
+    <value>Ngừng đăng</value>
+  </data>
+  <data name="BUTTON_TRABAI" xml:space="preserve">
+    <value>Trả lại</value>
+  </data>
+  <data name="BUTTON_TRALAIGUIBAI" xml:space="preserve">
+    <value>Trả lại</value>
+  </data>
+  <data name="CBO_LISTGROUP" xml:space="preserve">
+    <value>Lựa chọn nhóm người dùng</value>
+  </data>
+  <data name="CBO_LISTUSER" xml:space="preserve">
+    <value>Lựa chọn người dùng</value>
+  </data>
+  <data name="CHANGE_PASS" xml:space="preserve">
+    <value>Đổi mật khẩu</value>
+  </data>
+  <data name="CITY_EDIT_ANHTP" xml:space="preserve">
+    <value>Ảnh thành phố :</value>
+  </data>
+  <data name="CITY_EDIT_MOTA" xml:space="preserve">
+    <value>Mô tả thành phố :</value>
+  </data>
+  <data name="FEEDBACK_TITLE_EDIT" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Gửi thông báo đến đơn vị</value>
+  </data>
+  <data name="FEEDBACK_TITLE_EDIT_BAN" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Gửi thông báo đến ban chức năng</value>
+  </data>
+  <data name="FEEDBACK_TITLE_LIST" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Thông tin phản hồi của các đơn vị</value>
+  </data>
+  <data name="FEEDBACK_TITLE_LIST_BAN" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Thông báo của ban chức năng</value>
+  </data>
+  <data name="FUA_ADD" xml:space="preserve">
+    <value>Đính kèm một tệp khác</value>
+  </data>
+  <data name="FUA_DELETE" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="GRIDTITTLDELETE" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachAIG_Participant" xml:space="preserve">
+    <value>Danh sách người tham dự đại hội</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachAIG_Venues" xml:space="preserve">
+    <value>Danh sách nơi thi đấu</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachCacMonTheThao" xml:space="preserve">
+    <value>Danh sách các môn thể thao</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachSport_Cat" xml:space="preserve">
+    <value>Danh sách phân loại theo nhóm thi đấu</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachSport_Desc" xml:space="preserve">
+    <value>Thông tin chi tiết môn thể thao theo từng chỉ mục</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachSport_Details" xml:space="preserve">
+    <value>Môn thi đấu thuộc môn thể thao cụ thể</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachSport_Event" xml:space="preserve">
+    <value>Các nội dung thi đấu được phân loại theo nội dung và nhóm, kiểu thi đấu</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachSport_INdexName" xml:space="preserve">
+    <value>Danh sách Sport_Index_Name</value>
+  </data>
+  <data name="GRIDTITTLEDanhSachThongTinNguoiDung" xml:space="preserve">
+    <value>Danh sách thông tin người dùng</value>
+  </data>
+  <data name="GRIDTITTLEDIT" xml:space="preserve">
+    <value>Sửa</value>
+  </data>
+  <data name="GRIDTITTLEEDITNguoiDung" xml:space="preserve">
+    <value>Cập nhật thông tin người dùng</value>
+  </data>
+  <data name="GRIDTITTLEGroup" xml:space="preserve">
+    <value>Nhóm người dùng:</value>
+  </data>
+  <data name="GRIDTITTLERoleMoTa" xml:space="preserve">
+    <value>Mô tả</value>
+  </data>
+  <data name="GRIDTITTLERolePhanQuyen" xml:space="preserve">
+    <value>Phân quyền danh mục</value>
+  </data>
+  <data name="GRIDTITTLERoleTenDanhMuc" xml:space="preserve">
+    <value>Tên danh mục</value>
+  </data>
+  <data name="GRIDTITTLESEARCH" xml:space="preserve">
+    <value>Tìm kiếm</value>
+  </data>
+  <data name="GRIDTITTLETenNhom" xml:space="preserve">
+    <value>Tên nhóm</value>
+  </data>
+  <data name="GRIDTITTLEThemMoiNguoiDung" xml:space="preserve">
+    <value>Thêm mới người dùng</value>
+  </data>
+  <data name="GRIDTITTLEThongTinGroup" xml:space="preserve">
+    <value>Danh sách thông tin nhóm người dùng</value>
+  </data>
+  <data name="GRIDTITTLEThongTinGroupROLE" xml:space="preserve">
+    <value>Quyền chức năng của nhóm người dùng: </value>
+  </data>
+  <data name="GROUP_TITLE_EDIT" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Cập nhật thông tin nhóm</value>
+  </data>
+  <data name="GROUP_TITLE_LIST" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Danh sách thông tin nhóm người dùng</value>
+  </data>
+  <data name="GROUP_TITLE_ROLE" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Phân quyền nhóm người dùng</value>
+  </data>
+  <data name="HOTELS_EDIT_CHONTP" xml:space="preserve">
+    <value>Chọn thành phố :</value>
+  </data>
+  <data name="HOTELS_EDIT_MOTA" xml:space="preserve">
+    <value>Mô tả :</value>
+  </data>
+  <data name="LABEL_DELETE" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="LABEL_EDIT" xml:space="preserve">
+    <value>Sửa</value>
+  </data>
+  <data name="LABEL_LANG_GHICHU" xml:space="preserve">
+    <value>Ghi chú</value>
+  </data>
+  <data name="LABEL_LANG_KYHIEU" xml:space="preserve">
+    <value>Ký hiệu</value>
+  </data>
+  <data name="LABEL_LANG_TEN" xml:space="preserve">
+    <value>Tên Chuyên trang</value>
+  </data>
+  <data name="LABEL_LANGE_DANHSACH" xml:space="preserve">
+    <value>Danh sách Chuyên trang</value>
+  </data>
+  <data name="LABEL_RED_START" xml:space="preserve">
+    <value>&amp;nbsp;&lt;span class="req_Field"&gt;(*)&lt;/span&gt;</value>
+  </data>
+  <data name="LABEL_REQUIRE_FIELDS" xml:space="preserve">
+    <value>&lt;u&gt;- Ghi chú:&lt;/u&gt; &amp;nbsp;Các ô có đánh dấu &lt;span class="req_Field"&gt;*&lt;/span&gt; là trường
+                    bắt buộc phải nhập.</value>
+  </data>
+  <data name="LABEL_SEARCH" xml:space="preserve">
+    <value>Tìm kiếm</value>
+  </data>
+  <data name="LANQUAGE_ALERT" xml:space="preserve">
+    <value>Bài viết đã được dịch sang Chuyên trang này rồi!</value>
+  </data>
+  <data name="LANQUAGE_ALERT_EXITS" xml:space="preserve">
+    <value>Nên dịch ngữ từ Chuyên trang tiếng việt !</value>
+  </data>
+  <data name="lblNgonNguALL" xml:space="preserve">
+    <value>Chuyên trang</value>
+  </data>
+  <data name="lblPhanQuyenPhongVien" xml:space="preserve">
+    <value>/NewEditor/ListEditor.aspx?Menu_ID=8</value>
+  </data>
+  <data name="LOGIN_CUSTOMER" xml:space="preserve">
+    <value>Trung tâm báo chí - MPC</value>
+  </data>
+  <data name="LOGIN_DESC" xml:space="preserve">
+    <value>Nhập tên đăng nhập và mật khẩu. Sau đó nhấn nút "Đăng nhập" để vào trong trang quản lý website.</value>
+  </data>
+  <data name="LOGIN_ERROR" xml:space="preserve">
+    <value>Đăng nhập không thành công!</value>
+  </data>
+  <data name="LOGIN_PASSWORD" xml:space="preserve">
+    <value>Mật khẩu</value>
+  </data>
+  <data name="LOGIN_REMEMBER" xml:space="preserve">
+    <value>Ghi nhớ mật khẩu</value>
+  </data>
+  <data name="LOGIN_TITLE" xml:space="preserve">
+    <value>ĐĂNG NHẬP HỆ THỐNG</value>
+  </data>
+  <data name="LOGIN_USERNAME" xml:space="preserve">
+    <value>Tên truy cập</value>
+  </data>
+  <data name="MENU_TITLE_Department" xml:space="preserve">
+    <value>Chỉnh sửa thông tin phòng ban</value>
+  </data>
+  <data name="MENU_TITLE_DepartmentAdd" xml:space="preserve">
+    <value>Thêm mới thông tin phòng ban</value>
+  </data>
+  <data name="MENU_TITLE_EDIT" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Cập nhật thông tin chức năng</value>
+  </data>
+  <data name="MENU_TITLE_LIST" xml:space="preserve">
+    <value>&amp;nbsp;&amp;nbsp;Danh sách thông tin chức năng hiện có</value>
+  </data>
+  <data name="MenuQuanLyDanhMucTittle" xml:space="preserve">
+    <value>Quản lý danh mục</value>
+  </data>
+  <data name="NHOMVANBAN_TITLE_EDIT" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Cập nhật thông tin nhóm văn bản</value>
+  </data>
+  <data name="NHOMVANBAN_TITLE_LIST" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp; Danh mục nhóm văn bản</value>
+  </data>
+  <data name="NOC_DETAIL_DESCRIPTION" xml:space="preserve">
+    <value>Mô tả chi tiết :</value>
+  </data>
+  <data name="NOC_DETAIL_EDIT_LOGO" xml:space="preserve">
+    <value>Logo uỷ ban :</value>
+  </data>
+  <data name="NOC_EDIT_CHONHOTEL" xml:space="preserve">
+    <value>Tên khách sạn :</value>
+  </data>
+  <data name="PANELEDITGROUPNAME" xml:space="preserve">
+    <value>Cập nhật nhóm người dùng</value>
+  </data>
+  <data name="PANELTHEMMOIGROUPNAME" xml:space="preserve">
+    <value>Thêm mới nhóm người dùng</value>
+  </data>
+  <data name="PNLTITTLEGROUPTEXTEDITADD" xml:space="preserve">
+    <value>Thêm mới</value>
+  </data>
+  <data name="PNLTITTLEGROUPTEXTEDITEDIT" xml:space="preserve">
+    <value>Cập nhật</value>
+  </data>
+  <data name="QLND_BUTTON_APPROVE" xml:space="preserve">
+    <value>Gửi biên tập</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="QLND_BUTTON_CREATE" xml:space="preserve">
+    <value>Viết bài mới</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="QLND_BUTTON_DELETE" xml:space="preserve">
+    <value>Xóa bài viết</value>
+    <comment>haolm</comment>
+  </data>
+  <data name="QLTT_CHUYENMUC_CHUYENMUCCHA" xml:space="preserve">
+    <value>Chuyên mục cha:</value>
+  </data>
+  <data name="QLTT_CHUYENMUC_CHUYENMUCCHA1" xml:space="preserve">
+    <value>Chuyên mục cha:</value>
+  </data>
+  <data name="QLTT_CHUYENMUC_CHUYENMUCCHA11" xml:space="preserve">
+    <value>Chuyên mục cha :</value>
+  </data>
+  <data name="QLTT_CHUYENMUC_TENCHUYENMUC" xml:space="preserve">
+    <value>Tên chuyên muc:</value>
+  </data>
+  <data name="QLTT_TINTUC_ANHDINHKEM" xml:space="preserve">
+    <value>File đính kèm</value>
+  </data>
+  <data name="QLTT_TINTUC_ANHTINBAI" xml:space="preserve">
+    <value>Ảnh tin bài:</value>
+  </data>
+  <data name="QLTT_TINTUC_ANHTINBAI_VIDEO" xml:space="preserve">
+    <value>Ảnh đính kèm</value>
+  </data>
+  <data name="QLTT_TINTUC_CHUYENDE" xml:space="preserve">
+    <value>Chuyên đề</value>
+  </data>
+  <data name="QLTT_TINTUC_CHUYENMUC" xml:space="preserve">
+    <value>Chuyên mục</value>
+  </data>
+  <data name="QLTT_TINTUC_DIADIEMTHIDAU" xml:space="preserve">
+    <value>Chọn địa điểm thi đấu</value>
+  </data>
+  <data name="QLTT_TINTUC_MONTHETHAO" xml:space="preserve">
+    <value>Chọn môn thể thao</value>
+  </data>
+  <data name="QLTT_TINTUC_NOIDUNGTIN" xml:space="preserve">
+    <value>Nội dung:</value>
+  </data>
+  <data name="QLTT_TINTUC_PATH_VIDEO" xml:space="preserve">
+    <value>Đường dẫn video</value>
+  </data>
+  <data name="QLTT_TINTUC_TENQG" xml:space="preserve">
+    <value>Chọn quốc gia</value>
+  </data>
+  <data name="QLTT_TINTUC_TIEUDE" xml:space="preserve">
+    <value>Nhập tiêu đề</value>
+  </data>
+  <data name="QLTT_TINTUC_TIEUDE_ENG" xml:space="preserve">
+    <value>Tiêu đề English</value>
+  </data>
+  <data name="QLTT_TINTUC_TIEUDE_VIETNAM" xml:space="preserve">
+    <value>Tiêu đề tiếng việt</value>
+  </data>
+  <data name="QLTT_TINTUC_TOMTAT" xml:space="preserve">
+    <value>Sapo:</value>
+  </data>
+  <data name="QLTT_TINTUC_TOMTAT_ENG" xml:space="preserve">
+    <value>Tóm tắt English</value>
+  </data>
+  <data name="QLTT_TINTUC_TOMTAT_VIETNAM" xml:space="preserve">
+    <value>Tóm tắt tiếng việt</value>
+  </data>
+  <data name="QLTT_TINTUCLIST_TIEUDECM" xml:space="preserve">
+    <value>Tiêu đề :</value>
+  </data>
+  <data name="QLTT_TINTUCLIST_TIEUDECM1" xml:space="preserve">
+    <value>Tên đề tài:</value>
+  </data>
+  <data name="Sport_EventCat_IDEdit" xml:space="preserve">
+    <value>Mã nhóm thi đấu</value>
+  </data>
+  <data name="Sport_EventDetail_IDEdit" xml:space="preserve">
+    <value>Mã môn thi đấu chi tiết</value>
+  </data>
+  <data name="Sport_EventExercise_Type_ID" xml:space="preserve">
+    <value>Thi đấu đối kháng hay biểu diễn</value>
+  </data>
+  <data name="Sport_EventNameEdit" xml:space="preserve">
+    <value>Tên nội dung thi đấu</value>
+  </data>
+  <data name="Sport_EventTeam_Type_IDEdit" xml:space="preserve">
+    <value>Mã kiểu thi đấu</value>
+  </data>
+  <data name="Sport_ValidateExits_Code" xml:space="preserve">
+    <value>Mã môn thi này đã tồn tại</value>
+  </data>
+  <data name="Sport_ValidateExits_CodeDetails" xml:space="preserve">
+    <value>Mã môn thi đấu đã tồn tại</value>
+  </data>
+  <data name="String1" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SYSTEM_EDITMENUTenChucNang" xml:space="preserve">
+    <value>Tên chức năng</value>
+  </data>
+  <data name="SYSTEM_GridTiitleDelete" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="SYSTEM_GridTiitleDuongDan" xml:space="preserve">
+    <value>Đường dẫn</value>
+  </data>
+  <data name="SYSTEM_GridTiitleEdit" xml:space="preserve">
+    <value>Sửa</value>
+  </data>
+  <data name="SYSTEM_GridTiitleTenDanhMuc" xml:space="preserve">
+    <value>Tên danh mục</value>
+  </data>
+  <data name="SYSTEM_MENU_ChucNangCha" xml:space="preserve">
+    <value>Chức năng cha</value>
+  </data>
+  <data name="SYSTEM_MENU_EDITAnhMinhHoa" xml:space="preserve">
+    <value>Ảnh minh họa</value>
+  </data>
+  <data name="SYSTEM_MENU_EDITDuongDan" xml:space="preserve">
+    <value>Đường dẫn</value>
+  </data>
+  <data name="SYSTEM_MENU_EDITHienThi" xml:space="preserve">
+    <value>Hiển thị</value>
+  </data>
+  <data name="SYSTEM_MENU_EDITMoTa" xml:space="preserve">
+    <value>Mô tả</value>
+  </data>
+  <data name="SYSTEM_MENU_EDITThuTu" xml:space="preserve">
+    <value>Thứ tự</value>
+  </data>
+  <data name="System_StatusDocumentsALL1" xml:space="preserve">
+    <value>Bài đang xử lý tại PV</value>
+  </data>
+  <data name="System_StatusDocumentsALL10" xml:space="preserve">
+    <value>Trả lại bài cho hiệu đính</value>
+  </data>
+  <data name="System_StatusDocumentsALL11" xml:space="preserve">
+    <value>Bài đã bị xóa</value>
+  </data>
+  <data name="System_StatusDocumentsALL12" xml:space="preserve">
+    <value>Hoàn chỉnh ngữ đang xử lý</value>
+  </data>
+  <data name="System_StatusDocumentsALL13" xml:space="preserve">
+    <value>Trả lại bài cho Hoàn chỉnh ngữ</value>
+  </data>
+  <data name="System_StatusDocumentsALL14" xml:space="preserve">
+    <value>Duyệt xuất bản đang xử lý</value>
+  </data>
+  <data name="System_StatusDocumentsALL15" xml:space="preserve">
+    <value>Trả lại bài cho duyệt xuất bản</value>
+  </data>
+  <data name="System_StatusDocumentsALL16" xml:space="preserve">
+    <value>Chờ duyệt xuất bản đang xử lý</value>
+  </data>
+  <data name="System_StatusDocumentsALL17" xml:space="preserve">
+    <value>Bài đã được xuất bản</value>
+  </data>
+  <data name="System_StatusDocumentsALL2" xml:space="preserve">
+    <value>Trả lại bài cho PV</value>
+  </data>
+  <data name="System_StatusDocumentsALL20" xml:space="preserve">
+    <value>Bài đang xử lý tại PV</value>
+  </data>
+  <data name="System_StatusDocumentsALL21" xml:space="preserve">
+    <value>Gửi trả lại bài cho PV</value>
+  </data>
+  <data name="System_StatusDocumentsALL22" xml:space="preserve">
+    <value>Gửi TKTS</value>
+  </data>
+  <data name="System_StatusDocumentsALL23" xml:space="preserve">
+    <value>Gửi trả lại bài cho TKTS</value>
+  </data>
+  <data name="System_StatusDocumentsALL24" xml:space="preserve">
+    <value>Gửi Họa sĩ trình bày</value>
+  </data>
+  <data name="System_StatusDocumentsALL25" xml:space="preserve">
+    <value>Gửi trả lại bài cho Họa sĩ trình bày</value>
+  </data>
+  <data name="System_StatusDocumentsALL26" xml:space="preserve">
+    <value>Gửi Biên dịch ngữ</value>
+  </data>
+  <data name="System_StatusDocumentsALL27" xml:space="preserve">
+    <value>Gửi trả lại biên dịch ngữ</value>
+  </data>
+  <data name="System_StatusDocumentsALL28" xml:space="preserve">
+    <value>Gửi hiệu đính</value>
+  </data>
+  <data name="System_StatusDocumentsALL29" xml:space="preserve">
+    <value>Gửi trả lại bài cho hiệu đính</value>
+  </data>
+  <data name="System_StatusDocumentsALL3" xml:space="preserve">
+    <value>TKTS đang xử lý</value>
+  </data>
+  <data name="System_StatusDocumentsALL30" xml:space="preserve">
+    <value>Gửi Hoàn chỉnh ngữ</value>
+  </data>
+  <data name="System_StatusDocumentsALL31" xml:space="preserve">
+    <value>Gửi trả lại bài cho Hoàn chỉnh ngữ</value>
+  </data>
+  <data name="System_StatusDocumentsALL32" xml:space="preserve">
+    <value>Gửi DXB</value>
+  </data>
+  <data name="System_StatusDocumentsALL33" xml:space="preserve">
+    <value>Gửi trả lại bài cho DXB</value>
+  </data>
+  <data name="System_StatusDocumentsALL34" xml:space="preserve">
+    <value>Gửi chờ DXB</value>
+  </data>
+  <data name="System_StatusDocumentsALL35" xml:space="preserve">
+    <value>Gửi bài đã được xuất bản</value>
+  </data>
+  <data name="System_StatusDocumentsALL4" xml:space="preserve">
+    <value>Trả lại bài cho TKTS</value>
+  </data>
+  <data name="System_StatusDocumentsALL5" xml:space="preserve">
+    <value>Họa sĩ trình bày đang xử lý</value>
+  </data>
+  <data name="System_StatusDocumentsALL6" xml:space="preserve">
+    <value>Trả lại bài cho Họa sĩ trình bầy</value>
+  </data>
+  <data name="System_StatusDocumentsALL7" xml:space="preserve">
+    <value>Biên dịch ngữ đang xử lý</value>
+  </data>
+  <data name="System_StatusDocumentsALL8" xml:space="preserve">
+    <value>Trả lại biên dịch ngữ</value>
+  </data>
+  <data name="System_StatusDocumentsALL9" xml:space="preserve">
+    <value>Hiệu đính đang xử lý</value>
+  </data>
+  <data name="T_NEWS_CHUYENDE_EDIT_AUTHORNAME" xml:space="preserve">
+    <value>Tên tác giả:</value>
+  </data>
+  <data name="T_NEWS_CHUYENDE_EDIT_COMMENTS" xml:space="preserve">
+    <value>Chú thích:</value>
+  </data>
+  <data name="T_NEWS_CHUYENDE_EDIT_DOUUTIEN" xml:space="preserve">
+    <value>Mức quan trọng:</value>
+  </data>
+  <data name="T_NEWSCHUYENDE_TKTS_LIST" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="TBM_TITLE_EDIT" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Cập nhật thông tin văn bản</value>
+  </data>
+  <data name="TBM_TITLE_LIST" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Danh mục văn bản</value>
+  </data>
+  <data name="TEPMAUBIEU_TITLE" xml:space="preserve">
+    <value>&lt;img height="13" src="Images/arrow_d.gif" width="15" align="absMiddle" border="0"&gt;Tên văn bản</value>
+  </data>
+  <data name="TOOLTIP_SUA_NN" xml:space="preserve">
+    <value>Chỉnh sửa Chuyên trang</value>
+  </data>
+  <data name="TOOLTIP_XOA_NN" xml:space="preserve">
+    <value>Xóa Chuyên trang</value>
+  </data>
+  <data name="txtSearchNameTenLoaiThidau" xml:space="preserve">
+    <value>Tên loại thi đấu:</value>
+  </data>
+  <data name="txtSearchNameTenNoiDungThiDau" xml:space="preserve">
+    <value>Tên nội dung thi đấu</value>
+  </data>
+  <data name="UpdateSuccessfully" xml:space="preserve">
+    <value>Cập nhật thành công.</value>
+  </data>
+  <data name="UpdateTittlePanelAIG_ParticipantAdd" xml:space="preserve">
+    <value>Thêm mới người tham dự đại hội</value>
+  </data>
+  <data name="UpdateTittlePanelAIG_ParticipantEdit" xml:space="preserve">
+    <value>Sửa người tham dự đại hội</value>
+  </data>
+  <data name="UpdateTittlePanelMenu" xml:space="preserve">
+    <value>Cập nhật chức năng hệ thống</value>
+  </data>
+  <data name="UPLOAD_PATH" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="USER_FULLNAME" xml:space="preserve">
+    <value>Họ và Tên</value>
+  </data>
+  <data name="USER_TITLE_EDIT" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Cập nhật thông tin người dùng</value>
+  </data>
+  <data name="USER_TITLE_GROUP" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Gán nhóm người dùng</value>
+  </data>
+  <data name="USER_TITLE_LIST" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Danh sách thông tin người dùng</value>
+  </data>
+  <data name="USER_TITLE_ROLE" xml:space="preserve">
+    <value>&lt;img height="42" src="Images/chuyenmuc.gif" width="42" align="absMiddle" border="0"&gt;&amp;nbsp;&amp;nbsp;Phân quyền người dùng</value>
+  </data>
+  <data name="USER_TITLE_ROLETHANHVIEN" xml:space="preserve">
+    <value>Thành viên</value>
+  </data>
+  <data name="USER_TITLE_ROLETHANHVIENTHUOCNHOM" xml:space="preserve">
+    <value>Thành viên thuộc nhóm</value>
+  </data>
+  <data name="USER_TITLE_ROLEWITDHGROUP" xml:space="preserve">
+    <value>Phân quyền theo nhóm cho người dùng: </value>
+  </data>
+  <data name="USER_TITLE_ROLEWITDHMENU" xml:space="preserve">
+    <value>Phân quyền chức năng người dùng: </value>
+  </data>
+  <data name="Utility_CurrentPage_text" xml:space="preserve">
+    <value>Trang {0}/{1} ({2} bản ghi)</value>
+  </data>
+  <data name="Utility_Pager_firstButton" xml:space="preserve">
+    <value>|&lt;</value>
+  </data>
+  <data name="Utility_Pager_lastButton" xml:space="preserve">
+    <value>&gt;|</value>
+  </data>
+  <data name="Utility_Pager_nextButton" xml:space="preserve">
+    <value>&gt;&gt;</value>
+  </data>
+  <data name="Utility_Pager_previousButton" xml:space="preserve">
+    <value>&lt;&lt;</value>
+  </data>
+  <data name="VALIDATE_ADDNEWS" xml:space="preserve">
+    <value>Bạn đã thêm mới thành công</value>
+  </data>
+  <data name="VALIDATE_MenuExits" xml:space="preserve">
+    <value>Menu này đã tồn tại</value>
+  </data>
+  <data name="VALIDATE_NHOMNGUOIDUNG_AddNews" xml:space="preserve">
+    <value>Bạn đã thêm mới nhóm người dùng thành công.</value>
+  </data>
+  <data name="VALIDATE_NHOMNGUOIDUNG_EXIT" xml:space="preserve">
+    <value>Nhóm người dùng đã tồn tại.</value>
+  </data>
+  <data name="VALIDATE_USER_EXIT" xml:space="preserve">
+    <value>Tên truy cập đã có người sử dụng</value>
+  </data>
+  <data name="VALIDATE_USER_REQUIRED" xml:space="preserve">
+    <value>Tên truy cập phải khác rỗng!</value>
+  </data>
+  <data name="VALIDATE_USERNAMEExits" xml:space="preserve">
+    <value>Tên truy cập đã tồn tại</value>
+  </data>
+  <data name="ValidateChuaNhapTenCuaLoaiTHiDau" xml:space="preserve">
+    <value>Chưa nhập tên của loại thi đấu</value>
+  </data>
+  <data name="ValidateCityNot" xml:space="preserve">
+    <value>Chưa chọn thành phố</value>
+  </data>
+  <data name="ValidateDeleteConfirmPublic" xml:space="preserve">
+    <value>Bạn có chắc chắn muốn xóa không?</value>
+  </data>
+  <data name="ValidateLanguagesNot" xml:space="preserve">
+    <value>Chưa chọn Chuyên trang</value>
+  </data>
+  <data name="ValidateSport_Event_Name" xml:space="preserve">
+    <value>Chưa nhập tên nội dung thi đấu</value>
+  </data>
+  <data name="ValidateSport_EventCat_IDEdit" xml:space="preserve">
+    <value>Chưa nhập mã nhóm thi đấu chi tiết</value>
+  </data>
+  <data name="ValidateSport_EventDetail_IDEdit" xml:space="preserve">
+    <value>Chưa chọn mã môn thi đấu chi tiết</value>
+  </data>
+</root>

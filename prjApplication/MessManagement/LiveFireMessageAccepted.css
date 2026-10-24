@@ -1,0 +1,8 @@
+.lfa-dialog { width: min(980px, 100%); }
+.lfa-meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.lfa-meta > div { min-height: 58px; padding: 8px; border: 1px solid #cfe0eb; border-radius: 5px; background: #f7fafc; }
+.lfa-meta b { display: block; margin-bottom: 5px; color: #337fb8; font-size: 11px; text-transform: uppercase; }
+.lfa-meta span, .lfa-meta pre { display: block; margin: 0; color: #213e52; white-space: pre-wrap; overflow-wrap: anywhere; }
+.lfa-wide { grid-column: span 2; }
+#lfaPreview { width: 100%; border: 1px solid #a9c9df; border-radius: 5px; padding: 10px; font-family: Consolas, monospace; font-size: 13px; text-transform: uppercase; resize: vertical; }
+@media (max-width: 760px) { .lfa-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }.lfa-wide { grid-column: span 2; } }

@@ -1,0 +1,89 @@
+Điểm cần chỉnh trước khi phát hành
+Cột Trạng thái SRS trong bảng danh mục tổng hợp chưa được đồng bộ đầy đủ:
+một số chức năng đã có đặc tả chi tiết nhưng vẫn có thể đang mang
+trạng thái “Chờ đặc tả/Chờ xây dựng”. Đây là lỗi trình bày trạng thái,
+không phải thiếu nội dung đặc tả.
+Ưu tiên tiếp theo hợp lý là FR-OPT-021,
+FR-OPT-022 và FR-OPT-023,
+sau đó thực hiện FR-OPT-025 đến FR-OPT-029 và
+FR-OPT-031 đến FR-OPT-032.
+
+FR-OPT-001	Mở rộng thời gian lưu trữ điện văn INBOX
+FR-OPT-002	Cảnh báo NOPERM cho điện văn không có trong KHBN
+FR-OPT-003	Áp dụng quy tắc 120 giờ ICAO cho hiển thị FPL
+
+FR-OPT-004	Tìm kiếm chuyến bay đa trường và theo từ khóa (đang làm)
+http://localhost/ATFM_WEB/Permission/SearchExtension.aspx?Menu_ID=381
+
+FR-OPT-005	Tìm kiếm nâng cao phục vụ báo cáo
+FR-OPT-006	Phân loại chuyến bay Quốc nội/Quốc tế tự động
+FR-OPT-007	Export dữ liệu chia tách ba loại file ALL, LD, OF
+FR-OPT-008	Chức năng Edit info chuyến bay
+FR-OPT-009	Hiển thị lịch sử thao tác của người xử lý chuyến bay
+FR-OPT-010	Đồng bộ dữ liệu điện văn liên ngày
+FR-OPT-011	Thống kê theo khung giờ, chặng và đường bay
+FR-OPT-012	Cảnh báo chuyến bay không có trong phép bay/KHB ngày
+
+FR-OPT-013	Hỗ trợ hủy phép bay quốc tế/quốc nội
+
+với Link HỦY CHUYẾN
+http://localhost/ATFM_WEB/Tool/ImportsPermSC_LD_V2.aspx?Menu_ID=991
+
+FR-OPT-014	Tối ưu hiệu năng ExportBravo dưới 3 phút
+FR-OPT-015	Chức năng F8 ép dòng trong Calendar Accepted
+FR-OPT-016	Tối ưu Gen KHB ngày hôm sau ra AFTN dưới 3 phút
+FR-OPT-017	Mở rộng phạm vi tra cứu INBOX trên 7 ngày
+
+FR-OPT-018	Tự động cập nhật khi sửa KHB đã build
+
+FR-OPT-019	Cảnh báo chuyến bay cấp sai ngày bay so với thực tế
+
+FR-OPT-020	Bổ sung trường Mục đích chuyến bay trong KHB ngày
+
+FR-OPT-021	Logic cảnh báo đỏ chính xác cho chuyến bay hết hiệu lực
+
+Ưu tiên tiếp theo hợp lý là FR-OPT-021, FR-OPT-022 và FR-OPT-023, sau đó thực hiện FR-OPT-025 đến FR-OPT-029 và FR-OPT-031 đến FR-OPT-032.
+
+FR-OPT-022	Tự động cập nhật đường bay theo đoạn từ FPL thực tế
+
+FR-OPT-023	Tự động nhận diện và chuyển ngày cho chuyến bay quốc tế hạ cánh hôm sau
+
+FR-OPT-024	Theo dõi kế hoạch bay hằng ngày với cập nhật liên tục
+http://localhost/ATFM_WEB/FinishFlights/ListFlightOnMess.aspx?Menu_ID=948
+Dựa vào việc lọc chuyến bay theo điện văn, để đưa ra danh sách các chuyến bay thay đổi
+
+FR-OPT-025	Thông báo thời điểm nhận số liệu bay Đi/Đến từ Trung tâm TBHĐB
+
+FR-OPT-026	Cập nhật số liệu bay từ HTSLB sang Bravo
+
+FR-OPT-027	Khắc phục lỗi nhầm ngày so với thực tế
+
+FR-OPT-028	Sửa nhiều chuyến bay cùng nội dung trong một thao tác
+
+FR-OPT-029	Đối chiếu số liệu bay giữa HTSLB và Bravo
+
+FR-OPT-030	Mở rộng tìm kiếm trên giao diện Daily Military Report
+http://localhost/ATFM_WEB/FinishFlights/ListFinishedFlightsMilitaryReport.aspx?Menu_ID=863
+
+FR-OPT-031	Thêm lựa chọn theo tất cả tiêu chí thống kê trong báo cáo
+
+FR-OPT-032	Đánh giá, so sánh số liệu của KHBHĐBN
+
+FR-RPT-004	Tích hợp ADS-B cho báo cáo khai thác thực tế
+
+FR-RPT-001	Biểu đồ thông tin tổng quan khai thác bay
+FR-RPT-002	Phân tích xu hướng khai thác theo thời gian
+http://localhost/ATFM_WEB/ReportNew/FlightTrendAnalysis.aspx?Menu_ID=909
+FR-RPT-003	Phát hiện và cảnh báo dữ liệu bất thường
+http://localhost/ATFM_WEB/ReportNew/AnomalyWarning.aspx?Menu_ID=910
+FR-RPT-005	Tổng hợp chỉ số hiệu suất bay từ ADS-B O/F
+http://localhost/ATFM_WEB/ReportNew/AdsBPerformanceReport.aspx?Menu_ID=923
+FR-RPT-006	Biểu đồ thống kê trạng thái chuyến bay theo tỷ lệ phần trăm
+http://localhost/ATFM_WEB/ReportNew/FlightStatusRate.aspx?Menu_ID=907
+FR-RPT-007	Biểu đồ so sánh hoạt động bay giữa các sân bay
+http://localhost/ATFM_WEB/Common/ChartReportAirport.aspx?Menu_ID=906
+FR-RPT-008	Báo cáo chuyến bay quân sự theo tiêu chí mở rộng
+http://localhost/ATFM_WEB/ReportNew/MilitaryFlightReport.aspx?Menu_ID=911
+FR-RPT-009	Báo cáo tổng hợp hoạt động bay tại tất cả sân bay dân dụng
+http://localhost/ATFM_WEB/ReportNew/CivilFlightSummary.aspx?Menu_ID=912
+FR-RPT-010	Báo cáo cất, hạ cánh tại các sân bay toàn quốc

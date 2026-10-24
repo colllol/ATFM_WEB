@@ -1,0 +1,30 @@
+.lf-app { padding: 10px; color: #173b59; }
+.lf-toolbar { display: flex; align-items: flex-end; gap: 8px; padding: 12px; border: 1px solid #c9dfef; border-radius: 8px; background: #f4f9fc; overflow-x: auto; }
+.lf-toolbar label, .lf-fields label { display: flex; flex-direction: column; gap: 4px; margin: 0; font-size: 11px; font-weight: 700; color: #245779; }
+.lf-toolbar input, .lf-toolbar select, .lf-fields input, .lf-fields textarea, .lf-subgrid input, #lfPreview { border: 1px solid #a9c9df; border-radius: 5px; padding: 7px 9px; color: #173b59; background: #fff; }
+.lf-toolbar input, .lf-toolbar select { height: 36px; min-width: 125px; }
+.lf-toolbar .lf-keyword input { width: 270px; }
+.lf-btn { min-height: 35px; border: 0; border-radius: 5px; padding: 7px 14px; font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; cursor: pointer; }
+.lf-btn:disabled { opacity: .48; cursor: not-allowed; }
+.lf-primary { background: #368ac9; }.lf-success { background: #69ad74; }.lf-danger { background: #d85c51; }.lf-warning { background: #d89632; }.lf-light { background: #7794a8; }
+.lf-summary { display: flex; justify-content: space-between; padding: 9px 3px 6px; font-weight: 700; }.lf-status-help { color: #6a7e8d; font-weight: 400; }
+.lf-grid-wrap { overflow: auto; border: 1px solid #bdd7e9; border-radius: 6px; }
+.lf-grid { width: 100%; min-width: 1050px; border-collapse: collapse; table-layout: fixed; }
+.lf-grid th { padding: 9px 5px; color: #fff; background: #337fb8; font-size: 11px; text-align: center; }
+.lf-grid td { padding: 7px 6px; border: 1px solid #c7dcea; text-align: center; vertical-align: middle; overflow-wrap: anywhere; }
+.lf-grid th:nth-child(1) { width: 45px; }.lf-grid th:nth-child(2) { width: 110px; }.lf-grid th:nth-child(3) { width: 90px; }.lf-grid th:nth-child(4) { width: 210px; }.lf-grid th:nth-child(5) { width: 260px; }.lf-grid th:nth-child(6) { width: 95px; }.lf-grid th:nth-child(7), .lf-grid th:nth-child(8) { width: 110px; }.lf-grid th:nth-child(9) { width: 85px; }
+.lf-grid tbody tr:nth-child(even) { background: #f4f9fc; }.lf-empty { padding: 25px !important; color: #718795; font-style: italic; }
+.lf-status { display: inline-block; min-width: 75px; border-radius: 12px; padding: 3px 7px; font-size: 10px; font-weight: 700; color: #fff; }.lf-s0 { background:#7d91a0; }.lf-s1 { background:#3b9b5d; }.lf-s2 { background:#d79227; }.lf-s3 { background:#c94e47; }.lf-s4 { background:#347eb8; }
+.lf-view { border: 0; border-radius: 4px; padding: 5px 9px; color: #fff; background: #368ac9; cursor: pointer; }
+.lf-pager { display: flex; justify-content: center; align-items: center; gap: 18px; padding: 12px; }.lf-pager button { border: 0; border-radius: 5px; padding: 7px 14px; color: #fff; background: #9eb1bd; }
+.lf-modal { position: fixed; inset: 0; z-index: 1050; display: none; padding: 18px; background: rgba(10,35,52,.52); overflow: auto; }
+.lf-modal.is-open { display: block; }.lf-modal-dialog { width: min(1120px, 100%); margin: 0 auto; border-radius: 8px; background: #fff; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+.lf-modal header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #d7e5ee; }.lf-modal h2 { margin: 0; color: #337fb8; font-size: 20px; }.lf-close { border: 0; color: #999; background: transparent; font-size: 30px; }
+.lf-editor-body { max-height: calc(100vh - 160px); padding: 14px 18px; overflow-y: auto; }.lf-modal fieldset { margin: 0 0 12px; padding: 10px 12px 12px; border: 1px solid #cfe0eb; border-radius: 6px; }.lf-modal legend { width: auto; margin: 0; padding: 0 6px; color: #337fb8; font-size: 14px; font-weight: 700; }
+.lf-fields { display: grid; gap: 9px; }.lf-fields-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }.lf-fields-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }.lf-span-2 { grid-column: span 2; }.lf-span-3 { grid-column: span 3; }.lf-span-4 { grid-column: span 4; }.lf-fields textarea { resize: vertical; }
+.lf-subgrid { width: 100%; margin-bottom: 8px; border-collapse: collapse; table-layout: fixed; }.lf-subgrid th { padding: 5px; color: #fff; background: #5b91b7; text-align: center; }.lf-subgrid td { padding: 3px; border: 1px solid #cbdde8; }.lf-subgrid input { width: 100%; height: 31px; text-align: center; }.lf-remove { width: 31px; border: 0; color: #fff; background: #d85c51; border-radius: 4px; }
+#lfPreview { width: 100%; resize: vertical; font-family: Consolas, monospace; font-size: 13px; text-transform: uppercase; }.lf-reject-info { display: none; margin-top: 8px; padding: 8px; border-left: 4px solid #c94e47; color: #8b2e29; background: #fff1f0; }
+.lf-modal footer { display: flex; justify-content: center; gap: 8px; padding: 12px 18px; border-top: 1px solid #d7e5ee; background: #f6fafc; }
+.lf-readonly input, .lf-readonly textarea, .lf-readonly .lf-remove, .lf-readonly #lfAddCoordinate, .lf-readonly #lfAddSchedule { pointer-events: none; opacity: .8; }
+body.lf-modal-open { overflow: hidden; }
+@media (max-width: 850px) { .lf-toolbar { flex-wrap: wrap; }.lf-fields-3,.lf-fields-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }.lf-span-3,.lf-span-4 { grid-column: span 2; }.lf-modal footer { flex-wrap: wrap; } }
