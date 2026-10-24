@@ -2240,6 +2240,7 @@
       <DependentUpon>Notifications.aspx</DependentUpon>
     </Compile>
     <Compile Include="SLOTS\SlotComparisonService.cs" />
+    <Compile Include="SLOTS\SlotComparisonRules.cs" />
     <Compile Include="SLOTS\SlotComparison.aspx.cs">
       <DependentUpon>SlotComparison.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>

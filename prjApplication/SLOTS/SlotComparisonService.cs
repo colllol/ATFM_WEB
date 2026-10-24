@@ -84,7 +84,8 @@ namespace prjApplication.SLOTS
             }
             else if (resultType == "KQ3")
             {
-                results.AddRange(airlinePlan.Where(item => !(slot.ContainsKey(item.Key) && permission.ContainsKey(item.Key)))
+                results.AddRange(airlinePlan.Where(item => SlotComparisonRules.IsKq3Mismatch(
+                        slot.ContainsKey(item.Key), permission.ContainsKey(item.Key)))
                     .Select(item => CreateResult(date, resultType, item.Value, "KHB Hãng: Không có cả trong SLOT và Phép bay")));
             }
             else
